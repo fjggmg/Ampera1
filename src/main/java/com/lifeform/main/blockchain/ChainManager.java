@@ -124,7 +124,7 @@ public class ChainManager implements IChainMan {
         {
             return;
         }
-        ki.getMainLog().info("current height is: " + csMap.get("height"));
+        //ki.getMainLog().info("current height is: " + csMap.get("height"));
         currentHeight = new BigInteger(csMap.get("height"));
         if(getByHeight(currentHeight) == null)
         {
@@ -457,11 +457,11 @@ public class ChainManager implements IChainMan {
 
     private synchronized void recalculateDifficulty()
     {
-        BigInteger correctDelta = BigInteger.valueOf(30000000L);
-        BigInteger actualDelta = BigInteger.valueOf(getByHeight(currentHeight()).timestamp - getByHeight(currentHeight().subtract(BigInteger.valueOf(100L))).timestamp);
-        BigInteger percentage = actualDelta.divide(correctDelta.divide(BigInteger.valueOf(10000000L)));
+        BigInteger correctDelta = BigInteger.valueOf(300000000L);
+        BigInteger actualDelta = BigInteger.valueOf(getByHeight(currentHeight()).timestamp - getByHeight(currentHeight().subtract(BigInteger.valueOf(1000L))).timestamp);
+        BigInteger percentage = actualDelta.divide(correctDelta.divide(BigInteger.valueOf(100000000L)));
         currentDifficulty = currentDifficulty.multiply(percentage);
-        currentDifficulty = currentDifficulty.divide(BigInteger.valueOf(10000000L));
+        currentDifficulty = currentDifficulty.divide(BigInteger.valueOf(100000000L));
 
         //currentDifficulty = currentDifficulty.multiply((BigInteger.valueOf(System.currentTimeMillis() - (currentHeight.intValueExact() * 300000L)).multiply(BigInteger.valueOf(100L))).divide(BigInteger.valueOf(GENESIS_DAY))).divide(BigInteger.valueOf(100L));
         ki.getMainLog().info("New Difficulty: " + Utils.toHexArray(currentDifficulty.toByteArray()));
@@ -569,12 +569,18 @@ public class ChainManager implements IChainMan {
         Block b = new Block();
         b.solver = Utils.toHexArray(ki.getEncryptMan().getPublicKey().getEncoded());
         b.timestamp = System.currentTimeMillis();
-        for (String key : b.getTransactionKeys()) {
+        List<String> toRemove = new ArrayList<>();
+        for (String key : ki.getTransMan().getPending().keySet()) {
+
 
             if(ki.getTransMan().getUTXOSpentMap().containsKey(key))
-            ki.getTransMan().getPending().remove(key);
+            toRemove.add(key);
         }
 
+        for(String key:toRemove)
+        {
+            ki.getTransMan().getPending().remove(key);
+        }
         b.addAll(ki.getTransMan().getPending());
 
         b.height = currentHeight().add(BigInteger.ONE);

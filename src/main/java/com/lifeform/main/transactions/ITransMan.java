@@ -2,6 +2,7 @@ package com.lifeform.main.transactions;
 
 import org.mapdb.DB;
 
+import java.math.BigInteger;
 import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
 
@@ -14,7 +15,7 @@ public interface ITransMan {
 
     Map<String,MKiTransaction> getPending();
 
-    Map<String,MKiTransaction> getInputs(String key);
+    Map<String,BigInteger> getInputs(String key);
 
     void close();
 

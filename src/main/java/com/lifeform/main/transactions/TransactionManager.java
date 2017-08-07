@@ -90,8 +90,18 @@ public class TransactionManager  implements  ITransMan{
         List<String> walletUTXO = JSONManager.parseJSONToList(utxoMap.get(t.sender));
         if(walletUTXO == null) return false; //no inputs
         ki.getMainLog().info("mark 1");
+        for(String trans:walletUTXO)
+        {
+            ki.getMainLog().info("Trans in wallet: " + trans);
+        }
+        if(t.inputs.isEmpty())
+        {
+            ki.getMainLog().info("input empty");
+            return false;
+        }
         for(String trans: t.inputs.keySet())
         {
+            ki.getMainLog().info("Input is: " + trans + "\n Amount: " + getUTXOValueMap().get(trans));
             if(!walletUTXO.contains(trans)) return false; //not your transaction
             ki.getMainLog().info("mark 2");
             //if(!utxoMap.containsKey(trans)) return false; //not unspent
@@ -127,15 +137,15 @@ public class TransactionManager  implements  ITransMan{
     }
 
     @Override
-    public Map<String, MKiTransaction> getInputs(String key) {
-        Map<String,MKiTransaction> inputs = new HashMap<>();
+    public Map<String, BigInteger> getInputs(String key) {
+        Map<String,BigInteger> inputs = new HashMap<>();
 
         List<String> IDs = JSONManager.parseJSONToList(utxoMap.get(key));
         if(IDs == null) return null;
         for(String ID:IDs)
         {
             if(!getUTXOSpentMap().get(ID))
-            inputs.put(ID,ki.getChainMan().getByHeight(new BigInteger(utxoMap.get(ID))).getTransaction(ID));
+            inputs.put(ID,new BigInteger(getUTXOValueMap().get(ID)));
         }
 
 

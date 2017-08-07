@@ -34,7 +34,7 @@ public class Ki extends Thread implements IKi {
     private IKi ki = this;
     private MainGUI gui;
     private boolean run = true;
-    public static final String VERSION = "0.2.0-ALPHA";
+    public static final String VERSION = "0.3.1-ALPHA";
     private boolean relay = false;
     public Ki(Options o)
     {

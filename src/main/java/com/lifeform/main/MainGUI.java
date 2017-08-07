@@ -82,8 +82,8 @@ public class MainGUI {
 
                     trans.height = ki.getChainMan().currentHeight();
 
-
-                    Map<String, MKiTransaction> inputs = new HashMap<>(), all = new HashMap<>();
+                    amount = amount.add(trans.relayFee).add(trans.transactionFee);
+                    Map<String, BigInteger> inputs = new HashMap<>(), all = new HashMap<>();
                     BigInteger inputAmount = BigInteger.ZERO;
                     all = ki.getTransMan().getInputs(Utils.toHexArray(ki.getEncryptMan().getPublicKey().getEncoded()));
                     if (all == null) {
@@ -91,11 +91,13 @@ public class MainGUI {
                         return;
                     }
                     for (String key : all.keySet()) {
+                        ki.getMainLog().info("Trans key is: " + key);
                         if (all.get(key) == null) continue;
                         inputs.put(key, all.get(key));
-                        inputAmount = inputAmount.add(all.get(key).amount);
-                        ki.getMainLog().info("Amount of input is: " + all.get(key).amount);
+                        inputAmount = inputAmount.add(all.get(key));
+                        ki.getMainLog().info("Amount of input is: " + all.get(key));
                         if (inputAmount.compareTo(amount) >= 0) {
+                            ki.getMainLog().info("found enough inputs");
                             break;
                         }
                     }
@@ -104,8 +106,16 @@ public class MainGUI {
                         ki.getMainLog().warn("Insufficient funds to complete transaction");
                         return;
                     }
+                    Map<String,MKiTransaction> i2 = new HashMap<>();
+                    for(String key: inputs.keySet())
+                    {
+                        MKiTransaction t2 = new MKiTransaction();
+                        t2.ID = key;
+                        t2.amount = new BigInteger(ki.getTransMan().getUTXOValueMap().get(key));
+                        i2.put(key,t2);
 
-                    trans.inputs = inputs;
+                    }
+                    trans.inputs = i2;
                     trans.change = trans.calculateChange();
                     trans.ID = EncryptionManager.sha256(trans.preSigAll());
                     trans.preSig = ki.getEncryptMan().sign(trans.preSigAll());
