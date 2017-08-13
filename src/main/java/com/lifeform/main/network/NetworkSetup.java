@@ -2,7 +2,9 @@ package com.lifeform.main.network;
 
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryonet.EndPoint;
+import com.lifeform.main.transactions.ITrans;
 import com.lifeform.main.transactions.MKiTransaction;
+import com.lifeform.main.transactions.Transaction;
 
 import java.math.BigInteger;
 import java.util.HashMap;
@@ -23,7 +25,8 @@ public class NetworkSetup {
         kryo.register(BadBlock.class);
         kryo.register(BigInteger.class);
         kryo.register(OnFork.class);
-        kryo.register(MKiTransaction.class);
+        kryo.register(ITrans.class);
+        kryo.register(Transaction.class);
         kryo.register(Map.class);
         kryo.register(NewTransactionPacket.class);
         kryo.register(BlockProp.class);

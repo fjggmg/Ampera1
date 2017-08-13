@@ -5,7 +5,7 @@ import com.lifeform.main.data.EncryptionManager;
 import com.lifeform.main.data.JSONManager;
 import com.lifeform.main.data.Utils;
 import com.lifeform.main.data.files.StringFileHandler;
-import com.lifeform.main.transactions.MKiTransaction;
+import com.lifeform.main.transactions.*;
 import org.json.simple.JSONObject;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
@@ -29,7 +29,7 @@ public class ChainManager implements IChainMan {
     private IKi ki;
     private boolean canMine = true;
     Block current;
-    BigInteger currentDifficulty = new BigInteger("00000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF",16);
+    BigInteger currentDifficulty = new BigInteger("00000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF",16);
     BigInteger currentHeight = BigInteger.valueOf(-1L);
     DB csDB;
     DB tmDB;
@@ -90,6 +90,7 @@ public class ChainManager implements IChainMan {
     public synchronized boolean addBlock(Block block){
        
         if(!verifyBlock(block)) return false; else exMap.put(block.ID,block.toJSON());
+        ki.blockTick();
         current = block;
         currentHeight = block.height;
         blockchainMap.put(block.ID,block);
@@ -113,8 +114,7 @@ public class ChainManager implements IChainMan {
             addBlock(b);
             verifyLater.remove(b.height);
         }
-        ki.getTransMan().getUTXODB().commit();
-        ki.getTransMan().getUTXOValueDB().commit();
+
         return true;
     }
 
@@ -185,83 +185,43 @@ public class ChainManager implements IChainMan {
     public synchronized boolean softVerifyBlock(Block block) {
 
         Block current = getByHeight(block.height.subtract(BigInteger.ONE));
-        boolean foundCoinbase = false;
+        //ki.getMainLog().info("verifying block...");
         if(block.height.compareTo(currentHeight()) < 0)
         {
             //this is a "replacement" for an older block, we need the rest of the chain to verify this is actually part of it
             return false;
         }
-        //ki.getMainLog().info("Forward moving block");
-        if(block.getTransactionKeys().isEmpty()) return false; //WE NEED A COINBASE TRANSACTION FUCKER
-        //ki.getMainLog().info("has transactions");
-        //ki.getMainLog().info("Height is: " + block.height);
+        //ki.getMainLog().info("Height is ok");
+
         if(current == null && block.height.compareTo(BigInteger.ZERO) != 0)
         {
-            //we do not have the block before this one yet
             return false;
         }
-        //ki.getMainLog().info("we have the block before this one");
-        /*
-        THIS SHIT BELONGS WITH THE NETWORK FOR NEW BLOCKS YOU MOTHER FUCKING ASSHOLE
-        if(block.timestamp < System.currentTimeMillis() - 20000L) return false; //past dated block
-        if(block.timestamp > System.currentTimeMillis() + 120000L) return false; //future dated block
-        */
-        //ki.getMainLog().info("ID is: " + block.ID);
+        //ki.getMainLog().info("Height check 2 is ok");
         if(current != null && !block.prevID.equalsIgnoreCase(current.ID)) return false;
-        String hash = EncryptionManager.sha256(block.header());
-        //ki.getMainLog().info("Previous ID is ok");
-        //ki.getMainLog().info("Hash is: " + hash);
+        //ki.getMainLog().info("prev ID is ok");
+        String hash = EncryptionManager.sha512(block.header());
         if(!block.ID.equals(hash)) return false;
         //ki.getMainLog().info("ID is ok");
-        //System.out.println("checking difficulty");
-        //System.out.println(EncryptionManager.sha256(block.header()));
         if(new BigInteger(Utils.toByteArray(hash)).abs().compareTo(currentDifficulty) > 0) return false;
         //ki.getMainLog().info("Solves for difficulty");
+        if(block.getCoinbase() == null) return false;
+        //ki.getMainLog().info("coinbase is in block");
+        BigInteger fees = BigInteger.ZERO;
 
-        for(String trans:block.getTransactionKeys())
+        for(String t:block.getTransactionKeys())
         {
-            if(block.getTransaction(trans).sender.equals("coinbase"))
-            {
-                //coinbase transaction
-                MKiTransaction t = block.getTransaction(trans);
-                BigInteger tFees = BigInteger.ZERO;
-                for(String tFeeID:block.getTransactionKeys())
-                {
-                    tFees = tFees.add(block.getTransaction(tFeeID).transactionFee);
-                }
-                if(!t.receiver.equals(block.solver)) return false; //solver not on coinbase
-                //ki.getMainLog().info("mark 1");
-                if(t.amount.subtract(tFees).compareTo(blockRewardForHeight(block.height)) != 0) return false; // wrong reward
-                //ki.getMainLog().info("mark 2");
-                if(t.relayer != null) return false; //coinbase doesn't pay for relay
-                //ki.getMainLog().info("mark 3");
-                if(t.transactionFee.compareTo(BigInteger.ZERO) != 0) return false; //obviously no transaction fee as this is the block we're solving
-                //ki.getMainLog().info("mark 4");
-                if(t.relayFee.compareTo(BigInteger.ZERO) != 0) return false; //not allowing relay fee either for possible abuse
-                //ki.getMainLog().info("mark 5");
-                if(t.change.compareTo(BigInteger.ZERO) != 0) return false; //no change on coinbase
-                //ki.getMainLog().info("mark 6");
-                if(t.height.compareTo(block.height) != 0) return false; //for ease of lookup should be this blocks height
-                //ki.getMainLog().info("mark 7");
-                if(t.inputs != null) if(!t.inputs.isEmpty()) return false; //inputs should be null or empty
-                //ki.getMainLog().info("mark 8");
-                if(t.relaySignature != null) if(!t.relaySignature.isEmpty()) return false; //no relay, no sig
-                //ki.getMainLog().info("mark 9");
-                if(!ki.getEncryptMan().verifySig(t.all(),t.signature,t.receiver)) return false; //should be signed by solver once done
-                //ki.getMainLog().info("mark 10");
-
-
-                foundCoinbase = true;
-
-
-            }else {
-                if (!ki.getTransMan().softVerifyTransaction(block.getTransaction(trans))) return false;
-
-            }
+            fees = fees.add(block.getTransaction(t).getFee());
         }
 
-
-        return foundCoinbase;
+        if(!ki.getTransMan().verifyCoinbase(block.getCoinbase(),block.height,fees)) return false;
+        //ki.getMainLog().info("Coinbase verifies ok");
+        for(String t: block.getTransactionKeys())
+        {
+            if(!ki.getTransMan().verifyTransaction(block.getTransaction(t))) return false;
+        }
+        //ki.getMainLog().info("transactions verify ok");
+        return true;
     }
 
     private synchronized int getCurrentSegment()
@@ -273,155 +233,18 @@ public class ChainManager implements IChainMan {
 
     public synchronized boolean verifyBlock(Block block){
 
-        Block current = getByHeight(block.height.subtract(BigInteger.ONE));
-        boolean foundCoinbase = false;
-        if(block.height.compareTo(currentHeight()) < 0)
+        if(!softVerifyBlock(block)) return false;
+        BigInteger fees = BigInteger.ZERO;
+
+        for(String t:block.getTransactionKeys())
         {
-            //this is a "replacement" for an older block, we need the rest of the chain to verify this is actually part of it
-            return false;
+            fees = fees.add(block.getTransaction(t).getFee());
         }
-        //ki.getMainLog().info("Forward moving block");
-        if(block.getTransactionKeys().isEmpty()) return false; //WE NEED A COINBASE TRANSACTION FUCKER
-        //ki.getMainLog().info("has transactions");
-        //ki.getMainLog().info("Height is: " + block.height);
-        if(current == null && block.height.compareTo(BigInteger.ZERO) != 0)
+
+        if(!ki.getTransMan().addCoinbase(block.getCoinbase(),block.height,fees)) return false;
+        for(String key:block.getTransactionKeys())
         {
-            //we do not have the block before this one yet
-            return false;
-        }
-        //ki.getMainLog().info("we have the block before this one");
-        /*
-        THIS SHIT BELONGS WITH THE NETWORK FOR NEW BLOCKS YOU MOTHER FUCKING ASSHOLE
-        if(block.timestamp < System.currentTimeMillis() - 20000L) return false; //past dated block
-        if(block.timestamp > System.currentTimeMillis() + 120000L) return false; //future dated block
-        */
-        //ki.getMainLog().info("ID is: " + block.ID);
-        if(current != null && !block.prevID.equalsIgnoreCase(current.ID)) return false;
-        String hash = EncryptionManager.sha256(block.header());
-        //ki.getMainLog().info("Previous ID is ok");
-        //ki.getMainLog().info("Hash is: " + hash);
-        if(!block.ID.equals(hash)) return false;
-        //ki.getMainLog().info("ID is ok");
-        //System.out.println("checking difficulty");
-        //System.out.println(EncryptionManager.sha256(block.header()));
-        if(new BigInteger(Utils.toByteArray(hash)).abs().compareTo(currentDifficulty) > 0) return false;
-        //ki.getMainLog().info("Solves for difficulty");
-
-        for(String trans:block.getTransactionKeys())
-        {
-            if(block.getTransaction(trans).sender.equals("coinbase"))
-            {
-                //coinbase transaction
-                MKiTransaction t = block.getTransaction(trans);
-                BigInteger tFees = BigInteger.ZERO;
-                for(String tFeeID:block.getTransactionKeys())
-                {
-                    tFees = tFees.add(block.getTransaction(tFeeID).transactionFee);
-                }
-                if(!t.receiver.equals(block.solver)) return false; //solver not on coinbase
-                //ki.getMainLog().info("mark 1");
-                if(t.amount.subtract(tFees).compareTo(blockRewardForHeight(block.height)) != 0) return false; // wrong reward
-                //ki.getMainLog().info("mark 2");
-                if(t.relayer != null) return false; //coinbase doesn't pay for relay
-                //ki.getMainLog().info("mark 3");
-                if(t.transactionFee.compareTo(BigInteger.ZERO) != 0) return false; //obviously no transaction fee as this is the block we're solving
-                //ki.getMainLog().info("mark 4");
-                if(t.relayFee.compareTo(BigInteger.ZERO) != 0) return false; //not allowing relay fee either for possible abuse
-                //ki.getMainLog().info("mark 5");
-                if(t.change.compareTo(BigInteger.ZERO) != 0) return false; //no change on coinbase
-                //ki.getMainLog().info("mark 6");
-                if(t.height.compareTo(block.height) != 0) return false; //for ease of lookup should be this blocks height
-                //ki.getMainLog().info("mark 7");
-                if(t.inputs != null) if(!t.inputs.isEmpty()) return false; //inputs should be null or empty
-                //ki.getMainLog().info("mark 8");
-                if(t.relaySignature != null) if(!t.relaySignature.isEmpty()) return false; //no relay, no sig
-                //ki.getMainLog().info("mark 9");
-                if(!ki.getEncryptMan().verifySig(t.all(),t.signature,t.receiver)) return false; //should be signed by solver once done
-                //ki.getMainLog().info("mark 10");
-
-                foundCoinbase = true;
-
-
-            }else {
-                if (!ki.getTransMan().softVerifyTransaction(block.getTransaction(trans))) return false;
-            }
-        }
-        for(String trans:block.getTransactionKeys())
-        {
-            if(block.getTransaction(trans).sender.equals("coinbase"))
-            {
-                //coinbase transaction
-                MKiTransaction t = block.getTransaction(trans);
-                BigInteger tFees = BigInteger.ZERO;
-                for(String tFeeID:block.getTransactionKeys())
-                {
-                    tFees = tFees.add(block.getTransaction(tFeeID).transactionFee);
-                }
-
-                ki.getTransMan().getUTXOValueMap().put(trans,t.amount.add(tFees).toString());
-                ki.getTransMan().getUTXOMap().put(trans,block.height.toString());
-                ki.getTransMan().getUTXOSpentMap().put(trans,false);
-                if (ki.getTransMan().getUTXOMap().get(block.getTransaction(trans).receiver) != null) {
-                    List<String> inputs = JSONManager.parseJSONToList(ki.getTransMan().getUTXOMap().get(block.getTransaction(trans).receiver));
-                    inputs.add(trans);
-                    ki.getTransMan().getUTXOMap().put(block.getTransaction(trans).receiver, JSONManager.parseListToJSON(inputs).toJSONString());
-                } else {
-                    List<String> inputs = new ArrayList<>();
-                    inputs.add(trans);
-                    ki.getTransMan().getUTXOMap().put(block.getTransaction(trans).receiver, JSONManager.parseListToJSON(inputs).toJSONString());
-
-                }
-
-
-
-            }else {
-                if (!ki.getTransMan().verifyAndCommitTransaction(block.getTransaction(trans))) return false;
-                else {
-                    ki.getTransMan().getUTXOMap().put(trans, block.height.toString());
-                    ki.getTransMan().getUTXOMap().put(trans + "change", block.height.toString());
-                    ki.getTransMan().getUTXOMap().put(trans + "rfee", block.height.toString());
-                    ki.getTransMan().getUTXOValueMap().put(trans, block.getTransaction(trans).amount.toString());
-                    ki.getTransMan().getUTXOValueMap().put(trans + "change", block.getTransaction(trans).change.toString());
-                    ki.getTransMan().getUTXOValueMap().put(trans + "rfee", block.getTransaction(trans).relayFee.toString());
-                    ki.getTransMan().getUTXOSpentMap().put(trans,false);
-                    ki.getTransMan().getUTXOSpentMap().put(trans + "change",false);
-                    ki.getTransMan().getUTXOSpentMap().put(trans + "rfee",false);
-                    //ki.getTransMan().getUTXOChangeValueMap().put(trans,block.getTransaction(trans).change.toString());
-
-                    if (ki.getTransMan().getUTXOMap().get(block.getTransaction(trans).receiver) != null) {
-                        List<String> inputs = JSONManager.parseJSONToList(ki.getTransMan().getUTXOMap().get(block.getTransaction(trans).receiver));
-                        inputs.add(trans);
-                        ki.getTransMan().getUTXOMap().put(block.getTransaction(trans).receiver, JSONManager.parseListToJSON(inputs).toJSONString());
-
-                    } else {
-                        List<String> inputs = new ArrayList<>();
-                        inputs.add(trans);
-                        ki.getTransMan().getUTXOMap().put(block.getTransaction(trans).receiver, JSONManager.parseListToJSON(inputs).toJSONString());
-                    }
-                    if (ki.getTransMan().getUTXOMap().get(block.getTransaction(trans).sender) != null) {
-                        List<String> inputs = JSONManager.parseJSONToList(ki.getTransMan().getUTXOMap().get(block.getTransaction(trans).sender));
-                        inputs.add(trans + "change");
-                        ki.getTransMan().getUTXOMap().put(block.getTransaction(trans).sender, JSONManager.parseListToJSON(inputs).toJSONString());
-
-                    } else {
-                        List<String> inputs = new ArrayList<>();
-                        inputs.add(trans + "change");
-                        ki.getTransMan().getUTXOMap().put(block.getTransaction(trans).sender, JSONManager.parseListToJSON(inputs).toJSONString());
-                    }
-                    if (ki.getTransMan().getUTXOMap().get(block.getTransaction(trans).relayer) != null) {
-                        List<String> inputs = JSONManager.parseJSONToList(ki.getTransMan().getUTXOMap().get(block.getTransaction(trans).relayer));
-                        inputs.add(trans + "rfee");
-                        ki.getTransMan().getUTXOMap().put(block.getTransaction(trans).relayer, JSONManager.parseListToJSON(inputs).toJSONString());
-
-                    } else {
-                        List<String> inputs = new ArrayList<>();
-                        inputs.add(trans + "rfee");
-                        ki.getTransMan().getUTXOMap().put(block.getTransaction(trans).relayer, JSONManager.parseListToJSON(inputs).toJSONString());
-                    }
-
-
-                }
-            }
+            if(!ki.getTransMan().addTransaction(block.getTransaction(key))) return false;
         }
         if(block.height.mod(BigInteger.valueOf(1000L)).equals(BigInteger.valueOf(0)) && block.height.compareTo(BigInteger.ZERO) != 0)
         {
@@ -429,7 +252,8 @@ public class ChainManager implements IChainMan {
                 recalculateDifficulty();
             }
         }
-        return foundCoinbase;
+
+        return true;
     }
 
     public synchronized BigInteger currentHeight()
@@ -450,10 +274,7 @@ public class ChainManager implements IChainMan {
        return Block.fromJSON(line);
     }
 
-    public Block getBlock(long height)
-    {
-        return null;
-    }
+
 
     private synchronized void recalculateDifficulty()
     {
@@ -481,7 +302,7 @@ public class ChainManager implements IChainMan {
 
     public static BigInteger blockRewardForHeight(BigInteger height)
     {
-        if(height.equals(BigInteger.ZERO)) return BigInteger.valueOf(3800000000000000L);
+        if(height.equals(BigInteger.ZERO)) return BigInteger.valueOf(4000000000000000L);
         return BigInteger.valueOf(100L).multiply(BigInteger.valueOf(13934304L).subtract(height).multiply(BigInteger.valueOf(100000000L)).divide(BigInteger.valueOf(13934304L)));
     }
 
@@ -507,6 +328,7 @@ public class ChainManager implements IChainMan {
 
     }
 
+    @Deprecated
     private Map<BigInteger,Block> fromJSONheightOld(String json)
     {
         Map<String,String> map = JSONManager.parseJSONtoMap(json);
@@ -567,50 +389,53 @@ public class ChainManager implements IChainMan {
     @Override
     public synchronized Block formEmptyBlock() {
         Block b = new Block();
-        b.solver = Utils.toHexArray(ki.getEncryptMan().getPublicKey().getEncoded());
+        b.solver = ki.getEncryptMan().getPublicKeyString();
         b.timestamp = System.currentTimeMillis();
-        List<String> toRemove = new ArrayList<>();
-        for (String key : ki.getTransMan().getPending().keySet()) {
 
-
-            if(ki.getTransMan().getUTXOSpentMap().containsKey(key))
-            toRemove.add(key);
-        }
-
-        for(String key:toRemove)
+        Map<String,ITrans> transactions = new HashMap<>();
+        for(ITrans trans:ki.getTransMan().getPending())
         {
-            ki.getTransMan().getPending().remove(key);
+            transactions.put(trans.getID(),trans);
         }
-        b.addAll(ki.getTransMan().getPending());
+        b.addAll(transactions);
 
         b.height = currentHeight().add(BigInteger.ONE);
+        //if(b.height.compareTo(BigInteger.ZERO) == 0) b.height = b.height.add(BigInteger.ONE);
         if (!(currentHeight().compareTo(BigInteger.valueOf(-1L)) == 0)) {
             if (getByHeight(currentHeight()) == null) ki.getMainLog().info("Current is null");
             b.prevID = getByHeight(currentHeight()).ID;
         } else
             b.prevID = "0";
 
-        MKiTransaction coinbase = new MKiTransaction();
-        coinbase.height = b.height;
-        BigInteger tFees = BigInteger.ZERO;
-        for (String tFeeID : b.getTransactionKeys()) {
-            tFees = tFees.add(b.getTransaction(tFeeID).transactionFee);
+        BigInteger fees = BigInteger.ZERO;
+        for(String t:transactions.keySet())
+        {
+            fees = fees.add(transactions.get(t).getFee());
         }
-        coinbase.amount = ChainManager.blockRewardForHeight(b.height).add(tFees);
-        coinbase.receiver = Utils.toHexArray(ki.getEncryptMan().getPublicKey().getEncoded());
-        coinbase.relayFee = BigInteger.ZERO;
-        coinbase.transactionFee = BigInteger.ZERO;
-        coinbase.change = BigInteger.ZERO;
+        Output o = new Output(blockRewardForHeight(currentHeight().add(BigInteger.ONE)).add(fees),ki.getAddMan().getMainAdd(), Token.ORIGIN,0);
+        List<Output> outputs = new ArrayList<>();
+        outputs.add(o);
+        int i = 1;
+        if(b.height.compareTo(BigInteger.ZERO) == 0)
+        {
+            for(Token t:Token.values())
+            {
+                if(!t.equals(Token.ORIGIN)) {
+                    outputs.add(new Output(BigInteger.valueOf(Long.MAX_VALUE), ki.getAddMan().getMainAdd(), t, i));
+                    i++;
+                }
+            }
+        }
+        ITrans coinbase = new Transaction("coinbase",0,new HashMap<String,String>(),outputs,new ArrayList<Input>(),new HashMap<>(),new ArrayList<String>());
 
-        coinbase.sender = "coinbase";
-        coinbase.ID = EncryptionManager.sha256(coinbase.all());
-        coinbase.signature = ki.getEncryptMan().sign(coinbase.all());
-        b.addTransaction(coinbase);
-        b.ID = EncryptionManager.sha256(b.header());
+        b.setCoinbase(coinbase);
+        //b.addTransaction(coinbase);
+        b.ID = EncryptionManager.sha512(b.header());
 
         return b;
     }
 
+    @Deprecated
     private Map<String,Block> fromJSONOld(String json)
     {
         Map<String,String> map = JSONManager.parseJSONtoMap(json);
@@ -627,6 +452,7 @@ public class ChainManager implements IChainMan {
     }
 
 
+    @Deprecated
     private void fromJSON(String json)
     {
         Map<String,String> map = JSONManager.parseJSONtoMap(json);

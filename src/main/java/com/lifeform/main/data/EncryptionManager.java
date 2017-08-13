@@ -2,9 +2,11 @@ package com.lifeform.main.data;
 
 import com.lifeform.main.IKi;
 import com.lifeform.main.data.files.StringFileHandler;
+import org.bouncycastle.jcajce.provider.digest.SHA3;
 
 import java.io.UnsupportedEncodingException;
 import java.security.*;
+import java.security.spec.ECGenParameterSpec;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
@@ -15,6 +17,8 @@ import java.security.spec.X509EncodedKeySpec;
 public class EncryptionManager  implements IEncryptMan{
 
     public static final String KEY_FILE = "key";
+    public static final String KEY_PADDING = "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE";
+    public static final String KEY_PROTOCOL = "brainpoolp512t1";
     private IKi ki;
     public EncryptionManager(IKi ki){
         this.ki = ki;
@@ -50,6 +54,38 @@ public class EncryptionManager  implements IEncryptMan{
         return 0;
     }
 
+    public static String sha512(String input)
+    {
+        SHA3.DigestSHA3 md = null;
+        try {
+            md = new SHA3.Digest512();
+            md.update(input.getBytes("UTF-8"));
+            byte[] digest = md.digest();
+            //logger.debug("Size of hash is: " + digest.length);
+            return Utils.toHexArray(digest);
+        } catch (UnsupportedEncodingException e) {
+
+
+        }
+        return null;
+    }
+
+    public static String sha224(String input)
+    {
+        SHA3.DigestSHA3 md = null;
+        try {
+            md = new SHA3.Digest224();
+            md.update(input.getBytes("UTF-8"));
+            byte[] digest = md.digest();
+            //logger.debug("Size of hash is: " + digest.length);
+            return Utils.toHexArray(digest);
+        } catch (UnsupportedEncodingException e) {
+
+
+        }
+        return null;
+    }
+
     public static String sha256(String input)
     {
         MessageDigest md = null;
@@ -59,9 +95,11 @@ public class EncryptionManager  implements IEncryptMan{
             byte[] digest = md.digest();
             //logger.debug("Size of hash is: " + digest.length);
             return Utils.toHexArray(digest);
-        } catch (NoSuchAlgorithmException | UnsupportedEncodingException e) {
+        } catch (UnsupportedEncodingException e) {
 
 
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
         }
         return null;
     }
@@ -70,11 +108,11 @@ public class EncryptionManager  implements IEncryptMan{
     private KeyPair pair;
     public KeyPair generateKeys() {
         try {
-            //TODO: investigate if we should be using bouncycastle
-            KeyPairGenerator gen = KeyPairGenerator.getInstance("EC");
+            KeyPairGenerator gen = KeyPairGenerator.getInstance("EC","BC");
 
             SecureRandom random = SecureRandom.getInstance("SHA1PRNG");
-            gen.initialize(256,random);
+            ECGenParameterSpec ecSpec = new ECGenParameterSpec(KEY_PROTOCOL);
+            gen.initialize(ecSpec,random);
 
             KeyPair pair = gen.generateKeyPair();
             this.pair = pair;
@@ -82,6 +120,8 @@ public class EncryptionManager  implements IEncryptMan{
         } catch (NoSuchAlgorithmException e) {
             //logger.error(e.getMessage());
             //logger.debug("No EC algorithm found.");
+        } catch (InvalidAlgorithmParameterException | NoSuchProviderException e) {
+            e.printStackTrace();
         }
         return null;
     }
@@ -91,17 +131,32 @@ public class EncryptionManager  implements IEncryptMan{
         return pair;
     }
 
-
-    public PublicKey pubKeyFromString(String key) {
+    public PublicKey pubKeyFromShortenedString(String key) {
 
         KeyFactory keyFactory = null;
         try {
-            keyFactory = KeyFactory.getInstance("ECDSA");
-
-            X509EncodedKeySpec publicKeySpec = new X509EncodedKeySpec(Utils.toByteArray(key));
+            keyFactory = KeyFactory.getInstance("ECDSA","BC");
+            key = KEY_PADDING + key;
+            X509EncodedKeySpec publicKeySpec = new X509EncodedKeySpec(Utils.fromBase64(key));
             PublicKey publicKey = keyFactory.generatePublic(publicKeySpec);
             return publicKey;
-        } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
+        } catch (NoSuchAlgorithmException | InvalidKeySpecException | NoSuchProviderException e) {
+            e.printStackTrace();
+            //logger.error(e.getMessage());
+            //logger.debug("Could not read public key from string");
+        }
+        return null;
+    }
+
+    public static PublicKey pubKeyFromString(String key) {
+
+        KeyFactory keyFactory = null;
+        try {
+            keyFactory = KeyFactory.getInstance("ECDSA","BC");
+            X509EncodedKeySpec publicKeySpec = new X509EncodedKeySpec(Utils.fromBase64(key));
+            PublicKey publicKey = keyFactory.generatePublic(publicKeySpec);
+            return publicKey;
+        } catch (NoSuchAlgorithmException | InvalidKeySpecException | NoSuchProviderException e) {
             e.printStackTrace();
             //logger.error(e.getMessage());
             //logger.debug("Could not read public key from string");
@@ -113,10 +168,10 @@ public class EncryptionManager  implements IEncryptMan{
     public PrivateKey privKeyFromString(String key) {
 
 
-        byte[] encodedPrivateKey = Utils.toByteArray(key);
+        byte[] encodedPrivateKey = Utils.fromBase64(key);
         KeyFactory keyFactory = null;
         try {
-            keyFactory = KeyFactory.getInstance("ECDSA");
+            keyFactory = KeyFactory.getInstance("ECDSA","BC");
             PKCS8EncodedKeySpec privateKeySpec = new PKCS8EncodedKeySpec(
                     encodedPrivateKey);
             PrivateKey privateKey = keyFactory.generatePrivate(privateKeySpec);
@@ -124,6 +179,8 @@ public class EncryptionManager  implements IEncryptMan{
         } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
             //logger.error(e.getMessage());
             //logger.debug("Could not read private key from string");
+        } catch (NoSuchProviderException e) {
+            e.printStackTrace();
         }
         return null;
 
@@ -159,15 +216,21 @@ public class EncryptionManager  implements IEncryptMan{
     public void saveKeys()
     {
         StringFileHandler fh = new StringFileHandler(ki,KEY_FILE + ".pubk");
-        fh.replaceLine(0,Utils.toHexArray(getPublicKey().getEncoded()));
+        fh.replaceLine(0,Utils.toBase64(getPublicKey().getEncoded()));
         fh = new StringFileHandler(ki,KEY_FILE + ".privk");
-        fh.replaceLine(0,Utils.toHexArray(getPrivateKey().getEncoded()));
+        fh.replaceLine(0,Utils.toBase64(getPrivateKey().getEncoded()));
         //trion.getDataMan().saveStringToFlatFile("pub." + KEY_FILE, Utils.toHexArray(getPublicKey().getEncoded()));
         //trion.getDataMan().saveStringToFlatFile("priv." + KEY_FILE, Utils.toHexArray(getPrivateKey().getEncoded()));
         //logger.debug("Saved keys.");
     }
 
 
+    public String getPublicKeyString()
+    {
+        String key = Utils.toBase64(getPublicKey().getEncoded());
+        key = key.replaceFirst(KEY_PADDING,"");
+        return key;
+    }
     public String sign(String toSign) {
         try {
             Signature sig = Signature.getInstance("SHA1withECDSA");
@@ -184,7 +247,7 @@ public class EncryptionManager  implements IEncryptMan{
     }
 
 
-    public boolean verifySig(String signed, String sig,String pubKey) {
+    public static boolean verifySig(String signed, String sig,String pubKey) {
         try {
             //logger.debug("Signed: " + signed);
             //logger.debug("Sig: " + sig);

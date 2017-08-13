@@ -39,7 +39,7 @@ public class Miner extends Thread {
                     Block b = ki.getChainMan().formEmptyBlock();
 
                     canMine = ki.getChainMan().canMine();
-                    b.ID = EncryptionManager.sha256(b.header());
+                    b.ID = EncryptionManager.sha512(b.header());
                     while ((b.ID != null) && !(new BigInteger(b.ID,16).compareTo(ki.getChainMan().getCurrentDifficulty()) < 0) && canMine) {
                         if (!mining) break;
                         b.timestamp = System.currentTimeMillis();
@@ -50,10 +50,13 @@ public class Miner extends Thread {
                         if (guess.compareTo(maxGuess) > 0) {
                             guess = guessSet;
                             System.out.println("1Mhash");
+                            System.out.println("Current diff: " + ki.getChainMan().getCurrentDifficulty());
+
                         }
                         b.payload = guess.toString();
 
-                        b.ID = EncryptionManager.sha256(b.header());
+                        b.ID = EncryptionManager.sha512(b.header());
+                        //System.out.println(b.ID);
 
                         if(foundBlock)
                             break;

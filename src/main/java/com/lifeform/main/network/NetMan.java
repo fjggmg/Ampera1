@@ -54,7 +54,7 @@ public class NetMan extends Thread implements QueuedNetworkManager {
                 public void connected(Connection connection)
                 {
                     Handshake hs = new Handshake();
-                    hs.ID = Utils.toHexArray(ki.getEncryptMan().getPublicKey().getEncoded());
+                    hs.ID = ki.getEncryptMan().getPublicKeyString();
                     hs.version = Ki.VERSION;
                     hs.currentHeight = ki.getChainMan().currentHeight();
                     if(ki.getChainMan().currentHeight().compareTo(BigInteger.valueOf(-1L)) == 0)
@@ -92,7 +92,7 @@ public class NetMan extends Thread implements QueuedNetworkManager {
                         ConnectionManager cm = new ConnMan(ki, client, ((Handshake) o).ID);
                         client.addListener((ConnMan) cm);
                         Handshake hs = new Handshake();
-                        hs.ID = Utils.toHexArray(ki.getEncryptMan().getPublicKey().getEncoded());
+                        hs.ID = ki.getEncryptMan().getPublicKeyString();
                         hs.version = Ki.VERSION;
                         if (ki.getChainMan().currentHeight().compareTo(BigInteger.valueOf(-1L)) == 0) {
                             hs.mostRecentBlock = "";
@@ -258,9 +258,9 @@ public class NetMan extends Thread implements QueuedNetworkManager {
 
                             Socket s = ss.accept();
 
-                            ConnectionManager cm = new ConnMan(ki,s,EncryptionManager.sha256(s.getInetAddress().getHostAddress()));
+                            ConnectionManager cm = new ConnMan(ki,s,EncryptionManager.sha512(s.getInetAddress().getHostAddress()));
                             cm.listen();
-                            connectionMap.put(EncryptionManager.sha256(s.getInetAddress().getHostAddress()),cm);
+                            connectionMap.put(EncryptionManager.sha512(s.getInetAddress().getHostAddress()),cm);
 
                         } catch (IOException e) {
                             e.printStackTrace();
@@ -279,9 +279,9 @@ public class NetMan extends Thread implements QueuedNetworkManager {
                    Socket s = connect(address, PORT);
 
                    if (s != null) {
-                       ConnectionManager cm = new ConnMan(ki, s,EncryptionManager.sha256(s.getInetAddress().getHostAddress()));
+                       ConnectionManager cm = new ConnMan(ki, s,EncryptionManager.sha512(s.getInetAddress().getHostAddress()));
                        cm.listen();
-                       connectionMap.put(EncryptionManager.sha256(address), cm);
+                       connectionMap.put(EncryptionManager.sha512(address), cm);
                        ki.getMainLog().info("Connected to: " + address);
                        BlockRequestPacket brp = new BlockRequestPacket(ki);
                        Map<String,String> dat = new HashMap<>();

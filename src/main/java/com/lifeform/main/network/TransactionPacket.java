@@ -2,10 +2,10 @@ package com.lifeform.main.network;
 
 import com.lifeform.main.IKi;
 import com.lifeform.main.data.JSONManager;
+import com.lifeform.main.transactions.ITrans;
 import com.lifeform.main.transactions.MKiTransaction;
-import com.lifeform.main.transactions.TransactionManager;
+import com.lifeform.main.transactions.Transaction;
 import org.bitbucket.backspace119.generallib.io.network.ConnectionManager;
-import org.bitbucket.backspace119.generallib.io.network.NetworkManager;
 import org.bitbucket.backspace119.generallib.io.network.Packet;
 
 import java.util.Map;
@@ -39,9 +39,9 @@ public class TransactionPacket implements Packet {
     @Override
     public void process(ConnectionManager cm) {
         ki.getMainLog().info("Transaction received from network: " + data.get("transaction"));
-        MKiTransaction trans = MKiTransaction.fromJSON(data.get("transaction"));
-        if(ki.getTransMan().softVerifyTransaction(trans)) {
-            ki.getTransMan().getPending().put(trans.ID, trans);
+        ITrans trans = Transaction.fromJSON(data.get("transaction"));
+        if(ki.getTransMan().verifyTransaction(trans)) {
+            ki.getTransMan().getPending().add(trans);
             ki.getMainLog().info("New transaction from network added to pending pool");
             ki.getNetMan().broadcastAllBut(this,cm.getID());
         }

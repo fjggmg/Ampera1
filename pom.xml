@@ -6,7 +6,7 @@
 
     <groupId>com.lifeform</groupId>
     <artifactId>Origin</artifactId>
-    <version>0.3.1-ALPHA</version>
+    <version>0.4.0-BETA</version>
     <repositories>
         <repository>
             <id>clojars</id>

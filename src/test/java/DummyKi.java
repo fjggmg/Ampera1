@@ -4,11 +4,8 @@ import com.lifeform.main.blockchain.IChainMan;
 import com.lifeform.main.data.EncryptionManager;
 import com.lifeform.main.data.IEncryptMan;
 import com.lifeform.main.data.Options;
-import com.lifeform.main.transactions.ITransMan;
-import com.lifeform.main.transactions.TransactionManager;
-import com.sun.jersey.server.impl.InitialContextHelper;
+import com.lifeform.main.transactions.*;
 import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.bitbucket.backspace119.generallib.Logging.ConsoleLogger;
 import org.bitbucket.backspace119.generallib.Logging.LogMan;
@@ -101,5 +98,15 @@ public class DummyKi implements IKi {
     @Override
     public void setRelayer(String relayer) {
 
+    }
+
+    @Override
+    public void blockTick() {
+
+    }
+
+    @Override
+    public IAddMan getAddMan() {
+        return null;
     }
 }

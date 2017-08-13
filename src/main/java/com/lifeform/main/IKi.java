@@ -3,8 +3,9 @@ package com.lifeform.main;
 import com.lifeform.main.blockchain.IChainMan;
 import com.lifeform.main.data.IEncryptMan;
 import com.lifeform.main.data.Options;
-import com.lifeform.main.network.NetMan;
+import com.lifeform.main.transactions.IAddMan;
 import com.lifeform.main.transactions.ITransMan;
+import com.lifeform.main.transactions.ITransManMKi;
 import org.apache.logging.log4j.Logger;
 import org.bitbucket.backspace119.generallib.Logging.LogMan;
 import org.bitbucket.backspace119.generallib.io.network.NetworkManager;
@@ -26,4 +27,6 @@ public interface IKi {
     boolean isRelay();
     String getRelayer();
     void setRelayer(String relayer);
+    void blockTick();
+    IAddMan getAddMan();
 }

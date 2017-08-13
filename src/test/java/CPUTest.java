@@ -15,7 +15,7 @@ public class CPUTest {
                 int i = 0;
                 String s = "FFAA00";
                 while (true) {
-                    EncryptionManager.sha256(s);
+                    EncryptionManager.sha512(s);
                 }
             }
         }.start();
@@ -25,7 +25,7 @@ public class CPUTest {
                 int i = 0;
                 String s = "FFAA00";
                 while (true) {
-                    EncryptionManager.sha256(s);
+                    EncryptionManager.sha512(s);
                 }
             }
         }.start();
@@ -35,7 +35,7 @@ public class CPUTest {
                 int i = 0;
                 String s = "FFAA00";
                 while (true) {
-                    EncryptionManager.sha256(s);
+                    EncryptionManager.sha512(s);
                 }
             }
         }.start();
@@ -45,7 +45,7 @@ public class CPUTest {
                 int i = 0;
                 String s = "FFAA00";
                 while (true) {
-                    EncryptionManager.sha256(s);
+                    EncryptionManager.sha512(s);
                 }
             }
         }.start();
@@ -55,7 +55,7 @@ public class CPUTest {
                 int i = 0;
                 String s = "FFAA00";
                 while (true) {
-                    EncryptionManager.sha256(s);
+                    EncryptionManager.sha512(s);
                 }
             }
         }.start();
@@ -65,7 +65,7 @@ public class CPUTest {
                 int i = 0;
                 String s = "FFAA00";
                 while (true) {
-                    EncryptionManager.sha256(s);
+                    EncryptionManager.sha512(s);
                 }
             }
         }.start();
@@ -75,7 +75,7 @@ public class CPUTest {
                 int i = 0;
                 String s = "FFAA00";
                 while (true) {
-                    EncryptionManager.sha256(s);
+                    EncryptionManager.sha512(s);
                 }
             }
         }.start();
@@ -85,7 +85,7 @@ public class CPUTest {
                 int i = 0;
                 String s = "FFAA00";
                 while (true) {
-                    EncryptionManager.sha256(s);
+                    EncryptionManager.sha512(s);
                 }
             }
         }.start();

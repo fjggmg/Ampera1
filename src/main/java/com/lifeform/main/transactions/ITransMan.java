@@ -1,36 +1,21 @@
 package com.lifeform.main.transactions;
 
-import org.mapdb.DB;
-
 import java.math.BigInteger;
-import java.util.Map;
-import java.util.concurrent.ConcurrentMap;
+import java.util.List;
 
 /**
- * Created by Bryan on 5/30/2017.
+ * Created by Bryan on 8/11/2017.
  */
 public interface ITransMan {
 
-    boolean verifyTransaction(MKiTransaction s);
-
-    Map<String,MKiTransaction> getPending();
-
-    Map<String,BigInteger> getInputs(String key);
+    boolean verifyTransaction(ITrans transaction);
+    boolean addTransaction(ITrans transaction);
+    List<Output> getUTXOs(Address address);
+    boolean verifyCoinbase(ITrans transaction,BigInteger blockHeight, BigInteger fees);
+    boolean addCoinbase(ITrans transaction,BigInteger blockHeight,BigInteger fees);
+    List<ITrans> getPending();
 
     void close();
 
-    ConcurrentMap<String,String> getUTXOMap();
-
-    DB getUTXODB();
-
-    ConcurrentMap<String,String> getUTXOValueMap();
-
-    DB getUTXOValueDB();
-
-    boolean verifyAndCommitTransaction(MKiTransaction s);
-
-    ConcurrentMap<String,Boolean> getUTXOSpentMap();
-
-    boolean softVerifyTransaction(MKiTransaction s);
 
 }

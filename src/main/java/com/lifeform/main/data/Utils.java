@@ -2,6 +2,7 @@ package com.lifeform.main.data;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
+import java.util.Base64;
 
 /**
  * Created by Bryan on 5/30/2017.
@@ -25,8 +26,16 @@ public class Utils {
 
 
 
+    public static String toBase64(byte[] array)
+    {
+        return new String(Base64.getEncoder().encode(array));
+    }
 
 
+    public static byte[] fromBase64(String b64)
+    {
+        return Base64.getDecoder().decode(b64);
+    }
     /**
      *
      * @param s hex array as a string

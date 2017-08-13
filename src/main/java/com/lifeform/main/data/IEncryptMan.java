@@ -9,13 +9,13 @@ import java.security.PublicKey;
  */
 public interface IEncryptMan {
 
-    public boolean verifySig(String signed, String sig,String pubKey);
     public String sign(String toSign);
-    public PublicKey pubKeyFromString(String key);
     public PrivateKey privKeyFromString(String key);
     public PublicKey getPublicKey();
     public PrivateKey getPrivateKey();
     public KeyPair generateKeys();
     public void saveKeys();
     public KeyPair loadKeys();
+    String getPublicKeyString();
+    PublicKey pubKeyFromShortenedString(String key);
 }

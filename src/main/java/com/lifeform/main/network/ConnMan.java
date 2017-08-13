@@ -8,6 +8,7 @@ import com.lifeform.main.IKi;
 import com.lifeform.main.MainGUI;
 import com.lifeform.main.blockchain.Block;
 import com.lifeform.main.data.JSONManager;
+import com.lifeform.main.transactions.ITrans;
 import com.lifeform.main.transactions.MKiTransaction;
 import org.bitbucket.backspace119.generallib.io.network.ConnectionManager;
 import org.bitbucket.backspace119.generallib.io.network.Packet;
@@ -117,20 +118,7 @@ public class ConnMan extends Listener implements org.bitbucket.backspace119.gene
             }
         }else if(object instanceof NewTransactionPacket)
         {
-            ki.getMainLog().info("Received new transaction packet from relay");
-            NewTransactionPacket ntp = (NewTransactionPacket) object;
-            if(ntp.trans.relaySignature != null && !ntp.trans.relaySignature.isEmpty())
-            {
-                ki.getMainLog().info("Verified the relay signature on our transaction");
-                ntp.trans.signature = ki.getEncryptMan().sign(ntp.trans.all());
-                MKiTransaction trans = ntp.trans;
-                Map<String,String> data = new HashMap<>();
-                data.put("transaction",trans.toJSON());
-                TransactionPacket tp = new TransactionPacket(ki);
-                tp.setData(data);
-                sendPacket(tp);
-                ki.getTransMan().getPending().put(trans.ID,trans);
-            }
+
         }else if(object instanceof BlockProp)
         {
             BlockProp bp = (BlockProp) object;

@@ -4,10 +4,10 @@ package com.lifeform.main.blockchain;
 import com.lifeform.main.data.EncryptionManager;
 import com.lifeform.main.data.JSONManager;
 import com.lifeform.main.data.Utils;
+import com.lifeform.main.transactions.ITrans;
 import com.lifeform.main.transactions.MKiTransaction;
+import com.lifeform.main.transactions.Transaction;
 import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
 
 import java.math.BigInteger;
 import java.util.*;
@@ -30,18 +30,27 @@ public class Block {
      */
     public String payload = "";
 
-    /**
-     * stupid way of storing transactions for easy access momentarily
-     */
-    private Map<String,MKiTransaction> transactions = new HashMap<>();
+    private ITrans coinbase;
 
-    public void addTransaction(MKiTransaction trans)
+    public void setCoinbase(ITrans coinbase)
     {
-        merkleRoot = null;
-        transactions.put(trans.ID,trans);
+        this.coinbase = coinbase;
     }
 
-    public MKiTransaction getTransaction(String ID)
+    public ITrans getCoinbase()
+    {
+        return coinbase;
+    }
+
+    private Map<String,ITrans> transactions = new HashMap<>();
+
+    public void addTransaction(ITrans trans)
+    {
+        merkleRoot = null;
+        transactions.put(trans.getID(),trans);
+    }
+
+    public ITrans getTransaction(String ID)
     {
         return transactions.get(ID);
     }
@@ -51,7 +60,7 @@ public class Block {
         return transactions.keySet();
     }
 
-    public void addAll(Map<String,MKiTransaction> transes)
+    public void addAll(Map<String,ITrans> transes)
     {
         merkleRoot = null;
         for(String trans:transes.keySet())
@@ -96,15 +105,15 @@ public class Block {
         do {
             for (int i = 0; i < hashes.size(); i = i + 2) {
                 if ((hashes.size() - 1) != i) {
-                    nextLevel.add(EncryptionManager.sha256(hashes.get(i) + hashes.get(i + 1)));
+                    nextLevel.add(EncryptionManager.sha512(hashes.get(i) + hashes.get(i + 1)));
                 } else {
-                    nextLevel.add(EncryptionManager.sha256(hashes.get(i) + hashes.get(i)));
+                    nextLevel.add(EncryptionManager.sha512(hashes.get(i) + hashes.get(i)));
                 }
             }
 
             if (nextLevel.size() < 2) {
                 if (nextLevel.size() == 0) {
-                    return EncryptionManager.sha256(height.toString());
+                    return EncryptionManager.sha512(height.toString());
                 } else {
                     return nextLevel.get(0);
                 }
@@ -117,16 +126,12 @@ public class Block {
     private String solverHash;
     public String header()
     {
-
-        payloadHash = EncryptionManager.sha256(payload);
-
+        payloadHash = EncryptionManager.sha512(payload);
         if(solverHash == null || solverHash.isEmpty())
         {
-            solverHash = EncryptionManager.sha256(solver);
+            solverHash = EncryptionManager.sha512(solver);
         }
-        //System.out.println("PAYLOAD: " + payload);
-        //System.out.println("PAYLOAD HASH: " + payloadHash);
-        return prevID + solverHash + Utils.toHexArray(height.toByteArray()) + timestamp + payloadHash + ((merkleRoot == null) ? merkleRoot(null):merkleRoot);
+        return prevID + solverHash + Utils.toHexArray(height.toByteArray()) + timestamp + payloadHash + coinbase.getID() + ((merkleRoot == null) ? merkleRoot(null):merkleRoot);
     }
 
     public String toJSON()
@@ -144,6 +149,7 @@ public class Block {
             obj2.put(trans,transactions.get(trans).toJSON());
         }
         obj.put("transactions",obj2.toJSONString());
+        obj.put("coinbase",coinbase.toJSON());
         return obj.toJSONString();
     }
 
@@ -157,10 +163,11 @@ public class Block {
         b.solver = map.get("solver");
         b.timestamp = Long.parseLong(map.get("timestamp"));
         b.payload = map.get("payload");
+        b.setCoinbase(Transaction.fromJSON(map.get("coinbase")));
         Map<String,String> transactions = JSONManager.parseJSONtoMap(map.get("transactions"));
         for(String trans:transactions.keySet())
         {
-            b.transactions.put(trans,MKiTransaction.fromJSON(transactions.get(trans)));
+            b.transactions.put(trans, Transaction.fromJSON(transactions.get(trans)));
         }
         return b;
     }

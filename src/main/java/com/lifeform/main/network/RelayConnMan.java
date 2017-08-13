@@ -57,15 +57,7 @@ public class RelayConnMan extends Listener implements ConnectionManager {
             }
             else if(object instanceof NewTransactionPacket)
             {
-                ki.getMainLog().info("Received new transaction packet from node");
-                NewTransactionPacket ntp = (NewTransactionPacket) object;
-                if(ntp.trans.relayer.equals(Utils.toHexArray(ki.getEncryptMan().getPublicKey().getEncoded())))
-                {
-                    ki.getMainLog().info("Verified we are relaying this transaction");
-                    //TODO verify we're being paid later
-                    ntp.trans.relaySignature = ki.getEncryptMan().sign(ntp.trans.preSigAll());
-                    sendPacket(ntp);
-                }
+
             }
         }
     }
