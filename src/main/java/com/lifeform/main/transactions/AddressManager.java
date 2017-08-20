@@ -2,11 +2,11 @@ package com.lifeform.main.transactions;
 
 import com.lifeform.main.IKi;
 import com.lifeform.main.data.files.StringFileHandler;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by Bryan on 8/10/2017.
@@ -14,6 +14,7 @@ import java.util.Map;
 public class AddressManager implements IAddMan {
     String entropy = "Entropy goes here, Please reset me to something else";
     String addFile = "addresses.origin";
+    String addEntFile = "addresses.entropy";
     private IKi ki;
     private final int depth = 30;
     private List<Address> addresses = new ArrayList<>();
@@ -71,7 +72,9 @@ public class AddressManager implements IAddMan {
         }
         for(Address a:toRemove)
         {
+
             verifyCounter.remove(a);
+            if(!a.encodeForChain().equals(main.encodeForChain()))
             addresses.remove(a);
         }
 
@@ -97,6 +100,18 @@ public class AddressManager implements IAddMan {
                 }
             }
         }
+        StringFileHandler fh2 = new StringFileHandler(ki,addEntFile);
+        if(fh2.getLines().size() != 0) {
+            try {
+                JSONObject jo = (JSONObject) new JSONParser().parse(fh2.getLine(0));
+                for (String add : (Set<String>) jo.keySet()) {
+                    //ki.getMainLog().info("Shit found in the entropy file. it matches this: " + add + " " + jo.get(add));
+                    entropyMap.put(Address.decodeFromChain(add), (String) jo.get(add));
+                }
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     @Override
@@ -105,23 +120,39 @@ public class AddressManager implements IAddMan {
         fh.delete();
         if(main != null)
         fh.addLine(main.encodeForChain());
-        if(!getActive().isEmpty())
-        for(Address a:getActive())
-        {
-            if(!main.encodeForChain().equals(a.encodeForChain()))
-            fh.addLine(a.encodeForChain());
-        }
+        if(!getActive().isEmpty()) {
+            for (Address a : getActive()) {
+                if (!main.encodeForChain().equals(a.encodeForChain()))
+                    fh.addLine(a.encodeForChain());
+            }
+            fh.save();
+            JSONObject jo = new JSONObject();
+            for (Address a : getActive()) {
+                jo.put(a.encodeForChain(), getEntropyForAdd(a));
+            }
 
+            StringFileHandler fh2 = new StringFileHandler(ki, addEntFile);
+            fh2.delete();
+            fh2.addLine(jo.toJSONString());
+            fh2.save();
+        }
     }
 
     @Override
     public String getEntropyForAdd(Address a) {
+
+        for(Address add:entropyMap.keySet())
+        {
+            if(add.encodeForChain().equals(a.encodeForChain())) return entropyMap.get(add);
+        }
         return entropyMap.get(a);
     }
 
     @Override
     public void setMainAdd(Address a) {
         main = a;
+        inactive.remove(a);
+        addresses.add(a);
         save();
     }
 }

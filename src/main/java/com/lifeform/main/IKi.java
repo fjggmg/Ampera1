@@ -43,4 +43,6 @@ public interface IKi {
     void setRelayer(String relayer);
     void blockTick();
     IAddMan getAddMan();
+
+    void debug(String s);
 }

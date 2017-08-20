@@ -76,6 +76,7 @@ public class Miner extends Thread {
                         data.put("block", b.toJSON());
                         nb.setData(data);
                         ki.getNetMan().broadcastPacket(nb);
+                        ki.getMainLog().info("Sent NBP to network");
                     }
                     boolean wait = true;
                     foundBlock = true;

@@ -6,7 +6,7 @@
 
     <groupId>com.lifeform</groupId>
     <artifactId>Origin</artifactId>
-    <version>0.4.0-BETA</version>
+    <version>0.5.0-BETA</version>
     <repositories>
         <repository>
             <id>clojars</id>
@@ -81,6 +81,13 @@
             <version>0.0.1</version>
 
         </dependency>
+        <!-- https://mvnrepository.com/artifact/org.jfxtras/jfxtras-labs -->
+        <dependency>
+            <groupId>org.jfxtras</groupId>
+            <artifactId>jfxtras-labs</artifactId>
+            <version>8.0-r5</version>
+        </dependency>
+
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-core</artifactId>

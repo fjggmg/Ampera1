@@ -4,6 +4,7 @@ import com.esotericsoftware.kryonet.Client;
 import com.esotericsoftware.kryonet.Connection;
 import com.esotericsoftware.kryonet.Listener;
 import com.esotericsoftware.kryonet.Server;
+import com.esotericsoftware.minlog.Log;
 import com.lifeform.main.IKi;
 import com.lifeform.main.Ki;
 import com.lifeform.main.data.EncryptionManager;
@@ -17,6 +18,8 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
+
+import static com.esotericsoftware.minlog.Log.LEVEL_TRACE;
 
 /**
  * Created by Bryan on 5/8/2017.
@@ -37,11 +40,12 @@ public class NetMan extends Thread implements QueuedNetworkManager {
         this.ki = ki;
         this.tickTime = tickTime;
         this.relay = relay;
-
+        //Log.set(LEVEL_TRACE);
         if(relay)
         {
             server = new Server(20000000,20000000);
             NetworkSetup.setup(server);
+
             server.start();
             try {
                 server.bind(PORT);

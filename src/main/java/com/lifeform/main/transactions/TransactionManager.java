@@ -38,23 +38,42 @@ public class TransactionManager implements ITransMan{
 
     @Override
     public boolean verifyTransaction(ITrans transaction) {
+        ki.getMainLog().info("Verifying transaction: " + transaction.getID());
         for(Input i:transaction.getInputs())
         {
+            ki.getMainLog().info("Verifying input");
             if(utxoSpent.get(i.getID())) return false;
+            ki.getMainLog().info("input not spent");
             if(new BigInteger(utxoValueMap.get(i.getID())).compareTo(i.getAmount()) != 0) return false;
+            ki.getMainLog().info("input correct amount");
         }
+        ki.getMainLog().info("all inputs verified");
         if(!transaction.verifyInputToOutput()) return false;
+        ki.getMainLog().info("input to output verifies");
         if(!transaction.verifyCanSpend()) return false;
+        ki.getMainLog().info("verified can spend");
         if(!transaction.verifySigs()) return false;
+        ki.getMainLog().info("verified signature");
         return true;
     }
 
     @Override
     public boolean addTransaction(ITrans transaction) {
         if(!verifyTransaction(transaction)) return false;
+
         for(Input i:transaction.getInputs())
         {
             utxoSpent.put(i.getID(), true);
+            if (utxoMap.get(i.getAddress().encodeForChain()) != null) {
+                List<String> inputs = JSONManager.parseJSONToList(utxoMap.get(i.getAddress().encodeForChain()));
+                inputs.remove(i.toJSON());
+                utxoMap.put(i.getAddress().encodeForChain(), JSONManager.parseListToJSON(inputs).toJSONString());
+
+            } else {
+                List<String> inputs = new ArrayList<>();
+                inputs.remove(i.toJSON());
+                utxoMap.put(i.getAddress().encodeForChain(), JSONManager.parseListToJSON(inputs).toJSONString());
+            }
         }
         for(Output o:transaction.getOutputs())
         {
@@ -74,7 +93,14 @@ public class TransactionManager implements ITransMan{
         }
         utxoValueDB.commit();
         utxoDB.commit();
-        pending.remove(transaction);
+        List<ITrans> toRemove = new ArrayList<>();
+        for(ITrans t: pending)
+        {
+            if(t.getID().equals(transaction.getID())) toRemove.add(t);
+        }
+        for(ITrans t:toRemove) {
+            pending.remove(t);
+        }
         return true;
     }
 
@@ -84,9 +110,24 @@ public class TransactionManager implements ITransMan{
             List<Output> utxos = new ArrayList<>();
             List<String> sUtxos = JSONManager.parseJSONToList(utxoMap.get(address.encodeForChain()));
             //ki.getMainLog().info("List of UTXOs " + sUtxos);
+            List<String> toRemove = new ArrayList<>();
             for(String s:sUtxos)
             {
+
+                if(!utxoSpent.get(Output.fromJSON(s).getID()))
                 utxos.add(Output.fromJSON(s));
+                else
+                    toRemove.add(s);
+            }
+            if(!toRemove.isEmpty())
+            {
+                for(String s:toRemove)
+                {
+                    sUtxos.remove(s);
+
+                }
+                utxoMap.put(address.encodeForChain(), JSONManager.parseListToJSON(sUtxos).toJSONString());
+                utxoDB.commit();
             }
             return utxos;
         }

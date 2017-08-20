@@ -24,21 +24,21 @@ import java.util.Map;
 
 /**
  * Created by Bryan on 7/18/2017.
- *
- *  Copyright (C) 2017  Bryan Sharpe
-
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation, either version 3 of the License, or
- (at your option) any later version.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * <p>
+ * Copyright (C) 2017  Bryan Sharpe
+ * <p>
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * <p>
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * <p>
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 public class MainGUI {
     private JTextPane accountInfo;
@@ -84,12 +84,11 @@ public class MainGUI {
                     keys.add(ki.getEncryptMan().getPublicKeyString());
                     java.util.List<Input> inputs = new ArrayList<>();
                     double dFee = Double.parseDouble(feeToPay.getText());
-                    long lFee = (long) (amt * 100000000D);
+                    long lFee = (long) (dFee * 100000000D);
                     BigInteger fee = BigInteger.valueOf(lFee);
+                    ki.getMainLog().info("Fee is: " + fee.toString());
                     BigInteger totalInput = BigInteger.ZERO;
                     for (Address a : ki.getAddMan().getActive()) {
-
-
                         for (Output o : ki.getTransMan().getUTXOs(a)) {
                             if (o.getToken().equals(token)) {
                                 inputs.add(Input.fromOutput(o));
@@ -101,16 +100,19 @@ public class MainGUI {
                         if (totalInput.compareTo(amount) >= 0) break;
 
                     }
-                    if (totalInput.compareTo(amount) < 0) return; // not enough of this token to send;
+                    if (totalInput.compareTo(amount) < 0) {
+                        ki.getMainLog().info("Not enough " + token.name() + " to do this transaction");
+                        return; // not enough of this token to send;
+                    }
 
                     BigInteger feeInput = (token.equals(Token.ORIGIN)) ? totalInput : BigInteger.ZERO;
                     for (Address a : ki.getAddMan().getActive()) {
                         //get inputs
-                        if (fee.compareTo(fee) >= 0) break;
+                        if (feeInput.compareTo(fee) >= 0) break;
                         for (Output o : ki.getTransMan().getUTXOs(a)) {
                             if (o.getToken().equals(Token.ORIGIN)) {
                                 inputs.add(Input.fromOutput(o));
-                                totalInput = totalInput.add(o.getAmount());
+                                feeInput = feeInput.add(o.getAmount());
                                 if (feeInput.compareTo(fee) >= 0) break;
 
                             }
@@ -119,21 +121,27 @@ public class MainGUI {
 
                     }
 
-                    if (feeInput.compareTo(fee) < 0) return; //not enough origin to send this kind of fee
+                    if (feeInput.compareTo(fee) < 0) {
+                        ki.getMainLog().info("Not enough origin to pay for this fee");
+                        return; //not enough origin to send this kind of fee
+                    }
 
-                    Map<Address, String> entropyMap = new HashMap<>();
+                    Map<String, String> entropyMap = new HashMap<>();
 
                     for (Input i : inputs) {
-                        entropyMap.put(i.getAddress(), ki.getAddMan().getEntropyForAdd(i.getAddress()));
+                        if (entropyMap.containsKey(i.getAddress().encodeForChain())) continue;
+                        entropyMap.put(i.getAddress().encodeForChain(), ki.getAddMan().getEntropyForAdd(i.getAddress()));
+                        ki.getMainLog().info("Matching: " + i.getAddress().encodeForChain() + " with " + ki.getAddMan().getEntropyForAdd(i.getAddress()));
                     }
 
 
                     ITrans trans = new Transaction("", 1, null, outputs, inputs, entropyMap, keys);
                     trans.makeChange(fee, ki.getAddMan().getMainAdd()); // TODO this just sends change back to the main address......will need to give option later
+                    trans.addSig(ki.getEncryptMan().getPublicKeyString(), ki.getEncryptMan().sign(trans.toSign()));
                     ki.getTransMan().getPending().add(trans);
 
                     NewTransactionPacket ntp = new NewTransactionPacket();
-                    ntp.trans = trans;
+                    ntp.trans = trans.toJSON();
                     ki.getNetMan().broadcastPacket(ntp);
                 }
             }
@@ -199,12 +207,14 @@ public class MainGUI {
             BigInteger amount = BigInteger.ZERO;
             java.util.List<Address> checked = new ArrayList<>();
             for (Address a : ki.getAddMan().getActive()) {
-                if(checked.contains(a)) continue;
+                if (checked.contains(a)) continue;
                 checked.add(a);
-                ki.getMainLog().info("Getting info from Address: " + a.encodeForChain());
-                for (Output o : ki.getTransMan().getUTXOs(a)) {
-                    if (o.getToken().equals(Token.valueOf((String) coinSelectorView.getSelectedItem())))
-                        amount = amount.add(o.getAmount());
+                //ki.getMainLog().info("Getting info from Address: " + a.encodeForChain());
+                if (ki.getTransMan().getUTXOs(a) != null) {
+                    for (Output o : ki.getTransMan().getUTXOs(a)) {
+                        if (o.getToken().equals(Token.valueOf((String) coinSelectorView.getSelectedItem())))
+                            amount = amount.add(o.getAmount());
+                    }
                 }
             }
             accountInfo.setText("Welcome to the Origin built in wallet. Below you'll find the current amount of coins you have according to the type you've selected to the right" + "\n"

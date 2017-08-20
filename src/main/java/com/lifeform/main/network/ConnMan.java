@@ -10,6 +10,7 @@ import com.lifeform.main.blockchain.Block;
 import com.lifeform.main.data.JSONManager;
 import com.lifeform.main.transactions.ITrans;
 import com.lifeform.main.transactions.MKiTransaction;
+import com.lifeform.main.transactions.Transaction;
 import org.bitbucket.backspace119.generallib.io.network.ConnectionManager;
 import org.bitbucket.backspace119.generallib.io.network.Packet;
 
@@ -118,7 +119,8 @@ public class ConnMan extends Listener implements org.bitbucket.backspace119.gene
             }
         }else if(object instanceof NewTransactionPacket)
         {
-
+            NewTransactionPacket ntp = (NewTransactionPacket) object;
+            if(ki.getTransMan().verifyTransaction(Transaction.fromJSON(ntp.trans))) ki.getTransMan().getPending().add(Transaction.fromJSON(ntp.trans));
         }else if(object instanceof BlockProp)
         {
             BlockProp bp = (BlockProp) object;

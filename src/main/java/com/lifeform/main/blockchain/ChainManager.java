@@ -233,6 +233,7 @@ public class ChainManager implements IChainMan {
 
     public synchronized boolean verifyBlock(Block block){
 
+        ki.getMainLog().info("Block has: " + block.getTransactionKeys().size() + " transactions");
         if(!softVerifyBlock(block)) return false;
         BigInteger fees = BigInteger.ZERO;
 

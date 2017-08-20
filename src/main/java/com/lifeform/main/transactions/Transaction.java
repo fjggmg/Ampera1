@@ -24,7 +24,7 @@ public class Transaction implements ITrans{
      * @param entropyMap
      * @param keys this will be reordered automatically, multisig wallets order keys by lowest hash of key first and so on
      */
-    public Transaction(String message, int sigsRequired,Map<String,String> keySigMap,List<Output> outputs, List<Input> inputs,Map<Address,String> entropyMap, List<String> keys)
+    public Transaction(String message, int sigsRequired,Map<String,String> keySigMap,List<Output> outputs, List<Input> inputs,Map<String,String> entropyMap, List<String> keys)
     {
         Collections.sort(keys);
         this.keySigMap = keySigMap;
@@ -49,7 +49,7 @@ public class Transaction implements ITrans{
 
 
     List<String> keys;
-    Map<Address,String> entropyMap; //for keys
+    Map<String,String> entropyMap; //for keys
     Map<String,String> keySigMap = new HashMap<>();
 
     List<Output> outputs;
@@ -83,12 +83,8 @@ public class Transaction implements ITrans{
 
         jo.put("keySigMap",JSONManager.parseMapToJSON(keySigMap).toJSONString());
         jo.put("keys", JSONManager.parseListToJSON(keys).toJSONString());
-        Map<String,String> eMap = new HashMap<>();
-        for(Address a:entropyMap.keySet())
-        {
-            eMap.put(a.encodeForChain(),entropyMap.get(a));
-        }
-        jo.put("entropyMap",JSONManager.parseMapToJSON(eMap).toJSONString());
+
+        jo.put("entropyMap",JSONManager.parseMapToJSON(entropyMap).toJSONString());
         return jo.toJSONString();
     }
 
@@ -117,13 +113,12 @@ public class Transaction implements ITrans{
             }
 
             Map<String,String> keySigMap = JSONManager.parseJSONtoMap((String)jo.get("keySigMap"));
-            Map<String,String> eMap = JSONManager.parseJSONtoMap((String)jo.get("entropyMap"));
-            Map<Address,String> entropyMap = new HashMap<>();
-            for(String key:eMap.keySet())
+            //Map<String,String> eMap = JSONManager.parseJSONtoMap((String)jo.get("entropyMap"));
+            Map<String,String> entropyMap = JSONManager.parseJSONtoMap((String)jo.get("entropyMap"));
+            for(String s:entropyMap.keySet())
             {
-                entropyMap.put(Address.decodeFromChain(key),eMap.get(key));
+                System.out.println("Address: " + s + " value " + entropyMap.get(s));
             }
-
             List<String> keys = JSONManager.parseJSONToList((String)jo.get("keys"));
             return new Transaction(message,sigsRequired,keySigMap,outputs,inputs,entropyMap,keys);
 
@@ -190,12 +185,17 @@ public class Transaction implements ITrans{
         {
             if(idMap.keySet().contains(i.getID()))
             {
-                if(idMap.get(i.getID()) == i.getIndex())
+                if(idMap.get(i.getID()) == i.getIndex()) {
+                    System.out.println("input already used");
                     return false;
+                }
             }
             idMap.put(i.getID(),i.getIndex());
-            if(entropyMap.get(i.getAddress()) == null) return false;
-            if(!i.canSpend(sKeys,entropyMap.get(i.getAddress()))) return false;
+            if(entropyMap.get(i.getAddress().encodeForChain()) == null){
+                System.out.println("Entropy for this address: " + i.getAddress().encodeForChain() +  " is null");
+                return false;
+            }
+            if(!i.canSpend(sKeys,entropyMap.get(i.getAddress().encodeForChain()))) return false;
         }
         return true;
     }
@@ -241,6 +241,7 @@ public class Transaction implements ITrans{
 
     @Override
     public void makeChange(BigInteger fee,Address cAdd) {
+        makeChangeSecondary(cAdd);
         BigInteger allInput = BigInteger.ZERO;
         for(Input i: inputs)
         {
@@ -261,6 +262,29 @@ public class Transaction implements ITrans{
         }
         Output o = new Output(allInput.subtract(allOutput).subtract(fee),cAdd,Token.ORIGIN,outputs.size() + 1);
         outputs.add(o);
+
+    }
+
+
+    private void makeChangeSecondary(Address cAdd)
+    {
+        for(Token t:Token.values()) {
+            if(t.equals(Token.ORIGIN)) continue;
+            BigInteger allInput = BigInteger.ZERO;
+            for (Input i : inputs) {
+                if (i.getToken().equals(t))
+                    allInput = allInput.add(i.getAmount());
+
+            }
+            BigInteger allOutput = BigInteger.ZERO;
+            for (Output o : outputs) {
+                if (o.getToken().equals(t))
+                    allOutput = allOutput.add(o.getAmount());
+            }
+
+            Output o = new Output(allInput.subtract(allOutput), cAdd, t, outputs.size() + 1);
+            outputs.add(o);
+        }
     }
 
     @Override

@@ -7,6 +7,7 @@ public enum Token {
 
     ORIGIN,
     KI,
+    BITCOIN,
     GOLD,
     SILVER,
     PLATINUM,

@@ -42,10 +42,13 @@ public class Ki extends Thread implements IKi {
     private EncryptionManager encMan;
     private IAddMan addMan;
     private IKi ki = this;
-    private MainGUI gui;
     private boolean run = true;
-    public static final String VERSION = "0.4.0-BETA";
+    public static final String VERSION = "0.5.0-BETA";
     private boolean relay = false;
+
+    public static boolean debug = false;
+    private static IKi instance;
+
     public Ki(Options o)
     {
 
@@ -61,7 +64,7 @@ public class Ki extends Thread implements IKi {
         encMan = new EncryptionManager(this);
         EncryptionManager.initStatic();
 
-        gui = MainGUI.guiFactory(this);
+
         try {
             ki.getEncryptMan().loadKeys();
         } catch (Exception ex) {
@@ -76,6 +79,11 @@ public class Ki extends Thread implements IKi {
         }
         netMan = new NetMan(this,20,o.relay);
         netMan.start();
+        //gui = MainGUI.guiFactory(this);
+        instance = this;
+        FXGUI.subLaunch();
+
+
     }
 
     public void close()
@@ -85,6 +93,15 @@ public class Ki extends Thread implements IKi {
         addMan.save();
     }
 
+    /**
+     * Singleton for use with un-initializable objects, like the FXMLController, instance should be taken and stored to
+     * help prevent thread issues.
+     * @return instance of Ki
+     */
+    public static IKi getInstance()
+    {
+        return instance;
+    }
     @Override
     public boolean isRelay() {
         return relay;
@@ -106,17 +123,6 @@ public class Ki extends Thread implements IKi {
 
     }
 
-
-    @Override
-    public void run()
-    {
-
-        while(run)
-        {
-            gui.tick();
-
-        }
-    }
 
     @Override
     public Options getOptions() {
@@ -147,6 +153,15 @@ public class Ki extends Thread implements IKi {
 
     @Override
     public Logger getMainLog() { return main; }
+
+    @Override
+    public void debug(String debug)
+    {
+        if(Ki.debug)
+        {
+            main.debug(debug);
+        }
+    }
 
     @Override
     public NetworkManager getNetMan()

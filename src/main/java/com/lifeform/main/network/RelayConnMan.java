@@ -7,6 +7,7 @@ import com.esotericsoftware.kryonet.Server;
 import com.lifeform.main.IKi;
 import com.lifeform.main.data.JSONManager;
 import com.lifeform.main.data.Utils;
+import com.lifeform.main.transactions.Transaction;
 import org.bitbucket.backspace119.generallib.io.network.ConnectionManager;
 import org.bitbucket.backspace119.generallib.io.network.Packet;
 
@@ -50,14 +51,19 @@ public class RelayConnMan extends Listener implements ConnectionManager {
     @Override
     public void received(Connection connection, Object object)
     {
-        //ki.getMainLog().info("received packet");
+        ki.getMainLog().info("received packet");
         if(connection.getID() == this.connection.getID()) {
+            ki.getMainLog().info("received packet from: " + connection.getID());
+            ki.getMainLog().info("Packet details: " + object.toString());
             if (object instanceof String) {
+                ki.getMainLog().info("Received old style packet, sending to listener");
                 listen((String) object);
             }
             else if(object instanceof NewTransactionPacket)
             {
-
+                NewTransactionPacket ntp = (NewTransactionPacket) object;
+                if(ki.getTransMan().verifyTransaction(Transaction.fromJSON(ntp.trans)))
+                ki.getNetMan().broadcastAllBut(ntp,getID());
             }
         }
     }
@@ -79,25 +85,25 @@ public class RelayConnMan extends Listener implements ConnectionManager {
     public void listen(String line) {
 
         Map<String, String> map = JSONManager.parseJSONtoMap(line);
-        if (map != null && map.containsKey("type"))
+        if (map != null && map.containsKey("type")) {
+            ki.getMainLog().info("Checking packet type");
             switch (map.get("type")) {
                 case "BlockPacket":
 
                     //packets.add(BlockPacket.fromJSON(ki, line));
-                    BlockPacket.fromJSON(ki,line).process(this);
+                    BlockPacket.fromJSON(ki, line).process(this);
                     break;
                 case "BlockRequestPacket":
 
                     BigInteger height = new BigInteger(map.get("height"));
                     height = height.add(BigInteger.ONE);
                     ki.getMainLog().info("Height requested: " + height);
-                    if(height.compareTo(ki.getChainMan().currentHeight()) > 0)
-                    {
+                    if (height.compareTo(ki.getChainMan().currentHeight()) > 0) {
                         ki.getMainLog().info("Received request for blocks past what we have");
                         OnFork of = new OnFork();
                         of.undoTo = ki.getChainMan().currentHeight();
                         sendPacket(of);
-                    }else {
+                    } else {
                         while (height.compareTo(ki.getChainMan().currentHeight()) <= 0) {
                             BlockPacket bp = new BlockPacket(ki);
                             Map<String, String> bdat = new HashMap<>();
@@ -115,6 +121,7 @@ public class RelayConnMan extends Listener implements ConnectionManager {
 
                     break;
                 case "NewBlockPacket":
+                    ki.getMainLog().info("Received new block packet");
                     NewBlockPacket nb = new NewBlockPacket(ki);
                     nb.setData(map);
                     nb.process(instance);
@@ -125,7 +132,7 @@ public class RelayConnMan extends Listener implements ConnectionManager {
                     break;
             }
 
-
+        }
 
     }
 

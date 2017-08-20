@@ -109,4 +109,9 @@ public class DummyKi implements IKi {
     public IAddMan getAddMan() {
         return null;
     }
+
+    @Override
+    public void debug(String s) {
+
+    }
 }

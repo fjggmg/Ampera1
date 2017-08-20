@@ -50,6 +50,8 @@ public class Address {
     public boolean canSpend(String keys, String entropy)
     {
         Address a = createNew(keys,entropy);
+        System.out.println("Address 1: " + a.encodeForChain());
+        System.out.println("Address 2: " + encodeForChain());
         return a.encodeForChain().equals(encodeForChain());
     }
 
@@ -97,5 +99,15 @@ public class Address {
     }
 
 
-
+    @Override
+    public boolean equals(Object o)
+    {
+        if(o instanceof Address)
+        {
+            Address a = (Address) o;
+            return a.encodeForChain().equals(encodeForChain());
+        }else{
+            return false;
+        }
+    }
 }
