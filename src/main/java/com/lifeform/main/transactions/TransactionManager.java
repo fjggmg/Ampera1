@@ -98,9 +98,7 @@ public class TransactionManager implements ITransMan{
         {
             if(t.getID().equals(transaction.getID())) toRemove.add(t);
         }
-        for(ITrans t:toRemove) {
-            pending.remove(t);
-        }
+        pending.removeAll(toRemove);
         return true;
     }
 

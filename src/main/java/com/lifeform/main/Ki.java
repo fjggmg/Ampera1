@@ -1,5 +1,7 @@
 package com.lifeform.main;
 
+import com.lifeform.main.blockchain.Block;
+import com.lifeform.main.blockchain.CPUMiner;
 import com.lifeform.main.blockchain.ChainManager;
 import com.lifeform.main.blockchain.IChainMan;
 import com.lifeform.main.data.EncryptionManager;
@@ -12,6 +14,8 @@ import org.apache.logging.log4j.Logger;
 import org.bitbucket.backspace119.generallib.Logging.ConsoleLogger;
 import org.bitbucket.backspace119.generallib.Logging.LogMan;
 import org.bitbucket.backspace119.generallib.io.network.NetworkManager;
+
+import java.math.BigInteger;
 
 /**
  * Created by Bryan on 5/10/2017.
@@ -43,7 +47,7 @@ public class Ki extends Thread implements IKi {
     private IAddMan addMan;
     private IKi ki = this;
     private boolean run = true;
-    public static final String VERSION = "0.5.0-BETA";
+    public static final String VERSION = "0.5.1-BETA";
     private boolean relay = false;
 
     public static boolean debug = false;
@@ -170,8 +174,11 @@ public class Ki extends Thread implements IKi {
     }
 
     @Override
-    public void blockTick()
+    public void blockTick(Block block)
     {
+        CPUMiner.height = block.height.add(BigInteger.ONE);
+        CPUMiner.prevID = block.ID;
+
 
     }
 

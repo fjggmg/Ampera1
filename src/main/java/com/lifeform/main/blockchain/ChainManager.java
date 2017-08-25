@@ -90,13 +90,12 @@ public class ChainManager implements IChainMan {
     public synchronized boolean addBlock(Block block){
        
         if(!verifyBlock(block)) return false; else exMap.put(block.ID,block.toJSON());
-        ki.blockTick();
+        ki.blockTick(block);
         current = block;
         currentHeight = block.height;
         blockchainMap.put(block.ID,block);
         heightMap.put(block.height,block);
-        Miner.height = block.height.add(BigInteger.ONE);
-        Miner.prevID = block.ID;
+
         saveBlock(block);
         csMap.put("current",block.toJSON());
         csMap.put("height",block.height.toString());
@@ -137,9 +136,9 @@ public class ChainManager implements IChainMan {
             cmDB.commit();
         }
 
-        Miner.height = currentHeight().add(BigInteger.ONE);
+        CPUMiner.height = currentHeight().add(BigInteger.ONE);
         if(getByHeight(currentHeight()) != null)
-        Miner.prevID = getByHeight(currentHeight()).ID;
+        CPUMiner.prevID = getByHeight(currentHeight()).ID;
 
     }
 

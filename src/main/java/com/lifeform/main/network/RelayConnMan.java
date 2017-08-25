@@ -62,8 +62,11 @@ public class RelayConnMan extends Listener implements ConnectionManager {
             else if(object instanceof NewTransactionPacket)
             {
                 NewTransactionPacket ntp = (NewTransactionPacket) object;
-                if(ki.getTransMan().verifyTransaction(Transaction.fromJSON(ntp.trans)))
-                ki.getNetMan().broadcastAllBut(ntp,getID());
+                if(ki.getTransMan().verifyTransaction(Transaction.fromJSON(ntp.trans))) {
+                    ki.getNetMan().broadcastAllBut(ntp, getID());
+                    ki.getTransMan().getPending().add(Transaction.fromJSON(ntp.trans));
+                }
+
             }
         }
     }

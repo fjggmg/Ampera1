@@ -1,6 +1,6 @@
 package com.lifeform.main;
 
-import com.lifeform.main.blockchain.Miner;
+import com.lifeform.main.blockchain.CPUMiner;
 import com.lifeform.main.network.NewTransactionPacket;
 import com.lifeform.main.transactions.*;
 import javafx.application.Application;
@@ -29,10 +29,19 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Copyright (C) Bryan Sharpe
+ *
+ * All rights reserved.
+ *
+ *
+ */
 public class FXMLController {
 
     public static Stage primaryStage;
     public static Application app;
+    @FXML
+    public Slider coresSlider;
 
 
     private IKi ki;
@@ -201,6 +210,7 @@ public class FXMLController {
     private DecimalFormat format = new DecimalFormat("###,###,###,###,###,###,##0.0#######");
     public void tick()
     {
+
             if(versionLabel != null)
             {
                 if(startMiningPane != null)
@@ -210,6 +220,7 @@ public class FXMLController {
                         startMiningPane.setOpacity(0.01);
                         miningPane.setOpacity(0.1);
                     }
+                    coresSlider.setMax(Runtime.getRuntime().availableProcessors());
                 }
                 if(!versionSet)
                 {
@@ -249,7 +260,12 @@ public class FXMLController {
                         }
                     }
 
-                    amountLabel.setText(format.format(tokenValueMap.get(currentWallet).longValueExact()/100000000D));
+                    if(tokenValueMap.get(currentWallet) == null || tokenValueMap.get(currentWallet).compareTo(BigInteger.ZERO) == 0)
+                    {
+                        amountLabel.setText("0");
+                    }else {
+                        amountLabel.setText(format.format(tokenValueMap.get(currentWallet).longValueExact() / 100000000D));
+                    }
 
                 }
             }
@@ -402,25 +418,25 @@ public class FXMLController {
     }
 
     private boolean mining = false;
-    List<Miner> miners = new ArrayList<>();
+    List<CPUMiner> miners = new ArrayList<>();
     public void startMiningClicked(MouseEvent mouseEvent) {
         if(ki.getOptions().mining) {
             nonPrimaryPaneClicked(startMiningPane);
             mining = !mining;
 
             if (mining) {
-                Miner.mining = true;
+                CPUMiner.mining = true;
                 BigInteger guess = BigInteger.ZERO;
-                for (int i = 0; i < Runtime.getRuntime().availableProcessors(); i++) {
+                for (int i = 0; i < coresSlider.getValue(); i++) {
                     ki.getMainLog().info("Starting miner: " + i);
-                    Miner miner = new Miner(ki, guess, guess.add(BigInteger.valueOf(1000000L)));
+                    CPUMiner miner = new CPUMiner(ki, guess, guess.add(BigInteger.valueOf(1000000L)));
                     guess = guess.add(BigInteger.valueOf(1000000L));
                     miners.add(miner);
                     miner.start();
                 }
 
             } else {
-                Miner.mining = false;
+                CPUMiner.mining = false;
             }
         }
     }

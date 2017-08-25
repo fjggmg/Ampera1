@@ -8,10 +8,7 @@ import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Created by Bryan on 7/31/2017.
- */
-public class Miner extends Thread {
+public class CPUMiner extends Thread implements IMiner{
 
     public static boolean mining = true;
     public static String blockPropped = "";
@@ -23,7 +20,7 @@ public class Miner extends Thread {
     private boolean canMine;
     public static String prevID = "0";
     public static BigInteger height = BigInteger.ZERO;
-    public Miner(IKi ki, BigInteger guess,BigInteger maxGuess)
+    public CPUMiner(IKi ki, BigInteger guess,BigInteger maxGuess)
     {
         this.ki = ki;
         this.guess = guess;

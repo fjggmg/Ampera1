@@ -43,10 +43,14 @@ public class AddressManager implements IAddMan {
 
     @Override
     public void receivedOn(Address address) {
+        Address toRemove = null;
         for(Address a:inactive) {
-            if(a.encodeForChain().equals(address.encodeForChain()))
-            addresses.add(address);
+            if (a.encodeForChain().equals(address.encodeForChain())) {
+                addresses.add(address);
+                toRemove = address;
+            }
         }
+        inactive.remove(toRemove);
     }
 
     @Override

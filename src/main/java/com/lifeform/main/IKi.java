@@ -1,5 +1,6 @@
 package com.lifeform.main;
 
+import com.lifeform.main.blockchain.Block;
 import com.lifeform.main.blockchain.IChainMan;
 import com.lifeform.main.data.IEncryptMan;
 import com.lifeform.main.data.Options;
@@ -41,7 +42,7 @@ public interface IKi {
     boolean isRelay();
     String getRelayer();
     void setRelayer(String relayer);
-    void blockTick();
+    void blockTick(Block block);
     IAddMan getAddMan();
 
     void debug(String s);

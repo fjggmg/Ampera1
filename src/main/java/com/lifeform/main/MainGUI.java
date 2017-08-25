@@ -3,7 +3,6 @@ package com.lifeform.main;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
-import com.lifeform.main.blockchain.Miner;
 import com.lifeform.main.network.NewTransactionPacket;
 import com.lifeform.main.transactions.*;
 
@@ -146,27 +145,7 @@ public class MainGUI {
                 }
             }
         });
-        continuousMiningButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                mining = !mining;
 
-                if (mining) {
-                    Miner.mining = true;
-                    BigInteger guess = BigInteger.ZERO;
-                    for (int i = 0; i < Runtime.getRuntime().availableProcessors(); i++) {
-                        ki.getMainLog().info("Starting miner: " + i);
-                        Miner miner = new Miner(ki, guess, guess.add(BigInteger.valueOf(1000000L)));
-                        guess = guess.add(BigInteger.valueOf(1000000L));
-                        miners.add(miner);
-                        miner.start();
-                    }
-
-                } else {
-                    Miner.mining = false;
-                }
-            }
-        });
         copyButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -178,7 +157,6 @@ public class MainGUI {
         });
     }
 
-    private java.util.List<Miner> miners = new ArrayList<>();
     private volatile boolean mining = false;
 
     public void init(JFrame frame) {
