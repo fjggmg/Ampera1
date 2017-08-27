@@ -4,6 +4,7 @@ import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.image.Image;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
@@ -28,7 +29,7 @@ public class FXGUI extends Application {
         pStage.setTitle("Origin");
         Parent root = FXMLLoader.load(getClass().getResource("/FXGUI.fxml"));
         Scene scene = new Scene(root, 640, 480);
-
+        pStage.getIcons().add(new Image(getClass().getResourceAsStream("/origin.png")));
         pStage.setScene(scene);
         pStage.show();
         FXMLController.primaryStage = pStage;

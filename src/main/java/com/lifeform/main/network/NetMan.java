@@ -9,6 +9,7 @@ import com.lifeform.main.IKi;
 import com.lifeform.main.Ki;
 import com.lifeform.main.data.EncryptionManager;
 import com.lifeform.main.data.Utils;
+import com.lifeform.main.transactions.ITrans;
 import org.bitbucket.backspace119.generallib.io.network.*;
 import org.bitbucket.backspace119.generallib.io.network.Packet;
 
@@ -78,6 +79,12 @@ public class NetMan extends Thread implements QueuedNetworkManager {
                         ConnectionManager cm = new RelayConnMan(ki,connection,((Handshake)o).ID);
                         connectionMap.put(cm.getID(),cm);
                         server.addListener((RelayConnMan)cm);
+                        for(ITrans t:ki.getTransMan().getPending())
+                        {
+                            NewTransactionPacket ntp = new NewTransactionPacket();
+                            ntp.trans = t.toJSON();
+                            connection.sendTCP(ntp);
+                        }
                         connection.sendTCP(new GoAhead());
                     }
                 }

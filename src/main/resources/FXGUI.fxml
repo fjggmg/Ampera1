@@ -276,10 +276,10 @@
                   </Pane>
                   <Pane fx:id="transactionContentPane" prefHeight="200.0" prefWidth="200.0" style="-fx-background-color: rgba(0,0,255,0.1);" visible="false">
                      <children>
-                        <TextField fx:id="addressToSend" layoutX="311.0" layoutY="48.0" opacity="0.5" promptText="Address*" style="-fx-background-color: Gray;" />
-                        <TextField fx:id="amountToSend" layoutX="311.0" layoutY="88.0" opacity="0.5" promptText="Amount*" style="-fx-background-color: Gray;" />
-                        <TextField fx:id="feeToSend" layoutX="311.0" layoutY="128.0" opacity="0.5" promptText="Fee*" style="-fx-background-color: Gray;" />
-                        <TextField fx:id="messageToSend" layoutX="311.0" layoutY="169.0" opacity="0.5" promptText="Message" style="-fx-background-color: Gray;" />
+                        <TextField fx:id="addressToSend" focusTraversable="false" layoutX="311.0" layoutY="48.0" opacity="0.5" promptText="Address*" style="-fx-background-color: Gray;" />
+                        <TextField fx:id="amountToSend" focusTraversable="false" layoutX="311.0" layoutY="88.0" opacity="0.5" promptText="Amount*" style="-fx-background-color: Gray;" />
+                        <TextField fx:id="feeToSend" focusTraversable="false" layoutX="311.0" layoutY="128.0" opacity="0.5" promptText="Fee*" style="-fx-background-color: Gray;" />
+                        <TextField fx:id="messageToSend" focusTraversable="false" layoutX="311.0" layoutY="169.0" opacity="0.5" promptText="Message" style="-fx-background-color: Gray;" />
                         <Label layoutX="311.0" layoutY="210.0" opacity="0.5" text="* Required" textFill="WHITE">
                            <font>
                               <Font name="System Italic" size="14.0" />
