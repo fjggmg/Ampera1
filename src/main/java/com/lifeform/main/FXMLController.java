@@ -5,9 +5,6 @@ import com.lifeform.main.network.NewTransactionPacket;
 import com.lifeform.main.transactions.*;
 import javafx.application.Application;
 import javafx.application.Platform;
-import javafx.beans.property.StringProperty;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -16,7 +13,6 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
-import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 import java.awt.*;
@@ -28,6 +24,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 /**
  * Copyright (C) Bryan Sharpe
@@ -58,7 +56,7 @@ public class FXMLController {
                         }
                     });
                     try {
-                        Thread.sleep(100);
+                        Thread.sleep(1000);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
@@ -71,7 +69,47 @@ public class FXMLController {
         Thread thread = new Thread(task);
         thread.setDaemon(true);
         thread.start();
+
         ki = Ki.getInstance();
+
+        new Thread(){
+
+            public void run()
+            {
+                while(run) {
+                    isFinal = false;
+                    tokenValueMap.clear();
+                    java.util.List<Address> checked = new ArrayList<>();
+                    for (Address a : ki.getAddMan().getActive()) {
+                        if (checked.contains(a)) continue;
+                        checked.add(a);
+                        //ki.getMainLog().info("Getting info from Address: " + a.encodeForChain());
+                        if (ki.getTransMan().getUTXOs(a) != null) {
+                            for (Output o : ki.getTransMan().getUTXOs(a)) {
+
+                                if (tokenValueMap.get(o.getToken()) == null) {
+                                    tokenValueMap.put(o.getToken(), o.getAmount());
+                                } else {
+                                    tokenValueMap.put(o.getToken(), tokenValueMap.get(o.getToken()).add(o.getAmount()));
+                                }
+                            }
+                            try {
+                                Thread.sleep(100);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                        }
+
+                    }
+                    isFinal = true;
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }.start();
     }
 
     private Token currenttransaction;
@@ -206,28 +244,31 @@ public class FXMLController {
 
     private Token currentWallet = Token.ORIGIN;
     private Token currentTransaction = Token.ORIGIN;
-    private Map<Token,BigInteger> tokenValueMap = new HashMap<>();
+    private ConcurrentMap<Token,BigInteger> tokenValueMap = new ConcurrentHashMap<>();
     private DecimalFormat format = new DecimalFormat("###,###,###,###,###,###,##0.0#######");
+    private volatile boolean isFinal = false;
+
     public void tick()
     {
 
             if(versionLabel != null)
             {
-                if(startMiningPane != null)
-                {
 
-                    if(!ki.getOptions().mining) {
-                        startMiningPane.setOpacity(0.01);
-                        miningPane.setOpacity(0.1);
-                    }
-                    coresSlider.setMax(Runtime.getRuntime().availableProcessors());
-                }
                 if(!versionSet)
                 {
                     versionLabel.setText(versionLabel.getText() + " " + Ki.VERSION);
                     //amountLabel.setText("1,000.00");
                     //amountLabel.textProperty().bind(calculatedAmount);
                     versionSet = true;
+                    if(startMiningPane != null)
+                    {
+
+                        if(!ki.getOptions().mining) {
+                            startMiningPane.setOpacity(0.01);
+                            miningPane.setOpacity(0.1);
+                        }
+                        coresSlider.setMax(Runtime.getRuntime().availableProcessors());
+                    }
                 }
                 if(addressLabel != null)
                 {
@@ -237,28 +278,7 @@ public class FXMLController {
                 {
                     Ki.debug = debugButton.isSelected();
                 }
-                if (ki.getEncryptMan().getPublicKey() != null) {
-
-
-
-                    tokenValueMap.clear();
-                    java.util.List<Address> checked = new ArrayList<>();
-                    for (Address a : ki.getAddMan().getActive()) {
-                        if (checked.contains(a)) continue;
-                        checked.add(a);
-                        //ki.getMainLog().info("Getting info from Address: " + a.encodeForChain());
-                        if (ki.getTransMan().getUTXOs(a) != null) {
-                            for (Output o : ki.getTransMan().getUTXOs(a)) {
-
-                                    if(tokenValueMap.get(o.getToken()) == null)
-                                    {
-                                        tokenValueMap.put(o.getToken(), o.getAmount());
-                                    }else{
-                                        tokenValueMap.put(o.getToken(),tokenValueMap.get(o.getToken()).add(o.getAmount()));
-                                    }
-                            }
-                        }
-                    }
+                if (ki.getEncryptMan().getPublicKey() != null && isFinal) {
 
                     if(tokenValueMap.get(currentWallet) == null || tokenValueMap.get(currentWallet).compareTo(BigInteger.ZERO) == 0)
                     {

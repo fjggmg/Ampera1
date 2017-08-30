@@ -71,9 +71,7 @@ public class ConnMan extends Listener implements org.bitbucket.backspace119.gene
             ki.getChainMan().setCanMine(false);
             if(b != null)
             {
-
-
-                    /*
+                /*
                     if(!resentBlocks.contains(b.ID)) {
                         NewBlockPacket nbp = new NewBlockPacket(ki);
                         Map<String, String> data = new HashMap<>();

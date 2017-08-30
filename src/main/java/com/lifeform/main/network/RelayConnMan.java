@@ -7,6 +7,7 @@ import com.esotericsoftware.kryonet.Server;
 import com.lifeform.main.IKi;
 import com.lifeform.main.data.JSONManager;
 import com.lifeform.main.data.Utils;
+import com.lifeform.main.transactions.ITrans;
 import com.lifeform.main.transactions.Transaction;
 import org.bitbucket.backspace119.generallib.io.network.ConnectionManager;
 import org.bitbucket.backspace119.generallib.io.network.Packet;
@@ -115,6 +116,12 @@ public class RelayConnMan extends Listener implements ConnectionManager {
                             sendPacket(bp);
                             height = height.add(BigInteger.ONE);
                         }
+                        for(ITrans t:ki.getTransMan().getPending())
+                        {
+                            NewTransactionPacket ntp = new NewTransactionPacket();
+                            ntp.trans = t.toJSON();
+                            connection.sendTCP(ntp);
+                        }
                     }
                     break;
                 case "TransactionPacket":
@@ -138,10 +145,6 @@ public class RelayConnMan extends Listener implements ConnectionManager {
         }
 
     }
-
-
-
-
 
     @Override
     public String getID() {

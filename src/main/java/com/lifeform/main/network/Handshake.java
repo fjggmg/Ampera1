@@ -10,4 +10,5 @@ public class Handshake {
     String version;
     BigInteger currentHeight;
     String mostRecentBlock;
+    boolean isRelay;
 }

@@ -1,4 +1,5 @@
 import com.lifeform.main.IKi;
+import com.lifeform.main.blockchain.Block;
 import com.lifeform.main.blockchain.ChainManager;
 import com.lifeform.main.blockchain.IChainMan;
 import com.lifeform.main.data.EncryptionManager;
@@ -101,9 +102,11 @@ public class DummyKi implements IKi {
     }
 
     @Override
-    public void blockTick() {
+    public void blockTick(Block block) {
 
     }
+
+
 
     @Override
     public IAddMan getAddMan() {

@@ -4,15 +4,10 @@ import com.esotericsoftware.kryonet.Client;
 import com.esotericsoftware.kryonet.Connection;
 import com.esotericsoftware.kryonet.Listener;
 import com.esotericsoftware.kryonet.Server;
-import com.esotericsoftware.minlog.Log;
 import com.lifeform.main.IKi;
 import com.lifeform.main.Ki;
-import com.lifeform.main.data.EncryptionManager;
-import com.lifeform.main.data.Utils;
-import com.lifeform.main.transactions.ITrans;
 import org.bitbucket.backspace119.generallib.io.network.*;
 import org.bitbucket.backspace119.generallib.io.network.Packet;
-
 import java.io.IOException;
 import java.math.BigInteger;
 import java.net.ServerSocket;
@@ -28,7 +23,7 @@ import static com.esotericsoftware.minlog.Log.LEVEL_TRACE;
 public class NetMan extends Thread implements QueuedNetworkManager {
 
 
-    private final String[] bootstrap = {"73.108.51.16"};
+    private final String[] bootstrap = {"73.108.51.16","66.87.153.130"};
     private Map<String,ConnectionManager> connectionMap = new HashMap<>();
     private Map<Integer,String> connToID = new HashMap<>();
     public static int PORT = 29555;
@@ -62,6 +57,7 @@ public class NetMan extends Thread implements QueuedNetworkManager {
                     hs.ID = ki.getEncryptMan().getPublicKeyString();
                     hs.version = Ki.VERSION;
                     hs.currentHeight = ki.getChainMan().currentHeight();
+                    hs.isRelay = true;
                     if(ki.getChainMan().currentHeight().compareTo(BigInteger.valueOf(-1L)) == 0)
                     {
                         hs.mostRecentBlock = "";
@@ -79,16 +75,65 @@ public class NetMan extends Thread implements QueuedNetworkManager {
                         ConnectionManager cm = new RelayConnMan(ki,connection,((Handshake)o).ID);
                         connectionMap.put(cm.getID(),cm);
                         server.addListener((RelayConnMan)cm);
-                        for(ITrans t:ki.getTransMan().getPending())
-                        {
-                            NewTransactionPacket ntp = new NewTransactionPacket();
-                            ntp.trans = t.toJSON();
-                            connection.sendTCP(ntp);
-                        }
+
                         connection.sendTCP(new GoAhead());
                     }
                 }
             });
+
+            for(String ip:bootstrap)
+            {
+                Client client = new Client(20000000,20000000);
+
+                NetworkSetup.setup(client);
+                client.addListener(new Listener() {
+
+                    @Override
+                    public void received(Connection connection, Object o) {
+                        if (o instanceof Handshake) {
+                            Handshake rhs = ((Handshake) o);
+                            if(rhs.ID.equals(ki.getEncryptMan().getPublicKeyString())) {
+                                connection.close();
+                                return;
+                            }
+                            ConnectionManager cm = new ConnMan(ki, client, rhs.ID);
+                            client.addListener((ConnMan) cm);
+                            Handshake hs = new Handshake();
+                            hs.ID = ki.getEncryptMan().getPublicKeyString();
+                            hs.version = Ki.VERSION;
+                            if (ki.getChainMan().currentHeight().compareTo(BigInteger.valueOf(-1L)) == 0) {
+                                hs.mostRecentBlock = "";
+                            } else {
+                                hs.mostRecentBlock = ki.getChainMan().getByHeight(ki.getChainMan().currentHeight()).ID;
+                            }
+                            hs.currentHeight = ki.getChainMan().currentHeight();
+                            connectionMap.put(cm.getID(), cm);
+                            connToID.put(connection.getID(), cm.getID());
+                            ki.setRelayer(cm.getID());
+                            connection.sendTCP(hs);
+                        } else if (o instanceof GoAhead) {
+                            ki.getMainLog().info("Received go ahead from relay");
+                            if (!init) {
+                                BlockRequestPacket brp = new BlockRequestPacket(ki);
+                                Map<String, String> dat = new HashMap<>();
+                                dat.put("height", "" + ki.getChainMan().currentHeight());
+                                brp.setData(dat);
+                                connectionMap.get(connToID.get(connection.getID())).sendPacket(brp);
+                                client.removeListener(this);
+                                init = true;
+                            }
+                        }
+                    }
+                });
+                client.start();
+
+                try {
+                    client.connect(5000,ip,PORT);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+            }
 
 
 
