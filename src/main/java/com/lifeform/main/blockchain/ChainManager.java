@@ -47,16 +47,47 @@ public class ChainManager implements IChainMan {
     ConcurrentMap<String,String> exMap;
     ConcurrentMap<String,String> cmMap;
     private String fileName = "block.data";
-    private String folderName = "blocks/";
+    private String folderName;
+
+    public ChainManager(IKi ki, short chainID, String folderName, Block primer)
+    {
+        this(ki,chainID,folderName);
+        primeChain(primer);
+    }
+
     /**
-     * current implementation is for multi-chain PoW and PoS system with
-     * different chain IDs listed as finals at bottom of file
+     * ONLY FOR USE WITH TEMP CHAIN MANAGER FOR PRIMING CHAIN! NOT FOR USE WITH NORMAL CHAIN, FORCES BLOCK ONTO STACK
+     * @param block
+     */
+    private synchronized void primeChain(Block block)
+    {
+        current = block;
+        currentHeight = block.height;
+        blockchainMap.put(block.ID,block);
+        heightMap.put(block.height,block);
+
+        saveBlock(block);
+        csMap.put("current",block.toJSON());
+        csMap.put("height",block.height.toString());
+        csDB.commit();
+        for(String ID:block.getTransactionKeys())
+        {
+            //System.out.println("ID for trans block is: " + ID);
+            tmMap.put(ID,block.height.toString());
+        }
+        tmDB.commit();
+        cmMap.put(block.ID,block.height.toString());
+        cmDB.commit();
+    }
+
+    /**
+     * PoW system only
      * @param chainID
      */
-    public ChainManager(IKi ki, short chainID)
+    public ChainManager(IKi ki, short chainID, String folderName)
     {
         this.ki = ki;
-
+        this.folderName = folderName;
         csDB = DBMaker.fileDB("chain.state").fileMmapEnableIfSupported().transactionEnable().make();
 
         csMap = csDB.hashMap("csDB", Serializer.STRING,Serializer.STRING).createOrOpen();
@@ -149,13 +180,14 @@ public class ChainManager implements IChainMan {
 
     @Override
     public synchronized void clearFile() {
-        File folder = new File("blocks/");
+        File folder = new File(folderName);
         File[] all = folder.listFiles();
 
         for(int i = 0; i < all.length; i++)
         {
             all[i].delete();
         }
+
     }
 
     @Override

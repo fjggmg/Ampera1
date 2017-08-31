@@ -5,6 +5,8 @@ import com.esotericsoftware.kryonet.Connection;
 import com.esotericsoftware.kryonet.Listener;
 import com.esotericsoftware.kryonet.Server;
 import com.lifeform.main.IKi;
+import com.lifeform.main.blockchain.Block;
+import com.lifeform.main.blockchain.ChainManager;
 import com.lifeform.main.data.JSONManager;
 import com.lifeform.main.data.Utils;
 import com.lifeform.main.transactions.ITrans;
@@ -52,12 +54,12 @@ public class RelayConnMan extends Listener implements ConnectionManager {
     @Override
     public void received(Connection connection, Object object)
     {
-        ki.getMainLog().info("received packet");
+        //ki.getMainLog().info("received packet");
         if(connection.getID() == this.connection.getID()) {
-            ki.getMainLog().info("received packet from: " + connection.getID());
-            ki.getMainLog().info("Packet details: " + object.toString());
+            //ki.getMainLog().info("received packet from: " + connection.getID());
+            //ki.getMainLog().info("Packet details: " + object.toString());
             if (object instanceof String) {
-                ki.getMainLog().info("Received old style packet, sending to listener");
+                //ki.getMainLog().info("Received old style packet, sending to listener");
                 listen((String) object);
             }
             else if(object instanceof NewTransactionPacket)
@@ -68,7 +70,61 @@ public class RelayConnMan extends Listener implements ConnectionManager {
                     ki.getTransMan().getPending().add(Transaction.fromJSON(ntp.trans));
                 }
 
+            }else if(object instanceof LastAgreedList)
+            {
+                List<Block> blocks = ((LastAgreedList)object).blocks;
+                Map<BigInteger,Block> heightMap = new HashMap<>();
+                for(Block b:blocks)
+                {
+                    heightMap.put(b.height,b);
+                }
+                BigInteger highest = BigInteger.ZERO;
+                for(BigInteger height:heightMap.keySet())
+                {
+                    if(ki.getChainMan().getByHeight(height).ID.equals(heightMap.get(height).ID))
+                    {
+                        if(height.compareTo(highest) > 0)
+                        {
+                            highest = height;
+                        }
+                    }
+                }
+
+                LastAgreed la = new LastAgreed();
+                la.agreed = highest;
+                sendPacket(la);
+            }else if(object instanceof  ChainUpdate)
+            {
+                ChainUpdate cu = (ChainUpdate) object;
+                ChainManager temp = new ChainManager(ki,ChainManager.POW_CHAIN,"/temp",ki.getChainMan().getByHeight(cu.minHeight));
+                Map<BigInteger,Block> heightMap = new HashMap<>();
+                BigInteger max = BigInteger.ZERO;
+                for(Block b:cu.chain)
+                {
+                    if(b.height.compareTo(max) > 0) max = b.height;
+                    heightMap.put(b.height,b);
+                }
+
+                for(BigInteger current = cu.minHeight.add(BigInteger.ONE);current.compareTo(max) == 0;current = current.add(BigInteger.ONE))
+                {
+                    if(!temp.addBlock(heightMap.get(current))) return;
+                }
+
+                ki.getChainMan().undoToBlock(ki.getChainMan().getByHeight(cu.minHeight).ID);
+
+                for(BigInteger current = cu.minHeight.add(BigInteger.ONE);current.compareTo(max) == 0;current = current.add(BigInteger.ONE))
+                {
+                    if(!ki.getChainMan().addBlock(temp.getByHeight(current))) {
+                        ki.getMainLog().error("There has been an error in rebuilding the block chain to a longer competitor. The blocks are not correctly verified and the chain is not complete");
+                        temp.clearFile();
+                        return;
+                    }
+                }
+
+                temp.clearFile();
+
             }
+
         }
     }
 

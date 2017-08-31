@@ -68,16 +68,12 @@ public class NewBlockPacket implements Packet {
 
         if(b.height.compareTo(ki.getChainMan().currentHeight().add(BigInteger.ONE)) > 0)
         {
-
-
             if(ki.isRelay()) {
 
                 //TODO: we're now going to accept future blocks from nodes everywhere and ask for a chain update
-                ki.getMainLog().info("Received future block from node. Not allowed, sending bad block packet");
-                BadBlock bb = new BadBlock();
-                bb.ID = b.ID;
-                bb.currentHeight = ki.getChainMan().currentHeight();
-                connectionManager.sendPacket(bb);
+                LastAgreedRequest lar = new LastAgreedRequest();
+                lar.currentHeight = ki.getChainMan().currentHeight();
+                connectionManager.sendPacket(lar);
             }else{
                 ki.getMainLog().info("Received orphan block, caching for later verification");
                 ki.getChainMan().verifyLater(b);

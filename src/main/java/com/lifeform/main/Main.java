@@ -43,6 +43,10 @@ public class Main {
         {
             if(s.equals("-r")) o.relay = true;
             if(s.equals("-enableMining")) o.mining = true;
+            if(s.startsWith("-ur"))
+            {
+                o.relayToUse = Integer.parseInt(s.replaceFirst("-ur",""));
+            }
         }
         return o;
     }

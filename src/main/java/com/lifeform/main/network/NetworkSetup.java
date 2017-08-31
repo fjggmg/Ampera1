@@ -38,6 +38,11 @@ public class NetworkSetup {
         kryo.register(ArrayList.class);
         kryo.register(Token.class);
         kryo.register(String.class);
+        kryo.register(ChainUpdate.class);
+        kryo.register(ChainRequest.class);
+        kryo.register(LastAgreed.class);
+        kryo.register(LastAgreedList.class);
+        kryo.register(LastAgreedRequest.class);
 
     }
 }

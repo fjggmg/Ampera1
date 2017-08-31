@@ -31,7 +31,7 @@ public class NetMan extends Thread implements QueuedNetworkManager {
     private Server server;
     private Client client;
     private IKi ki;
-    public NetMan(IKi ki, int tickTime, boolean relay)
+    public NetMan(IKi ki, int tickTime, boolean relay, int rtu)
     {
         this.ki = ki;
         this.tickTime = tickTime;
@@ -178,7 +178,7 @@ public class NetMan extends Thread implements QueuedNetworkManager {
             client.start();
 
                     try {
-                        client.connect(5000, bootstrap[0], PORT);
+                        client.connect(5000, bootstrap[rtu], PORT);
                     } catch (IOException e) {
                         e.printStackTrace();
                     }

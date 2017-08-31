@@ -124,6 +124,35 @@ public class ConnMan extends Listener implements org.bitbucket.backspace119.gene
             BlockProp bp = (BlockProp) object;
 
             MainGUI.blockPropped = bp.ID;
+        }else if(object instanceof LastAgreedRequest)
+        {
+            BigInteger height = ((LastAgreedRequest) object).currentHeight;
+            LastAgreedList lal = new LastAgreedList();
+            List<Block> blocks = new ArrayList<>();
+
+            for(int i = 0; i < 100; i++)
+            {
+                blocks.add(ki.getChainMan().getByHeight(height.subtract(BigInteger.valueOf(i))));
+            }
+
+            lal.blocks = blocks;
+
+            sendPacket(lal);
+
+        }else if(object instanceof LastAgreed)
+        {
+            BigInteger height = ((LastAgreed)object).agreed;
+
+            ChainUpdate cu = new ChainUpdate();
+            cu.minHeight = height.add(BigInteger.ONE);
+            BigInteger current;
+            List<Block> chain = new ArrayList<>();
+            for(current = height;current.compareTo(ki.getChainMan().currentHeight()) <= 0; current = current.add(BigInteger.ONE))
+            {
+                chain.add(ki.getChainMan().getByHeight(current));
+            }
+            cu.chain = chain;
+            sendPacket(cu);
         }
 
     }
