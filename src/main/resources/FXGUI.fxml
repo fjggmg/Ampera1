@@ -272,6 +272,7 @@
                               <Label alignment="CENTER" contentDisplay="CENTER" layoutX="20.0" layoutY="1.0" opacity="0.8" prefHeight="17.0" prefWidth="51.0" text="Copy" textAlignment="CENTER" textFill="WHITE" />
                            </children>
                         </Pane>
+                        <Label fx:id="heightLabel" layoutX="110.0" layoutY="245.0" opacity="0.4" text="Height: " textFill="WHITE" />
                      </children>
                   </Pane>
                   <Pane fx:id="transactionContentPane" prefHeight="200.0" prefWidth="200.0" style="-fx-background-color: rgba(0,0,255,0.1);" visible="false">
@@ -480,7 +481,7 @@
                      </children></Pane>
                   <Pane fx:id="settingsContentPane" prefHeight="200.0" prefWidth="200.0" style="-fx-background-color: rgba(0,0,255,0.1);" visible="false">
                      <children>
-                        <CheckBox fx:id="debugButton" layoutX="191.0" layoutY="86.0" mnemonicParsing="false" opacity="0.5" text="Debug Mode" textFill="WHITE" />
+                        <CheckBox fx:id="debugButton" layoutX="191.0" layoutY="86.0" mnemonicParsing="false" opacity="0.5" selected="true" text="Debug Mode" textFill="WHITE" />
                      </children></Pane>
                   <Pane fx:id="helpContentPane" prefHeight="200.0" prefWidth="200.0" style="-fx-background-color: rgba(0,0,255,0.1);" visible="false">
                      <children>

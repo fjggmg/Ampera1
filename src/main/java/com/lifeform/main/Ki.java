@@ -7,6 +7,7 @@ import com.lifeform.main.blockchain.IChainMan;
 import com.lifeform.main.data.EncryptionManager;
 import com.lifeform.main.data.IEncryptMan;
 import com.lifeform.main.data.Options;
+import com.lifeform.main.network.INetworkManager;
 import com.lifeform.main.network.NetMan;
 import com.lifeform.main.transactions.*;
 import org.apache.logging.log4j.Level;
@@ -40,17 +41,17 @@ public class Ki extends Thread implements IKi {
     private Options o;
     private LogMan logMan;
     private Logger main;
-    private NetworkManager netMan;
+    private INetworkManager netMan;
     private ChainManager chainMan;
     private ITransMan transMan;
     private EncryptionManager encMan;
     private IAddMan addMan;
     private IKi ki = this;
     private boolean run = true;
-    public static final String VERSION = "0.6.0-BETA";
+    public static final String VERSION = "0.7.0-BETA";
     private boolean relay = false;
 
-    public static boolean debug = false;
+    public static boolean debug = true;
     private static IKi instance;
 
     public Ki(Options o)
@@ -61,7 +62,7 @@ public class Ki extends Thread implements IKi {
         logMan = new LogMan(new ConsoleLogger());
         main = logMan.createLogger("Main","console", Level.DEBUG);
         main.info("Ki starting up");
-        chainMan = new ChainManager(this, ChainManager.POW_CHAIN,"/blocks");
+        chainMan = new ChainManager(this, ChainManager.POW_CHAIN,"blocks/");
         chainMan.loadChain();
         getMainLog().info("Chain loaded. Current height: " + chainMan.currentHeight());
         transMan = new TransactionManager(this);
@@ -81,7 +82,8 @@ public class Ki extends Thread implements IKi {
         {
             addMan.setMainAdd(addMan.getNewAdd());
         }
-        netMan = new NetMan(this,20,o.relay,o.relayToUse);
+
+        netMan = new NetMan(this,o.relay);
         netMan.start();
         //gui = MainGUI.guiFactory(this);
         instance = this;
@@ -168,7 +170,7 @@ public class Ki extends Thread implements IKi {
     }
 
     @Override
-    public NetworkManager getNetMan()
+    public INetworkManager getNetMan()
     {
         return netMan;
     }

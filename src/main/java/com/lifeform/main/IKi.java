@@ -4,6 +4,7 @@ import com.lifeform.main.blockchain.Block;
 import com.lifeform.main.blockchain.IChainMan;
 import com.lifeform.main.data.IEncryptMan;
 import com.lifeform.main.data.Options;
+import com.lifeform.main.network.INetworkManager;
 import com.lifeform.main.transactions.IAddMan;
 import com.lifeform.main.transactions.ITransMan;
 import com.lifeform.main.transactions.ITransManMKi;
@@ -37,7 +38,7 @@ public interface IKi {
     IEncryptMan getEncryptMan();
     LogMan getLogMan();
     Logger getMainLog();
-    NetworkManager getNetMan();
+    INetworkManager getNetMan();
     void close();
     boolean isRelay();
     String getRelayer();

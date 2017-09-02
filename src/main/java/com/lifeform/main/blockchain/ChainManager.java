@@ -26,6 +26,7 @@ import java.util.concurrent.ConcurrentMap;
  *
  */
 public class ChainManager implements IChainMan {
+    //TODO: WE NEED TO ACTUALLY USE THE CHAIN IDS AND ADD A TESTNET!
     private IKi ki;
     private boolean canMine = true;
     Block current;
@@ -35,6 +36,9 @@ public class ChainManager implements IChainMan {
     DB tmDB;
     DB exDB;
     DB cmDB;
+    //===============CHAIN IDS========================\\
+    public static final short POW_CHAIN = 0x0111;
+    public static final short TEST_NET= 0x1111;
     private boolean lock = false;
     private Map<BigInteger,Block> verifyLater = new HashMap<>();
     /**
@@ -338,13 +342,7 @@ public class ChainManager implements IChainMan {
         return BigInteger.valueOf(100L).multiply(BigInteger.valueOf(13934304L).subtract(height).multiply(BigInteger.valueOf(100000000L)).divide(BigInteger.valueOf(13934304L)));
     }
 
-    //===============CHAIN IDS========================\\
-    public static final short ANCHOR_CHAIN = 0x0101;
-    public static final short TEST_NET_ANCHOR = 0x1101;
-    public static final short POW_CHAIN = 0x0111;
-    public static final short POS_CHAIN = 0x0222;
-    public static final short TEST_NET_POW = 0x1111;
-    public static final short TEST_NET_POS = 0x1222;
+
 
     private String toJSON()
     {

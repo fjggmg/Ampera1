@@ -2,17 +2,17 @@ package com.lifeform.main.blockchain;
 
 import com.lifeform.main.IKi;
 import com.lifeform.main.data.EncryptionManager;
-import com.lifeform.main.network.NewBlockPacket;
+import com.lifeform.main.network.BlockEnd;
+import com.lifeform.main.network.BlockHeader;
+import com.lifeform.main.network.TransactionPacket;
 
 import java.math.BigInteger;
-import java.util.HashMap;
-import java.util.Map;
 
 public class CPUMiner extends Thread implements IMiner{
 
     public static boolean mining = true;
     public static String blockPropped = "";
-    public static boolean foundBlock = false;
+    public static volatile boolean foundBlock = false;
     private IKi ki;
     private BigInteger guess;
     private BigInteger maxGuess;
@@ -68,11 +68,7 @@ public class CPUMiner extends Thread implements IMiner{
                         //ki.getMainLog().info("Block found");
                         if (!ki.getChainMan().canMine()) continue;
                         ki.getMainLog().info("Block verified");
-                        NewBlockPacket nb = new NewBlockPacket(ki);
-                        Map<String, String> data = new HashMap<>();
-                        data.put("block", b.toJSON());
-                        nb.setData(data);
-                        ki.getNetMan().broadcastPacket(nb);
+                        sendBlock(b);
                         ki.getMainLog().info("Sent NBP to network");
                     }
                     boolean wait = true;
@@ -87,5 +83,36 @@ public class CPUMiner extends Thread implements IMiner{
                 }
             }
         }
+    }
+
+    private void sendBlock(Block b)
+    {
+        BlockHeader bh2 = formHeader(b);
+        ki.getNetMan().broadcast(bh2);
+
+
+        for(String key:b.getTransactionKeys())
+        {
+            TransactionPacket tp = new TransactionPacket();
+            tp.block = b.ID;
+            tp.trans = b.getTransaction(key);
+            ki.getNetMan().broadcast(tp);
+        }
+        BlockEnd be = new BlockEnd();
+        be.ID = b.ID;
+        ki.getNetMan().broadcast(be);
+    }
+    private BlockHeader formHeader(Block b)
+    {
+        BlockHeader bh = new BlockHeader();
+        bh.timestamp = b.timestamp;
+        bh.solver = b.solver;
+        bh.prevID = b.prevID;
+        bh.payload = b.payload;
+        bh.merkleRoot = b.merkleRoot;
+        bh.ID = b.ID;
+        bh.height = b.height;
+        bh.coinbase = b.getCoinbase();
+        return bh;
     }
 }

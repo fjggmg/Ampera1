@@ -1,7 +1,7 @@
 package com.lifeform.main;
 
 import com.lifeform.main.blockchain.CPUMiner;
-import com.lifeform.main.network.NewTransactionPacket;
+import com.lifeform.main.network.TransactionPacket;
 import com.lifeform.main.transactions.*;
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -113,6 +113,9 @@ public class FXMLController {
     }
 
     private Token currenttransaction;
+
+    @FXML
+    public Label heightLabel;
     @FXML
     private Pane transactionOrigin;
 
@@ -286,6 +289,7 @@ public class FXMLController {
                     }else {
                         amountLabel.setText(format.format(tokenValueMap.get(currentWallet).longValueExact() / 100000000D));
                     }
+                    heightLabel.setText("Height: " + ki.getChainMan().currentHeight());
 
                 }
             }
@@ -548,9 +552,9 @@ public class FXMLController {
             trans.addSig(ki.getEncryptMan().getPublicKeyString(), ki.getEncryptMan().sign(trans.toSign()));
             ki.getTransMan().getPending().add(trans);
 
-            NewTransactionPacket ntp = new NewTransactionPacket();
-            ntp.trans = trans.toJSON();
-            ki.getNetMan().broadcastPacket(ntp);
+            TransactionPacket tp = new TransactionPacket();
+            tp.trans = trans;
+            ki.getNetMan().broadcast(tp);
         }
     }
 
