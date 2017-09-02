@@ -12,6 +12,6 @@ public class BlockHeader {
     public long timestamp;
     public String prevID;
     public String payload;
-    public ITrans coinbase;
+    public String coinbase;
 
 }

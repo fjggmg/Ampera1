@@ -95,7 +95,7 @@ public class CPUMiner extends Thread implements IMiner{
         {
             TransactionPacket tp = new TransactionPacket();
             tp.block = b.ID;
-            tp.trans = b.getTransaction(key);
+            tp.trans = b.getTransaction(key).toJSON();
             ki.getNetMan().broadcast(tp);
         }
         BlockEnd be = new BlockEnd();
@@ -112,7 +112,7 @@ public class CPUMiner extends Thread implements IMiner{
         bh.merkleRoot = b.merkleRoot;
         bh.ID = b.ID;
         bh.height = b.height;
-        bh.coinbase = b.getCoinbase();
+        bh.coinbase = b.getCoinbase().toJSON();
         return bh;
     }
 }

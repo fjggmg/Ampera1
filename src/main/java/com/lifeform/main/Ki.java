@@ -48,7 +48,7 @@ public class Ki extends Thread implements IKi {
     private IAddMan addMan;
     private IKi ki = this;
     private boolean run = true;
-    public static final String VERSION = "0.7.0-BETA";
+    public static final String VERSION = "0.7.1-BETA";
     private boolean relay = false;
 
     public static boolean debug = true;
@@ -62,7 +62,7 @@ public class Ki extends Thread implements IKi {
         logMan = new LogMan(new ConsoleLogger());
         main = logMan.createLogger("Main","console", Level.DEBUG);
         main.info("Ki starting up");
-        chainMan = new ChainManager(this, ChainManager.POW_CHAIN,"blocks/");
+        chainMan = new ChainManager(this, ChainManager.POW_CHAIN,"blocks/","chain.state","transaction.meta","extra.chains","chain.meta");
         chainMan.loadChain();
         getMainLog().info("Chain loaded. Current height: " + chainMan.currentHeight());
         transMan = new TransactionManager(this);
@@ -88,7 +88,6 @@ public class Ki extends Thread implements IKi {
         //gui = MainGUI.guiFactory(this);
         instance = this;
         FXGUI.subLaunch();
-
 
     }
 

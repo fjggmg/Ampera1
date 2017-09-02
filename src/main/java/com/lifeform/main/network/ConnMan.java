@@ -70,7 +70,10 @@ public class ConnMan extends IConnectionManager {
     @Override
     public void received(Connection connection,Object o)
     {
-        if(process)
+        ki.debug("Received packet from: " + connection.getID());
+        ki.debug("This connection managers ID is: " + this.connection.getID());
+        ki.debug("Raw Packet is: " + o.toString());
+        if(process && connection.getID() == this.connection.getID())
         pp.process(o);
     }
 }

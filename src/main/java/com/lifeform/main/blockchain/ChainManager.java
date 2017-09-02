@@ -53,9 +53,9 @@ public class ChainManager implements IChainMan {
     private String fileName = "block.data";
     private String folderName;
 
-    public ChainManager(IKi ki, short chainID, String folderName, Block primer)
+    public ChainManager(IKi ki, short chainID, String folderName,String csFile,String transFile,String extraFile,String cmFile,Block primer)
     {
-        this(ki,chainID,folderName);
+        this(ki,chainID,folderName,csFile,transFile,extraFile,cmFile);
         primeChain(primer);
     }
 
@@ -65,6 +65,7 @@ public class ChainManager implements IChainMan {
      */
     private synchronized void primeChain(Block block)
     {
+        ki.debug("Priming temp chain with block of height: " + block.height);
         current = block;
         currentHeight = block.height;
         blockchainMap.put(block.ID,block);
@@ -88,23 +89,23 @@ public class ChainManager implements IChainMan {
      * PoW system only
      * @param chainID
      */
-    public ChainManager(IKi ki, short chainID, String folderName)
+    public ChainManager(IKi ki, short chainID, String folderName,String csFile,String transFile,String extraFile,String cmFile)
     {
         this.ki = ki;
         this.folderName = folderName;
-        csDB = DBMaker.fileDB("chain.state").fileMmapEnableIfSupported().transactionEnable().make();
+        csDB = DBMaker.fileDB(csFile).fileMmapEnableIfSupported().transactionEnable().make();
 
         csMap = csDB.hashMap("csDB", Serializer.STRING,Serializer.STRING).createOrOpen();
 
-        tmDB = DBMaker.fileDB("transaction.meta").fileMmapEnableIfSupported().transactionEnable().make();
+        tmDB = DBMaker.fileDB(transFile).fileMmapEnableIfSupported().transactionEnable().make();
 
         tmMap = tmDB.hashMap("tmDB",Serializer.STRING,Serializer.STRING).createOrOpen();
 
-        exDB = DBMaker.fileDB("extra.chains").fileMmapEnableIfSupported().transactionEnable().make();
+        exDB = DBMaker.fileDB(extraFile).fileMmapEnableIfSupported().transactionEnable().make();
 
         exMap = exDB.hashMap("exDB",Serializer.STRING,Serializer.STRING).createOrOpen();
 
-        cmDB = DBMaker.fileDB("chain.meta").fileMmapEnableIfSupported().transactionEnable().make();
+        cmDB = DBMaker.fileDB(cmFile).fileMmapEnableIfSupported().transactionEnable().make();
 
         cmMap = cmDB.hashMap("cmDB", Serializer.STRING,Serializer.STRING).createOrOpen();
 
@@ -169,6 +170,7 @@ public class ChainManager implements IChainMan {
             csDB.commit();
             tmDB.commit();
             cmDB.commit();
+
         }
 
         CPUMiner.height = currentHeight().add(BigInteger.ONE);
@@ -191,8 +193,15 @@ public class ChainManager implements IChainMan {
         {
             all[i].delete();
         }
-
+        csMap.clear();
+        tmMap.clear();
+        cmMap.clear();
+        csDB.commit();
+        tmDB.commit();
+        cmDB.commit();
+        close();
     }
+
 
     @Override
     public synchronized void saveBlock(Block b) {
@@ -220,28 +229,28 @@ public class ChainManager implements IChainMan {
     public synchronized boolean softVerifyBlock(Block block) {
 
         Block current = getByHeight(block.height.subtract(BigInteger.ONE));
-        //ki.getMainLog().info("verifying block...");
+        ki.debug("verifying block...");
         if(block.height.compareTo(currentHeight()) < 0)
         {
             //this is a "replacement" for an older block, we need the rest of the chain to verify this is actually part of it
             return false;
         }
-        //ki.getMainLog().info("Height is ok");
+        ki.debug("Height is ok");
 
         if(current == null && block.height.compareTo(BigInteger.ZERO) != 0)
         {
             return false;
         }
-        //ki.getMainLog().info("Height check 2 is ok");
+        ki.debug("Height check 2 is ok");
         if(current != null && !block.prevID.equalsIgnoreCase(current.ID)) return false;
-        //ki.getMainLog().info("prev ID is ok");
+        ki.debug("prev ID is ok");
         String hash = EncryptionManager.sha512(block.header());
         if(!block.ID.equals(hash)) return false;
-        //ki.getMainLog().info("ID is ok");
+        ki.debug("ID is ok");
         if(new BigInteger(Utils.toByteArray(hash)).abs().compareTo(currentDifficulty) > 0) return false;
-        //ki.getMainLog().info("Solves for difficulty");
+        ki.debug("Solves for difficulty");
         if(block.getCoinbase() == null) return false;
-        //ki.getMainLog().info("coinbase is in block");
+        ki.debug("coinbase is in block");
         BigInteger fees = BigInteger.ZERO;
 
         for(String t:block.getTransactionKeys())
@@ -250,12 +259,12 @@ public class ChainManager implements IChainMan {
         }
 
         if(!ki.getTransMan().verifyCoinbase(block.getCoinbase(),block.height,fees)) return false;
-        //ki.getMainLog().info("Coinbase verifies ok");
+        ki.debug("Coinbase verifies ok");
         for(String t: block.getTransactionKeys())
         {
             if(!ki.getTransMan().verifyTransaction(block.getTransaction(t))) return false;
         }
-        //ki.getMainLog().info("transactions verify ok");
+        ki.debug("transactions verify ok");
         return true;
     }
 

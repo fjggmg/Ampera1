@@ -553,7 +553,7 @@ public class FXMLController {
             ki.getTransMan().getPending().add(trans);
 
             TransactionPacket tp = new TransactionPacket();
-            tp.trans = trans;
+            tp.trans = trans.toJSON();
             ki.getNetMan().broadcast(tp);
         }
     }
