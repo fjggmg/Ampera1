@@ -51,8 +51,9 @@ public class PacketProcessor implements IPacketProcessor{
                 connMan.disconnect();
                 return;
             }
+            connMan.setID(hs.ID);
             ki.getNetMan().connectionInit(hs.ID,connMan);
-            if(!ki.getChainMan().getByHeight(ki.getChainMan().currentHeight()).ID.equals(hs.mostRecentBlock))
+            if(ki.getChainMan().currentHeight().compareTo(BigInteger.ZERO) > 0 && !ki.getChainMan().getByHeight(ki.getChainMan().currentHeight()).ID.equals(hs.mostRecentBlock))
             {
                 if(ki.getChainMan().currentHeight().compareTo(hs.currentHeight) < 0)
                 {
@@ -63,7 +64,7 @@ public class PacketProcessor implements IPacketProcessor{
                     connMan.sendPacket(las);
                 }
 
-            }else if(!(ki.getChainMan().currentHeight().compareTo(hs.currentHeight) < 0))
+            }else if(ki.getChainMan().currentHeight().compareTo(hs.currentHeight) < 0)
             {
                 ki.debug("Requesting blocks we're missing from the network");
                 BlocksRequest br = new BlocksRequest();
@@ -74,6 +75,7 @@ public class PacketProcessor implements IPacketProcessor{
         {
             ki.debug("Received block header");
             BlockHeader bh = (BlockHeader) packet;
+            ki.debug("Height: " + bh.height);
             headerMap.put(bh.ID,bh);
             if(laFlag)
             {
@@ -92,6 +94,10 @@ public class PacketProcessor implements IPacketProcessor{
                 cuMap.put(bh,new ArrayList<>());
             }else{
                 bMap.put(bh,new ArrayList<>());
+                if(ki.getNetMan().isRelay())
+                {
+                    ki.getNetMan().broadcast(packet);
+                }
             }
         }else if(packet instanceof LastAgreedEnd)
         {
@@ -131,7 +137,8 @@ public class PacketProcessor implements IPacketProcessor{
                 ki.debug("Verifying block with height: " + height + " before doing final commit");
                 if(!temp.addBlock(heightMap.get(height))) return;
             }
-
+            ki.debug("Undoing chain to height: " + cue.startHeight);
+            if(ki.getChainMan().currentHeight().compareTo(cue.startHeight) >= 0)
             ki.getChainMan().undoToBlock(ki.getChainMan().getByHeight(cue.startHeight).ID);
             height = cue.startHeight;
             for(;height.compareTo(max) <= 0;height = height.add(BigInteger.ONE))
@@ -165,7 +172,13 @@ public class PacketProcessor implements IPacketProcessor{
             TransactionPacket tp = (TransactionPacket) packet;
             if(tp.block == null || tp.block.isEmpty())
             {
-                if(ki.getTransMan().verifyTransaction(Transaction.fromJSON(tp.trans))) ki.getTransMan().getPending().add(Transaction.fromJSON(tp.trans));
+                if(ki.getTransMan().verifyTransaction(Transaction.fromJSON(tp.trans))){
+                    ki.getTransMan().getPending().add(Transaction.fromJSON(tp.trans));
+                    if(ki.getNetMan().isRelay())
+                    {
+                        ki.getNetMan().broadcastAllBut(connMan.getID(),packet);
+                    }
+                }
             }else{
                 if(cuFlag)
                 {
@@ -177,6 +190,10 @@ public class PacketProcessor implements IPacketProcessor{
                     if(bMap.get(headerMap.get(tp.block)) != null)
                     {
                         bMap.get(headerMap.get(tp.block)).add(Transaction.fromJSON(tp.trans));
+                        if(ki.getNetMan().isRelay())
+                        {
+                            ki.getNetMan().broadcast(packet);
+                        }
                     }
                 }
             }
@@ -194,6 +211,10 @@ public class PacketProcessor implements IPacketProcessor{
                 }
                 cuBlocks.add(block);
             }else {
+                if(ki.getNetMan().isRelay())
+                {
+                    ki.getNetMan().broadcast(packet);
+                }
                 BlockEnd be = (BlockEnd) packet;
                 BlockHeader bh = headerMap.get(be.ID);
                 List<ITrans> trans = bMap.get(bh);
@@ -213,17 +234,20 @@ public class PacketProcessor implements IPacketProcessor{
                         processBlocks();
                     }
                 }else if(block.height.compareTo(ki.getChainMan().currentHeight().add(BigInteger.ONE)) > 0){
+                    /*
                     BlocksRequest br = new BlocksRequest();
                     br.fromHeight = ki.getChainMan().currentHeight().add(BigInteger.ONE);
                     connMan.sendPacket(br);
+                     */
                     futureBlocks.add(block);
-                }else{
+                }
+                /*else{
                     if(ki.getChainMan().getByHeight(block.height).ID.equals(block.ID))
                     {
                         BigInteger height = block.height;
                         sendFromHeight(height);
                     }
-                }
+                }*/
             }
 
         }else if(packet instanceof BlocksRequest)

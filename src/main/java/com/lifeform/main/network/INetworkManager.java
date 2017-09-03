@@ -10,6 +10,7 @@ public interface INetworkManager {
     IConnectionManager getConnection(String ID);
     void connectionInit(String ID, IConnectionManager connMan);
     void start();
+    boolean isRelay();
 
 
 }

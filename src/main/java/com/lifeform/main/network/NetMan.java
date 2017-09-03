@@ -20,10 +20,11 @@ public class NetMan extends Thread implements INetworkManager {
     private IKi ki;
     private boolean isRelay;
     public static final int PORT = 29555;
-    public static final int IN_BUFFER = 20000000;
-    public static final int OUT_BUFFER = 20000000;
+    public static final int IN_BUFFER = 100000000;
+    public static final int OUT_BUFFER = 100000000;
     List<IConnectionManager> connections = new ArrayList<>();
     Map<String,IConnectionManager> connMap = new HashMap<>();
+    Map<Integer,IConnectionManager> kryoMap = new HashMap<>();
     public NetMan(IKi ki,boolean isRelay)
     {
         this.ki = ki;
@@ -32,6 +33,12 @@ public class NetMan extends Thread implements INetworkManager {
        //Log.set(Log.LEVEL_TRACE);
 
 
+    }
+
+    @Override
+    public boolean isRelay()
+    {
+        return isRelay;
     }
 
     @Override
@@ -45,7 +52,16 @@ public class NetMan extends Thread implements INetworkManager {
                 @Override
                 public void connected(Connection conn)
                 {
-                    server.addListener(new ConnMan(ki,true,conn));
+                    IConnectionManager connMan = new ConnMan(ki,true,conn);
+                    kryoMap.put(conn.getID(),connMan);
+                    connMan.connected(conn);
+
+                }
+
+                @Override
+                public void received(Connection conn, Object o)
+                {
+                    kryoMap.get(conn.getID()).received(o);
                 }
             });
             server.start();
@@ -63,7 +79,20 @@ public class NetMan extends Thread implements INetworkManager {
         for(String ip:bootstrap) {
             Client client = new Client(IN_BUFFER, OUT_BUFFER);
             NetworkSetup.setup(client);
-            client.addListener(new ConnMan(ki,false));
+            client.addListener(new Listener(){
+                IConnectionManager connMan = new ConnMan(ki,false);
+                @Override
+                public void connected(Connection conn)
+                {
+                    connMan.connected(conn);
+                }
+
+                @Override
+                public void received(Connection conn,Object o)
+                {
+                    connMan.received(o);
+                }
+            });
             client.start();
             successes++;
             try {
@@ -89,19 +118,24 @@ public class NetMan extends Thread implements INetworkManager {
     public void broadcast(Object o) {
         for(IConnectionManager connMan:connections)
         {
-            connMan.sendPacket(o);
+            if(!(connMan == null)) {
+                connMan.sendPacket(o);
+            }
         }
+        connections.remove(null);
     }
 
     @Override
     public void broadcastAllBut(String ID, Object o) {
         for(IConnectionManager connMan:connections)
         {
-            if(!connMan.getID().equals(ID))
-            {
-                connMan.sendPacket(o);
+            if(connMan != null && ID != null) {
+                if (!connMan.getID().equals(ID)) {
+                    connMan.sendPacket(o);
+                }
             }
         }
+        connections.remove(null);
     }
 
     @Override
@@ -111,6 +145,7 @@ public class NetMan extends Thread implements INetworkManager {
 
     @Override
     public void connectionInit(String ID, IConnectionManager connMan) {
+
         connMap.put(ID,connMan);
         connections.add(connMan);
     }

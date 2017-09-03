@@ -3,6 +3,8 @@ package com.lifeform.main.network;
 import com.esotericsoftware.kryonet.Connection;
 import com.lifeform.main.IKi;
 
+import java.math.BigInteger;
+
 public class ConnMan extends IConnectionManager {
 
     private IPacketProcessor pp;
@@ -14,7 +16,7 @@ public class ConnMan extends IConnectionManager {
     {
         this(ki,isRelay);
         this.connection = conncetion;
-        connected(connection);
+        //connected(connection);
     }
     public ConnMan(IKi ki, boolean isRelay, IPacketProcessor pp)
     {
@@ -29,17 +31,23 @@ public class ConnMan extends IConnectionManager {
         pp = new PacketProcessor(ki,this);
     }
     @Override
-    boolean isRelay() {
+    public boolean isRelay() {
         return isRelay;
     }
 
     @Override
-    String getID() {
+    public String getID() {
         return ID;
     }
-
+    @Override
+    public void setID(String ID)
+    {
+        this.ID = ID;
+    }
     @Override
     void sendPacket(Object o) {
+
+        ki.debug("Sending packet: " + o.toString());
         connection.sendTCP(o);
     }
 
@@ -60,7 +68,10 @@ public class ConnMan extends IConnectionManager {
         hs.isRelay = isRelay;
         hs.currentHeight = ki.getChainMan().currentHeight();
         hs.ID = ki.getEncryptMan().getPublicKeyString();
-        hs.mostRecentBlock = ki.getChainMan().getByHeight(ki.getChainMan().currentHeight()).ID;
+        if(ki.getChainMan().currentHeight().compareTo(BigInteger.ZERO) > 0)
+            hs.mostRecentBlock = ki.getChainMan().getByHeight(ki.getChainMan().currentHeight()).ID;
+        else
+            hs.mostRecentBlock = "";
         hs.version = Handshake.VERSION;
         sendPacket(hs);
 
@@ -68,7 +79,7 @@ public class ConnMan extends IConnectionManager {
     }
 
     @Override
-    public void received(Connection connection,Object o)
+    public void received(Object o)
     {
         ki.debug("Received packet from: " + connection.getID());
         ki.debug("This connection managers ID is: " + this.connection.getID());
