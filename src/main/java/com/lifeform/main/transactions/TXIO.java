@@ -12,4 +12,5 @@ public interface TXIO {
     int getIndex();
     String toJSON();
     String getID();
+    long getTimestamp();
 }

@@ -71,6 +71,12 @@ public class PacketProcessor implements IPacketProcessor{
                 br.fromHeight = ki.getChainMan().currentHeight();
                 connMan.sendPacket(br);
             }
+            for(ITrans trans:ki.getTransMan().getPending())
+            {
+                TransactionPacket tp = new TransactionPacket();
+                tp.trans = trans.toJSON();
+                connMan.sendPacket(tp);
+            }
         }else if(packet instanceof BlockHeader)
         {
             ki.debug("Received block header");

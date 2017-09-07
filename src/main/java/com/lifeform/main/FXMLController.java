@@ -115,6 +115,21 @@ public class FXMLController {
     private Token currenttransaction;
 
     @FXML
+    public Label rTrans1;
+
+    @FXML
+    public Label rTrans2;
+
+    @FXML
+    public Label rTrans3;
+
+    @FXML
+    public Label rTrans4;
+
+    @FXML
+    public Label rTrans5;
+
+    @FXML
     public Label heightLabel;
     @FXML
     private Pane transactionOrigin;
@@ -253,10 +268,8 @@ public class FXMLController {
 
     public void tick()
     {
-
             if(versionLabel != null)
             {
-
                 if(!versionSet)
                 {
                     versionLabel.setText(versionLabel.getText() + " " + Ki.VERSION);
@@ -290,6 +303,8 @@ public class FXMLController {
                         amountLabel.setText(format.format(tokenValueMap.get(currentWallet).longValueExact() / 100000000D));
                     }
                     heightLabel.setText("Height: " + ki.getChainMan().currentHeight());
+
+
 
                 }
             }
@@ -489,7 +504,7 @@ public class FXMLController {
             BigInteger amount = BigInteger.valueOf(lAmt);
             int index = 0;
             Address receiver = Address.decodeFromChain(addressToSend.getText());
-            Output output = new Output(amount, receiver, token, index);
+            Output output = new Output(amount, receiver, token, index,System.currentTimeMillis());
             java.util.List<Output> outputs = new ArrayList<>();
             outputs.add(output);
             java.util.List<String> keys = new ArrayList<>();
@@ -503,6 +518,7 @@ public class FXMLController {
             for (Address a : ki.getAddMan().getActive()) {
                 for (Output o : ki.getTransMan().getUTXOs(a)) {
                     if (o.getToken().equals(token)) {
+                        if(inputs.contains(Input.fromOutput(o))) continue;
                         inputs.add(Input.fromOutput(o));
                         totalInput = totalInput.add(o.getAmount());
                         if (totalInput.compareTo(amount) >= 0) break;
@@ -551,7 +567,7 @@ public class FXMLController {
             trans.makeChange(fee, ki.getAddMan().getMainAdd()); // TODO this just sends change back to the main address......will need to give option later
             trans.addSig(ki.getEncryptMan().getPublicKeyString(), ki.getEncryptMan().sign(trans.toSign()));
             ki.getTransMan().getPending().add(trans);
-
+            ki.getTransMan().getUsedUTXOs().addAll(trans.getInputs());
             TransactionPacket tp = new TransactionPacket();
             tp.trans = trans.toJSON();
             ki.getNetMan().broadcast(tp);

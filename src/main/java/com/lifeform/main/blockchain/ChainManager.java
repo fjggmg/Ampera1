@@ -37,9 +37,8 @@ public class ChainManager implements IChainMan {
     DB exDB;
     DB cmDB;
     //===============CHAIN IDS========================\\
-    public static final short POW_CHAIN = 0x0111;
-    public static final short TEST_NET= 0x1111;
-    private boolean lock = false;
+    public static final short POW_CHAIN = 0x0001;
+    public static final short TEST_NET= 0x1110;
     private Map<BigInteger,Block> verifyLater = new HashMap<>();
     /**
      * stupid way to store the chain for easy access momentarily
@@ -52,6 +51,7 @@ public class ChainManager implements IChainMan {
     ConcurrentMap<String,String> cmMap;
     private String fileName = "block.data";
     private String folderName;
+    private short chainID;
 
     public ChainManager(IKi ki, short chainID, String folderName,String csFile,String transFile,String extraFile,String cmFile,Block primer)
     {
@@ -92,20 +92,23 @@ public class ChainManager implements IChainMan {
     public ChainManager(IKi ki, short chainID, String folderName,String csFile,String transFile,String extraFile,String cmFile)
     {
         this.ki = ki;
-        this.folderName = folderName;
-        csDB = DBMaker.fileDB(csFile).fileMmapEnableIfSupported().transactionEnable().make();
+        this.folderName = chainID + folderName;
+        this.chainID = chainID;
+
+        new File("chain" + chainID + "/").mkdirs();
+        csDB = DBMaker.fileDB("chain" + chainID + "/" + csFile).fileMmapEnableIfSupported().transactionEnable().make();
 
         csMap = csDB.hashMap("csDB", Serializer.STRING,Serializer.STRING).createOrOpen();
 
-        tmDB = DBMaker.fileDB(transFile).fileMmapEnableIfSupported().transactionEnable().make();
+        tmDB = DBMaker.fileDB("chain" + chainID + "/" + transFile).fileMmapEnableIfSupported().transactionEnable().make();
 
         tmMap = tmDB.hashMap("tmDB",Serializer.STRING,Serializer.STRING).createOrOpen();
 
-        exDB = DBMaker.fileDB(extraFile).fileMmapEnableIfSupported().transactionEnable().make();
+        exDB = DBMaker.fileDB("chain" + chainID + "/" + extraFile).fileMmapEnableIfSupported().transactionEnable().make();
 
         exMap = exDB.hashMap("exDB",Serializer.STRING,Serializer.STRING).createOrOpen();
 
-        cmDB = DBMaker.fileDB(cmFile).fileMmapEnableIfSupported().transactionEnable().make();
+        cmDB = DBMaker.fileDB("chain" + chainID + "/" + cmFile).fileMmapEnableIfSupported().transactionEnable().make();
 
         cmMap = cmDB.hashMap("cmDB", Serializer.STRING,Serializer.STRING).createOrOpen();
 
@@ -451,7 +454,7 @@ public class ChainManager implements IChainMan {
         {
             fees = fees.add(transactions.get(t).getFee());
         }
-        Output o = new Output(blockRewardForHeight(currentHeight().add(BigInteger.ONE)).add(fees),ki.getAddMan().getMainAdd(), Token.ORIGIN,0);
+        Output o = new Output(blockRewardForHeight(currentHeight().add(BigInteger.ONE)).add(fees),ki.getAddMan().getMainAdd(), Token.ORIGIN,0, System.currentTimeMillis());
         List<Output> outputs = new ArrayList<>();
         outputs.add(o);
         int i = 1;
@@ -460,7 +463,7 @@ public class ChainManager implements IChainMan {
             for(Token t:Token.values())
             {
                 if(!t.equals(Token.ORIGIN)) {
-                    outputs.add(new Output(BigInteger.valueOf(Long.MAX_VALUE), ki.getAddMan().getMainAdd(), t, i));
+                    outputs.add(new Output(BigInteger.valueOf(Long.MAX_VALUE), ki.getAddMan().getMainAdd(), t, i, System.currentTimeMillis()));
                     i++;
                 }
             }

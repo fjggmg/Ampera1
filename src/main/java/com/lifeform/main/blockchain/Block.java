@@ -5,7 +5,6 @@ import com.lifeform.main.data.EncryptionManager;
 import com.lifeform.main.data.JSONManager;
 import com.lifeform.main.data.Utils;
 import com.lifeform.main.transactions.ITrans;
-import com.lifeform.main.transactions.MKiTransaction;
 import com.lifeform.main.transactions.Transaction;
 import org.json.simple.JSONObject;
 

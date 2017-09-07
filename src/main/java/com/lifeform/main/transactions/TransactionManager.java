@@ -8,10 +8,7 @@ import org.mapdb.DBMaker;
 import org.mapdb.Serializer;
 
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentMap;
 
 /**
@@ -26,6 +23,7 @@ public class TransactionManager implements ITransMan{
     private ConcurrentMap<String,String> utxoValueMap;
     private IKi ki;
     private List<ITrans> pending = new ArrayList<>();
+    private List<Input> usedUTXOs = new ArrayList<>();
     public TransactionManager(IKi ki)
     {
         this.ki = ki;
@@ -38,22 +36,22 @@ public class TransactionManager implements ITransMan{
 
     @Override
     public boolean verifyTransaction(ITrans transaction) {
-        ki.getMainLog().info("Verifying transaction: " + transaction.getID());
+        ki.debug("Verifying transaction: " + transaction.getID());
         for(Input i:transaction.getInputs())
         {
-            ki.getMainLog().info("Verifying input");
+            ki.debug("Verifying input");
             if(utxoSpent.get(i.getID())) return false;
-            ki.getMainLog().info("input not spent");
+            ki.debug("input not spent");
             if(new BigInteger(utxoValueMap.get(i.getID())).compareTo(i.getAmount()) != 0) return false;
-            ki.getMainLog().info("input correct amount");
+            ki.debug("input correct amount");
         }
-        ki.getMainLog().info("all inputs verified");
+        ki.debug("all inputs verified");
         if(!transaction.verifyInputToOutput()) return false;
-        ki.getMainLog().info("input to output verifies");
+        ki.debug("input to output verifies");
         if(!transaction.verifyCanSpend()) return false;
-        ki.getMainLog().info("verified can spend");
+        ki.debug("verified can spend");
         if(!transaction.verifySigs()) return false;
-        ki.getMainLog().info("verified signature");
+        ki.debug("verified signature");
         return true;
     }
 
@@ -107,25 +105,29 @@ public class TransactionManager implements ITransMan{
         if (utxoMap.get(address.encodeForChain()) != null) {
             List<Output> utxos = new ArrayList<>();
             List<String> sUtxos = JSONManager.parseJSONToList(utxoMap.get(address.encodeForChain()));
-            //ki.getMainLog().info("List of UTXOs " + sUtxos);
+            //ki.debug("List of UTXOs " + sUtxos);
             List<String> toRemove = new ArrayList<>();
-            for(String s:sUtxos)
-            {
 
-                if(!utxoSpent.get(Output.fromJSON(s).getID()))
-                utxos.add(Output.fromJSON(s));
-                else
-                    toRemove.add(s);
-            }
-            if(!toRemove.isEmpty())
-            {
-                for(String s:toRemove)
-                {
-                    sUtxos.remove(s);
+            if(sUtxos != null) {
+                Set<String> hs = new HashSet<>();
+                hs.addAll(sUtxos);
+                sUtxos.clear();
+                sUtxos.addAll(hs);
 
+                for (String s : sUtxos) {
+
+                    if (!utxoSpent.get(Output.fromJSON(s).getID())) {
+                        if(!usedUTXOs.contains(Input.fromOutput(Output.fromJSON(s))))
+                        utxos.add(Output.fromJSON(s));
+                    }
+                    else
+                        toRemove.add(s);
                 }
-                utxoMap.put(address.encodeForChain(), JSONManager.parseListToJSON(sUtxos).toJSONString());
-                utxoDB.commit();
+                if (!toRemove.isEmpty()) {
+                    sUtxos.removeAll(toRemove);
+                    utxoMap.put(address.encodeForChain(), JSONManager.parseListToJSON(sUtxos).toJSONString());
+                    utxoDB.commit();
+                }
             }
             return utxos;
         }
@@ -134,8 +136,8 @@ public class TransactionManager implements ITransMan{
 
     @Override
     public boolean verifyCoinbase(ITrans transaction, BigInteger blockHeight, BigInteger fees) {
-        ki.getMainLog().info("Verifying coinbase transaction");
-        ki.getMainLog().info("It has: " + transaction.getOutputs().size() + " outputs");
+        ki.debug("Verifying coinbase transaction");
+        ki.debug("It has: " + transaction.getOutputs().size() + " outputs");
         if(blockHeight.compareTo(BigInteger.ZERO) != 0)
         {
             if(transaction.getOutputs().size() > 1) return false;
@@ -157,10 +159,10 @@ public class TransactionManager implements ITransMan{
 
         for(Output o:transaction.getOutputs())
         {
-            ki.getMainLog().info("Address " + o.getAddress().encodeForChain());
-            ki.getMainLog().info("ID: " + o.getID());
-            ki.getMainLog().info("Token " + o.getToken());
-            ki.getMainLog().info("Amount " + o.getAmount());
+            ki.debug("Address " + o.getAddress().encodeForChain());
+            ki.debug("ID: " + o.getID());
+            ki.debug("Token " + o.getToken());
+            ki.debug("Amount " + o.getAmount());
             utxoSpent.put(o.getID(),false);
             utxoValueMap.put(o.getID(),o.getAmount().toString());
             ki.getAddMan().receivedOn(o.getAddress());
@@ -184,6 +186,11 @@ public class TransactionManager implements ITransMan{
     @Override
     public List<ITrans> getPending() {
         return pending;
+    }
+
+    @Override
+    public List<Input> getUsedUTXOs() {
+        return usedUTXOs;
     }
 
     @Override

@@ -14,7 +14,7 @@ public interface ITransMan {
     boolean verifyCoinbase(ITrans transaction,BigInteger blockHeight, BigInteger fees);
     boolean addCoinbase(ITrans transaction,BigInteger blockHeight,BigInteger fees);
     List<ITrans> getPending();
-
+    List<Input> getUsedUTXOs();
     void close();
 
 

@@ -297,27 +297,27 @@
                         </Pane>
                         <VBox layoutX="129.0" layoutY="297.0" prefHeight="85.0" prefWidth="331.0">
                            <children>
-                              <Label opacity="0.6" text="None" textFill="WHITE">
+                              <Label fx:id="rTrans1" opacity="0.6" text="None" textFill="WHITE">
                                  <font>
                                     <Font name="System Italic" size="12.0" />
                                  </font>
                               </Label>
-                              <Label opacity="0.6" text="None" textFill="WHITE">
+                              <Label fx:id="rTrans2" opacity="0.6" text="None" textFill="WHITE">
                                  <font>
                                     <Font name="System Italic" size="12.0" />
                                  </font>
                               </Label>
-                              <Label opacity="0.6" text="None" textFill="WHITE">
+                              <Label fx:id="rTrans3" opacity="0.6" text="None" textFill="WHITE">
                                  <font>
                                     <Font name="System Italic" size="12.0" />
                                  </font>
                               </Label>
-                              <Label opacity="0.6" text="None" textFill="WHITE">
+                              <Label fx:id="rTrans4" opacity="0.6" text="None" textFill="WHITE">
                                  <font>
                                     <Font name="System Italic" size="12.0" />
                                  </font>
                               </Label>
-                              <Label opacity="0.6" text="None" textFill="WHITE">
+                              <Label fx:id="rTrans5" opacity="0.6" text="None" textFill="WHITE">
                                  <font>
                                     <Font name="System Italic" size="12.0" />
                                  </font>

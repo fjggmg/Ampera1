@@ -11,15 +11,17 @@ import java.math.BigInteger;
  */
 public class Input implements TXIO{
 
-    public Input(String prevID,int prevOut,BigInteger amount,Address receiver,Token token)
+    public Input(String prevID,int prevOut,BigInteger amount,Address receiver,Token token,long timestamp)
     {
         this.prevID = prevID;
         this.prevOut = prevOut;
         this.amount = amount;
         this.receiver = receiver;
         this.token = token;
+        this.timestamp = timestamp;
     }
 
+    private long timestamp;
     public String getID()
     {
         return prevID;
@@ -62,6 +64,7 @@ public class Input implements TXIO{
         jo.put("amount",amount.toString());
         jo.put("receiver",receiver.encodeForChain());
         jo.put("token",token.toString());
+        jo.put("timestamp",timestamp);
         return jo.toJSONString();
     }
 
@@ -74,15 +77,22 @@ public class Input implements TXIO{
             BigInteger amount = new BigInteger((String)jo.get("amount"));
             Address receiver = Address.decodeFromChain((String)jo.get("receiver"));
             Token token = Token.valueOf((String)jo.get("token"));
-            return new Input(prevID,prevOut,amount,receiver,token);
+            long timestamp = Long.parseLong((String)jo.get("timestamp"));
+            return new Input(prevID,prevOut,amount,receiver,token,timestamp);
         } catch (ParseException e) {
             e.printStackTrace();
         }
         return null;
     }
 
+    @Override
+    public long getTimestamp()
+    {
+        return timestamp;
+    }
+
     public static Input fromOutput(Output output)
     {
-        return new Input(output.getID(),output.getIndex(),output.getAmount(),output.getAddress(),output.getToken());
+        return new Input(output.getID(),output.getIndex(),output.getAmount(),output.getAddress(),output.getToken(),output.getTimestamp());
     }
 }

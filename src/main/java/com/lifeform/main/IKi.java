@@ -7,10 +7,8 @@ import com.lifeform.main.data.Options;
 import com.lifeform.main.network.INetworkManager;
 import com.lifeform.main.transactions.IAddMan;
 import com.lifeform.main.transactions.ITransMan;
-import com.lifeform.main.transactions.ITransManMKi;
 import org.apache.logging.log4j.Logger;
 import org.bitbucket.backspace119.generallib.Logging.LogMan;
-import org.bitbucket.backspace119.generallib.io.network.NetworkManager;
 
 /**
  * Created by Bryan on 5/10/2017.

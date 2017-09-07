@@ -1,5 +1,6 @@
 package com.lifeform.main.transactions;
 
+import com.lifeform.main.Ki;
 import com.lifeform.main.data.EncryptionManager;
 import com.lifeform.main.data.JSONManager;
 import org.json.simple.JSONObject;
@@ -183,16 +184,17 @@ public class Transaction implements ITrans{
         Map<String,Integer> idMap = new HashMap<>();
         for(Input i:inputs)
         {
+            Ki.getInstance().debug("Input information:: ID: " + i.getID() + " Index: " + i.getIndex() );
             if(idMap.keySet().contains(i.getID()))
             {
                 if(idMap.get(i.getID()) == i.getIndex()) {
-                    System.out.println("input already used");
+                    Ki.getInstance().debug("input already used earlier in this transaction");
                     return false;
                 }
             }
             idMap.put(i.getID(),i.getIndex());
             if(entropyMap.get(i.getAddress().encodeForChain()) == null){
-                System.out.println("Entropy for this address: " + i.getAddress().encodeForChain() +  " is null");
+                Ki.getInstance().debug("Entropy for this address: " + i.getAddress().encodeForChain() +  " is null");
                 return false;
             }
             if(!i.canSpend(sKeys,entropyMap.get(i.getAddress().encodeForChain()))) return false;
@@ -260,7 +262,7 @@ public class Transaction implements ITrans{
             //not enough left to make fee
             return;
         }
-        Output o = new Output(allInput.subtract(allOutput).subtract(fee),cAdd,Token.ORIGIN,outputs.size() + 1);
+        Output o = new Output(allInput.subtract(allOutput).subtract(fee),cAdd,Token.ORIGIN,outputs.size() + 1,System.currentTimeMillis());
         outputs.add(o);
 
     }
@@ -282,7 +284,7 @@ public class Transaction implements ITrans{
                     allOutput = allOutput.add(o.getAmount());
             }
 
-            Output o = new Output(allInput.subtract(allOutput), cAdd, t, outputs.size() + 1);
+            Output o = new Output(allInput.subtract(allOutput), cAdd, t, outputs.size() + 1, System.currentTimeMillis());
             outputs.add(o);
         }
     }
