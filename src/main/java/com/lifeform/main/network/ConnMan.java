@@ -1,8 +1,7 @@
 package com.lifeform.main.network;
 
-import com.esotericsoftware.kryonet.Connection;
 import com.lifeform.main.IKi;
-
+import com.lifeform.main.network.logic.INetworkEndpoint;
 import java.math.BigInteger;
 
 public class ConnMan extends IConnectionManager {
@@ -10,25 +9,20 @@ public class ConnMan extends IConnectionManager {
     private IPacketProcessor pp;
     private boolean isRelay;
     private IKi ki;
-    private Connection connection;
     private String ID;
-    public ConnMan(IKi ki, boolean isRelay, Connection conncetion)
+    private INetworkEndpoint endpoint;
+    public ConnMan(IKi ki, boolean isRelay, INetworkEndpoint endpoint, IPacketProcessor pp)
     {
-        this(ki,isRelay);
-        this.connection = conncetion;
-        //connected(connection);
-    }
-    public ConnMan(IKi ki, boolean isRelay, IPacketProcessor pp)
-    {
-        this(ki,isRelay);
+        this(ki,isRelay,endpoint);
         this.pp = pp;
 
     }
-    public ConnMan(IKi ki, boolean isRelay)
+    public ConnMan(IKi ki, boolean isRelay, INetworkEndpoint endpoint)
     {
         this.isRelay = isRelay;
         this.ki = ki;
         pp = new PacketProcessor(ki,this);
+        this.endpoint = endpoint;
     }
     @Override
     public boolean isRelay() {
@@ -45,25 +39,25 @@ public class ConnMan extends IConnectionManager {
         this.ID = ID;
     }
     @Override
-    void sendPacket(Object o) {
+    public void sendPacket(Object o) {
 
         ki.debug("Sending packet: " + o.toString());
-        connection.sendTCP(o);
+        //connection.sendTCP(new FrameworkMessage.KeepAlive());
+        endpoint.sendPacket(o);
     }
 
     private boolean process = true;
     @Override
-    void disconnect() {
-        if(connection != null)
-        connection.close();
+    public void disconnect() {
+
         process = false;
     }
 
     @Override
-    public void connected(Connection connection)
+    public void connected()
     {
         ki.debug("Connection established, forming and sending Handshake");
-        this.connection = connection;
+        //sendPacket("This is a test 5");
         Handshake hs = new Handshake();
         hs.isRelay = isRelay;
         hs.currentHeight = ki.getChainMan().currentHeight();
@@ -75,16 +69,10 @@ public class ConnMan extends IConnectionManager {
         hs.version = Handshake.VERSION;
         sendPacket(hs);
 
-
     }
 
     @Override
-    public void received(Object o)
-    {
-        ki.debug("Received packet from: " + connection.getID());
-        ki.debug("This connection managers ID is: " + this.connection.getID());
-        ki.debug("Raw Packet is: " + o.toString());
-        if(process && connection.getID() == this.connection.getID())
-        pp.process(o);
+    public void received(Object o) {
+       pp.enqueue(o);
     }
 }

@@ -1,7 +1,8 @@
 package com.lifeform.main.network;
 
+import java.io.Serializable;
 import java.math.BigInteger;
 
-public class LastAgreedEnd {
+public class LastAgreedEnd implements Serializable {
     BigInteger height;
 }

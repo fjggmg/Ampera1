@@ -2,6 +2,7 @@ package com.lifeform.main;
 
 import com.lifeform.main.blockchain.Block;
 import com.lifeform.main.blockchain.IChainMan;
+import com.lifeform.main.blockchain.IMinerMan;
 import com.lifeform.main.data.IEncryptMan;
 import com.lifeform.main.data.Options;
 import com.lifeform.main.network.INetworkManager;
@@ -45,4 +46,6 @@ public interface IKi {
     IAddMan getAddMan();
 
     void debug(String s);
+
+    IMinerMan getMinerMan();
 }

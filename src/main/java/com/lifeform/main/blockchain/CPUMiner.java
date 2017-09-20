@@ -2,10 +2,12 @@ package com.lifeform.main.blockchain;
 
 import com.lifeform.main.IKi;
 import com.lifeform.main.data.EncryptionManager;
+import com.lifeform.main.data.Utils;
 import com.lifeform.main.network.BlockEnd;
 import com.lifeform.main.network.BlockHeader;
 import com.lifeform.main.network.TransactionPacket;
 
+import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 
 public class CPUMiner extends Thread implements IMiner{
@@ -17,27 +19,39 @@ public class CPUMiner extends Thread implements IMiner{
     private BigInteger guess;
     private BigInteger maxGuess;
     private BigInteger guessSet;
-    private boolean canMine;
+    private static boolean canMine;
     public static String prevID = "0";
     public static BigInteger height = BigInteger.ZERO;
+    private Block b;
+
+
     public CPUMiner(IKi ki, BigInteger guess,BigInteger maxGuess)
     {
         this.ki = ki;
         this.guess = guess;
         this.guessSet = guess;
         this.maxGuess = maxGuess;
+
     }
     @Override
     public void run() {
-        L1:
-        while (mining) {
-            while (ki.getChainMan().canMine()) {
+        canMine = true;
                 if (ki.getEncryptMan().getPublicKey() != null) {
-                    Block b = ki.getChainMan().formEmptyBlock();
-
+                    ki.debug("Mining");
+                    b = ki.getChainMan().formEmptyBlock();
                     canMine = ki.getChainMan().canMine();
                     b.ID = EncryptionManager.sha512(b.header());
-                    while ((b.ID != null) && !(new BigInteger(b.ID,16).compareTo(ki.getChainMan().getCurrentDifficulty()) < 0) && canMine) {
+
+                    byte[] hash = new byte[0];
+                    try {
+                        hash = EncryptionManager.sha512(b.header().getBytes("UTF-8"));
+                    } catch (UnsupportedEncodingException e) {
+                        e.printStackTrace();
+                    }
+                    BigInteger cd = ki.getChainMan().getCurrentDifficulty();
+
+                    while ((b.ID != null) && !(new BigInteger(hash).abs().compareTo(cd) < 0) && canMine) {
+                        //ki.debug("Mining super awesomely");
                         if (!mining) break;
                         b.timestamp = System.currentTimeMillis();
                         b.height = height;
@@ -47,42 +61,31 @@ public class CPUMiner extends Thread implements IMiner{
                         if (guess.compareTo(maxGuess) > 0) {
                             guess = guessSet;
                             System.out.println("1Mhash");
-                            System.out.println("Current diff: " + ki.getChainMan().getCurrentDifficulty());
-
+                            System.out.println("Current diff: " + cd);
                         }
                         b.payload = guess.toString();
 
-                        b.ID = EncryptionManager.sha512(b.header());
-                        //System.out.println(b.ID);
+                        try {
+                            hash = EncryptionManager.sha512(b.header().getBytes("UTF-8"));
 
+                        } catch (UnsupportedEncodingException e) {
+                            e.printStackTrace();
+                        }
                         if(foundBlock)
                             break;
                     }
+                    b.ID = Utils.toBase64(hash);
+                    if(!canMine) return;
+                    if (!mining) return;
 
-                    //ki.getMainLog().info("Found block!");
-                    if (!mining) break;
-                    if(!foundBlock) {
-                        if(!ki.getChainMan().softVerifyBlock(b)) {
-                            continue L1;
-                        }
-                        //ki.getMainLog().info("Block found");
-                        if (!ki.getChainMan().canMine()) continue;
+                        if(!ki.getChainMan().softVerifyBlock(b)) return;
+                        if (!ki.getChainMan().canMine()) return;
                         ki.getMainLog().info("Block verified");
                         sendBlock(b);
                         ki.getMainLog().info("Sent NBP to network");
-                    }
-                    boolean wait = true;
-                    foundBlock = true;
-                    L2:while (height.compareTo(ki.getChainMan().currentHeight()) == 0 && !blockPropped.equals(b.ID)) {
-                        if (wait)
-                            ki.getMainLog().info("waiting for block propogation to mine");
-                        wait = false;
-                    }
-                    foundBlock = false;
+                        canMine = false;
 
                 }
-            }
-        }
     }
 
     private void sendBlock(Block b)

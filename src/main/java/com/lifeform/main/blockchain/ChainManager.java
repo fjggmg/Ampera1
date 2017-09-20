@@ -175,10 +175,16 @@ public class ChainManager implements IChainMan {
             cmDB.commit();
 
         }
-
         CPUMiner.height = currentHeight().add(BigInteger.ONE);
         if(getByHeight(currentHeight()) != null)
-        CPUMiner.prevID = getByHeight(currentHeight()).ID;
+            CPUMiner.prevID = getByHeight(currentHeight()).ID;
+        if(csMap.get("diff") == null)
+        {
+            return;
+        }
+        currentDifficulty = new BigInteger(csMap.get("diff"));
+
+
 
     }
 
@@ -250,7 +256,7 @@ public class ChainManager implements IChainMan {
         String hash = EncryptionManager.sha512(block.header());
         if(!block.ID.equals(hash)) return false;
         ki.debug("ID is ok");
-        if(new BigInteger(Utils.toByteArray(hash)).abs().compareTo(currentDifficulty) > 0) return false;
+        if(new BigInteger(Utils.fromBase64(hash)).abs().compareTo(currentDifficulty) > 0) return false;
         ki.debug("Solves for difficulty");
         if(block.getCoinbase() == null) return false;
         ki.debug("coinbase is in block");
@@ -263,9 +269,14 @@ public class ChainManager implements IChainMan {
 
         if(!ki.getTransMan().verifyCoinbase(block.getCoinbase(),block.height,fees)) return false;
         ki.debug("Coinbase verifies ok");
+        List<String> inputs = new ArrayList<>();
         for(String t: block.getTransactionKeys())
         {
             if(!ki.getTransMan().verifyTransaction(block.getTransaction(t))) return false;
+            for(Input i:block.getTransaction(t).getInputs())
+            {
+                if(inputs.contains(i.getID())) return false; else inputs.add(i.getID());
+            }
         }
         ki.debug("transactions verify ok");
         return true;
@@ -331,6 +342,7 @@ public class ChainManager implements IChainMan {
         BigInteger percentage = actualDelta.divide(correctDelta.divide(BigInteger.valueOf(100000000L)));
         currentDifficulty = currentDifficulty.multiply(percentage);
         currentDifficulty = currentDifficulty.divide(BigInteger.valueOf(100000000L));
+        csMap.put("diff",currentDifficulty.toString());
 
         //currentDifficulty = currentDifficulty.multiply((BigInteger.valueOf(System.currentTimeMillis() - (currentHeight.intValueExact() * 300000L)).multiply(BigInteger.valueOf(100L))).divide(BigInteger.valueOf(GENESIS_DAY))).divide(BigInteger.valueOf(100L));
         ki.getMainLog().info("New Difficulty: " + Utils.toHexArray(currentDifficulty.toByteArray()));

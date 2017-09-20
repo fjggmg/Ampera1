@@ -6,6 +6,7 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
+import java.io.File;
 import java.util.*;
 
 /**
@@ -15,6 +16,7 @@ public class AddressManager implements IAddMan {
     String entropy = "Entropy goes here, Please reset me to something else";
     String addFile = "addresses.origin";
     String addEntFile = "addresses.entropy";
+    String addFolder = "addresses/";
     private IKi ki;
     private final int depth = 30;
     private List<Address> addresses = new ArrayList<>();
@@ -24,6 +26,8 @@ public class AddressManager implements IAddMan {
     private List<Address> inactive = new ArrayList<>();
     public AddressManager(IKi ki)
     {
+        File f = new File(addFolder);
+        f.mkdirs();
         this.ki = ki;
     }
 
@@ -91,7 +95,7 @@ public class AddressManager implements IAddMan {
 
     @Override
     public void load() {
-        StringFileHandler fh = new StringFileHandler(ki,addFile);
+        StringFileHandler fh = new StringFileHandler(ki,addFolder + addFile);
         if(!(fh.getLines().size() == 0))
         {
             main = Address.decodeFromChain(fh.getLine(0));
@@ -104,7 +108,7 @@ public class AddressManager implements IAddMan {
                 }
             }
         }
-        StringFileHandler fh2 = new StringFileHandler(ki,addEntFile);
+        StringFileHandler fh2 = new StringFileHandler(ki,addFolder + addEntFile);
         if(fh2.getLines().size() != 0) {
             try {
                 JSONObject jo = (JSONObject) new JSONParser().parse(fh2.getLine(0));
@@ -120,7 +124,7 @@ public class AddressManager implements IAddMan {
 
     @Override
     public void save() {
-        StringFileHandler fh = new StringFileHandler(ki,addFile);
+        StringFileHandler fh = new StringFileHandler(ki,addFolder + addFile);
         fh.delete();
         if(main != null)
         fh.addLine(main.encodeForChain());
@@ -135,7 +139,7 @@ public class AddressManager implements IAddMan {
                 jo.put(a.encodeForChain(), getEntropyForAdd(a));
             }
 
-            StringFileHandler fh2 = new StringFileHandler(ki, addEntFile);
+            StringFileHandler fh2 = new StringFileHandler(ki, addFolder + addEntFile);
             fh2.delete();
             fh2.addLine(jo.toJSONString());
             fh2.save();

@@ -15,13 +15,12 @@ public class Utils {
      */
     public static String toHexArray(byte[] array)
     {
-        String s = "";
-
+        StringBuilder sb = new StringBuilder();
         for(byte b:array)
         {
-            s = s + (String.format("%02X", b));
+           sb.append(String.format("%02X", b));
         }
-        return s;
+        return sb.toString();
     }
 
 

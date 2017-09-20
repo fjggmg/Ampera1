@@ -77,7 +77,7 @@ public class Input implements TXIO{
             BigInteger amount = new BigInteger((String)jo.get("amount"));
             Address receiver = Address.decodeFromChain((String)jo.get("receiver"));
             Token token = Token.valueOf((String)jo.get("token"));
-            long timestamp = Long.parseLong((String)jo.get("timestamp"));
+            long timestamp =(long) jo.get("timestamp");
             return new Input(prevID,prevOut,amount,receiver,token,timestamp);
         } catch (ParseException e) {
             e.printStackTrace();

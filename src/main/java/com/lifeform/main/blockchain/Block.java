@@ -1,6 +1,7 @@
 package com.lifeform.main.blockchain;
 
 
+import com.lifeform.main.Ki;
 import com.lifeform.main.data.EncryptionManager;
 import com.lifeform.main.data.JSONManager;
 import com.lifeform.main.data.Utils;
@@ -74,55 +75,44 @@ public class Block {
         merkleRoot = null;
         transactions.remove(transaction);
     }
-
-    /**
-     * used for GPU mining, can add a new payload without modifying the block
-     * @param payload
-     * @return
-     */
-    public String header(String payload)
-    {
-        String trans = "";
-        for(String key:transactions.keySet())
-        {
-            trans = trans + key + transactions.get(key).toJSON();
-        }
-        return prevID + solver + Utils.toHexArray(height.toByteArray()) + timestamp + payload + trans;
-    }
-
     public String merkleRoot;
 
-    public String merkleRoot(List<String> hashes)
+    public String merkleRoot()
     {
-        List<String> nextLevel = new ArrayList<>();
-        if (hashes == null) {
-            hashes = new ArrayList<>();
-            for (String ID : transactions.keySet()) {
-                hashes.add(ID);
-            }
-        }
-        do {
-            for (int i = 0; i < hashes.size(); i = i + 2) {
-                if ((hashes.size() - 1) != i) {
-                    nextLevel.add(EncryptionManager.sha512(hashes.get(i) + hashes.get(i + 1)));
-                } else {
-                    nextLevel.add(EncryptionManager.sha512(hashes.get(i) + hashes.get(i)));
-                }
-            }
+        List<String> hashes = new ArrayList<>();
 
-            if (nextLevel.size() < 2) {
-                if (nextLevel.size() == 0) {
-                    return EncryptionManager.sha512(height.toString());
-                } else {
-                    return nextLevel.get(0);
+        hashes.addAll(transactions.keySet());
+        List<String> temp = new ArrayList<>();
+        if(hashes.size() == 0)
+        {
+            merkleRoot = EncryptionManager.sha512(height.toString());
+            return merkleRoot;
+        }
+        while(hashes.size() > 1)
+        {
+
+            for(int i = 0; i < hashes.size(); i = i + 2)
+            {
+                if(i == hashes.size() - 1)
+                {
+                    temp.add(EncryptionManager.sha512(hashes.get(i) + hashes.get(i)));
+                }else {
+                    temp.add(EncryptionManager.sha512(hashes.get(i) + hashes.get(i + 1)));
                 }
+
             }
-            hashes = nextLevel;
-        }while(nextLevel.size() > 1);
-        return merkleRoot(nextLevel);
+            hashes.clear();
+            hashes.addAll(temp);
+            temp.clear();
+        }
+        merkleRoot = hashes.get(0);
+        return hashes.get(0);
     }
     private String payloadHash;
     private String solverHash;
+    private String header;
+    private String coinbaseID;
+    private String sHeight;
     public String header()
     {
         payloadHash = EncryptionManager.sha512(payload);
@@ -130,14 +120,24 @@ public class Block {
         {
             solverHash = EncryptionManager.sha512(solver);
         }
-        return prevID + solverHash + Utils.toHexArray(height.toByteArray()) + timestamp + payloadHash + coinbase.getID() + ((merkleRoot == null) ? merkleRoot(null):merkleRoot);
+        if(coinbaseID == null || coinbaseID.isEmpty())
+        {
+            coinbaseID = coinbase.getID();
+        }
+
+        sHeight = Utils.toBase64(height.toByteArray());
+
+
+        header = prevID + solverHash + sHeight + timestamp + payloadHash + coinbaseID + ((merkleRoot == null) ? merkleRoot():merkleRoot);
+
+        return header;
     }
 
     public String toJSON()
     {
         JSONObject obj = new JSONObject();
         obj.put("prevID",prevID);
-        obj.put("height", Utils.toHexArray(height.toByteArray()));
+        obj.put("height", Utils.toBase64(height.toByteArray()));
         obj.put("ID",ID);
         obj.put("solver",solver);
         obj.put("timestamp",timestamp.toString());
@@ -157,7 +157,7 @@ public class Block {
         Map<String,String> map = JSONManager.parseJSONtoMap(json);
         Block b = new Block();
         b.prevID = map.get("prevID");
-        b.height = new BigInteger(Utils.toByteArray(map.get("height")));
+        b.height = new BigInteger(Utils.fromBase64(map.get("height")));
         b.ID = map.get("ID");
         b.solver = map.get("solver");
         b.timestamp = Long.parseLong(map.get("timestamp"));

@@ -16,7 +16,7 @@ import java.security.spec.X509EncodedKeySpec;
  */
 public class EncryptionManager  implements IEncryptMan{
 
-    public static final String KEY_FILE = "key";
+    public static final String KEY_FILE = "keys/key";
     public static final String KEY_PADDING = "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE";
     public static final String KEY_PROTOCOL = "brainpoolp512t1";
     private IKi ki;
@@ -62,7 +62,7 @@ public class EncryptionManager  implements IEncryptMan{
             md.update(input.getBytes("UTF-8"));
             byte[] digest = md.digest();
             //logger.debug("Size of hash is: " + digest.length);
-            return Utils.toHexArray(digest);
+            return Utils.toBase64(digest);
         } catch (UnsupportedEncodingException e) {
 
 
@@ -70,7 +70,29 @@ public class EncryptionManager  implements IEncryptMan{
         return null;
     }
 
+    public static byte[] sha512(byte[] input)
+    {
+        SHA3.DigestSHA3 md = new SHA3.Digest512();
+        md.update(input);
+        return md.digest();
+    }
+
     public static String sha224(String input)
+    {
+        SHA3.DigestSHA3 md = null;
+        try {
+            md = new SHA3.Digest224();
+            md.update(input.getBytes("UTF-8"));
+            byte[] digest = md.digest();
+            //logger.debug("Size of hash is: " + digest.length);
+            return Utils.toBase64(digest);
+        } catch (UnsupportedEncodingException e) {
+
+
+        }
+        return null;
+    }
+    public static String sha224Hex(String input)
     {
         SHA3.DigestSHA3 md = null;
         try {
@@ -94,7 +116,7 @@ public class EncryptionManager  implements IEncryptMan{
             md.update(input.getBytes("UTF-8"));
             byte[] digest = md.digest();
             //logger.debug("Size of hash is: " + digest.length);
-            return Utils.toHexArray(digest);
+            return Utils.toBase64(digest);
         } catch (UnsupportedEncodingException e) {
 
 
@@ -237,7 +259,7 @@ public class EncryptionManager  implements IEncryptMan{
             sig.initSign(getPrivateKey());
             sig.update(toSign.getBytes("UTF-8"));
 
-            return Utils.toHexArray(sig.sign());
+            return Utils.toBase64(sig.sign());
 
         } catch (UnsupportedEncodingException | NoSuchAlgorithmException | InvalidKeyException | SignatureException e) {
             //logger.error(e.getMessage());
@@ -255,7 +277,7 @@ public class EncryptionManager  implements IEncryptMan{
             Signature signature = Signature.getInstance("SHA1withECDSA");
             signature.initVerify(pubKeyFromString(pubKey));
             signature.update(signed.getBytes("UTF-8"));
-            return signature.verify(Utils.toByteArray(sig));
+            return signature.verify(Utils.fromBase64(sig));
         } catch (UnsupportedEncodingException | SignatureException | InvalidKeyException | NoSuchAlgorithmException e) {
             e.printStackTrace();
         }

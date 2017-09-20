@@ -68,15 +68,16 @@ public class FXMLController {
         };
         Thread thread = new Thread(task);
         thread.setDaemon(true);
+        thread.setName("JavaFX-Backend");
         thread.start();
 
         ki = Ki.getInstance();
 
-        new Thread(){
+        Thread t = new Thread() {
 
-            public void run()
-            {
-                while(run) {
+            public void run() {
+
+                while (run) {
                     isFinal = false;
                     tokenValueMap.clear();
                     java.util.List<Address> checked = new ArrayList<>();
@@ -109,7 +110,9 @@ public class FXMLController {
                     }
                 }
             }
-        }.start();
+        };
+        t.setName("GUI-Backend");
+        t.start();
     }
 
     private Token currenttransaction;
@@ -461,22 +464,14 @@ public class FXMLController {
     public void startMiningClicked(MouseEvent mouseEvent) {
         if(ki.getOptions().mining) {
             nonPrimaryPaneClicked(startMiningPane);
-            mining = !mining;
-
-            if (mining) {
-                CPUMiner.mining = true;
-                BigInteger guess = BigInteger.ZERO;
-                for (int i = 0; i < coresSlider.getValue(); i++) {
-                    ki.getMainLog().info("Starting miner: " + i);
-                    CPUMiner miner = new CPUMiner(ki, guess, guess.add(BigInteger.valueOf(1000000L)));
-                    guess = guess.add(BigInteger.valueOf(1000000L));
-                    miners.add(miner);
-                    miner.start();
-                }
-
+            if (!mining) {
+                ki.getMinerMan().startMiners(coresSlider.getValue());
+                mining = true;
             } else {
-                CPUMiner.mining = false;
+                ki.getMinerMan().stopMiners();
+                mining = false;
             }
+
         }
     }
 
@@ -510,10 +505,17 @@ public class FXMLController {
             java.util.List<String> keys = new ArrayList<>();
             keys.add(ki.getEncryptMan().getPublicKeyString());
             java.util.List<Input> inputs = new ArrayList<>();
-            double dFee = Double.parseDouble(feeToSend.getText());
-            long lFee = (long) (dFee * 100000000D);
-            BigInteger fee = BigInteger.valueOf(lFee);
+            BigInteger fee;
+            if(feeToSend.getText() == null || feeToSend.getText().isEmpty())
+            {
+                fee = BigInteger.ZERO;
+            }else {
+                double dFee = Double.parseDouble(feeToSend.getText());
+                long lFee = (long) (dFee * 100000000D);
+                fee = BigInteger.valueOf(lFee);
+            }
             ki.getMainLog().info("Fee is: " + fee.toString());
+
             BigInteger totalInput = BigInteger.ZERO;
             for (Address a : ki.getAddMan().getActive()) {
                 for (Output o : ki.getTransMan().getUTXOs(a)) {
@@ -567,7 +569,10 @@ public class FXMLController {
             trans.makeChange(fee, ki.getAddMan().getMainAdd()); // TODO this just sends change back to the main address......will need to give option later
             trans.addSig(ki.getEncryptMan().getPublicKeyString(), ki.getEncryptMan().sign(trans.toSign()));
             ki.getTransMan().getPending().add(trans);
-            ki.getTransMan().getUsedUTXOs().addAll(trans.getInputs());
+            for(Input i:trans.getInputs())
+            {
+             ki.getTransMan().getUsedUTXOs().add(i.getID());
+            }
             TransactionPacket tp = new TransactionPacket();
             tp.trans = trans.toJSON();
             ki.getNetMan().broadcast(tp);

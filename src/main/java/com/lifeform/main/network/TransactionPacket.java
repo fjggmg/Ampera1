@@ -1,8 +1,8 @@
 package com.lifeform.main.network;
 
-import com.lifeform.main.transactions.ITrans;
+import java.io.Serializable;
 
-public class TransactionPacket {
+public class TransactionPacket implements Serializable {
     public String trans;
     public String block;
 }

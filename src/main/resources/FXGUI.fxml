@@ -267,7 +267,7 @@
                               <Font size="10.0" />
                            </font>
                         </Label>
-                        <Pane fx:id="copyPanel" layoutX="375.0" layoutY="196.0" onMouseEntered="#copyHover" onMouseExited="#copyHoverOff" onMousePressed="#copyClicked" onMouseReleased="#copyUnclicked" opacity="0.8" prefHeight="21.0" prefWidth="93.0" style="-fx-background-color: rgba(127,127,127,0.5);">
+                        <Pane fx:id="copyPanel" layoutX="367.0" layoutY="207.0" onMouseEntered="#copyHover" onMouseExited="#copyHoverOff" onMousePressed="#copyClicked" onMouseReleased="#copyUnclicked" opacity="0.8" prefHeight="21.0" prefWidth="93.0" style="-fx-background-color: rgba(127,127,127,0.5);">
                            <children>
                               <Label alignment="CENTER" contentDisplay="CENTER" layoutX="20.0" layoutY="1.0" opacity="0.8" prefHeight="17.0" prefWidth="51.0" text="Copy" textAlignment="CENTER" textFill="WHITE" />
                            </children>

@@ -1,5 +1,7 @@
 package com.lifeform.main.network;
 
-public class BlockEnd {
+import java.io.Serializable;
+
+public class BlockEnd implements Serializable {
     public String ID;
 }

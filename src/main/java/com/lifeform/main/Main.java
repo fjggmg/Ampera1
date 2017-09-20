@@ -21,7 +21,7 @@ import com.lifeform.main.data.Options;
 
  *
  * ANYWHERE THE AFOREMENTIONED LICENSE IS NOT FOUND IN THE SOURCE CODE CREATED BY BRYAN SHARPE
- * IS STILL COVERED UNDER GPL V3
+ * IS STILL COVERED UNDER GPL V3 EXCLUDING ANY GUI RELATED FILES
  * SEE LICENSE.txt FOR DETAILS.
  *
  */
@@ -32,8 +32,9 @@ public class Main {
 
         Options o = decode(args);
 
-        IKi main = new Ki(o);
-        main.start();
+        IKi main = new Ki(o); //TODO no need for this to be a thread presently, investigate removing that from the code and just creating a new instance
+
+        //main.start();
     }
 
     public static Options decode(String[] args)
@@ -46,6 +47,10 @@ public class Main {
             if(s.startsWith("-ur"))
             {
                 o.relayToUse = Integer.parseInt(s.replaceFirst("-ur",""));
+            }
+            if(s.equals("-nogui"))
+            {
+                o.nogui = true;
             }
         }
         return o;

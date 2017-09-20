@@ -1,9 +1,6 @@
 package com.lifeform.main;
 
-import com.lifeform.main.blockchain.Block;
-import com.lifeform.main.blockchain.CPUMiner;
-import com.lifeform.main.blockchain.ChainManager;
-import com.lifeform.main.blockchain.IChainMan;
+import com.lifeform.main.blockchain.*;
 import com.lifeform.main.data.EncryptionManager;
 import com.lifeform.main.data.IEncryptMan;
 import com.lifeform.main.data.Options;
@@ -37,6 +34,7 @@ import java.math.BigInteger;
  */
 public class Ki extends Thread implements IKi {
 
+    private IMinerMan minerMan;
     private Options o;
     private LogMan logMan;
     private Logger main;
@@ -48,7 +46,7 @@ public class Ki extends Thread implements IKi {
     private IKi ki = this;
     private boolean run = true;
     //TODO: need to start saving version number to file for future conversion of files
-    public static final String VERSION = "0.8.0-BETA";
+    public static final String VERSION = "0.9.0-BETA";
     private boolean relay = false;
 
     public static boolean debug = true;
@@ -58,6 +56,7 @@ public class Ki extends Thread implements IKi {
     {
 
         this.o = o;
+        instance = this;
         relay = o.relay;
         logMan = new LogMan(new ConsoleLogger());
         main = logMan.createLogger("Main","console", Level.DEBUG);
@@ -82,11 +81,11 @@ public class Ki extends Thread implements IKi {
         {
             addMan.setMainAdd(addMan.getNewAdd());
         }
-
+        minerMan = new MinerManager(this);
         netMan = new NetMan(this,o.relay);
         netMan.start();
         //gui = MainGUI.guiFactory(this);
-        instance = this;
+        if(!o.nogui)
         FXGUI.subLaunch();
 
     }
@@ -177,6 +176,11 @@ public class Ki extends Thread implements IKi {
 
     }
 
+    @Override
+    public IMinerMan getMinerMan()
+    {
+        return minerMan;
+    }
     @Override
     public IAddMan getAddMan()
     {

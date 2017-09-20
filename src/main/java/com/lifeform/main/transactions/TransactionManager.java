@@ -7,6 +7,7 @@ import org.mapdb.DB;
 import org.mapdb.DBMaker;
 import org.mapdb.Serializer;
 
+import java.io.File;
 import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.ConcurrentMap;
@@ -23,14 +24,15 @@ public class TransactionManager implements ITransMan{
     private ConcurrentMap<String,String> utxoValueMap;
     private IKi ki;
     private List<ITrans> pending = new ArrayList<>();
-    private List<Input> usedUTXOs = new ArrayList<>();
+    private List<String> usedUTXOs = new ArrayList<>();
     public TransactionManager(IKi ki)
     {
         this.ki = ki;
-        utxoDB = DBMaker.fileDB("utxo.dat").fileMmapEnableIfSupported().transactionEnable().make();
+        new File("transactions/").mkdirs();
+        utxoDB = DBMaker.fileDB("transactions/utxo.dat").fileMmapEnableIfSupported().transactionEnable().make();
         utxoMap = utxoDB.hashMap("utxoDB", Serializer.STRING,Serializer.STRING).createOrOpen();
         utxoSpent = utxoDB.hashMap("utxoDBSpent", Serializer.STRING,Serializer.BOOLEAN).createOrOpen();
-        utxoValueDB = DBMaker.fileDB("utxoValue.dat").fileMmapEnableIfSupported().transactionEnable().make();
+        utxoValueDB = DBMaker.fileDB("transactions/utxoValue.dat").fileMmapEnableIfSupported().transactionEnable().make();
         utxoValueMap = utxoValueDB.hashMap("utxoValueDB",Serializer.STRING,Serializer.STRING).createOrOpen();
     }
 
@@ -40,6 +42,16 @@ public class TransactionManager implements ITransMan{
         for(Input i:transaction.getInputs())
         {
             ki.debug("Verifying input");
+            if(utxoSpent == null)
+            {
+                ki.debug("UTXO file uninitialized, installation corrupted or fatal program error");
+                return false;
+            }
+            if(i == null)
+            {
+                ki.debug("Input is null, malformed transaction.");
+                return false;
+            }
             if(utxoSpent.get(i.getID())) return false;
             ki.debug("input not spent");
             if(new BigInteger(utxoValueMap.get(i.getID())).compareTo(i.getAmount()) != 0) return false;
@@ -117,7 +129,7 @@ public class TransactionManager implements ITransMan{
                 for (String s : sUtxos) {
 
                     if (!utxoSpent.get(Output.fromJSON(s).getID())) {
-                        if(!usedUTXOs.contains(Input.fromOutput(Output.fromJSON(s))))
+                        if(!usedUTXOs.contains(Input.fromOutput(Output.fromJSON(s)).getID()))
                         utxos.add(Output.fromJSON(s));
                     }
                     else
@@ -189,7 +201,7 @@ public class TransactionManager implements ITransMan{
     }
 
     @Override
-    public List<Input> getUsedUTXOs() {
+    public List<String> getUsedUTXOs() {
         return usedUTXOs;
     }
 

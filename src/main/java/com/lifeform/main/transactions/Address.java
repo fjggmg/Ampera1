@@ -40,7 +40,7 @@ public class Address {
 
     public boolean isValid()
     {
-        String check = EncryptionManager.sha224(ID);
+        String check = EncryptionManager.sha224Hex(ID);
         char[] idChar = check.toCharArray();
         char[] cChar = {idChar[idChar.length-4],idChar[idChar.length-3],idChar[idChar.length-2],idChar[idChar.length-1]};
         String sum = new String(cChar);
@@ -69,8 +69,7 @@ public class Address {
     public static Address createNew(String keys,String entropy)
     {
         String hash = EncryptionManager.sha224(keys+entropy);
-        hash = Utils.toBase64(Utils.toByteArray(hash));
-        String fullChecksum = EncryptionManager.sha224(hash);
+        String fullChecksum = EncryptionManager.sha224Hex(hash);
         char[] checkChar = fullChecksum.toCharArray();
 
         char[] last4 = {checkChar[checkChar.length-4], checkChar[checkChar.length-3], checkChar[checkChar.length-2], checkChar[checkChar.length-1]};
