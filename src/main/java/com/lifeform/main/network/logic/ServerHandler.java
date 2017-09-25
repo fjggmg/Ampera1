@@ -8,11 +8,11 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.util.ReferenceCountUtil;
 
 public class ServerHandler extends ChannelInboundHandlerAdapter {
-    private INetworkEndpoint endpoint;
+
     private IKi ki;
-    public ServerHandler(IKi ki, INetworkEndpoint endpoint)
+
+    public ServerHandler(IKi ki)
     {
-        this.endpoint = endpoint;
         this.ki = ki;
     }
     private IConnectionManager connMan;

@@ -37,6 +37,12 @@ public class Client implements INetworkEndpoint{
     {
         this.channel = c;
     }
+
+    @Override
+    public void disconnect() {
+        channel.disconnect();
+    }
+
     private Channel channel;
     public void start(IConnectionManager connMan) throws Exception {
         // Configure SSL.

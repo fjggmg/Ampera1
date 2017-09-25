@@ -65,7 +65,7 @@ public class Block {
         merkleRoot = null;
         for(String trans:transes.keySet())
         {
-            System.out.println("Adding transaction: " + trans);
+            //System.out.println("Adding transaction: " + trans);
             transactions.put(trans,transes.get(trans));
         }
     }

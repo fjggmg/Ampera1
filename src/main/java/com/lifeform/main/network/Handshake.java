@@ -8,10 +8,12 @@ import java.math.BigInteger;
  */
 public class Handshake implements Serializable{
     public static final String VERSION = NetMan.NET_VER;
+    public static short CHAIN_VER;
     String ID;
     String version;
     BigInteger currentHeight;
     String mostRecentBlock;
+    short chainVer;
     @Deprecated
     boolean isRelay;
 }

@@ -14,4 +14,9 @@ public class ServerEndpointHandler implements INetworkEndpoint{
     public void setChannel(Channel c) {
         channel = c;
     }
+
+    @Override
+    public void disconnect() {
+        channel.disconnect();
+    }
 }

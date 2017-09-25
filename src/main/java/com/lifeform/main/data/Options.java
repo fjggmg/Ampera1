@@ -9,5 +9,10 @@ public class Options {
     public boolean mining = false;
     public int relayToUse = 0;
     public boolean nogui = false;
+    public boolean testNet = false;
+    public boolean dump = false;
+    public boolean bDebug = false;
+    public boolean mDebug = false;
+    public boolean rebuild = false;
 
 }

@@ -6,7 +6,7 @@
 
     <groupId>com.lifeform</groupId>
     <artifactId>Origin</artifactId>
-    <version>0.9.0-BETA</version>
+    <version>0.10.0-BETA</version>
     <repositories>
         <repository>
             <id>clojars</id>
@@ -60,7 +60,16 @@
     </build>
 
     <dependencies>
-
+        <dependency>
+            <groupId>org.jetbrains.xodus</groupId>
+            <artifactId>xodus-openAPI</artifactId>
+            <version>1.0.6</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jetbrains.xodus</groupId>
+            <artifactId>xodus-environment</artifactId>
+            <version>1.0.6</version>
+        </dependency>
         <!-- https://mvnrepository.com/artifact/io.netty/netty-all -->
         <dependency>
             <groupId>io.netty</groupId>
@@ -113,8 +122,6 @@
             <artifactId>asm</artifactId>
             <version>3.3.1</version>
         </dependency>
-
-
         <dependency>
             <groupId>org.json</groupId>
             <artifactId>json</artifactId>

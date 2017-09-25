@@ -5,4 +5,6 @@ import io.netty.channel.Channel;
 public interface INetworkEndpoint {
     void sendPacket(Object o);
     void setChannel(Channel c);
+
+    void disconnect();
 }

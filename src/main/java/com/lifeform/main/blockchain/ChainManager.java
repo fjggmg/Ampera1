@@ -52,20 +52,26 @@ public class ChainManager implements IChainMan {
     private String fileName = "block.data";
     private String folderName;
     private short chainID;
+    private boolean bDebug;
 
-    public ChainManager(IKi ki, short chainID, String folderName,String csFile,String transFile,String extraFile,String cmFile,Block primer)
+    public ChainManager(IKi ki, short chainID, String folderName, String csFile, String transFile, String extraFile, String cmFile, Block primer, boolean bDebug)
     {
-        this(ki,chainID,folderName,csFile,transFile,extraFile,cmFile);
+        this(ki, chainID, folderName, csFile, transFile, extraFile, cmFile, bDebug);
         primeChain(primer);
+
     }
 
+    public short getChainVer() {
+        return chainID;
+    }
     /**
      * ONLY FOR USE WITH TEMP CHAIN MANAGER FOR PRIMING CHAIN! NOT FOR USE WITH NORMAL CHAIN, FORCES BLOCK ONTO STACK
      * @param block
      */
     private synchronized void primeChain(Block block)
     {
-        ki.debug("Priming temp chain with block of height: " + block.height);
+        if (bDebug)
+            ki.debug("Priming temp chain with block of height: " + block.height);
         current = block;
         currentHeight = block.height;
         blockchainMap.put(block.ID,block);
@@ -89,12 +95,12 @@ public class ChainManager implements IChainMan {
      * PoW system only
      * @param chainID
      */
-    public ChainManager(IKi ki, short chainID, String folderName,String csFile,String transFile,String extraFile,String cmFile)
+    public ChainManager(IKi ki, short chainID, String folderName, String csFile, String transFile, String extraFile, String cmFile, boolean bDebug)
     {
         this.ki = ki;
         this.folderName = chainID + folderName;
         this.chainID = chainID;
-
+        this.bDebug = bDebug;
         new File("chain" + chainID + "/").mkdirs();
         csDB = DBMaker.fileDB("chain" + chainID + "/" + csFile).fileMmapEnableIfSupported().transactionEnable().make();
 
@@ -238,28 +244,35 @@ public class ChainManager implements IChainMan {
     public synchronized boolean softVerifyBlock(Block block) {
 
         Block current = getByHeight(block.height.subtract(BigInteger.ONE));
-        ki.debug("verifying block...");
+        if (bDebug)
+            ki.debug("verifying block...");
         if(block.height.compareTo(currentHeight()) < 0)
         {
             //this is a "replacement" for an older block, we need the rest of the chain to verify this is actually part of it
             return false;
         }
-        ki.debug("Height is ok");
+        if (bDebug)
+            ki.debug("Height is ok");
 
         if(current == null && block.height.compareTo(BigInteger.ZERO) != 0)
         {
             return false;
         }
-        ki.debug("Height check 2 is ok");
+        if (bDebug)
+            ki.debug("Height check 2 is ok");
         if(current != null && !block.prevID.equalsIgnoreCase(current.ID)) return false;
-        ki.debug("prev ID is ok");
+        if (bDebug)
+            ki.debug("prev ID is ok");
         String hash = EncryptionManager.sha512(block.header());
         if(!block.ID.equals(hash)) return false;
-        ki.debug("ID is ok");
+        if (bDebug)
+            ki.debug("ID is ok");
         if(new BigInteger(Utils.fromBase64(hash)).abs().compareTo(currentDifficulty) > 0) return false;
-        ki.debug("Solves for difficulty");
+        if (bDebug)
+            ki.debug("Solves for difficulty");
         if(block.getCoinbase() == null) return false;
-        ki.debug("coinbase is in block");
+        if (bDebug)
+            ki.debug("coinbase is in block");
         BigInteger fees = BigInteger.ZERO;
 
         for(String t:block.getTransactionKeys())
@@ -268,17 +281,21 @@ public class ChainManager implements IChainMan {
         }
 
         if(!ki.getTransMan().verifyCoinbase(block.getCoinbase(),block.height,fees)) return false;
-        ki.debug("Coinbase verifies ok");
+        if (bDebug)
+            ki.debug("Coinbase verifies ok");
+        BlockVerificationHelper bvh = new BlockVerificationHelper(ki, block);
+        if (!bvh.verifyTransactions()) return false;
         List<String> inputs = new ArrayList<>();
         for(String t: block.getTransactionKeys())
         {
-            if(!ki.getTransMan().verifyTransaction(block.getTransaction(t))) return false;
+            //if(!ki.getTransMan().verifyTransaction(block.getTransaction(t))) return false;
             for(Input i:block.getTransaction(t).getInputs())
             {
                 if(inputs.contains(i.getID())) return false; else inputs.add(i.getID());
             }
         }
-        ki.debug("transactions verify ok");
+        if (bDebug)
+            ki.debug("transactions verify ok");
         return true;
     }
 
@@ -290,7 +307,7 @@ public class ChainManager implements IChainMan {
     private synchronized int getSegment(BigInteger height) {return height.subtract(BigInteger.ONE).divide(BigInteger.valueOf(1000L)).intValueExact(); }
 
     public synchronized boolean verifyBlock(Block block){
-
+        if (bDebug)
         ki.getMainLog().info("Block has: " + block.getTransactionKeys().size() + " transactions");
         if(!softVerifyBlock(block)) return false;
         BigInteger fees = BigInteger.ZERO;
@@ -301,10 +318,16 @@ public class ChainManager implements IChainMan {
         }
 
         if(!ki.getTransMan().addCoinbase(block.getCoinbase(),block.height,fees)) return false;
+
+        //IBlockVerificationHelper bvh = new BlockVerificationHelper(ki,block);
+        //if(!bvh.addTransactions()) return false;
+
         for(String key:block.getTransactionKeys())
         {
-            if(!ki.getTransMan().addTransaction(block.getTransaction(key))) return false;
+            if (!ki.getTransMan().addTransactionNoVerify(block.getTransaction(key))) return false;
         }
+
+        ki.getTransMan().commit();
         if(block.height.mod(BigInteger.valueOf(1000L)).equals(BigInteger.valueOf(0)) && block.height.compareTo(BigInteger.ZERO) != 0)
         {
             if(this.current != null) {

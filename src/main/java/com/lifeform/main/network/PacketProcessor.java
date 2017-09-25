@@ -17,11 +17,19 @@ import java.util.Map;
 public class PacketProcessor implements IPacketProcessor{
 
     private IKi ki;
+    private PacketDispatcher pd;
     public PacketProcessor(IKi ki,IConnectionManager connMan)
     {
         this.connMan = connMan;
         this.ki = ki;
-        new Thread(this::heartbeat).start();
+        new Thread() {
+            public void run() {
+                setName("PacketProcessor");
+                heartbeat();
+            }
+
+        }.start();
+        pd = new PacketDispatcher(ki, connMan, ki.getNetMan());
 
     }
 
@@ -31,14 +39,24 @@ public class PacketProcessor implements IPacketProcessor{
     {
         while(run)
         {
+            //ki.debug("Heartbeat of packet processor, current queue size: " + packets.size());
             if(packets.size() > 0)
             {
+                ki.debug("Processing packet: " + packets.get(0).toString());
                 process(packets.get(0));
                 packets.remove(0);
             }
+            if (packets.size() == 0) {
+                try {
+                    Thread.sleep(5);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
         }
     }
-    private List<Object> packets = new ArrayList<>();
+
+    private volatile List<Object> packets = new ArrayList<>();
     private boolean run = true;
     private boolean laFlag = false;
     private boolean cuFlag = false;
@@ -54,14 +72,7 @@ public class PacketProcessor implements IPacketProcessor{
     private boolean blocking = false;
     @Override
     public void process(Object packet) {
-        while(blocking)
-        {
-            try {
-                Thread.sleep(25);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
+
         blocking = true;
         if(packet instanceof Handshake)
         {
@@ -71,7 +82,13 @@ public class PacketProcessor implements IPacketProcessor{
             ki.debug("Most recent block: " + hs.mostRecentBlock);
             ki.debug("version: " + hs.version);
             ki.debug("Height: " + hs.currentHeight);
+            ki.debug("Chain ver: " + hs.chainVer);
             startHeight = hs.currentHeight;
+            if (hs.chainVer != Handshake.CHAIN_VER) {
+                ki.debug("Mismatched chain versions, disconnecting");
+                connMan.disconnect();
+                return;
+            }
             if(!hs.version.equals(Handshake.VERSION)) {
                 ki.debug("Mismatched network versions, disconnecting");
                 connMan.disconnect();
@@ -159,7 +176,7 @@ public class PacketProcessor implements IPacketProcessor{
         {
             cuFlag = true;
             ChainUpStart cus = (ChainUpStart) packet;
-            temp = new ChainManager(ki,ChainManager.POW_CHAIN,"temp/","tempcs.temp","temptrans.temp","tempextra.temp","tempcm.temp",ki.getChainMan().getByHeight(cus.startHeight.subtract(BigInteger.ONE)));
+            temp = new ChainManager(ki, ki.getChainMan().getChainVer(), "temp/", "tempcs.temp", "temptrans.temp", "tempextra.temp", "tempcm.temp", ki.getChainMan().getByHeight(cus.startHeight.subtract(BigInteger.ONE)), true);
 
         }else if(packet instanceof ChainUpEnd)
         {
@@ -260,6 +277,7 @@ public class PacketProcessor implements IPacketProcessor{
                 }else{
                     if(bMap.get(headerMap.get(tp.block)) != null)
                     {
+                        ki.debug("Adding transaction to block list");
                         bMap.get(headerMap.get(tp.block)).add(Transaction.fromJSON(tp.trans));
                         if(ki.getNetMan().isRelay())
                         {
@@ -287,15 +305,22 @@ public class PacketProcessor implements IPacketProcessor{
                 BlockHeader bh = headerMap.get(be.ID);
                 List<ITrans> trans = bMap.get(bh);
                 Block block = formBlock(bh);
+                ki.debug("Block formed, adding transactions:");
+                int i = 0;
                 for (ITrans t : trans) {
+                    i++;
+                    ki.debug("Transaction " + i + " added");
                     block.addTransaction(t);
                 }
                 if(block.height.compareTo(ki.getChainMan().currentHeight().add(BigInteger.ONE)) == 0)
                 {
+                    ki.debug("Verifying block");
                     if(!ki.getChainMan().addBlock(block))
                     {
+
                         if(ki.getNetMan().isRelay())
                         {
+
                             BadBlockEnd bbe = new BadBlockEnd();
                             bbe.ID = be.ID;
                             ki.getNetMan().broadcast(bbe);
@@ -305,13 +330,16 @@ public class PacketProcessor implements IPacketProcessor{
                      laFlag = true;
                      connMan.sendPacket(las);
                     }else {
+                        ki.debug("Block verified and added");
                         if(ki.getNetMan().isRelay())
                         {
+                            ki.debug("Relaying block now");
                             ki.getNetMan().broadcast(packet);
                         }
                         processBlocks();
                         if(ki.getMinerMan().isMining())
                         {
+                            ki.debug("Restarting miners");
                             CPUMiner.height = ki.getChainMan().currentHeight().add(BigInteger.ONE);
                             CPUMiner.prevID = ki.getChainMan().getByHeight(ki.getChainMan().currentHeight()).ID;
 
@@ -366,6 +394,8 @@ public class PacketProcessor implements IPacketProcessor{
 
     @Override
     public void enqueue(Object packet) {
+
+        ki.debug("Enqueued new packet for processing: " + packet.toString());
         packets.add(packet);
     }
 

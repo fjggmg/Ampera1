@@ -4,6 +4,7 @@ import com.lifeform.main.blockchain.*;
 import com.lifeform.main.data.EncryptionManager;
 import com.lifeform.main.data.IEncryptMan;
 import com.lifeform.main.data.Options;
+import com.lifeform.main.network.Handshake;
 import com.lifeform.main.network.INetworkManager;
 import com.lifeform.main.network.NetMan;
 import com.lifeform.main.transactions.*;
@@ -13,6 +14,8 @@ import org.bitbucket.backspace119.generallib.Logging.ConsoleLogger;
 import org.bitbucket.backspace119.generallib.Logging.LogMan;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by Bryan on 5/10/2017.
@@ -46,7 +49,7 @@ public class Ki extends Thread implements IKi {
     private IKi ki = this;
     private boolean run = true;
     //TODO: need to start saving version number to file for future conversion of files
-    public static final String VERSION = "0.9.0-BETA";
+    public static final String VERSION = "0.10.0-BETA";
     private boolean relay = false;
 
     public static boolean debug = true;
@@ -61,10 +64,11 @@ public class Ki extends Thread implements IKi {
         logMan = new LogMan(new ConsoleLogger());
         main = logMan.createLogger("Main","console", Level.DEBUG);
         main.info("Ki starting up");
-        chainMan = new ChainManager(this, ChainManager.POW_CHAIN,"blocks/","chain.state","transaction.meta","extra.chains","chain.meta");
+        chainMan = new ChainManager(this, (o.testNet) ? ChainManager.TEST_NET : ChainManager.POW_CHAIN, "blocks/", "chain.state", "transaction.meta", "extra.chains", "chain.meta", o.bDebug);
+        Handshake.CHAIN_VER = (o.testNet) ? ChainManager.TEST_NET : ChainManager.POW_CHAIN;
         chainMan.loadChain();
         getMainLog().info("Chain loaded. Current height: " + chainMan.currentHeight());
-        transMan = new TransactionManager(this);
+        transMan = new TransactionManager(this, o.dump);
         encMan = new EncryptionManager(this);
         EncryptionManager.initStatic();
 
@@ -81,7 +85,20 @@ public class Ki extends Thread implements IKi {
         {
             addMan.setMainAdd(addMan.getNewAdd());
         }
-        minerMan = new MinerManager(this);
+        if (o.rebuild) {
+            List<Block> blocksToRebuild = new ArrayList<>();
+            BigInteger b = BigInteger.ONE;
+            while (b.compareTo(chainMan.currentHeight()) <= 0) {
+                blocksToRebuild.add(chainMan.getByHeight(b));
+                b = b.add(BigInteger.ONE);
+            }
+            chainMan.clearFile();
+            transMan.clear();
+            for (Block block : blocksToRebuild) {
+                chainMan.addBlock(block);
+            }
+        }
+        minerMan = new MinerManager(this, o.mDebug);
         netMan = new NetMan(this,o.relay);
         netMan.start();
         //gui = MainGUI.guiFactory(this);

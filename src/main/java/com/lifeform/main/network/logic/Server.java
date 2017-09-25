@@ -15,18 +15,17 @@ import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.util.SelfSignedCertificate;
 
-public class Server implements INetworkEndpoint{
+public class Server {
 
     static final boolean SSL = System.getProperty("ssl") != null;
     private int port;
 
     private IKi ki;
-    private INetworkEndpoint instance;
+
     public Server(IKi ki,int port)
     {
         this.ki = ki;
         this.port = port;
-        this.instance = this;
     }
     public void setChannel(Channel c)
     {
@@ -61,7 +60,7 @@ public class Server implements INetworkEndpoint{
                             p.addLast(
                                     new ObjectEncoder(),
                                     new ObjectDecoder(150000000,ClassResolvers.cacheDisabled(null)),
-                                    new ServerHandler(ki,instance));
+                                    new ServerHandler(ki));
                             //ch.write("This is a test 2");
                             channel = ch;
                         }
@@ -75,8 +74,5 @@ public class Server implements INetworkEndpoint{
         }
     }
 
-    @Override
-    public void sendPacket(Object o) {
-        channel.writeAndFlush(o);
-    }
+
 }

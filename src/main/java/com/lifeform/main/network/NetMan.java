@@ -43,25 +43,46 @@ public class NetMan extends Thread implements INetworkManager {
     public void run()
     {
         setName("Networking-Main");
-        if(isRelay)
-        {
-            Server server = new Server(ki,PORT);
-            try {
-                server.start();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+        if (isRelay) {
+            new Thread() {
+
+                public void run() {
+                    setName("server:" + PORT);
+                    Server server = new Server(ki, PORT);
+                    try
+
+                    {
+                        server.start();
+                    } catch (
+                            Exception e)
+
+                    {
+                        e.printStackTrace();
+                    }
+                }
+            }.start();
 
         }
         for(String ip:bootstrap) {
-            Client client = new Client(ki,ip,PORT);
-            IConnectionManager connMan = new ConnMan(ki,isRelay,client);
-            connections.add(connMan);
-            try {
-                client.start(connMan);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            new Thread() {
+
+                public void run() {
+                    setName("client:" + ip);
+                    Client client = new Client(ki, ip, PORT);
+                    IConnectionManager connMan = new ConnMan(ki, isRelay, client);
+                    connections.add(connMan);
+                    try
+
+                    {
+                        client.start(connMan);
+                    } catch (
+                            Exception e)
+
+                    {
+                        e.printStackTrace();
+                    }
+                }
+            }.start();
 
         }
     }
@@ -86,7 +107,7 @@ public class NetMan extends Thread implements INetworkManager {
     public void broadcastAllBut(String ID, Object o) {
         for(IConnectionManager connMan:connections)
         {
-            if(connMan != null && ID != null) {
+            if (connMan != null && ID != null && connMan.getID() != null) {
                 if (!connMan.getID().equals(ID)) {
                     connMan.sendPacket(o);
                 }

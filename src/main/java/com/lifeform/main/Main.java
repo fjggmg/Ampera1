@@ -44,14 +44,14 @@ public class Main {
         {
             if(s.equals("-r")) o.relay = true;
             if(s.equals("-enableMining")) o.mining = true;
-            if(s.startsWith("-ur"))
-            {
-                o.relayToUse = Integer.parseInt(s.replaceFirst("-ur",""));
-            }
-            if(s.equals("-nogui"))
-            {
-                o.nogui = true;
-            }
+            if (s.startsWith("-ur")) o.relayToUse = Integer.parseInt(s.replaceFirst("-ur", ""));
+            if (s.equals("-testnet")) o.testNet = true;
+            if (s.equals("-nogui")) o.nogui = true;
+            if (s.equals("-bd")) o.bDebug = true;
+            if (s.equals("-md")) o.mDebug = true;
+            if (s.equals("-dump")) o.dump = true;
+            if (s.equals("-rebuild")) o.rebuild = true;
+
         }
         return o;
     }

@@ -116,10 +116,7 @@ public class Transaction implements ITrans{
             Map<String,String> keySigMap = JSONManager.parseJSONtoMap((String)jo.get("keySigMap"));
             //Map<String,String> eMap = JSONManager.parseJSONtoMap((String)jo.get("entropyMap"));
             Map<String,String> entropyMap = JSONManager.parseJSONtoMap((String)jo.get("entropyMap"));
-            for(String s:entropyMap.keySet())
-            {
-                System.out.println("Address: " + s + " value " + entropyMap.get(s));
-            }
+
             List<String> keys = JSONManager.parseJSONToList((String)jo.get("keys"));
             return new Transaction(message,sigsRequired,keySigMap,outputs,inputs,entropyMap,keys);
 
@@ -273,11 +270,15 @@ public class Transaction implements ITrans{
         for(Token t:Token.values()) {
             if(t.equals(Token.ORIGIN)) continue;
             BigInteger allInput = BigInteger.ZERO;
+            boolean hasToken = false;
             for (Input i : inputs) {
-                if (i.getToken().equals(t))
+                if (i.getToken().equals(t)) {
                     allInput = allInput.add(i.getAmount());
+                    hasToken = true;
+                }
 
             }
+            if (!hasToken) continue;
             BigInteger allOutput = BigInteger.ZERO;
             for (Output o : outputs) {
                 if (o.getToken().equals(t))

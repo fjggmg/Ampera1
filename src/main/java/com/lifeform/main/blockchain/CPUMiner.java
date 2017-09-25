@@ -24,20 +24,21 @@ public class CPUMiner extends Thread implements IMiner{
     public static BigInteger height = BigInteger.ZERO;
     private Block b;
 
+    private boolean cDebug;
 
-    public CPUMiner(IKi ki, BigInteger guess,BigInteger maxGuess)
+    public CPUMiner(IKi ki, BigInteger guess, BigInteger maxGuess, boolean cDebug)
     {
         this.ki = ki;
         this.guess = guess;
         this.guessSet = guess;
         this.maxGuess = maxGuess;
+        this.cDebug = cDebug;
 
     }
     @Override
     public void run() {
         canMine = true;
                 if (ki.getEncryptMan().getPublicKey() != null) {
-                    ki.debug("Mining");
                     b = ki.getChainMan().formEmptyBlock();
                     canMine = ki.getChainMan().canMine();
                     b.ID = EncryptionManager.sha512(b.header());
@@ -80,8 +81,10 @@ public class CPUMiner extends Thread implements IMiner{
 
                         if(!ki.getChainMan().softVerifyBlock(b)) return;
                         if (!ki.getChainMan().canMine()) return;
+                    if (cDebug)
                         ki.getMainLog().info("Block verified");
                         sendBlock(b);
+                    if (cDebug)
                         ki.getMainLog().info("Sent NBP to network");
                         canMine = false;
 

@@ -51,6 +51,7 @@ public class ConnMan extends IConnectionManager {
     public void disconnect() {
 
         process = false;
+        endpoint.disconnect();
     }
 
     @Override
@@ -67,6 +68,7 @@ public class ConnMan extends IConnectionManager {
         else
             hs.mostRecentBlock = "";
         hs.version = Handshake.VERSION;
+        hs.chainVer = Handshake.CHAIN_VER;
         sendPacket(hs);
 
     }

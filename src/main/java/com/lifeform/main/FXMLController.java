@@ -566,16 +566,21 @@ public class FXMLController {
 
 
             ITrans trans = new Transaction(messageToSend.getText(), 1, null, outputs, inputs, entropyMap, keys);
+            ki.debug("Transaction has: " + trans.getOutputs().size() + " Outputs before finalization");
             trans.makeChange(fee, ki.getAddMan().getMainAdd()); // TODO this just sends change back to the main address......will need to give option later
             trans.addSig(ki.getEncryptMan().getPublicKeyString(), ki.getEncryptMan().sign(trans.toSign()));
-            ki.getTransMan().getPending().add(trans);
-            for(Input i:trans.getInputs())
-            {
-             ki.getTransMan().getUsedUTXOs().add(i.getID());
+            ki.debug("Transaction has: " + trans.getOutputs().size() + "Outputs after finalization");
+            if (ki.getTransMan().verifyTransaction(trans)) {
+                ki.getTransMan().getPending().add(trans);
+                for (Input i : trans.getInputs()) {
+                    ki.getTransMan().getUsedUTXOs().add(i.getID());
+                }
+                TransactionPacket tp = new TransactionPacket();
+                tp.trans = trans.toJSON();
+                ki.getNetMan().broadcast(tp);
+            } else {
+                ki.debug("Transaction did not verify, not sending and not adding to pending list");
             }
-            TransactionPacket tp = new TransactionPacket();
-            tp.trans = trans.toJSON();
-            ki.getNetMan().broadcast(tp);
         }
     }
 

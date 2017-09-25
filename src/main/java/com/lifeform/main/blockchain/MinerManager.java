@@ -9,10 +9,12 @@ import java.util.List;
 public class MinerManager implements IMinerMan{
 
     private IKi ki;
-    public MinerManager(IKi ki)
+    private boolean mDebug;
+
+    public MinerManager(IKi ki, boolean mDebug)
     {
         this.ki = ki;
-
+        this.mDebug = mDebug;
     }
 
     private int previousCount = 0;
@@ -84,8 +86,9 @@ public class MinerManager implements IMinerMan{
 
                 BigInteger guess = BigInteger.ZERO;
                 for (int i = 0; i < count; i++) {
-                    ki.getMainLog().info("Starting miner: " + i);
-                    CPUMiner miner = new CPUMiner(ki, guess, guess.add(BigInteger.valueOf(1000000L)));
+                    if (mDebug)
+                        ki.getMainLog().info("Starting miner: " + i);
+                    CPUMiner miner = new CPUMiner(ki, guess, guess.add(BigInteger.valueOf(1000000L)), mDebug);
                     miner.setName("Miner" + i);
                     guess = guess.add(BigInteger.valueOf(1000000L));
                     miners.add(miner);

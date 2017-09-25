@@ -46,4 +46,6 @@ public interface IChainMan {
 
     BigInteger calculateDiff(BigInteger currentDiff,long timeElapsed);
 
+    short getChainVer();
+
 }
