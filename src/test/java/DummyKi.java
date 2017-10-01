@@ -1,24 +1,24 @@
 import com.lifeform.main.IKi;
 import com.lifeform.main.blockchain.Block;
-import com.lifeform.main.blockchain.ChainManager;
 import com.lifeform.main.blockchain.IChainMan;
+import com.lifeform.main.blockchain.IMinerMan;
 import com.lifeform.main.data.EncryptionManager;
 import com.lifeform.main.data.IEncryptMan;
 import com.lifeform.main.data.Options;
+import com.lifeform.main.network.INetworkManager;
 import com.lifeform.main.transactions.*;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.Logger;
 import org.bitbucket.backspace119.generallib.Logging.ConsoleLogger;
 import org.bitbucket.backspace119.generallib.Logging.LogMan;
-import org.bitbucket.backspace119.generallib.io.network.NetworkManager;
 
 /**
  * Created by Bryan on 7/17/2017.
  */
 public class DummyKi implements IKi {
 
-    private IChainMan chainMan = new ChainManager(this,ChainManager.POW_CHAIN);
-    private ITransMan transMan = new TransactionManager(this);
+    private IChainMan chainMan = null;
+    private ITransMan transMan = null;
     private IEncryptMan encryptMan = new EncryptionManager(this);
     private LogMan logMan;
     private Logger main;
@@ -77,7 +77,7 @@ public class DummyKi implements IKi {
     public Logger getMainLog() { return main;}
 
     @Override
-    public NetworkManager getNetMan() {
+    public INetworkManager getNetMan() {
         return null;
     }
 
@@ -116,5 +116,10 @@ public class DummyKi implements IKi {
     @Override
     public void debug(String s) {
 
+    }
+
+    @Override
+    public IMinerMan getMinerMan() {
+        return null;
     }
 }

@@ -2,7 +2,6 @@ import com.lifeform.main.IKi;
 import com.lifeform.main.blockchain.Block;
 import com.lifeform.main.data.EncryptionManager;
 import com.lifeform.main.data.Utils;
-import com.lifeform.main.transactions.MKiTransaction;
 import org.junit.*;
 
 import java.math.BigInteger;

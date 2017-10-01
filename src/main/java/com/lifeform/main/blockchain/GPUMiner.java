@@ -4,5 +4,6 @@ public class GPUMiner implements IMiner {
     @Override
     public void start() {
 
+
     }
 }

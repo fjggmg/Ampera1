@@ -27,13 +27,9 @@ public class EncryptionManager  implements IEncryptMan{
 
     public static void initStatic()
     {
-        try {
-            md = MessageDigest.getInstance("SHA-256");
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        }
+
     }
-    static MessageDigest md;
+
 
     public static int sha256NoNew(String input,byte[] buf)
     {
@@ -52,6 +48,16 @@ public class EncryptionManager  implements IEncryptMan{
             e.printStackTrace();
         }
         return 0;
+    }
+
+    static SHA3.DigestSHA3 md = new SHA3.Digest512();
+
+    public static byte[] sha512NoNew(byte[] input) {
+
+        md.update(input);
+        byte[] hash = md.digest();
+        md.reset();
+        return hash;
     }
 
     public static String sha512(String input)

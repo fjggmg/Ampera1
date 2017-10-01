@@ -114,10 +114,13 @@ public class PacketProcessor implements IPacketProcessor{
                     connMan.sendPacket(tp);
                 }
             }
-            if(ki.getChainMan().currentHeight().compareTo(BigInteger.ZERO) > 0 && !ki.getChainMan().getByHeight(ki.getChainMan().currentHeight()).ID.equals(hs.mostRecentBlock))
-            {
-                if(ki.getChainMan().currentHeight().compareTo(hs.currentHeight) < 0)
-                {
+            if (ki.getChainMan().currentHeight().compareTo(hs.currentHeight) < 0) {
+                ki.debug("Requesting blocks we're missing from the network");
+                BlocksRequest br = new BlocksRequest();
+                br.fromHeight = ki.getChainMan().currentHeight();
+                connMan.sendPacket(br);
+            } else if (ki.getChainMan().currentHeight().compareTo(BigInteger.ZERO) > 0 && !ki.getChainMan().getByHeight(ki.getChainMan().currentHeight()).ID.equals(hs.mostRecentBlock)) {
+                if (ki.getChainMan().currentHeight().compareTo(hs.currentHeight) < 0) {
                     ki.debug("Discrepency between chains, starting resolution process");
                     LastAgreedStart las = new LastAgreedStart();
                     las.height = ki.getChainMan().currentHeight();
@@ -125,12 +128,6 @@ public class PacketProcessor implements IPacketProcessor{
                     connMan.sendPacket(las);
                 }
 
-            }else if(ki.getChainMan().currentHeight().compareTo(hs.currentHeight) < 0)
-            {
-                ki.debug("Requesting blocks we're missing from the network");
-                BlocksRequest br = new BlocksRequest();
-                br.fromHeight = ki.getChainMan().currentHeight();
-                connMan.sendPacket(br);
             }
 
         }else if(packet instanceof BlockHeader)

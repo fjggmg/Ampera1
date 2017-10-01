@@ -11,11 +11,11 @@ import org.jetbrains.annotations.NotNull;
 public class XodusStringMap {
     public XodusStringMap(String fileName) {
         env = Environments.newInstance(fileName);
-        store = env.computeInTransaction(txn -> env.openStore(fileName + "store", StoreConfig.WITHOUT_DUPLICATES, txn));
+        store = env.computeInTransaction(txn -> env.openStore(fileName + "store", StoreConfig.WITHOUT_DUPLICATES_WITH_PREFIXING, txn));
+
     }
 
     final Environment env;
-
     final Store store;
 
 
@@ -41,5 +41,23 @@ public class XodusStringMap {
 
     public void clear() {
         env.clear();
+    }
+
+    public void remove(String _key) {
+        final ByteIterable convertedKey = StringBinding.stringToEntry(_key);
+
+        env.executeInTransaction(txn -> store.delete(txn, convertedKey));
+    }
+
+    public void gc() {
+        env.gc();
+    }
+
+    public void suspendGC() {
+        env.suspendGC();
+    }
+
+    public void resumeGC() {
+        env.resumeGC();
     }
 }

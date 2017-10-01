@@ -1,4 +1,4 @@
-import com.lifeform.main.MainGUI;
+
 import org.junit.Test;
 
 /**
@@ -13,11 +13,6 @@ public class GUITest {
     @Test
     public void simpleGUILoadTest()
     {
-        MainGUI gui = MainGUI.guiFactory(new DummyKi());
-        try{
-            Thread.sleep(10000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+
     }
 }
