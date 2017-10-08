@@ -115,7 +115,6 @@ public class FXMLController {
         t.start();
     }
 
-    private Token currenttransaction;
 
     @FXML
     public Label rTrans1;
@@ -189,6 +188,10 @@ public class FXMLController {
 
     @FXML
     private ListView<String> tokenList;
+    @FXML
+    private CheckBox useCPUcheck;
+    @FXML
+    private CheckBox useGPUcheck;
 
     @FXML
     private Pane walletPane;
@@ -297,6 +300,9 @@ public class FXMLController {
                 {
                     Ki.debug = debugButton.isSelected();
                 }
+
+                ki.getMinerMan().setUseCPU(useCPUcheck.isSelected());
+                ki.getMinerMan().setUseGPU(useGPUcheck.isSelected());
                 if (ki.getEncryptMan().getPublicKey() != null && isFinal) {
 
                     if(tokenValueMap.get(currentWallet) == null || tokenValueMap.get(currentWallet).compareTo(BigInteger.ZERO) == 0)
@@ -796,7 +802,7 @@ public class FXMLController {
     @FXML
     void transactionCNYClicked(MouseEvent event) {
         subPaneClicked(transactionCNY);
-        currenttransaction = Token.CNY;
+        currentTransaction = Token.CNY;
     }
 
     @FXML
@@ -812,7 +818,7 @@ public class FXMLController {
     @FXML
     void transactionEURClicked(MouseEvent event) {
         subPaneClicked(transactionEUR);
-        currenttransaction = Token.EUR;
+        currentTransaction = Token.EUR;
     }
 
     @FXML
@@ -828,7 +834,7 @@ public class FXMLController {
     @FXML
     void transactionGBPClicked(MouseEvent event) {
         subPaneClicked(transactionGBP);
-        currenttransaction = Token.GBP;
+        currentTransaction = Token.GBP;
     }
 
     @FXML
@@ -844,7 +850,7 @@ public class FXMLController {
     @FXML
     void transactionGoldClicked(MouseEvent event) {
         subPaneClicked(transactionGold);
-        currenttransaction = Token.GOLD;
+        currentTransaction = Token.GOLD;
     }
 
     @FXML
@@ -861,7 +867,7 @@ public class FXMLController {
     @FXML
     void transactionJPYClicked(MouseEvent event) {
         subPaneClicked(transactionJPY);
-        currenttransaction = Token.JPY;
+        currentTransaction = Token.JPY;
     }
 
     @FXML
@@ -877,7 +883,7 @@ public class FXMLController {
     @FXML
     void transactionKiClicked(MouseEvent event) {
         subPaneClicked(transactionKi);
-        currenttransaction = Token.KI;
+        currentTransaction = Token.KI;
     }
 
     @FXML
@@ -893,7 +899,7 @@ public class FXMLController {
     @FXML
     void transactionOriginClicked(MouseEvent event) {
         subPaneClicked(transactionOrigin);
-        currenttransaction = Token.ORIGIN;
+        currentTransaction = Token.ORIGIN;
     }
 
     @FXML
@@ -909,7 +915,7 @@ public class FXMLController {
     @FXML
     void transactionPalladiumClicked(MouseEvent event) {
         subPaneClicked(transactionPalladium);
-        currenttransaction = Token.PALADIUM;
+        currentTransaction = Token.PALADIUM;
     }
 
     @FXML
@@ -925,7 +931,7 @@ public class FXMLController {
     @FXML
     void transactionPlatinumClicked(MouseEvent event) {
         subPaneClicked(transactionPlatinum);
-        currenttransaction = Token.PLATINUM;
+        currentTransaction = Token.PLATINUM;
     }
 
     @FXML
@@ -941,7 +947,7 @@ public class FXMLController {
     @FXML
     void transactionSilverClicked(MouseEvent event) {
         subPaneClicked(transactionSilver);
-        currenttransaction = Token.SILVER;
+        currentTransaction = Token.SILVER;
     }
 
     @FXML
@@ -957,7 +963,7 @@ public class FXMLController {
     @FXML
     void transactionUSDClicked(MouseEvent event) {
         subPaneClicked(transactionUSD);
-        currenttransaction = Token.USD;
+        currentTransaction = Token.USD;
     }
 
     @FXML
@@ -968,5 +974,33 @@ public class FXMLController {
     @FXML
     void transactionUSDHoverOff(MouseEvent event) {
         paneHoverOff(transactionUSD);
+    }
+
+    public void minimizeClicked(MouseEvent mouseEvent) {
+        primaryStage.setIconified(true);
+    }
+
+    public void addGenHover(MouseEvent mouseEvent) {
+    }
+
+    public void addGenHoverOff(MouseEvent mouseEvent) {
+    }
+
+    public void addGenClicked(MouseEvent mouseEvent) {
+    }
+
+    public void addGenUnclicked(MouseEvent mouseEvent) {
+    }
+
+    public void addManHover(MouseEvent mouseEvent) {
+    }
+
+    public void addManHoverOff(MouseEvent mouseEvent) {
+    }
+
+    public void addManClicked(MouseEvent mouseEvent) {
+    }
+
+    public void addManUnclicked(MouseEvent mouseEvent) {
     }
 }

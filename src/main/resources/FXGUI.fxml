@@ -20,7 +20,9 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="480.0" prefWidth="640.0" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.lifeform.main.FXMLController">
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="480.0"
+            prefWidth="640.0" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.lifeform.main.FXMLController">
    <children>
       <ImageView fitHeight="480.0" fitWidth="640.0">
          <image>
@@ -273,6 +275,28 @@
                            </children>
                         </Pane>
                         <Label fx:id="heightLabel" layoutX="110.0" layoutY="245.0" opacity="0.4" text="Height: " textFill="WHITE" />
+                        <Pane id="generateAddPanel" fx:id="addGenPanel" layoutX="367.0" layoutY="273.0"
+                              onMouseEntered="#addGenHover" onMouseExited="#addGenHoverOff"
+                              onMousePressed="#addGenClicked" onMouseReleased="#addGenUnclicked" opacity="0.8"
+                              prefHeight="21.0" prefWidth="93.0" style="-fx-background-color: rgba(127,127,127,0.5);">
+                           <children>
+                              <Label alignment="CENTER" contentDisplay="CENTER" layoutX="20.0" layoutY="1.0"
+                                     opacity="0.8" prefHeight="17.0" prefWidth="51.0" text="Generate"
+                                     textAlignment="CENTER" textFill="WHITE"/>
+                           </children>
+                        </Pane>
+                        <TextField focusTraversable="false" layoutX="110.0" layoutY="271.0" opacity="0.3"
+                                   promptText="Password"/>
+                        <Pane id="generateAddPanel" fx:id="addManagePanel" layoutX="367.0" layoutY="305.0"
+                              onMouseEntered="#addManHover" onMouseExited="#addManHoverOff"
+                              onMousePressed="#addManClicked" onMouseReleased="#addManUnclicked" opacity="0.8"
+                              prefHeight="21.0" prefWidth="93.0" style="-fx-background-color: rgba(127,127,127,0.5);">
+                           <children>
+                              <Label alignment="CENTER" contentDisplay="CENTER" layoutX="20.0" layoutY="1.0"
+                                     opacity="0.8" prefHeight="17.0" prefWidth="51.0" text="Manage"
+                                     textAlignment="CENTER" textFill="WHITE"/>
+                           </children>
+                        </Pane>
                      </children>
                   </Pane>
                   <Pane fx:id="transactionContentPane" prefHeight="200.0" prefWidth="200.0" style="-fx-background-color: rgba(0,0,255,0.1);" visible="false">
@@ -482,6 +506,10 @@
                   <Pane fx:id="settingsContentPane" prefHeight="200.0" prefWidth="200.0" style="-fx-background-color: rgba(0,0,255,0.1);" visible="false">
                      <children>
                         <CheckBox fx:id="debugButton" layoutX="191.0" layoutY="86.0" mnemonicParsing="false" opacity="0.5" selected="true" text="Debug Mode" textFill="WHITE" />
+                        <CheckBox fx:id="useCPUcheck" layoutX="191.0" layoutY="128.0" mnemonicParsing="false"
+                                  opacity="0.5" selected="true" text="Use CPU for mining" textFill="WHITE"/>
+                        <CheckBox fx:id="useGPUcheck" layoutX="191.0" layoutY="167.0" mnemonicParsing="false"
+                                  opacity="0.5" text="Use GPU for mining" textFill="WHITE"/>
                      </children></Pane>
                   <Pane fx:id="helpContentPane" prefHeight="200.0" prefWidth="200.0" style="-fx-background-color: rgba(0,0,255,0.1);" visible="false">
                      <children>
@@ -528,6 +556,16 @@
                            </effect>
                         </ImageView>
                         <Pane layoutX="171.0" layoutY="11.0" onMousePressed="#closeClicked" prefHeight="25.0" prefWidth="28.0" />
+                        <ImageView fitHeight="38.0" fitWidth="29.0" layoutX="143.0" layoutY="14.0" opacity="0.7">
+                           <image>
+                              <Image url="@minimize.png"/>
+                           </image>
+                           <effect>
+                              <Glow level="1.0"/>
+                           </effect>
+                        </ImageView>
+                        <Pane id="minimizePane" layoutX="140.0" layoutY="13.0" onMousePressed="#minimizeClicked"
+                              prefHeight="26.0" prefWidth="31.0"/>
                      </children>
                   </Pane>
                </children>

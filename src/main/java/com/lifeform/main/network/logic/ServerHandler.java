@@ -35,7 +35,6 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
         endpoint.setChannel(ctx.channel());
         connMan = new ConnMan(ki,true,endpoint);
         ki.getNetMan().getConnections().add(connMan);
-
         connMan.connected();
     }
 

@@ -7,6 +7,8 @@ import org.jetbrains.annotations.NotNull;
 
 /**
  * Created by Queue on 9/24/2017.
+ *
+ * this really should be called XodusStringStringMap but we're going to leave it for now, should hopefully get to use generics in the future anyway
  */
 public class XodusStringMap {
     public XodusStringMap(String fileName) {

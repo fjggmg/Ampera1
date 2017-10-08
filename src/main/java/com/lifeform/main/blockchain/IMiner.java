@@ -5,4 +5,8 @@ public interface IMiner {
 
     void start();
 
+    void setName(String name);
+
+    void interrupt();
+
 }

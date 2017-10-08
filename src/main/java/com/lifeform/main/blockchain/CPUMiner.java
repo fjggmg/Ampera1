@@ -64,7 +64,7 @@ public class CPUMiner extends Thread implements IMiner{
                             System.out.println("1Mhash");
                             System.out.println("Current diff: " + cd);
                         }
-                        b.payload = guess.toString();
+                        b.payload = guess.toByteArray();
 
                         try {
                             hash = EncryptionManager.sha512(b.header().getBytes("UTF-8"));

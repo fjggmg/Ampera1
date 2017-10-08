@@ -75,12 +75,27 @@ public class MinerManager implements IMinerMan{
     {
         return previousCount;
     }
+
+    private boolean useGPU = false;
+    private boolean useCPU = true;
+
+    @Override
+    public void setUseGPU(boolean useGPU) {
+        //TODO: check if we're on Mac, at which point we will refuse to turn on GPU mining, later on we should disable this setting in the GUI if on Mac
+        this.useGPU = useGPU;
+    }
+
+    @Override
+    public void setUseCPU(boolean useCPU) {
+        this.useCPU = useCPU;
+    }
+
     @Override
     public void startMiners(int count) {
         if(ki.getOptions().mining) {
             previousCount = count;
             mining = true;
-            if (mining) {
+            if (useCPU) {
                 CPUMiner.mining = true;
                 CPUMiner.foundBlock = false;
 
@@ -88,13 +103,21 @@ public class MinerManager implements IMinerMan{
                 for (int i = 0; i < count; i++) {
                     if (mDebug)
                         ki.getMainLog().info("Starting miner: " + i);
-                    CPUMiner miner = new CPUMiner(ki, guess, guess.add(BigInteger.valueOf(1000000L)), mDebug);
+                    IMiner miner = new CPUMiner(ki, guess, guess.add(BigInteger.valueOf(1000000L)), mDebug);
                     miner.setName("Miner" + i);
                     guess = guess.add(BigInteger.valueOf(1000000L));
                     miners.add(miner);
                     miner.start();
                 }
 
+            }
+
+            if (useGPU) {
+                GPUMiner.mining = true;
+                IMiner miner = new GPUMiner(ki);
+                miner.setName("GPUMiner");
+                miners.add(miner);
+                miner.start();
             }
         }
     }
@@ -103,9 +126,10 @@ public class MinerManager implements IMinerMan{
     public void stopMiners() {
         for(IMiner miner:miners)
         {
-            ((CPUMiner)miner).interrupt();
+            miner.interrupt();
         }
         CPUMiner.mining = false;
+        GPUMiner.mining = false;
         mining = false;
         miners.clear();
     }

@@ -214,7 +214,6 @@ public class ChainManager implements IChainMan {
         csDB.commit();
         tmDB.commit();
         cmDB.commit();
-        close();
     }
 
 

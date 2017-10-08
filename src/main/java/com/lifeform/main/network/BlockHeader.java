@@ -1,7 +1,5 @@
 package com.lifeform.main.network;
 
-import com.lifeform.main.transactions.ITrans;
-
 import java.io.Serializable;
 import java.math.BigInteger;
 
@@ -12,7 +10,8 @@ public class BlockHeader implements Serializable {
     public BigInteger height;
     public long timestamp;
     public String prevID;
-    public String payload;
+    public byte[] payload;
     public String coinbase;
+    public boolean laFlag = false;
 
 }

@@ -16,6 +16,11 @@ public class ServerEndpointHandler implements INetworkEndpoint{
     }
 
     @Override
+    public String getAddress() {
+        return channel.remoteAddress().toString();
+    }
+
+    @Override
     public void disconnect() {
         channel.disconnect();
     }

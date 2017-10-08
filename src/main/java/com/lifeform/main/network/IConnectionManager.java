@@ -10,4 +10,6 @@ public abstract class IConnectionManager{
     public abstract void setID(String ID);
     public abstract void connected();
 
+    public abstract String getAddress();
+
 }

@@ -42,6 +42,10 @@ public class PacketProcessor implements IPacketProcessor{
             //ki.debug("Heartbeat of packet processor, current queue size: " + packets.size());
             if(packets.size() > 0)
             {
+                if (packets.get(0) == null) {
+                    packets.remove(0);
+                    continue;
+                }
                 ki.debug("Processing packet: " + packets.get(0).toString());
                 process(packets.get(0));
                 packets.remove(0);
@@ -70,6 +74,7 @@ public class PacketProcessor implements IPacketProcessor{
     private BigInteger startHeight;
     private boolean gotPending = false;
     private boolean blocking = false;
+    private boolean onRightChain = true;
     @Override
     public void process(Object packet) {
 
@@ -83,6 +88,7 @@ public class PacketProcessor implements IPacketProcessor{
             ki.debug("version: " + hs.version);
             ki.debug("Height: " + hs.currentHeight);
             ki.debug("Chain ver: " + hs.chainVer);
+            ki.debug("Address: " + connMan.getAddress());
             startHeight = hs.currentHeight;
             if (hs.chainVer != Handshake.CHAIN_VER) {
                 ki.debug("Mismatched chain versions, disconnecting");
@@ -114,6 +120,11 @@ public class PacketProcessor implements IPacketProcessor{
                     connMan.sendPacket(tp);
                 }
             }
+            if (ki.getChainMan().currentHeight().compareTo(hs.currentHeight) > 0) {
+                if (!ki.getChainMan().getByHeight(hs.currentHeight).ID.equals(hs.mostRecentBlock)) {
+                    onRightChain = false;
+                }
+            }
             if (ki.getChainMan().currentHeight().compareTo(hs.currentHeight) < 0) {
                 ki.debug("Requesting blocks we're missing from the network");
                 BlocksRequest br = new BlocksRequest();
@@ -136,7 +147,7 @@ public class PacketProcessor implements IPacketProcessor{
             BlockHeader bh = (BlockHeader) packet;
             ki.debug("Height: " + bh.height);
             headerMap.put(bh.ID,bh);
-            if(laFlag)
+            if (laFlag && bh.laFlag)
             {
                 if(ki.getChainMan().getByHeight(bh.height).ID.equals(bh.ID))
                 {
@@ -223,14 +234,24 @@ public class PacketProcessor implements IPacketProcessor{
             BlockHeader bh;
             Block b = ki.getChainMan().getByHeight(lac.height);
             bh = formHeader(b);
+            bh.laFlag = true;
             connMan.sendPacket(bh);
         }else if(packet instanceof LastAgreedStart)
         {
             ki.debug("Received last agreed start");
             LastAgreedStart las = (LastAgreedStart) packet;
+            if (onRightChain) {
+                ResetRequest rr = new ResetRequest();
+                BlockHeader bh = formHeader(ki.getChainMan().getByHeight(las.height));
+                rr.proof = bh;
+                connMan.sendPacket(rr);
+                return;
+            }
+
             BlockHeader bh;
             Block b = ki.getChainMan().getByHeight(las.height);
             bh = formHeader(b);
+            bh.laFlag = true;
             connMan.sendPacket(bh);
         }else if(packet instanceof TransactionPacket)
         {
@@ -292,6 +313,10 @@ public class PacketProcessor implements IPacketProcessor{
                 BlockHeader bh = headerMap.get(be.ID);
                 List<ITrans> trans = cuMap.get(bh);
                 Block block = formBlock(bh);
+                if (block == null) {
+                    ki.debug("Something fucked up, the block we received is null because of something");
+                    return;
+                }
                 for (ITrans t : trans) {
                     block.addTransaction(t);
                 }
@@ -302,6 +327,10 @@ public class PacketProcessor implements IPacketProcessor{
                 BlockHeader bh = headerMap.get(be.ID);
                 List<ITrans> trans = bMap.get(bh);
                 Block block = formBlock(bh);
+                if (block == null) {
+                    ki.debug("Something fucked up, block is null");
+                    return;
+                }
                 ki.debug("Block formed, adding transactions:");
                 int i = 0;
                 for (ITrans t : trans) {
@@ -314,7 +343,7 @@ public class PacketProcessor implements IPacketProcessor{
                     ki.debug("Verifying block");
                     if(!ki.getChainMan().addBlock(block))
                     {
-
+                        onRightChain = false;
                         if(ki.getNetMan().isRelay())
                         {
 
@@ -333,6 +362,7 @@ public class PacketProcessor implements IPacketProcessor{
                             ki.debug("Relaying block now");
                             ki.getNetMan().broadcast(packet);
                         }
+                        onRightChain = true;
                         processBlocks();
                         if(ki.getMinerMan().isMining())
                         {
@@ -384,7 +414,34 @@ public class PacketProcessor implements IPacketProcessor{
             }
         }else if(packet instanceof BadBlockEnd)
         {
-
+            BadBlockEnd bbe = (BadBlockEnd) packet;
+            bMap.remove(headerMap.get(bbe.ID));
+            headerMap.remove(bbe.ID);
+            onRightChain = false;
+        } else if (packet instanceof ResetRequest) {
+            ki.debug("Received a reset request");
+            ResetRequest rr = (ResetRequest) packet;
+            if (rr.proof.height.compareTo(ki.getChainMan().currentHeight()) == 0 && laFlag) {
+                if (rr.proof.ID.equals(ki.getChainMan().getByHeight(ki.getChainMan().currentHeight()).ID)) {
+                    //this should be sufficient check but really we need to do a full fucking check of the block, will implement ease of use method for this later
+                    if (rr.proof.prevID.equals(ki.getChainMan().getByHeight(ki.getChainMan().currentHeight()).prevID)) {
+                        ki.debug("Reset request is legitimate, reseting block chain and transactions. This may take some time");
+                        List<Block> blocks = new ArrayList<>();
+                        BigInteger height = BigInteger.ZERO;
+                        for (; height.compareTo(ki.getChainMan().currentHeight()) <= 0; height = height.add(BigInteger.ONE)) {
+                            blocks.add(ki.getChainMan().getByHeight(height));
+                        }
+                        ki.getChainMan().clearFile();
+                        ki.getTransMan().clear();
+                        for (Block b : blocks) {
+                            if (!ki.getChainMan().addBlock(b)) {
+                                ki.debug("The block chain is corrupted beyond repair, you will need to manually delete the chain and transaction folders AFTER closing the program. After restarting the program will redownload the chain and should work correctly");
+                                return;
+                            }
+                        }
+                    }
+                }
+            }
         }
         blocking = false;
     }
@@ -452,6 +509,42 @@ public class PacketProcessor implements IPacketProcessor{
     }
     private Block formBlock(BlockHeader bh)
     {
+        if (bh == null) {
+            ki.debug("We don't have the block header for this block end, our connection to the network must be fucked");
+            return null;
+        }
+        if (bh.prevID == null) {
+            ki.debug("Malformed block header received. PrevID is null");
+            return null;
+        }
+        if (bh.ID == null) {
+            ki.debug("Malformed block header received. ID is null");
+            return null;
+        }
+        if (bh.height == null) {
+            ki.debug("Malformed block header received. height is null");
+            return null;
+        }
+        if (bh.coinbase == null) {
+            ki.debug("Malformed block header received. coinbase is null");
+            return null;
+        }
+        if (bh.merkleRoot == null) {
+            ki.debug("Malformed block header received. merkleroot is null");
+            return null;
+        }
+        if (bh.payload == null) {
+            ki.debug("Malformed block header received. payload is null");
+            return null;
+        }
+        if (bh.solver == null) {
+            ki.debug("Malformed block header received. solver is null");
+            return null;
+        }
+        if (bh.timestamp == 0) {
+            ki.debug("Malformed block header received. timestamp is impossible");
+            return null;
+        }
         Block block = new Block();
         block.height = bh.height;
         block.ID = bh.ID;
@@ -470,7 +563,7 @@ public class PacketProcessor implements IPacketProcessor{
         bh.solver = b.solver;
         bh.prevID = b.prevID;
         bh.payload = b.payload;
-        bh.merkleRoot = b.merkleRoot;
+        bh.merkleRoot = b.merkleRoot();
         bh.ID = b.ID;
         bh.height = b.height;
         bh.coinbase = b.getCoinbase().toJSON();

@@ -14,6 +14,5 @@ public class Handshake implements Serializable{
     BigInteger currentHeight;
     String mostRecentBlock;
     short chainVer;
-    @Deprecated
     boolean isRelay;
 }

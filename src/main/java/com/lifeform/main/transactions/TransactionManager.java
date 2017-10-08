@@ -5,18 +5,10 @@ import com.lifeform.main.blockchain.ChainManager;
 import com.lifeform.main.data.JSONManager;
 import com.lifeform.main.data.XodusStringBooleanMap;
 import com.lifeform.main.data.XodusStringMap;
-import com.lifeform.main.data.files.StringFileHandler;
-import com.lifeform.main.network.PacketDispatcher;
-import org.mapdb.DB;
-import org.mapdb.DBMaker;
-import org.mapdb.Serializer;
-
 import java.io.File;
 import java.math.BigInteger;
 import java.util.*;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.logging.FileHandler;
 
 /**
  * Created by Bryan on 8/11/2017.

@@ -27,11 +27,7 @@ public class Server {
         this.ki = ki;
         this.port = port;
     }
-    public void setChannel(Channel c)
-    {
-        this.channel = c;
-    }
-    private Channel channel;
+
     public void start() throws Exception {
         // Configure SSL.
         final SslContext sslCtx;
@@ -61,8 +57,7 @@ public class Server {
                                     new ObjectEncoder(),
                                     new ObjectDecoder(150000000,ClassResolvers.cacheDisabled(null)),
                                     new ServerHandler(ki));
-                            //ch.write("This is a test 2");
-                            channel = ch;
+
                         }
                     }).childOption(ChannelOption.SO_KEEPALIVE,true);
 

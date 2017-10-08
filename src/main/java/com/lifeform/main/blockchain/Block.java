@@ -9,6 +9,7 @@ import com.lifeform.main.transactions.ITrans;
 import com.lifeform.main.transactions.Transaction;
 import org.json.simple.JSONObject;
 
+import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.util.*;
 
@@ -28,7 +29,7 @@ public class Block {
     /**
      * the following is a way to store data in the block, although said data may be arbitrary.
      */
-    public String payload = "";
+    public byte[] payload = {};
 
     private ITrans coinbase;
 
@@ -108,14 +109,14 @@ public class Block {
         merkleRoot = hashes.get(0);
         return hashes.get(0);
     }
-    private String payloadHash;
+
     private String solverHash;
     private String header;
     private String coinbaseID;
     private String sHeight;
     public String header()
     {
-        payloadHash = EncryptionManager.sha512(payload);
+        if (payload.length > 64) return null;//limit on payload
         if(solverHash == null || solverHash.isEmpty())
         {
             solverHash = EncryptionManager.sha512(solver);
@@ -125,14 +126,41 @@ public class Block {
             coinbaseID = coinbase.getID();
         }
 
+
         sHeight = Utils.toBase64(height.toByteArray());
 
 
-        header = prevID + solverHash + sHeight + timestamp + payloadHash + coinbaseID + ((merkleRoot == null) ? merkleRoot():merkleRoot);
+        try {
+            header = prevID + solverHash + sHeight + timestamp + coinbaseID + ((merkleRoot == null) ? merkleRoot() : merkleRoot) + new String(payload, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            //payload did not convert to string
+            e.printStackTrace();
+            return null;
+        }
 
         return header;
     }
 
+    /**
+     * no payload header for gpu mining
+     *
+     * @return
+     */
+    public byte[] gpuHeader() {
+        if (solverHash == null || solverHash.isEmpty()) {
+            solverHash = EncryptionManager.sha512(solver);
+        }
+        if (coinbaseID == null || coinbaseID.isEmpty()) {
+            coinbaseID = coinbase.getID();
+        }
+        sHeight = Utils.toBase64(height.toByteArray());
+
+
+        header = prevID + solverHash + sHeight + timestamp + coinbaseID + ((merkleRoot == null) ? merkleRoot() : merkleRoot);
+
+
+        return header.getBytes();
+    }
     public String toJSON()
     {
         JSONObject obj = new JSONObject();
@@ -141,7 +169,7 @@ public class Block {
         obj.put("ID",ID);
         obj.put("solver",solver);
         obj.put("timestamp",timestamp.toString());
-        obj.put("payload",payload);
+        obj.put("payload", Utils.toBase64(payload));
         JSONObject obj2 = new JSONObject();
         for(String trans:transactions.keySet())
         {
@@ -161,7 +189,7 @@ public class Block {
         b.ID = map.get("ID");
         b.solver = map.get("solver");
         b.timestamp = Long.parseLong(map.get("timestamp"));
-        b.payload = map.get("payload");
+        b.payload = Utils.fromBase64(map.get("payload"));
         b.setCoinbase(Transaction.fromJSON(map.get("coinbase")));
         Map<String,String> transactions = JSONManager.parseJSONtoMap(map.get("transactions"));
         for(String trans:transactions.keySet())

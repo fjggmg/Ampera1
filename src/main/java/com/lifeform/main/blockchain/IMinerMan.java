@@ -11,4 +11,8 @@ public interface IMinerMan {
     List<IMiner> getMiners();
     boolean isMining();
     int getPreviousCount();
+
+    void setUseGPU(boolean useGPU);
+
+    void setUseCPU(boolean useCPU);
 }

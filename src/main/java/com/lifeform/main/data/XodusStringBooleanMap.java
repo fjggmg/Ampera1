@@ -41,4 +41,22 @@ public class XodusStringBooleanMap {
     public void clear() {
         env.clear();
     }
+
+    public void remove(String _key) {
+        final ByteIterable convertedKey = StringBinding.stringToEntry(_key);
+
+        env.executeInTransaction(txn -> store.delete(txn, convertedKey));
+    }
+
+    public void gc() {
+        env.gc();
+    }
+
+    public void suspendGC() {
+        env.suspendGC();
+    }
+
+    public void resumeGC() {
+        env.resumeGC();
+    }
 }

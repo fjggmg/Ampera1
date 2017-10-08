@@ -74,6 +74,11 @@ public class ConnMan extends IConnectionManager {
     }
 
     @Override
+    public String getAddress() {
+        return endpoint.getAddress();
+    }
+
+    @Override
     public void received(Object o) {
        pp.enqueue(o);
     }
