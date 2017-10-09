@@ -65,7 +65,8 @@ public class GPUMiner extends Thread implements IMiner {
         if (miner.queryWinningPayload() != null) {
 
             ki.debug("Found a block, sending to network");
-
+            if (miner.queryHashesPerSecond() != -1)
+                ki.debug("Current hash rate is: " + miner.queryHashesPerSecond() + " H/s");
             byte[] winningPayload = miner.queryWinningPayload();
             try {
                 ki.debug("Payload is: " + new String(winningPayload, "UTF-8"));
@@ -77,7 +78,7 @@ public class GPUMiner extends Thread implements IMiner {
             b.ID = EncryptionManager.sha512(b.header());
 
             ki.debug("Hash is: " + Utils.toHexArray(Utils.fromBase64(b.ID)));
-            ki.debug("Diff is: " + Utils.toHexArray(ki.getChainMan().getCurrentDifficulty().toByteArray()));
+            ki.debug("Diff is: " + Utils.toHexArray(difficulty));
             if (ki.getChainMan().softVerifyBlock(b))
                 sendBlock(b);
             else {

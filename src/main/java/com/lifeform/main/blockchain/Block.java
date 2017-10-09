@@ -131,7 +131,7 @@ public class Block {
 
 
         try {
-            header = prevID + solverHash + sHeight + timestamp + coinbaseID + ((merkleRoot == null) ? merkleRoot() : merkleRoot) + new String(payload, "UTF-8");
+            header = prevID + solverHash + sHeight + timestamp + coinbaseID + ((merkleRoot == null) ? merkleRoot() : merkleRoot) + (((payload == null) || (payload.length == 0)) ? "" : new String(payload, "UTF-8"));
         } catch (UnsupportedEncodingException e) {
             //payload did not convert to string
             e.printStackTrace();
@@ -159,7 +159,12 @@ public class Block {
         header = prevID + solverHash + sHeight + timestamp + coinbaseID + ((merkleRoot == null) ? merkleRoot() : merkleRoot);
 
 
-        return header.getBytes();
+        try {
+            return header.getBytes("UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
     public String toJSON()
     {
