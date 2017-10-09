@@ -9,9 +9,6 @@ import com.lifeform.main.network.TransactionPacket;
 import gpuminer.JOCL.miner.JOCLSHA3Miner;
 
 import java.io.UnsupportedEncodingException;
-import java.nio.ByteBuffer;
-import java.util.Random;
-
 public class GPUMiner extends Thread implements IMiner {
 
     private IKi ki;
@@ -21,7 +18,7 @@ public class GPUMiner extends Thread implements IMiner {
     }
 
     public static boolean mining = true;
-    static JOCLSHA3Miner miner;
+    private JOCLSHA3Miner miner;
     @Override
     public void run() {
         Block b = ki.getChainMan().formEmptyBlock();
@@ -46,18 +43,33 @@ public class GPUMiner extends Thread implements IMiner {
             difficulty[p] = ki.getChainMan().getCurrentDifficulty().toByteArray()[i];
             p--;
         }
-        if (miner == null) {
-            //To use the miner you need to create an instance of the JOCLSHA3Miner object.
-            miner = new JOCLSHA3Miner();
-        }
 
+        miner = new JOCLSHA3Miner();
 
         //And if you have data ready for it you can start mining right away.
         miner.startMining(message, threadCount, difficulty);
         ki.debug("Started mining on the GPU, there will be no further output until a block is found");
+        if (miner.queryDiagnosticDifficulty() != null)
+            ki.debug("Current GPU diff is: " + Utils.toHexArray(miner.queryDiagnosticDifficulty()));
+        if (miner.queryDiagnosticMessageWithFrontPayload() != null) {
+            try {
+                ki.debug("Current GPU message is: " + new String(miner.queryDiagnosticMessageWithFrontPayload(), "UTF-8"));
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+        }
         //It will take a while to mine, so whatever thread is using the miner object will need to wait for it to finish.
         while (miner.hasMiningThread() && !miner.hasFailed() && miner.queryWinningPayload() == null && mining) //Any conditions on when to stop mining go in here with miner.hasMiningThread(). You can also stop mining with miner.stopAndClear() from another thread if that thread has a reference to the JOCLSHA3Miner object.
         {
+            if (miner.queryDiagnosticDifficulty() != null)
+                ki.debug("Current GPU diff is: " + Utils.toHexArray(miner.queryDiagnosticDifficulty()));
+            if (miner.queryDiagnosticMessageWithFrontPayload() != null) {
+                try {
+                    ki.debug("Current GPU message is: " + new String(miner.queryDiagnosticMessageWithFrontPayload(), "UTF-8"));
+                } catch (UnsupportedEncodingException e) {
+                    e.printStackTrace();
+                }
+            }
         }
         ki.debug("Miner has stopped");
         //The miner outputs the winning seeded message, not the hash itself, so if you need the hash you'll need to use bouncycastle for it.
@@ -79,6 +91,12 @@ public class GPUMiner extends Thread implements IMiner {
 
             ki.debug("Hash is: " + Utils.toHexArray(Utils.fromBase64(b.ID)));
             ki.debug("Diff is: " + Utils.toHexArray(difficulty));
+            ki.debug("GPU diff is: " + Utils.toHexArray(miner.queryDiagnosticDifficulty()));
+            try {
+                ki.debug("Diag message is: " + new String(miner.queryDiagnosticMessageWithFrontPayload(), "UTF-8"));
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
             if (ki.getChainMan().softVerifyBlock(b))
                 sendBlock(b);
             else {
@@ -89,13 +107,14 @@ public class GPUMiner extends Thread implements IMiner {
         }
         miner.stopAndClear();
         //If you're ever going to send the miner to the GC, you need to call this first.
-
+        miner.shutdown();
     }
 
 
     @Override
     public void interrupt() {
         miner.stopAndClear();
+        miner.shutdown();
         super.interrupt();
     }
 

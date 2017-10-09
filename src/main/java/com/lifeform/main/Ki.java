@@ -3,13 +3,14 @@ package com.lifeform.main;
 import com.lifeform.main.blockchain.*;
 import com.lifeform.main.data.EncryptionManager;
 import com.lifeform.main.data.IEncryptMan;
+import com.lifeform.main.data.InputHandler;
 import com.lifeform.main.data.Options;
 import com.lifeform.main.network.Handshake;
 import com.lifeform.main.network.INetworkManager;
 import com.lifeform.main.network.NetMan;
 import com.lifeform.main.transactions.*;
 import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.Logger;
 import org.bitbucket.backspace119.generallib.Logging.ConsoleLogger;
 import org.bitbucket.backspace119.generallib.Logging.LogMan;
 
@@ -49,19 +50,21 @@ public class Ki extends Thread implements IKi {
     private IKi ki = this;
     private boolean run = true;
     //TODO: need to start saving version number to file for future conversion of files
-    public static final String VERSION = "0.11.1-BETA";
+    public static final String VERSION = "0.11.2-BETA";
     private boolean relay = false;
 
     public static boolean debug = true;
     private static IKi instance;
-
+    private InputHandler ih;
     public Ki(Options o)
     {
-
+        ih = new InputHandler(this);
+        ih.start();
         this.o = o;
         instance = this;
         relay = o.relay;
         logMan = new LogMan(new ConsoleLogger());
+
         main = logMan.createLogger("Main","console", Level.DEBUG);
         main.info("Ki starting up");
         chainMan = new ChainManager(this, (o.testNet) ? ChainManager.TEST_NET : ChainManager.POW_CHAIN, "blocks/", "chain.state", "transaction.meta", "extra.chains", "chain.meta", o.bDebug);
