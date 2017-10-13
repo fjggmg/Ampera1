@@ -48,12 +48,11 @@ public class JSONManager {
 
         return jArray;
     }
+
     public static List<String> parseJSONToList(String json)
     {
         try {
-            JSONArray jsonArray = (JSONArray) (new JSONParser()).parse(json);
-
-            return jsonArray;
+            return (JSONArray) new JSONParser().parse(json);
         } catch (ParseException e) {
             e.printStackTrace();
         }

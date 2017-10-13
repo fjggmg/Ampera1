@@ -1,6 +1,8 @@
 package com.lifeform.main.blockchain;
 
 import com.lifeform.main.IKi;
+import gpuminer.JOCL.JOCLContextAndCommandQueue;
+import gpuminer.JOCL.JOCLPlatforms;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -11,16 +13,20 @@ public class MinerManager implements IMinerMan{
     private IKi ki;
     private boolean mDebug;
 
+    private static JOCLPlatforms platforms;
+
     public MinerManager(IKi ki, boolean mDebug)
     {
         this.ki = ki;
         this.mDebug = mDebug;
+        platforms = new JOCLPlatforms();
+        ocls = GPUMiner.init(ki);
     }
 
     private int previousCount = 0;
     private List<IMiner> miners = new ArrayList<>();
     private boolean mining = false;
-
+    private int ocls = 0;
     @Override
     public void startMiners(double count)
     {
@@ -90,6 +96,8 @@ public class MinerManager implements IMinerMan{
         this.useCPU = useCPU;
     }
 
+    ArrayList<GPUMiner> gpuMiners = new ArrayList<GPUMiner>();
+
     @Override
     public void startMiners(int count) {
         if(ki.getOptions().mining) {
@@ -114,10 +122,22 @@ public class MinerManager implements IMinerMan{
 
             if (useGPU) {
                 GPUMiner.mining = true;
-                IMiner miner = new GPUMiner(ki);
-                miner.setName("GPUMiner");
-                miners.add(miner);
-                miner.start();
+
+                if (!gpuMiners.isEmpty()) {
+                    for (IMiner miner : gpuMiners) {
+                        miner.interrupt();
+                    }
+                    gpuMiners.clear();
+                }
+
+                for (int i = 0; i < ocls; i++) {
+                    GPUMiner miner = new GPUMiner(ki);
+                    miner.setup(i);
+                    miner.setName("GPUMiner#" + i);
+                    gpuMiners.add(miner);
+                    miner.start();
+                }
+
             }
         }
     }
@@ -132,5 +152,7 @@ public class MinerManager implements IMinerMan{
         GPUMiner.mining = false;
         mining = false;
         miners.clear();
+        gpuMiners.clear();
     }
 }
+

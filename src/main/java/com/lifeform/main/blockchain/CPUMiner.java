@@ -121,4 +121,9 @@ public class CPUMiner extends Thread implements IMiner{
         bh.coinbase = b.getCoinbase().toJSON();
         return bh;
     }
+
+    @Override
+    public void setup(int index) {
+
+    }
 }

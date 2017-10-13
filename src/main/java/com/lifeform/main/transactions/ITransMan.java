@@ -18,6 +18,7 @@ public interface ITransMan {
     List<ITrans> getPending();
     List<String> getUsedUTXOs();
 
+    boolean utxosChanged(Address address);
     void commit();
     void close();
 

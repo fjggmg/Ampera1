@@ -2,6 +2,7 @@ package com.lifeform.main.transactions;
 
 import com.lifeform.main.IKi;
 import com.lifeform.main.blockchain.ChainManager;
+import com.lifeform.main.data.EncryptionManager;
 import com.lifeform.main.data.JSONManager;
 import com.lifeform.main.data.XodusStringBooleanMap;
 import com.lifeform.main.data.XodusStringMap;
@@ -79,7 +80,7 @@ public class TransactionManager implements ITransMan {
                 ki.debug("Input is null, malformed transaction.");
                 return false;
             }
-            if (utxoSpent.get(i.getID())) {
+            if (utxoSpent.get(i.getID()) == null || utxoSpent.get(i.getID())) {
                 ki.debug("Input already spent, bad transaction");
                 return false;
             }
@@ -172,11 +173,13 @@ public class TransactionManager implements ITransMan {
         return true;
     }
 
+    List<Output> utxos = new ArrayList<>();
+    List<String> sUtxos;
     @Override
     public List<Output> getUTXOs(Address address) {
         if (utxoMap.get(address.encodeForChain()) != null) {
-            List<Output> utxos = new ArrayList<>();
-            List<String> sUtxos = JSONManager.parseJSONToList(utxoMap.get(address.encodeForChain()));
+            utxos.clear();
+            sUtxos = JSONManager.parseJSONToList(utxoMap.get(address.encodeForChain()));
             //ki.debug("List of UTXOs " + sUtxos);
             List<String> toRemove = new ArrayList<>();
 
@@ -261,6 +264,21 @@ public class TransactionManager implements ITransMan {
     @Override
     public List<String> getUsedUTXOs() {
         return usedUTXOs;
+    }
+
+    private String lastHash = "";
+
+    @Override
+    public boolean utxosChanged(Address address) {
+        String cHash = "";
+        if (utxoMap.get(address.encodeForChain()) != null)
+            cHash = EncryptionManager.sha224(JSONManager.parseJSONToList(utxoMap.get(address.encodeForChain())).toString());
+
+        if (cHash != null && cHash.equals(lastHash)) {
+            lastHash = cHash;
+            return false;
+        }
+        return true;
     }
 
     @Deprecated

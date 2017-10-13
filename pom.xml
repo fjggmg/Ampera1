@@ -6,7 +6,7 @@
 
     <groupId>com.lifeform</groupId>
     <artifactId>Origin</artifactId>
-    <version>0.11.2-BETA</version>
+    <version>0.12.0-BETA</version>
 
     <build>
         <plugins>
@@ -104,7 +104,7 @@
         <dependency>
             <groupId>com.lifeform</groupId>
             <artifactId>GPUMiner</artifactId>
-            <version>1.0.1</version>
+            <version>1.0.30</version>
         </dependency>
 
         <dependency>

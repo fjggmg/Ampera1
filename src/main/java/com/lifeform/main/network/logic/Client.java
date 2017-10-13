@@ -87,6 +87,7 @@ public class Client implements INetworkEndpoint{
             b.connect(host, port).channel().closeFuture().sync();
         } finally {
             group.shutdownGracefully();
+            connMan.disconnect();
         }
     }
     public void sendPacket(Object o)

@@ -6,6 +6,7 @@ import com.lifeform.main.network.logic.INetworkEndpoint;
 import java.util.ArrayList;
 import java.util.List;
 
+@Deprecated
 public class PacketDispatcher {
     private IKi ki;
     private IConnectionManager connMan;

@@ -76,13 +76,14 @@ public class FXMLController {
         Thread t = new Thread() {
 
             public void run() {
-
+                java.util.List<Address> checked = new ArrayList<>();
                 while (run) {
                     isFinal = false;
                     tokenValueMap.clear();
-                    java.util.List<Address> checked = new ArrayList<>();
+                    checked.clear();
                     for (Address a : ki.getAddMan().getActive()) {
                         if (checked.contains(a)) continue;
+                        if (!ki.getTransMan().utxosChanged(a)) continue;
                         checked.add(a);
                         //ki.getMainLog().info("Getting info from Address: " + a.encodeForChain());
                         if (ki.getTransMan().getUTXOs(a) != null) {
@@ -95,7 +96,7 @@ public class FXMLController {
                                 }
                             }
                             try {
-                                Thread.sleep(100);
+                                Thread.sleep(200);
                             } catch (InterruptedException e) {
                                 e.printStackTrace();
                             }
@@ -104,7 +105,7 @@ public class FXMLController {
                     }
                     isFinal = true;
                     try {
-                        Thread.sleep(1000);
+                        Thread.sleep(1200);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
@@ -524,6 +525,7 @@ public class FXMLController {
 
             BigInteger totalInput = BigInteger.ZERO;
             for (Address a : ki.getAddMan().getActive()) {
+                if (ki.getTransMan().getUTXOs(a) == null) return;
                 for (Output o : ki.getTransMan().getUTXOs(a)) {
                     if (o.getToken().equals(token)) {
                         if(inputs.contains(Input.fromOutput(o))) continue;

@@ -52,6 +52,8 @@ public class ConnMan extends IConnectionManager {
 
         process = false;
         endpoint.disconnect();
+        ki.getNetMan().getConnections().remove(this);
+
     }
 
     @Override

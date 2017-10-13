@@ -253,15 +253,23 @@ public class ChainManager implements IChainMan {
         if (bDebug)
             ki.debug("Height is ok");
 
-        if(current == null && block.height.compareTo(BigInteger.ZERO) != 0)
+
+        if (current == null)
         {
-            return false;
+            if (block.height.compareTo(BigInteger.ZERO) != 0)
+                return false;
         }
+
+
         if (bDebug)
             ki.debug("Height check 2 is ok");
         if(current != null && !block.prevID.equalsIgnoreCase(current.ID)) return false;
+
         if (bDebug)
             ki.debug("prev ID is ok");
+        if (current != null && block.timestamp < current.timestamp) return false;
+        if (bDebug)
+            ki.debug("timestamp is OK");
         String hash = EncryptionManager.sha512(block.header());
         if(!block.ID.equals(hash)) return false;
         if (bDebug)

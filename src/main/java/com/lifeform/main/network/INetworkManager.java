@@ -18,5 +18,7 @@ public interface INetworkManager {
     boolean isRelay();
     Client getClient(String ID);
 
+    void attemptConnect(String IP);
+
 
 }

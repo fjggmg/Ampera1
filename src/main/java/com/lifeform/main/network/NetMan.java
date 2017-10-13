@@ -10,15 +10,12 @@ import java.util.*;
 public class NetMan extends Thread implements INetworkManager {
 
     public static final String[] bootstrap = {"73.108.51.16","221.0.236.161","75.74.67.19"};
-    public static final String NET_VER = "2.0.1";
+    public static final String NET_VER = "2.0.2";
     private IKi ki;
     private boolean isRelay;
     public static final int PORT = 29555;
-    public static final int WRITE_BUFFER = 150000000;
-    public static final int OBJECT_BUFFER = 60000000;
     Set<IConnectionManager> connections = new HashSet<>();
     Map<String,IConnectionManager> connMap = new HashMap<>();
-    Map<Integer,IConnectionManager> kryoMap = new HashMap<>();
     Map<String,Client> clientMap = new HashMap<>();
     List<Client> clients = new ArrayList<>();
     public NetMan(IKi ki,boolean isRelay)
@@ -40,6 +37,29 @@ public class NetMan extends Thread implements INetworkManager {
     }
 
     @Override
+    public void attemptConnect(final String IP) {
+        new Thread() {
+
+            public void run() {
+                setName("client:" + IP);
+                Client client = new Client(ki, IP, PORT);
+                IConnectionManager connMan = new ConnMan(ki, isRelay, client);
+                connections.add(connMan);
+                try
+
+                {
+                    client.start(connMan);
+                } catch (
+                        Exception e)
+
+                {
+                    e.printStackTrace();
+                }
+            }
+        }.start();
+    }
+
+    @Override
     public void run()
     {
         setName("Networking-Main");
@@ -49,13 +69,9 @@ public class NetMan extends Thread implements INetworkManager {
                 public void run() {
                     setName("server:" + PORT);
                     Server server = new Server(ki, PORT);
-                    try
-
-                    {
+                    try {
                         server.start();
-                    } catch (
-                            Exception e)
-
+                    } catch (Exception e)
                     {
                         e.printStackTrace();
                     }
@@ -71,13 +87,9 @@ public class NetMan extends Thread implements INetworkManager {
                     Client client = new Client(ki, ip, PORT);
                     IConnectionManager connMan = new ConnMan(ki, isRelay, client);
                     connections.add(connMan);
-                    try
-
-                    {
+                    try {
                         client.start(connMan);
-                    } catch (
-                            Exception e)
-
+                    } catch (Exception e)
                     {
                         e.printStackTrace();
                     }

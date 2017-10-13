@@ -9,4 +9,6 @@ public interface IMiner {
 
     void interrupt();
 
+    void setup(int index);
+
 }
