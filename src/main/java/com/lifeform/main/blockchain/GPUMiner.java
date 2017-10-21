@@ -12,6 +12,7 @@ import gpuminer.JOCL.miner.JOCLSHA3Miner;
 import org.bouncycastle.jcajce.provider.digest.SHA3;
 
 import java.io.UnsupportedEncodingException;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -58,8 +59,16 @@ public class GPUMiner extends Thread implements IMiner {
             //I've noticed if I go higher than this sometimes my GPU won't update my screen for a small, but noticeable amount of time.
             //I'd like the miner to not interrupt normal computer usage by default, but allow users to make it run hotter if they like.
             //You might play with this and see if you can do better.
-            int threadCount = (int) jcacq.getDInfo().getMaxWorkGroupSize();
+            int typeFactor = 1;
+            String deviceType = jcacq.getDInfo().getDeviceType();
 
+            if (deviceType.equals("CL_DEVICE_TYPE_CPU")) {
+                typeFactor = 1000000;
+            } else if (deviceType.equals("CL_DEVICE_TYPE_GPU")) {
+                typeFactor = 300000;
+            }
+
+            int threadCount = (int) jcacq.getDInfo().getMaxWorkGroupSize() * typeFactor;
             //Six preceding zeroes on the difficulty is hard enough that the miner is likely to be able to time its hashrate.
 
             byte[] difficulty = new byte[64];
@@ -124,7 +133,7 @@ public class GPUMiner extends Thread implements IMiner {
                     }
                     if (ki.getChainMan().softVerifyBlock(b))
                         sendBlock(b);
-                    else {
+                    else if (ki.getChainMan().getCurrentDifficulty().compareTo(new BigInteger(Utils.fromBase64(b.ID))) < 0) {
                         miner.stopAndClear();
                         ki.debug("FOUND AN ERROR ON OPENCL DEVICE: " + jcacq.getDInfo().getDeviceName());
                         //run();
