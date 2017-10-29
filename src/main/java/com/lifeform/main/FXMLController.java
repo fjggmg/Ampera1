@@ -1,6 +1,7 @@
 package com.lifeform.main;
 
 import com.lifeform.main.blockchain.CPUMiner;
+import com.lifeform.main.blockchain.IMiner;
 import com.lifeform.main.network.TransactionPacket;
 import com.lifeform.main.transactions.*;
 import javafx.application.Application;
@@ -467,7 +468,6 @@ public class FXMLController {
     }
 
     private boolean mining = false;
-    List<CPUMiner> miners = new ArrayList<>();
     public void startMiningClicked(MouseEvent mouseEvent) {
         if(ki.getOptions().mining) {
             nonPrimaryPaneClicked(startMiningPane);

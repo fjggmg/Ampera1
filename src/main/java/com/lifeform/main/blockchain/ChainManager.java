@@ -181,9 +181,11 @@ public class ChainManager implements IChainMan {
             cmDB.commit();
 
         }
+        /** old miner
         CPUMiner.height = currentHeight().add(BigInteger.ONE);
         if(getByHeight(currentHeight()) != null)
             CPUMiner.prevID = getByHeight(currentHeight()).ID;
+         */
         if(csMap.get("diff") == null)
         {
             return;

@@ -2,7 +2,7 @@ package com.lifeform.main.blockchain;
 
 import com.lifeform.main.IKi;
 import gpuminer.JOCL.JOCLContextAndCommandQueue;
-import gpuminer.JOCL.JOCLPlatforms;
+import gpuminer.JOCL.JOCLMaster;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -13,13 +13,13 @@ public class MinerManager implements IMinerMan{
     private IKi ki;
     private boolean mDebug;
 
-    private static JOCLPlatforms platforms;
+    private static JOCLMaster platforms;
 
     public MinerManager(IKi ki, boolean mDebug)
     {
         this.ki = ki;
         this.mDebug = mDebug;
-        platforms = new JOCLPlatforms();
+        platforms = new JOCLMaster();
         ocls = GPUMiner.init(ki);
     }
 
@@ -103,6 +103,7 @@ public class MinerManager implements IMinerMan{
         if(ki.getOptions().mining) {
             previousCount = count;
             mining = true;
+            /** old miner, OCL miner can use both CPU and GPU now
             if (useCPU) {
                 CPUMiner.mining = true;
                 CPUMiner.foundBlock = false;
@@ -119,6 +120,7 @@ public class MinerManager implements IMinerMan{
                 }
 
             }
+            */
 
             if (useGPU) {
                 GPUMiner.mining = true;
@@ -133,7 +135,7 @@ public class MinerManager implements IMinerMan{
                 for (int i = 0; i < ocls; i++) {
                     GPUMiner miner = new GPUMiner(ki);
                     miner.setup(i);
-                    miner.setName("GPUMiner#" + i);
+                    miner.setName("Miner#" + i);
                     gpuMiners.add(miner);
                     miner.start();
                 }
@@ -148,7 +150,7 @@ public class MinerManager implements IMinerMan{
         {
             miner.interrupt();
         }
-        CPUMiner.mining = false;
+        //CPUMiner.mining = false; old miner
         GPUMiner.mining = false;
         mining = false;
         miners.clear();

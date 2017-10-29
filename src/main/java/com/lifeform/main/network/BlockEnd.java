@@ -67,9 +67,10 @@ public class BlockEnd implements Serializable, Packet {
                     pg.processBlocks();
                     if (ki.getMinerMan().isMining()) {
                         ki.debug("Restarting miners");
+                        /** old miner stuff
                         CPUMiner.height = ki.getChainMan().currentHeight().add(BigInteger.ONE);
                         CPUMiner.prevID = ki.getChainMan().getByHeight(ki.getChainMan().currentHeight()).ID;
-
+                        */
                         ki.getMinerMan().restartMiners(ki.getMinerMan().getPreviousCount());
                     }
                 }

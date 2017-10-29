@@ -10,6 +10,7 @@ import com.lifeform.main.network.TransactionPacket;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 
+@Deprecated
 public class CPUMiner extends Thread implements IMiner{
 
     public static boolean mining = true;

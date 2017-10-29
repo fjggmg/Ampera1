@@ -57,6 +57,7 @@ public class Output implements TXIO{
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public String toJSON() {
         JSONObject jo = new JSONObject();
         jo.put("index",Integer.toString(index));
@@ -68,7 +69,7 @@ public class Output implements TXIO{
     }
 
 
-    public static Output fromJSON(String json)
+    static Output fromJSON(String json)
     {
         try {
             JSONObject jo = (JSONObject) (new JSONParser().parse(json));

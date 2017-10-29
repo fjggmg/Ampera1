@@ -7,10 +7,9 @@ import com.lifeform.main.network.BlockEnd;
 import com.lifeform.main.network.BlockHeader;
 import com.lifeform.main.network.TransactionPacket;
 import gpuminer.JOCL.JOCLContextAndCommandQueue;
-import gpuminer.JOCL.JOCLPlatforms;
+import gpuminer.JOCL.JOCLMaster;
 import gpuminer.JOCL.miner.JOCLSHA3Miner;
-import org.bouncycastle.jcajce.provider.digest.SHA3;
-
+import gpuminer.JOCL.miner.KernelType;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -21,19 +20,27 @@ public class GPUMiner extends Thread implements IMiner {
     private IKi ki;
 
     public static volatile boolean mining = false;
+
     private JOCLSHA3Miner miner;
     private JOCLContextAndCommandQueue jcacq;
     private static List<JOCLSHA3Miner> gpuMiners = new ArrayList<>();
     private static List<JOCLContextAndCommandQueue> jcacqs_;
 
     public static int init(IKi ki) {
-        JOCLPlatforms platforms = new JOCLPlatforms();
+        JOCLMaster platforms = new JOCLMaster();
         List<JOCLContextAndCommandQueue> jcacqs = platforms.getContextsAndCommandQueues();
+        byte[] difficulty = new byte[64];
+        int p = 63;
+        for (int i = ki.getChainMan().getCurrentDifficulty().toByteArray().length - 1; i >= 0; i--) {
+            difficulty[p] = ki.getChainMan().getCurrentDifficulty().toByteArray()[i];
+            p--;
+        }
         for (JOCLContextAndCommandQueue jcaq : jcacqs) {
-            JOCLSHA3Miner miner = new JOCLSHA3Miner(jcaq);
+            JOCLSHA3Miner miner = new JOCLSHA3Miner(jcaq,difficulty, KernelType.MAIN);
             gpuMiners.add(miner);
 
         }
+
         jcacqs_ = jcacqs;
         return jcacqs.size();
     }
@@ -91,6 +98,7 @@ public class GPUMiner extends Thread implements IMiner {
 
                 ki.debug("Mining on OpenCL device: " + jcacq.getDInfo().getDeviceName() + " has stopped.");
 
+                /**old diagnostics
                 if (miner.queryDiagnosticDifficulty() != null) {
                     ki.debug("Current OpenCL device: " + jcacq.getDInfo().getDeviceName() + " diff is: " + Utils.toHexArray(miner.queryDiagnosticDifficulty()));
                 }
@@ -101,18 +109,19 @@ public class GPUMiner extends Thread implements IMiner {
                         e.printStackTrace();
                     }
                 }
+                 */
 
                 //The miner outputs the winning seeded message, not the hash itself, so if you need the hash you'll need to use bouncycastle for it.
                 //If the miner hasn't found a winning seeded message this will return null, so you need to check for that.
-                if (miner.queryWinningPayload() != null) {
+                if (miner.getWinningPayload() != null) {
 
                     ki.debug("Found a block, sending to network");
 
-                    if (miner.queryHashesPerSecond() != -1) {
-                        ki.debug("Current hash rate on OpenCL device: " + jcacq.getDInfo().getDeviceName() + " is: " + miner.queryHashesPerSecond() + " H/s");
+                    if (miner.getHashesPerSecond() != -1) {
+                        ki.debug("Current hash rate on OpenCL device: " + jcacq.getDInfo().getDeviceName() + " is: " + miner.getHashesPerSecond() + " H/s");
                     }
 
-                    byte[] winningPayload = miner.queryWinningPayload();
+                    byte[] winningPayload = miner.getWinningPayload();
 
                     try {
                         ki.debug("Payload is: " + new String(winningPayload, "UTF-8"));
@@ -124,13 +133,14 @@ public class GPUMiner extends Thread implements IMiner {
                     b.ID = EncryptionManager.sha512(b.header());
 
                     ki.debug("Hash is: " + Utils.toHexArray(Utils.fromBase64(b.ID)));
-                    ki.debug("ODIF is: " + Utils.toHexArray(difficulty));
-                    ki.debug("DDIF is: " + Utils.toHexArray(miner.queryDiagnosticDifficulty()));
+                    ki.debug("DIF is: " + Utils.toHexArray(difficulty));
+                    /** old diagnostics
                     try {
                         ki.debug("Diag message is: " + new String(miner.queryDiagnosticMessageWithFrontPayload(), "UTF-8"));
                     } catch (UnsupportedEncodingException e) {
                         e.printStackTrace();
                     }
+                     */
                     if (ki.getChainMan().softVerifyBlock(b))
                         sendBlock(b);
                     else if (ki.getChainMan().getCurrentDifficulty().compareTo(new BigInteger(Utils.fromBase64(b.ID))) < 0) {
