@@ -52,9 +52,9 @@ public class Ki extends Thread implements IKi {
     private IKi ki = this;
     private boolean run = true;
     //TODO: need to start saving version number to file for future conversion of files
-    public static final String VERSION = "0.13.1-BETA";
+    public static final String VERSION = "0.13.2-BETA";
     private boolean relay = false;
-
+    private FXMLController guiHook;
     public static boolean debug = true;
     private static IKi instance;
     private InputHandler ih;
@@ -113,6 +113,15 @@ public class Ki extends Thread implements IKi {
 
     }
 
+    @Override
+    public void setGUIHook(FXMLController guiHook) {
+        this.guiHook = guiHook;
+    }
+
+    @Override
+    public FXMLController getGUIHook() {
+        return guiHook;
+    }
     public void close()
     {
         chainMan.close();

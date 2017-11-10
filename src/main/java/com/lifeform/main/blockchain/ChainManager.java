@@ -344,6 +344,9 @@ public class ChainManager implements IChainMan {
                 recalculateDifficulty();
             }
         }
+        if (ki.getEncryptMan().getPublicKeyString().equals(block.solver)) {
+            ki.getGUIHook().blockFound();
+        }
 
         return true;
     }

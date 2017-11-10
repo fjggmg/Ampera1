@@ -2,6 +2,8 @@ package com.lifeform.main;
 
 import com.lifeform.main.blockchain.CPUMiner;
 import com.lifeform.main.blockchain.IMiner;
+import com.lifeform.main.data.JSONManager;
+import com.lifeform.main.data.files.StringFileHandler;
 import com.lifeform.main.network.TransactionPacket;
 import com.lifeform.main.transactions.*;
 import gpuminer.JOCL.JOCLConstants;
@@ -58,10 +60,22 @@ public class FXMLController {
     public Pane addManagePanel;
     @FXML
     public Label startMiningLabel;
-
+    private volatile int blocksFoundInt = 0;
     private IKi ki;
+    private StringFileHandler guiData;
+    private Map<String, String> guiMap = new HashMap<>();
     public FXMLController()
     {
+        ki = Ki.getInstance();
+        ki.setGUIHook(this);
+        guiData = new StringFileHandler(ki, "gui.data");
+        if (guiData.getLine(0) != null && !guiData.getLine(0).isEmpty()) {
+            guiMap = JSONManager.parseJSONtoMap(guiData.getLine(0));
+            if (guiMap != null) {
+                blocksFoundInt = Integer.parseInt(guiMap.get("blocksFound"));
+            }
+        }
+
         Task task = new Task<Void>() {
             @Override
             public Void call() {
@@ -88,7 +102,7 @@ public class FXMLController {
         thread.setName("JavaFX-Backend");
         thread.start();
 
-        ki = Ki.getInstance();
+
 
         Thread t = new Thread() {
 
@@ -131,9 +145,18 @@ public class FXMLController {
         };
         t.setName("GUI-Backend");
         t.start();
+
     }
 
+    public void blockFound() {
+        blocksFoundInt++;
+        guiMap.put("blocksFound", "" + blocksFoundInt);
+        guiData.replaceLine(0, JSONManager.parseMapToJSON(guiMap).toJSONString());
+        guiData.save();
+    }
 
+    @FXML
+    public Label blocksFound;
     @FXML
     public Label rTrans1;
 
@@ -318,7 +341,7 @@ public class FXMLController {
                             startMiningPane.setOpacity(0.01);
                             miningPane.setOpacity(0.1);
                         }
-                        coresSlider.setMax(Runtime.getRuntime().availableProcessors());
+
                     }
                 }
                 if(addressLabel != null)
@@ -393,6 +416,10 @@ public class FXMLController {
                     }
                 });
             }
+
+        }
+        if (blocksFound != null) {
+            blocksFound.setText("Blocks Found - " + blocksFoundInt);
         }
     }
 

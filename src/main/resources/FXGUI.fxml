@@ -490,7 +490,7 @@
                         <Label layoutX="383.0" layoutY="280.0" opacity="0.4" text="Message" textFill="WHITE" />
                      </children></Pane>
                   <Pane fx:id="miningContentPane" prefHeight="200.0" prefWidth="200.0"
-                        style="-fx-background-color: rgba(0,0,255,0.1);">
+                        style="-fx-background-color: rgba(0,0,255,0.1);" visible="false">
                      <children>
                         <Pane fx:id="startMiningPane" layoutX="132.0" layoutY="129.0" onMouseEntered="#startMiningHover"
                               onMouseExited="#startMiningHoverOff" onMousePressed="#startMiningClicked"
@@ -505,6 +505,8 @@
                               </Label>
                            </children>
                         </Pane>
+                        <Label fx:id="blocksFound" layoutX="132.0" layoutY="204.0" opacity="0.5" text="Blocks found - "
+                               textFill="WHITE"/>
                      </children></Pane>
                   <Pane fx:id="settingsContentPane" prefHeight="200.0" prefWidth="200.0" style="-fx-background-color: rgba(0,0,255,0.1);" visible="false">
                      <children>
@@ -566,16 +568,19 @@
                            </effect>
                         </ImageView>
                         <Pane layoutX="171.0" layoutY="11.0" onMousePressed="#closeClicked" prefHeight="25.0" prefWidth="28.0" />
-                        <ImageView fitHeight="38.0" fitWidth="29.0" layoutX="143.0" layoutY="14.0" opacity="0.7">
-                           <image>
-                              <Image url="@minimize.png"/>
-                           </image>
-                           <effect>
-                              <Glow level="1.0"/>
-                           </effect>
-                        </ImageView>
-                        <Pane id="minimizePane" layoutX="140.0" layoutY="13.0" onMousePressed="#minimizeClicked"
-                              prefHeight="26.0" prefWidth="31.0"/>
+                        <Pane id="minimizePane" layoutX="140.0" layoutY="14.0" onMousePressed="#minimizeClicked"
+                              prefHeight="25.0" prefWidth="31.0">
+                           <children>
+                              <ImageView fitHeight="26.0" fitWidth="29.0" layoutX="3.0" layoutY="5.0" opacity="0.7">
+                                 <image>
+                                    <Image url="@minimize.png"/>
+                                 </image>
+                                 <effect>
+                                    <Glow level="1.0"/>
+                                 </effect>
+                              </ImageView>
+                           </children>
+                        </Pane>
                      </children>
                   </Pane>
                </children>

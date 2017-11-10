@@ -47,5 +47,8 @@ public interface IKi {
 
     void debug(String s);
 
+    FXMLController getGUIHook();
+
+    void setGUIHook(FXMLController guiHook);
     IMinerMan getMinerMan();
 }
