@@ -30,9 +30,7 @@ public class InputHandler extends Thread {
                         break;
                     case "mineGPU":
                         System.out.println("starting gpu miner");
-                        ki.getMinerMan().setUseGPU(true);
-                        ki.getMinerMan().setUseCPU(false);
-                        ki.getMinerMan().startMiners(1);
+                        ki.getMinerMan().startMiners();
                         break;
 
                     default:

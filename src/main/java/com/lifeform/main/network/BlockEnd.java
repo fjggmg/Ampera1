@@ -71,7 +71,7 @@ public class BlockEnd implements Serializable, Packet {
                         CPUMiner.height = ki.getChainMan().currentHeight().add(BigInteger.ONE);
                         CPUMiner.prevID = ki.getChainMan().getByHeight(ki.getChainMan().currentHeight()).ID;
                         */
-                        ki.getMinerMan().restartMiners(ki.getMinerMan().getPreviousCount());
+                        ki.getMinerMan().restartMiners();
                     }
                 }
             } else if (block.height.compareTo(ki.getChainMan().currentHeight().add(BigInteger.ONE)) > 0) {

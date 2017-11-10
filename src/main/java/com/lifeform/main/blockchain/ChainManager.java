@@ -29,9 +29,9 @@ public class ChainManager implements IChainMan {
     //TODO: WE NEED TO ACTUALLY USE THE CHAIN IDS AND ADD A TESTNET!
     private IKi ki;
     private boolean canMine = true;
-    Block current;
-    BigInteger currentDifficulty = new BigInteger("00000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF",16);
-    BigInteger currentHeight = BigInteger.valueOf(-1L);
+    private Block current;
+    private BigInteger currentDifficulty = new BigInteger("00000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF", 16);
+    private volatile BigInteger currentHeight = BigInteger.valueOf(-1L);
     DB csDB;
     DB tmDB;
     DB exDB;
@@ -270,6 +270,7 @@ public class ChainManager implements IChainMan {
         if (bDebug)
             ki.debug("prev ID is ok");
         if (current != null && block.timestamp < current.timestamp) return false;
+        if (block.timestamp > System.currentTimeMillis() + 10000L) return false;
         if (bDebug)
             ki.debug("timestamp is OK");
         String hash = EncryptionManager.sha512(block.header());
@@ -378,6 +379,16 @@ public class ChainManager implements IChainMan {
 
         //currentDifficulty = currentDifficulty.multiply((BigInteger.valueOf(System.currentTimeMillis() - (currentHeight.intValueExact() * 300000L)).multiply(BigInteger.valueOf(100L))).divide(BigInteger.valueOf(GENESIS_DAY))).divide(BigInteger.valueOf(100L));
         ki.getMainLog().info("New Difficulty: " + Utils.toHexArray(currentDifficulty.toByteArray()));
+        if (ki.getMinerMan().miningCompatible() && ki.getOptions().mining) {
+            boolean isMining = false;
+            if (ki.getMinerMan().isMining()) {
+                ki.getMinerMan().stopMiners();
+                isMining = true;
+            }
+            GPUMiner.init(ki);
+            if (isMining)
+                ki.getMinerMan().startMiners();
+        }
     }
 
 

@@ -4,10 +4,17 @@ import com.lifeform.main.blockchain.CPUMiner;
 import com.lifeform.main.blockchain.IMiner;
 import com.lifeform.main.network.TransactionPacket;
 import com.lifeform.main.transactions.*;
+import gpuminer.JOCL.JOCLConstants;
+import gpuminer.JOCL.JOCLContextAndCommandQueue;
+import gpuminer.JOCL.JOCLDevices;
+import gpuminer.JOCL.JOCLMaster;
 import javafx.application.Application;
 import javafx.application.Platform;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.Label;
@@ -41,7 +48,16 @@ public class FXMLController {
     public static Application app;
     @FXML
     public Slider coresSlider;
-
+    @FXML
+    public ListView<String> disabledDevList;
+    @FXML
+    public ListView<String> enabledDevList;
+    @FXML
+    public Pane addGenPanel;
+    @FXML
+    public Pane addManagePanel;
+    @FXML
+    public Label startMiningLabel;
 
     private IKi ki;
     public FXMLController()
@@ -273,7 +289,18 @@ public class FXMLController {
     private ConcurrentMap<Token,BigInteger> tokenValueMap = new ConcurrentHashMap<>();
     private DecimalFormat format = new DecimalFormat("###,###,###,###,###,###,##0.0#######");
     private volatile boolean isFinal = false;
+    private ObservableList<String> enabledDevices = FXCollections.observableArrayList();
+    private ObservableList<String> disabledDevices = FXCollections.observableArrayList();
 
+    public void addEnabledDevice(String dev) {
+        enabledDevices.add(dev);
+    }
+
+    public void addDisabledDevice(String dev) {
+        disabledDevices.add(dev);
+    }
+
+    private boolean firstDevTick = true;
     public void tick()
     {
             if(versionLabel != null)
@@ -303,8 +330,6 @@ public class FXMLController {
                     Ki.debug = debugButton.isSelected();
                 }
 
-                ki.getMinerMan().setUseCPU(useCPUcheck.isSelected());
-                ki.getMinerMan().setUseGPU(useGPUcheck.isSelected());
                 if (ki.getEncryptMan().getPublicKey() != null && isFinal) {
 
                     if(tokenValueMap.get(currentWallet) == null || tokenValueMap.get(currentWallet).compareTo(BigInteger.ZERO) == 0)
@@ -313,16 +338,62 @@ public class FXMLController {
                     }else {
                         amountLabel.setText(format.format(tokenValueMap.get(currentWallet).longValueExact() / 100000000D));
                     }
-                    heightLabel.setText("Height: " + ki.getChainMan().currentHeight());
-
-
 
                 }
+                heightLabel.setText("Height: " + ki.getChainMan().currentHeight());
             }
             if(tokenLabel != null)
             {
                 tokenLabel.setText(currentWallet.name());
             }
+
+        if (enabledDevList != null && disabledDevList != null) {
+            if (firstDevTick) {
+                firstDevTick = false;
+                enabledDevList.setItems(enabledDevices);
+                disabledDevList.setItems(disabledDevices);
+
+
+                for (String dev : ki.getMinerMan().getDevNames()) {
+                    //TODO probably pointless check as long as we're only running this once
+                    if (!enabledDevices.contains(dev)) {
+                        enabledDevices.add(dev);
+                    }
+                }
+                JOCLContextAndCommandQueue.setWorkaround(false);
+                JOCLDevices.setDeviceFilter(JOCLConstants.ALL_DEVICES);
+
+                JOCLMaster jm = new JOCLMaster();
+                for (JOCLContextAndCommandQueue dev : jm.getContextsAndCommandQueues()) {
+                    if (!enabledDevices.contains(dev.getDInfo().getDeviceName())) {
+                        disabledDevices.add(dev.getDInfo().getDeviceName());
+                    }
+                }
+
+                enabledDevList.setOnMouseClicked(new EventHandler<MouseEvent>() {
+                    @Override
+                    public void handle(MouseEvent event) {
+                        if (event.getClickCount() == 2) {
+                            ki.getMinerMan().disableDev(enabledDevList.getSelectionModel().getSelectedItem());
+                            disabledDevices.add(enabledDevList.getSelectionModel().getSelectedItem());
+                            enabledDevices.remove(enabledDevList.getSelectionModel().getSelectedItem());
+
+                        }
+                    }
+                });
+                disabledDevList.setOnMouseClicked(new EventHandler<MouseEvent>() {
+                    @Override
+                    public void handle(MouseEvent event) {
+                        if (event.getClickCount() == 2) {
+                            ki.getMinerMan().enableDev(disabledDevList.getSelectionModel().getSelectedItem());
+                            enabledDevices.add(disabledDevList.getSelectionModel().getSelectedItem());
+                            disabledDevices.remove(disabledDevList.getSelectionModel().getSelectedItem());
+
+                        }
+                    }
+                });
+            }
+        }
     }
 
     @FXML
@@ -350,7 +421,6 @@ public class FXMLController {
 
     public void walletClicked(MouseEvent mouseEvent) {
         paneClicked(walletPane, walletContentPane);
-
 
     }
 
@@ -472,10 +542,12 @@ public class FXMLController {
         if(ki.getOptions().mining) {
             nonPrimaryPaneClicked(startMiningPane);
             if (!mining) {
-                ki.getMinerMan().startMiners(coresSlider.getValue());
+                ki.getMinerMan().startMiners();
+                startMiningLabel.setText("Stop Mining");
                 mining = true;
             } else {
                 ki.getMinerMan().stopMiners();
+                startMiningLabel.setText("Start Mining");
                 mining = false;
             }
 
@@ -983,9 +1055,11 @@ public class FXMLController {
     }
 
     public void addGenHover(MouseEvent mouseEvent) {
+        paneHover(addGenPanel);
     }
 
     public void addGenHoverOff(MouseEvent mouseEvent) {
+        paneHoverOff(addGenPanel);
     }
 
     public void addGenClicked(MouseEvent mouseEvent) {
@@ -995,9 +1069,11 @@ public class FXMLController {
     }
 
     public void addManHover(MouseEvent mouseEvent) {
+        paneHover(addManagePanel);
     }
 
     public void addManHoverOff(MouseEvent mouseEvent) {
+        paneHoverOff(addManagePanel);
     }
 
     public void addManClicked(MouseEvent mouseEvent) {
@@ -1005,4 +1081,5 @@ public class FXMLController {
 
     public void addManUnclicked(MouseEvent mouseEvent) {
     }
+
 }

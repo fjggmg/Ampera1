@@ -4,15 +4,18 @@ import java.util.List;
 
 public interface IMinerMan {
 
-    void startMiners(double count);
-    void startMiners(int count);
+    void startMiners();
     void stopMiners();
-    void restartMiners(int count);
+
+    void restartMiners();
     List<IMiner> getMiners();
     boolean isMining();
-    int getPreviousCount();
 
-    void setUseGPU(boolean useGPU);
+    boolean miningCompatible();
 
-    void setUseCPU(boolean useCPU);
+    List<String> getDevNames();
+
+    void enableDev(String dev);
+
+    void disableDev(String dev);
 }

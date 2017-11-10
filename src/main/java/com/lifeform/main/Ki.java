@@ -9,6 +9,8 @@ import com.lifeform.main.network.Handshake;
 import com.lifeform.main.network.INetworkManager;
 import com.lifeform.main.network.NetMan;
 import com.lifeform.main.transactions.*;
+import gpuminer.JOCL.JOCLContextAndCommandQueue;
+import gpuminer.JOCL.JOCLDevices;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.Logger;
 import org.bitbucket.backspace119.generallib.Logging.ConsoleLogger;
@@ -50,7 +52,7 @@ public class Ki extends Thread implements IKi {
     private IKi ki = this;
     private boolean run = true;
     //TODO: need to start saving version number to file for future conversion of files
-    public static final String VERSION = "0.13.0-BETA";
+    public static final String VERSION = "0.13.1-BETA";
     private boolean relay = false;
 
     public static boolean debug = true;
@@ -58,6 +60,7 @@ public class Ki extends Thread implements IKi {
     private InputHandler ih;
     public Ki(Options o)
     {
+        JOCLContextAndCommandQueue.setWorkaround(true);
         ih = new InputHandler(this);
         ih.start();
         this.o = o;
