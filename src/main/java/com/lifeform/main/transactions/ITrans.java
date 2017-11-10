@@ -36,5 +36,6 @@ public interface ITrans {
 
     String toJSON();
 
+    String getMessage();
     void addSig(String key,String sig);
 }

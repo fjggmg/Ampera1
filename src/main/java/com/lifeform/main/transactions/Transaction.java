@@ -3,6 +3,7 @@ package com.lifeform.main.transactions;
 import com.lifeform.main.Ki;
 import com.lifeform.main.data.EncryptionManager;
 import com.lifeform.main.data.JSONManager;
+import com.lifeform.main.network.Packet;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -302,5 +303,10 @@ public class Transaction implements ITrans{
             }
         }
         return false;
+    }
+
+    @Override
+    public String getMessage() {
+        return message;
     }
 }

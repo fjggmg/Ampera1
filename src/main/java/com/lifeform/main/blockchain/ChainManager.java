@@ -344,8 +344,31 @@ public class ChainManager implements IChainMan {
                 recalculateDifficulty();
             }
         }
-        if (ki.getEncryptMan().getPublicKeyString().equals(block.solver)) {
-            ki.getGUIHook().blockFound();
+        if (!ki.getOptions().nogui) {
+            if (ki.getEncryptMan().getPublicKeyString().equals(block.solver)) {
+                ki.getGUIHook().blockFound();
+            }
+            for (String trans : block.getTransactionKeys()) {
+                boolean add = false;
+                ITrans transaction = block.getTransaction(trans);
+                for (Output o : transaction.getOutputs()) {
+                    for (Address a : ki.getAddMan().getActive()) {
+                        if (o.getAddress().encodeForChain().equals(a.encodeForChain())) {
+                            add = true;
+                        }
+                    }
+                }
+                for (Input i : transaction.getInputs()) {
+                    for (Address a : ki.getAddMan().getActive()) {
+                        if (i.getAddress().encodeForChain().equals(a.encodeForChain())) {
+                            add = true;
+                        }
+                    }
+                }
+                if (add) {
+                    ki.getGUIHook().addTransaction(transaction, block.height);
+                }
+            }
         }
 
         return true;

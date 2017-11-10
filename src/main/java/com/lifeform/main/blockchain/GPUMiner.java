@@ -10,11 +10,9 @@ import gpuminer.JOCL.JOCLContextAndCommandQueue;
 import gpuminer.JOCL.JOCLMaster;
 import gpuminer.JOCL.miner.JOCLSHA3Miner;
 import gpuminer.JOCL.miner.autotune.Autotune;
-
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.text.DecimalFormat;
-import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -144,6 +142,10 @@ public class GPUMiner extends Thread implements IMiner {
                             miner.stopAndClear();
                             ki.debug("FOUND AN ERROR ON OPENCL DEVICE: " + jcacq.getDInfo().getDeviceName());
                             //run();
+                        } else {
+                            ki.debug("An error was found with the block verification. Block will not be sent to the network");
+                            miner.stopAndClear();
+                            run();
                         }
                     }
                     miner.stopAndClear();

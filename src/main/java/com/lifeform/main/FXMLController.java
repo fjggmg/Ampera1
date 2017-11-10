@@ -1,7 +1,5 @@
 package com.lifeform.main;
 
-import com.lifeform.main.blockchain.CPUMiner;
-import com.lifeform.main.blockchain.IMiner;
 import com.lifeform.main.data.JSONManager;
 import com.lifeform.main.data.files.StringFileHandler;
 import com.lifeform.main.network.TransactionPacket;
@@ -24,16 +22,13 @@ import javafx.scene.control.TextField;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
-
 import java.awt.*;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.math.BigInteger;
 import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -64,6 +59,7 @@ public class FXMLController {
     private IKi ki;
     private StringFileHandler guiData;
     private Map<String, String> guiMap = new HashMap<>();
+    private List<ITrans> transactions = new ArrayList<>();
     public FXMLController()
     {
         ki = Ki.getInstance();
@@ -73,6 +69,16 @@ public class FXMLController {
             guiMap = JSONManager.parseJSONtoMap(guiData.getLine(0));
             if (guiMap != null) {
                 blocksFoundInt = Integer.parseInt(guiMap.get("blocksFound"));
+                if (guiMap.get("transactions") != null) {
+                    List<String> transactions = JSONManager.parseJSONToList(guiMap.get("transactions"));
+                    if (transactions != null)
+                        for (String trans : transactions) {
+                            this.transactions.add(Transaction.fromJSON(trans));
+                        }
+                }
+                if (guiMap.get("heightMap") != null) {
+                    heightMap = JSONManager.parseJSONtoMap(guiMap.get("heightMap"));
+                }
             }
         }
 
@@ -155,6 +161,7 @@ public class FXMLController {
         guiData.save();
     }
 
+    //TODO why are these public?
     @FXML
     public Label blocksFound;
     @FXML
@@ -171,6 +178,36 @@ public class FXMLController {
 
     @FXML
     public Label rTrans5;
+
+    @FXML
+    public Label rTrans1a;
+
+    @FXML
+    public Label rTrans2a;
+
+    @FXML
+    public Label rTrans3a;
+
+    @FXML
+    public Label rTrans4a;
+
+    @FXML
+    public Label rTrans5a;
+
+    @FXML
+    public Label rTrans1m;
+
+    @FXML
+    public Label rTrans2m;
+
+    @FXML
+    public Label rTrans3m;
+
+    @FXML
+    public Label rTrans4m;
+
+    @FXML
+    public Label rTrans5m;
 
     @FXML
     public Label heightLabel;
@@ -304,6 +341,9 @@ public class FXMLController {
     @FXML
     private TextField messageToSend;
 
+    @FXML
+    private Pane exportPane;
+
     private boolean run = true;
     private boolean versionSet = false;
 
@@ -314,6 +354,7 @@ public class FXMLController {
     private volatile boolean isFinal = false;
     private ObservableList<String> enabledDevices = FXCollections.observableArrayList();
     private ObservableList<String> disabledDevices = FXCollections.observableArrayList();
+    private Map<String, String> heightMap = new HashMap<>();
 
     public void addEnabledDevice(String dev) {
         enabledDevices.add(dev);
@@ -416,11 +457,108 @@ public class FXMLController {
                     }
                 });
             }
+            if (rTrans1 != null) {
+                int i = 1;
+                if (!transactions.isEmpty()) {
+                    ITrans trans = transactions.get(transactions.size() - i);
+                    String transInfo = getTransInfo(trans);
+                    String[] split = transInfo.split("\n");
+                    rTrans1.setText(split[0]);
+                    rTrans1a.setText(split[1]);
+                    rTrans1m.setText(split[2]);
+                    i++;
+                    if (transactions.size() >= i) {
+                        trans = transactions.get(transactions.size() - i);
+                        transInfo = getTransInfo(trans);
+                        split = transInfo.split("\n");
+                        rTrans2.setText(split[0]);
+                        rTrans2a.setText(split[1]);
+                        rTrans2m.setText(split[2]);
+                    }
+                    i++;
+                    if (transactions.size() >= i) {
+                        trans = transactions.get(transactions.size() - i);
+                        transInfo = getTransInfo(trans);
+                        split = transInfo.split("\n");
+                        rTrans3.setText(split[0]);
+                        rTrans3a.setText(split[1]);
+                        rTrans3m.setText(split[2]);
+                    }
+                    i++;
+                    if (transactions.size() >= i) {
+                        trans = transactions.get(transactions.size() - i);
+                        transInfo = getTransInfo(trans);
+                        split = transInfo.split("\n");
+                        rTrans4.setText(split[0]);
+                        rTrans4a.setText(split[1]);
+                        rTrans4m.setText(split[2]);
+                    }
+                    i++;
+                    if (transactions.size() >= i) {
+                        trans = transactions.get(transactions.size() - i);
+                        transInfo = getTransInfo(trans);
+                        split = transInfo.split("\n");
+                        rTrans5.setText(split[0]);
+                        rTrans5a.setText(split[1]);
+                        rTrans5m.setText(split[2]);
+                    }
+                }
+
+
+            }
 
         }
         if (blocksFound != null) {
             blocksFound.setText("Blocks Found - " + blocksFoundInt);
         }
+    }
+
+    public void addTransaction(ITrans trans, BigInteger height) {
+
+        heightMap.put(trans.getID(), height.toString());
+        guiMap.put("heightMap", JSONManager.parseMapToJSON(heightMap).toJSONString());
+        guiData.save();
+        for (ITrans t : transactions) {
+            //in case of collision and our chain dying we check to make sure
+            //we're not adding a second time, the other issue we may need to consider is
+            //removing ones from the list if they fall off the current chain
+            //although this should be rare enough that we will wait until a future date to accomplish this
+            if (t.getID().equals(trans.getID())) {
+                return;
+            }
+        }
+        transactions.add(trans);
+        List<String> sTrans = new ArrayList<>();
+        for (ITrans t : transactions) {
+            sTrans.add(t.toJSON());
+        }
+        guiMap.put("transactions", JSONManager.parseListToJSON(sTrans).toJSONString());
+        guiData.replaceLine(0, JSONManager.parseMapToJSON(guiMap).toJSONString());
+        guiData.save();
+    }
+
+    private String getTransInfo(ITrans trans) {
+
+        boolean out = false;
+        BigInteger amount = BigInteger.ZERO;
+        for (Output o : trans.getOutputs()) {
+            for (Address a : ki.getAddMan().getActive()) {
+                if (o.getAddress().encodeForChain().equals(a.encodeForChain())) {
+                    amount = amount.add(o.getAmount());
+                }
+            }
+        }
+
+        for (Input input : trans.getInputs()) {
+            for (Address a : ki.getAddMan().getActive()) {
+                if (input.getAddress().encodeForChain().equals(a.encodeForChain())) {
+                    out = true;
+                    amount = amount.subtract(input.getAmount());
+                    amount = amount.add(trans.getFee());
+                }
+            }
+        }
+        return ((out) ? "Sent" : "Received") + "\n" + format.format(Math.abs(amount.longValueExact() / 100_000_000D)) + "\n" + trans.getMessage();
     }
 
     @FXML
@@ -1109,4 +1247,42 @@ public class FXMLController {
     public void addManUnclicked(MouseEvent mouseEvent) {
     }
 
+    public void exportClicked(MouseEvent mouseEvent) {
+        StringFileHandler transFile = new StringFileHandler(ki, "transactions.xls");
+
+
+        if (transFile.getLine(0) != null)
+            if (!transFile.getLine(0).isEmpty()) {
+                if (!transFile.delete()) {
+                    ki.getMainLog().info("File could not be deleted, please close the transactions.xls file and retry exporting");
+                    return;
+                }
+                transFile = new StringFileHandler(ki, "transactions.xls");
+            }
+        transFile.replaceLine(0, "Transaction \t timestamp \t message \t confirmations \t fee \n");
+        for (ITrans trans : transactions) {
+            StringBuilder t;
+            t = new StringBuilder(trans.getID() + "\t" + new Date(ki.getChainMan().getByHeight(new BigInteger(heightMap.get(trans.getID()))).timestamp).toString() + "\t" + trans.getMessage() + "\t" + ki.getChainMan().currentHeight().subtract(new BigInteger(heightMap.get(trans.getID()))).toString() + "\t" + format.format(trans.getFee().longValueExact() / 100_000_000L) +
+                    "\n" + "\t" + "output" + "\t" + "amount" + "\t" + "address");
+            for (Output o : trans.getOutputs()) {
+                t.append("\n" + "\t").append(o.getID()).append("\t").append(format.format(o.getAmount().longValueExact() / 100_000_000D)).append("\t").append(o.getAddress().encodeForChain());
+            }
+            t.append("\n" + "\t" + "input" + "\t" + "amount" + "\t" + "address");
+            for (Input i : trans.getInputs()) {
+                t.append("\n" + "\t").append(i.getID()).append("\t").append(format.format(i.getAmount().longValueExact() / 100_000_000D)).append("\t").append(i.getAddress().encodeForChain());
+            }
+            transFile.addLine(t.toString());
+        }
+        transFile.save();
+        ki.getMainLog().info("exported transactions to transactions.xls");
+
+    }
+
+    public void exportHovered(MouseEvent mouseEvent) {
+        paneHover(exportPane);
+    }
+
+    public void exportHoveredOff(MouseEvent mouseEvent) {
+        paneHoverOff(exportPane);
+    }
 }
