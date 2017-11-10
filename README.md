@@ -9,7 +9,7 @@ This repository stores all code, commits, issues, and in the future, wikis perti
 ### How do I get set up? ###
 
 
-Currently only base code is uploaded, no releases are stored here. You'd have to build it with Maven if you're determined enough, but releases will be available soon
+Downloads are available at the "Downloads" page on this repo. You may also download the code and build it yourself through Maven.
 
 ### Contribution guidelines ###
 
