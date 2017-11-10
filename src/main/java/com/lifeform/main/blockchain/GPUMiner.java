@@ -83,7 +83,7 @@ public class GPUMiner extends Thread implements IMiner {
 
                 //And if you have data ready for it you can start mining right away.
                 if (miner.startMining(message, threadCount, difficulty)) {
-                    ki.debug("Started mining on OpenCL device: " + jcacq.getDInfo().getDeviceName() + ". There will be no further output until a block is found.");
+                    ki.debug("Started mining on OpenCL device: " + jcacq.getDInfo().getDeviceName());
 
                     //It will take a while to mine, so whatever thread is using the miner object will need to wait for it to finish.
                     while (miner.isMining() && mining) //Any conditions on when to stop mining go in here with miner.hasMiningThread(). You can also stop mining with miner.stopAndClear() from another thread if that thread has a reference to the JOCLSHA3Miner object.
