@@ -21,7 +21,7 @@
 <?import javafx.scene.text.Font?>
 
 <AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="480.0"
-            prefWidth="640.0" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1"
+            prefWidth="640.0" xmlns="http://javafx.com/javafx/8.0.141" xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="com.lifeform.main.FXMLController">
    <children>
       <ImageView fitHeight="480.0" fitWidth="640.0">
@@ -312,7 +312,7 @@
                         </Label>
                         <Pane fx:id="sendPane" layoutX="313.0" layoutY="239.0" onMouseEntered="#sendHover" onMouseExited="#sendHoverOff" onMousePressed="#sendClicked" onMouseReleased="#sendUnclicked" opacity="0.5" prefHeight="32.0" prefWidth="140.0" style="-fx-background-color: Gray;">
                            <children>
-                              <Label layoutX="41.0" layoutY="-2.0" prefHeight="36.0" prefWidth="58.0" text="Send">
+                              <Label layoutX="41.0" layoutY="-2.0" prefHeight="36.0" prefWidth="101.0" text="Send">
                                  <font>
                                     <Font name="ADAM.CGPRO" size="24.0" />
                                  </font>
@@ -561,8 +561,8 @@
                               </Label>
                            </children>
                         </VBox>
-                        <Pane fx:id="exportPane" onMouseClicked="#exportClicked" onMouseEntered="#exportHovered"
-                              onMouseExited="#exportHoveredOff" layoutX="3.0" layoutY="330.0" opacity="0.5"
+                        <Pane fx:id="exportPane" layoutX="3.0" layoutY="330.0" onMouseClicked="#exportClicked"
+                              onMouseEntered="#exportHovered" onMouseExited="#exportHoveredOff" opacity="0.5"
                               prefHeight="17.0" prefWidth="121.0" style="-fx-background-color: gray;">
                            <children>
                               <Label layoutY="-3.0" prefHeight="21.0" prefWidth="122.0" text="Export All Transactions"

@@ -44,8 +44,6 @@ public class FXMLController {
     public static Stage primaryStage;
     public static Application app;
     @FXML
-    public Slider coresSlider;
-    @FXML
     public ListView<String> disabledDevList;
     @FXML
     public ListView<String> enabledDevList;
@@ -68,7 +66,8 @@ public class FXMLController {
         if (guiData.getLine(0) != null && !guiData.getLine(0).isEmpty()) {
             guiMap = JSONManager.parseJSONtoMap(guiData.getLine(0));
             if (guiMap != null) {
-                blocksFoundInt = Integer.parseInt(guiMap.get("blocksFound"));
+                if (guiMap.get("blocksFound") != null)
+                    blocksFoundInt = Integer.parseInt(guiMap.get("blocksFound"));
                 if (guiMap.get("transactions") != null) {
                     List<String> transactions = JSONManager.parseJSONToList(guiMap.get("transactions"));
                     if (transactions != null)
@@ -558,7 +557,7 @@ public class FXMLController {
                 }
             }
         }
-        return ((out) ? "Sent" : "Received") + "\n" + format.format(Math.abs(amount.longValueExact() / 100_000_000D)) + "\n" + trans.getMessage();
+        return ((out) ? "Sent" : "Received") + "\n" + format.format(Math.abs(amount.longValueExact() / 100_000_000D)) + "\n" + " " + trans.getMessage();
     }
 
     @FXML
