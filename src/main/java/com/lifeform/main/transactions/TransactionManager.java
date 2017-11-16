@@ -128,14 +128,21 @@ public class TransactionManager implements ITransMan {
     public boolean addTransactionNoVerify(ITrans transaction) {
         ki.debug("Saving transaction to disk");
         ki.debug("Transaction has: " + transaction.getInputs().size() + " inputs");
-        List<String> inputs;
+        List<String> inputs = new ArrayList<>();
+        String carry = null;
+        String lastAdd = "";
+        boolean sameAdd = false;
         for (Input i : transaction.getInputs()) {
 
             ki.debug("Saving input: " + i.getID());
             utxoSpent.put(i.getID(), true);
-            Object carry = utxoMap.get(i.getAddress().encodeForChain());
+            if(lastAdd.equals(i.getAddress().encodeForChain()))
+                sameAdd = true;
+            if(!sameAdd)
+            carry = utxoMap.get(i.getAddress().encodeForChain());
             if (carry != null) {
-                inputs = JSONManager.parseJSONToList((String)carry);
+                if(!sameAdd)
+                inputs = JSONManager.parseJSONToList(carry);
 
                 inputs.remove(i.toJSON());
                 utxoMap.put(i.getAddress().encodeForChain(), JSONManager.parseListToJSON(inputs).toJSONString());
@@ -145,16 +152,24 @@ public class TransactionManager implements ITransMan {
                 inputs = new ArrayList<>();
                 utxoMap.put(i.getAddress().encodeForChain(), JSONManager.parseListToJSON(inputs).toJSONString());
             }
+            lastAdd = i.getAddress().encodeForChain();
         }
+        lastAdd = "";
+        sameAdd = false;
+        carry = "";
         ki.debug("Transaction has: " + transaction.getOutputs().size() + " outputs");
         for (Output o : transaction.getOutputs()) {
             ki.debug("Saving output: " + o.getID() + " Token: " + o.getToken() + " Amount: " + o.getAmount());
             ki.getAddMan().receivedOn(o.getAddress());
             utxoSpent.put(o.getID(), false);
             utxoValueMap.put(o.getID(), o.getAmount().toString());
-            Object carry = utxoMap.get(o.getAddress().encodeForChain());
+            if(lastAdd.equals(o.getAddress().encodeForChain()))
+                sameAdd = true;
+            if(!sameAdd)
+            carry = utxoMap.get(o.getAddress().encodeForChain());
             if (carry != null) {
-                inputs = JSONManager.parseJSONToList((String) carry);
+                if(!sameAdd)
+                inputs = JSONManager.parseJSONToList(carry);
                 inputs.add(o.toJSON());
                 utxoMap.put(o.getAddress().encodeForChain(), JSONManager.parseListToJSON(inputs).toJSONString());
             } else {

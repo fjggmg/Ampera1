@@ -57,7 +57,7 @@ public class FXMLController {
     private IKi ki;
     private StringFileHandler guiData;
     private Map<String, String> guiMap = new HashMap<>();
-    private List<ITrans> transactions = new ArrayList<>();
+    private volatile List<ITrans> transactions = new ArrayList<>();
     public FXMLController()
     {
         ki = Ki.getInstance();
@@ -531,6 +531,7 @@ public class FXMLController {
         guiMap.put("transactions", JSONManager.parseListToJSON(sTrans).toJSONString());
         guiData.replaceLine(0, JSONManager.parseMapToJSON(guiMap).toJSONString());
         guiData.save();
+
     }
 
     private String getTransInfo(ITrans trans) {
@@ -539,8 +540,10 @@ public class FXMLController {
         BigInteger amount = BigInteger.ZERO;
         for (Output o : trans.getOutputs()) {
             for (Address a : ki.getAddMan().getActive()) {
+
                 if (o.getAddress().encodeForChain().equals(a.encodeForChain())) {
                     amount = amount.add(o.getAmount());
+                    //ki.debug("Output from trans: " + trans.getID() + " is up to: " + amount.toString() + " from output: " + o.getID());
                 }
             }
         }

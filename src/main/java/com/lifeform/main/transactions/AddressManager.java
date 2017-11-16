@@ -13,6 +13,7 @@ import java.util.*;
  * Created by Bryan on 8/10/2017.
  */
 public class AddressManager implements IAddMan {
+    static final String DEFAULT_ENTROPY = "Entropy goes here, Please reset me to something else";
     String entropy = "Entropy goes here, Please reset me to something else";
     String addFile = "addresses.origin";
     String addEntFile = "addresses.entropy";
@@ -47,6 +48,7 @@ public class AddressManager implements IAddMan {
 
     @Override
     public void receivedOn(Address address) {
+        if(address.encodeForChain().equals(main.encodeForChain())) return;
         Address toRemove = null;
         for(Address a:inactive) {
             if (a.encodeForChain().equals(address.encodeForChain())) {
@@ -118,6 +120,28 @@ public class AddressManager implements IAddMan {
                 }
             } catch (ParseException e) {
                 e.printStackTrace();
+            }
+        }
+
+        List<Address> toRemove = new ArrayList<>();
+        for(Address add:entropyMap.keySet())
+        {
+            entropy = entropyMap.get(add);
+            if(!add.encodeForChain().equals(getNewAdd().encodeForChain()))
+            {
+                ki.debug("Address loaded is not for the keys we have, deleting address");
+                toRemove.add(add);
+            }
+        }
+        for(Address add:toRemove)
+        {
+            if(main.encodeForChain().equals(add.encodeForChain()))
+            {
+                entropy = DEFAULT_ENTROPY;
+                main = getNewAdd();
+            }else{
+                addresses.remove(add);
+                entropyMap.remove(add);
             }
         }
     }

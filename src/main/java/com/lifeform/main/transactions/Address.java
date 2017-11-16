@@ -50,8 +50,10 @@ public class Address {
     public boolean canSpend(String keys, String entropy)
     {
         Address a = createNew(keys,entropy);
-        //System.out.println("Address 1: " + a.encodeForChain());
-        //System.out.println("Address 2: " + encodeForChain());
+        System.out.println("CAN SPEND DEBUG===================");
+        System.out.println("Address 1: " + a.encodeForChain());
+        System.out.println("Address 2: " + encodeForChain());
+        System.out.println("END OF CAN SPEND DEBUG============");
         return a.encodeForChain().equals(encodeForChain());
     }
 
