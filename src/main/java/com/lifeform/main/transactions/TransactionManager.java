@@ -175,31 +175,31 @@ public class TransactionManager implements ITransMan {
 
     List<Output> utxos = new ArrayList<>();
     List<String> sUtxos;
+    List<String> toRemove = new ArrayList<>();
+    Set<String> hs = new HashSet<>();
     @Override
     public List<Output> getUTXOs(Address address) {
-        if (utxoMap.get(address.encodeForChain()) != null) {
+        if(utxoMap.get(address.encodeForChain()) == null) return null;
+        sUtxos = JSONManager.parseJSONToList(utxoMap.get(address.encodeForChain()));
+        if (sUtxos != null) {
             utxos.clear();
-            sUtxos = JSONManager.parseJSONToList(utxoMap.get(address.encodeForChain()));
-            //ki.debug("List of UTXOs " + sUtxos);
-            List<String> toRemove = new ArrayList<>();
-
+            toRemove.clear();
             if (sUtxos != null) {
-                Set<String> hs = new HashSet<>();
+                hs.clear();
                 hs.addAll(sUtxos);
                 sUtxos.clear();
                 sUtxos.addAll(hs);
-
                 for (String s : sUtxos) {
-                    if (!utxoSpent.get(Output.fromJSON(s).getID())) {
-                        if (!usedUTXOs.contains(Input.fromOutput(Output.fromJSON(s)).getID()))
-                            utxos.add(Output.fromJSON(s));
+                    Output o = Output.fromJSON(s);
+                    if (!utxoSpent.get(o.getID())) {
+                        if (!usedUTXOs.contains(Input.fromOutput(o).getID()))
+                            utxos.add(o);
                     } else
                         toRemove.add(s);
                 }
                 if (!toRemove.isEmpty()) {
                     sUtxos.removeAll(toRemove);
                     utxoMap.put(address.encodeForChain(), JSONManager.parseListToJSON(sUtxos).toJSONString());
-
                 }
             }
             return utxos;
@@ -267,17 +267,16 @@ public class TransactionManager implements ITransMan {
     }
 
     private String lastHash = "";
-
+    private String cHash;
     @Override
     public boolean utxosChanged(Address address) {
-        String cHash = "";
+        cHash = "";
         if (utxoMap.get(address.encodeForChain()) != null)
             cHash = EncryptionManager.sha224(JSONManager.parseJSONToList(utxoMap.get(address.encodeForChain())).toString());
-
         if (cHash != null && cHash.equals(lastHash)) {
-            lastHash = cHash;
             return false;
         }
+        lastHash = cHash;
         return true;
     }
 

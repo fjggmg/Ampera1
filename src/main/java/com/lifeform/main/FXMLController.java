@@ -112,35 +112,32 @@ public class FXMLController {
         Thread t = new Thread() {
 
             public void run() {
-                java.util.List<Address> checked = new ArrayList<>();
+                java.util.List<String> checked = new ArrayList<>();
                 while (run) {
                     isFinal = false;
                     tokenValueMap.clear();
                     checked.clear();
                     for (Address a : ki.getAddMan().getActive()) {
-                        if (checked.contains(a)) continue;
-                        if (!ki.getTransMan().utxosChanged(a)) continue;
-                        checked.add(a);
+                        if (checked.contains(a.encodeForChain())) continue;
+                        //if (!ki.getTransMan().utxosChanged(a)) continue;
+                        checked.add(a.encodeForChain());
                         //ki.getMainLog().info("Getting info from Address: " + a.encodeForChain());
-                        if (ki.getTransMan().getUTXOs(a) != null) {
-                            for (Output o : ki.getTransMan().getUTXOs(a)) {
-
+                        List<Output> utxos = ki.getTransMan().getUTXOs(a);
+                        if (utxos != null) {
+                            for (Output o : utxos) {
                                 if (tokenValueMap.get(o.getToken()) == null) {
                                     tokenValueMap.put(o.getToken(), o.getAmount());
                                 } else {
                                     tokenValueMap.put(o.getToken(), tokenValueMap.get(o.getToken()).add(o.getAmount()));
                                 }
                             }
-                            try {
-                                Thread.sleep(200);
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
                         }
 
                     }
                     isFinal = true;
                     try {
+                        //TODO cheap and stupid fix
+                        System.gc();
                         Thread.sleep(1200);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
@@ -410,7 +407,7 @@ public class FXMLController {
                 tokenLabel.setText(currentWallet.name());
             }
 
-        if (enabledDevList != null && disabledDevList != null) {
+        if (enabledDevList != null && disabledDevList != null && enabledDevices != null) {
             if (firstDevTick) {
                 firstDevTick = false;
                 enabledDevList.setItems(enabledDevices);
