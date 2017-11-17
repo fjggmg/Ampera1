@@ -15,7 +15,6 @@ public class ConnMan extends IConnectionManager {
     {
         this(ki,isRelay,endpoint);
         this.pp = pp;
-
     }
     public ConnMan(IKi ki, boolean isRelay, INetworkEndpoint endpoint)
     {
@@ -41,6 +40,7 @@ public class ConnMan extends IConnectionManager {
     @Override
     public void sendPacket(Object o) {
 
+        if(ki.getOptions().pDebug)
         ki.debug("Sending packet: " + o.toString());
         //connection.sendTCP(new FrameworkMessage.KeepAlive());
         endpoint.sendPacket(o);
@@ -73,6 +73,11 @@ public class ConnMan extends IConnectionManager {
         hs.chainVer = Handshake.CHAIN_VER;
         sendPacket(hs);
 
+    }
+
+    @Override
+    public IPacketProcessor getPacketProcessor() {
+        return pp;
     }
 
     @Override

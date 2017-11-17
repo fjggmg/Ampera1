@@ -14,5 +14,6 @@ public class Options {
     public boolean bDebug = false;
     public boolean mDebug = false;
     public boolean rebuild = false;
+    public boolean pDebug = false;
 
 }

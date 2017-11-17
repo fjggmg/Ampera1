@@ -27,6 +27,10 @@ public class BlockEnd implements Serializable, Packet {
                 block.addTransaction(t);
             }
             pg.cuBlocks.add(block);
+            BlockAck ba = new BlockAck();
+            ba.height = block.height;
+            ba.verified = false;
+            connMan.sendPacket(ba);
         } else {
 
             BlockHeader bh = pg.headerMap.get(ID);
@@ -53,6 +57,10 @@ public class BlockEnd implements Serializable, Packet {
                         bbe.ID = ID;
                         ki.getNetMan().broadcast(bbe);
                     }
+                    BlockAck ba = new BlockAck();
+                    ba.height = block.height;
+                    ba.verified = false;
+                    connMan.sendPacket(ba);
                     LastAgreedStart las = new LastAgreedStart();
                     las.height = ki.getChainMan().currentHeight();
                     pg.laFlag = true;
@@ -73,15 +81,23 @@ public class BlockEnd implements Serializable, Packet {
                         */
                         ki.getMinerMan().restartMiners();
                     }
+                    BlockAck ba = new BlockAck();
+                    ba.height = block.height;
+                    ba.verified = true;
+                    connMan.sendPacket(ba);
                 }
             } else if (block.height.compareTo(ki.getChainMan().currentHeight().add(BigInteger.ONE)) > 0) {
                     /*
-                    BlocksRequest br = new BlocksRequest();
+                    BlockRequest br = new BlockRequest();
                     br.fromHeight = ki.getChainMan().currentHeight().add(BigInteger.ONE);
                     connMan.sendPacket(br);
                      */
                 pg.futureBlocks.add(block);
             }
+            BlockAck ba = new BlockAck();
+            ba.height = block.height;
+            ba.verified = false;
+            connMan.sendPacket(ba);
                 /*else{
                     if(ki.getChainMan().getByHeight(block.height).ID.equals(block.ID))
                     {

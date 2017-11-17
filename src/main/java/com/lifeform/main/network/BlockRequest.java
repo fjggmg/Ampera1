@@ -5,14 +5,14 @@ import com.lifeform.main.IKi;
 import java.io.Serializable;
 import java.math.BigInteger;
 
-public class BlocksRequest implements Serializable, Packet {
+public class BlockRequest implements Serializable, Packet {
     BigInteger fromHeight;
 
     @Override
     public void process(IKi ki, IConnectionManager connMan, PacketGlobal pg) {
-        ki.debug("Received blocks request");
+        ki.debug("Received block request");
         if (fromHeight.compareTo(ki.getChainMan().currentHeight()) <= 0)
-            pg.sendFromHeight(fromHeight);
+            pg.sendBlock(fromHeight.add(BigInteger.ONE));
         else {
             LastAgreedStart las = new LastAgreedStart();
             las.height = ki.getChainMan().currentHeight();

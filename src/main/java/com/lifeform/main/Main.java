@@ -29,11 +29,8 @@ public class Main {
 
     public static void main(String[] args)
     {
-
         Options o = decode(args);
-
         IKi main = new Ki(o); //TODO no need for this to be a thread presently, investigate removing that from the code and just creating a new instance
-
         //main.start();
     }
 
@@ -51,6 +48,7 @@ public class Main {
             if (s.equals("-md")) o.mDebug = true;
             if (s.equals("-dump")) o.dump = true;
             if (s.equals("-rebuild")) o.rebuild = true;
+            if (s.equals("-pd")) o.pDebug = true;
 
         }
         return o;

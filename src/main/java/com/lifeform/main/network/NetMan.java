@@ -10,7 +10,7 @@ import java.util.*;
 public class NetMan extends Thread implements INetworkManager {
 
     public static final String[] bootstrap = {"73.108.51.16","221.0.236.161","75.74.67.19"};
-    public static final String NET_VER = "2.0.2";
+    public static final String NET_VER = "2.0.3";
     private IKi ki;
     private boolean isRelay;
     public static final int PORT = 29555;
@@ -46,12 +46,9 @@ public class NetMan extends Thread implements INetworkManager {
                 IConnectionManager connMan = new ConnMan(ki, isRelay, client);
                 connections.add(connMan);
                 try
-
                 {
                     client.start(connMan);
-                } catch (
-                        Exception e)
-
+                } catch (Exception e)
                 {
                     e.printStackTrace();
                 }
@@ -109,7 +106,10 @@ public class NetMan extends Thread implements INetworkManager {
         for(IConnectionManager connMan:connections)
         {
             if(!(connMan == null)) {
-                connMan.sendPacket(o);
+                if(!connMan.getPacketProcessor().getPacketGlobal().doneDownloading)
+                    connMan.sendPacket(o);
+                else
+                    connMan.queueUntilDone(o);
             }
         }
         connections.remove(null);
@@ -121,7 +121,10 @@ public class NetMan extends Thread implements INetworkManager {
         {
             if (connMan != null && ID != null && connMan.getID() != null) {
                 if (!connMan.getID().equals(ID)) {
-                    connMan.sendPacket(o);
+                    if(!connMan.getPacketProcessor().getPacketGlobal().doneDownloading)
+                        connMan.sendPacket(o);
+                    else
+                        connMan.queueUntilDone(o);
                 }
             }
         }

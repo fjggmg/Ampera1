@@ -79,7 +79,7 @@ public class Handshake implements Serializable, Packet {
             }
         if (ki.getChainMan().currentHeight().compareTo(currentHeight) < 0) {
             ki.debug("Requesting blocks we're missing from the network");
-            BlocksRequest br = new BlocksRequest();
+            BlockRequest br = new BlockRequest();
             br.fromHeight = ki.getChainMan().currentHeight();
             connMan.sendPacket(br);
         } else if (ki.getChainMan().currentHeight().compareTo(BigInteger.ZERO) > 0 && !ki.getChainMan().getByHeight(ki.getChainMan().currentHeight()).ID.equals(mostRecentBlock)) {

@@ -5,6 +5,7 @@ import com.lifeform.main.blockchain.Block;
 import com.lifeform.main.blockchain.ChainManager;
 import com.lifeform.main.transactions.ITrans;
 import com.lifeform.main.transactions.Transaction;
+import org.eclipse.collections.impl.bimap.mutable.HashBiMap;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -20,6 +21,7 @@ class PacketGlobal {
         this.ki = ki;
     }
 
+    boolean doneDownloading = false;
     BigInteger startHeight;
     boolean laFlag = false;
     boolean onRightChain = true;
@@ -42,7 +44,7 @@ class PacketGlobal {
         }
     }
 
-    void sendBlock(BigInteger height) {
+    void sendBlock(final BigInteger height) {
         Block b = ki.getChainMan().getByHeight(height);
         BlockHeader bh2 = formHeader(b);
         connMan.sendPacket(bh2);
@@ -64,6 +66,47 @@ class PacketGlobal {
                 connMan.sendPacket(tp);
             }
         }
+
+        if(!resendMap.containsKey(height)) {
+            resendTimesMap.merge(height, 1, (a, b1) -> a + b1);
+            if (resendTimesMap.get(height) > 5) {
+                ki.debug("Disconnecting connection since retry to send a single block has taken more than 5 tries");
+                connMan.disconnect();
+                return;
+            }
+            Thread t = new Thread(() -> {
+                try {
+                    Thread.sleep(450000);
+                } catch (InterruptedException e) {
+                    //fail silently as we expect this to happen
+                    if (ki.getOptions().pDebug)
+                        ki.debug("Block resend #" + height.toString() + " interrupted");
+                    return;
+                }
+                ki.debug("Did not receive BlockAck within 45 seconds, resending");
+                sendBlock(height);
+            });
+            t.setName("Block #" + height.toString() + " Resend Thread");
+            t.start();
+            if(lastCancelled.compareTo(height) >= 0)
+                t.interrupt();
+            else
+                resendMap.put(height, t);
+        }
+
+    }
+    private BigInteger lastCancelled = BigInteger.ZERO;
+    private Map<BigInteger,Integer> resendTimesMap = new HashMap<>();
+    private Map<BigInteger,Thread> resendMap = new HashMap<>();
+    public void cancelResend(BigInteger height)
+    {
+        if(ki.getOptions().pDebug)
+        ki.debug("Cancelling resend #" + height.toString());
+        if(resendMap.get(height) != null)
+        resendMap.get(height).interrupt();
+
+        resendMap.remove(height);
+        resendTimesMap.remove(height);
     }
 
     Block formBlock(BlockHeader bh) {
