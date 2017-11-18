@@ -23,13 +23,14 @@ public class FileManager implements IFileManager {
                 }
             if(!file.createNewFile()) {
                 Ki.getInstance().debug("Failed to make file: " + fileName);
-                return;
+
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
 
     }
+    //TODO what the fuck was I supposed to be doing here
     @Override
     public boolean save() {
         return false;

@@ -1,6 +1,7 @@
 package com.lifeform.main.data.files;
 
 import com.lifeform.main.IKi;
+import com.lifeform.main.Ki;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -27,6 +28,7 @@ public class StringFileHandler extends FileManager implements IStringFileHandler
 
             //Files.write(file.toPath(), (line + "/n").getBytes(), StandardOpenOption.APPEND);
         } catch (IOException e) {
+            Ki.getInstance().debug("File manager for: " + file.getName() + " failed on addLine");
         }
     }
 
@@ -37,6 +39,7 @@ public class StringFileHandler extends FileManager implements IStringFileHandler
             if(index >= lines.size()) return null;
             return lines.get(index);
         } catch (IOException e) {
+            Ki.getInstance().debug("File manager for: " + file.getName() + " failed on getLine");
         }
         return null;
     }
@@ -49,6 +52,7 @@ public class StringFileHandler extends FileManager implements IStringFileHandler
                 return true;
             }
         } catch (IOException e) {
+            Ki.getInstance().debug("File manager for: " + file.getName() + " failed on hasLine");
         }
         return false;
     }
@@ -67,6 +71,7 @@ public class StringFileHandler extends FileManager implements IStringFileHandler
                 i++;
             }
         } catch (IOException e) {
+            Ki.getInstance().debug("File manager for: " + file.getName() + " failed on replaceLine");
         }
     }
 
@@ -86,6 +91,7 @@ public class StringFileHandler extends FileManager implements IStringFileHandler
             writer.close();
 
         } catch (IOException e) {
+            Ki.getInstance().debug("File manager for: " + file.getName() + " failed on insertLine");
         }
     }
 
@@ -104,6 +110,7 @@ public class StringFileHandler extends FileManager implements IStringFileHandler
             writer.close();
 
         } catch (IOException e) {
+            Ki.getInstance().debug("File manager for: " + file.getName() + " failed on insertNoLoad with message: " + e.getMessage());
         }
     }
 
@@ -116,6 +123,7 @@ public class StringFileHandler extends FileManager implements IStringFileHandler
             insertNoLoad(newLine,index,lines);
 
         } catch (IOException e) {
+            Ki.getInstance().debug("File manager for: " + file.getName() + " failed on replaceLine");
         }
     }
 
@@ -125,7 +133,7 @@ public class StringFileHandler extends FileManager implements IStringFileHandler
         try {
             return Files.readAllLines(file.toPath(), StandardCharsets.UTF_8);
         } catch (IOException e) {
-
+            Ki.getInstance().debug("File manager for: " + file.getName() + " failed on getLines");
         }
         return null;
     }

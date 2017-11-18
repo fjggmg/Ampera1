@@ -153,12 +153,13 @@ public class ChainManager implements IChainMan {
         tmDB.commit();
         cmMap.put(block.ID,block.height.toString());
         cmDB.commit();
+        /*
         Block b = verifyLater.get(block.height.add(BigInteger.ONE));
         if(b != null) {
             addBlock(b);
             verifyLater.remove(b.height);
         }
-
+        */
         return true;
     }
 
@@ -258,8 +259,10 @@ public class ChainManager implements IChainMan {
 
         if (current == null)
         {
-            if (block.height.compareTo(BigInteger.ZERO) != 0)
+            if (block.height.compareTo(BigInteger.ZERO) != 0) {
+                ki.debug("Height is not 0 and current block is null, bad block");
                 return false;
+            }
         }
 
 
@@ -270,7 +273,8 @@ public class ChainManager implements IChainMan {
         if (bDebug)
             ki.debug("prev ID is ok");
         if (current != null && block.timestamp < current.timestamp) return false;
-        if (block.timestamp > System.currentTimeMillis() + 10000L) return false;
+        //TODO: check this shit out, timestamps have been fucking us since day 1
+        if (block.timestamp > System.currentTimeMillis() + 60000L) return false;
         if (bDebug)
             ki.debug("timestamp is OK");
         String hash = EncryptionManager.sha512(block.header());
@@ -374,7 +378,7 @@ public class ChainManager implements IChainMan {
         return true;
     }
 
-    public synchronized BigInteger currentHeight()
+    public BigInteger currentHeight()
     {
         return currentHeight;
     }
@@ -468,7 +472,7 @@ public class ChainManager implements IChainMan {
     }
 
     @Override
-    public synchronized BigInteger getCurrentDifficulty()
+    public BigInteger getCurrentDifficulty()
     {
         return currentDifficulty;
     }

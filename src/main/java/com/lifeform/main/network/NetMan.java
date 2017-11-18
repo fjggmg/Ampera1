@@ -106,7 +106,7 @@ public class NetMan extends Thread implements INetworkManager {
         for(IConnectionManager connMan:connections)
         {
             if(!(connMan == null)) {
-                if(!connMan.getPacketProcessor().getPacketGlobal().doneDownloading)
+                if(connMan.getPacketProcessor().getPacketGlobal().doneDownloading)
                     connMan.sendPacket(o);
                 else
                     connMan.queueUntilDone(o);
@@ -121,7 +121,7 @@ public class NetMan extends Thread implements INetworkManager {
         {
             if (connMan != null && ID != null && connMan.getID() != null) {
                 if (!connMan.getID().equals(ID)) {
-                    if(!connMan.getPacketProcessor().getPacketGlobal().doneDownloading)
+                    if(connMan.getPacketProcessor().getPacketGlobal().doneDownloading)
                         connMan.sendPacket(o);
                     else
                         connMan.queueUntilDone(o);

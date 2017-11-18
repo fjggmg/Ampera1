@@ -69,6 +69,8 @@ public class Handshake implements Serializable, Packet {
                     TransactionPacket tp = new TransactionPacket();
                     tp.trans = trans.toJSON();
                     connMan.sendPacket(tp);
+                    pg.doneDownloading = true;
+
                 }
             }
         if (currentHeight.compareTo(BigInteger.valueOf(-1L)) != 0)
@@ -76,9 +78,13 @@ public class Handshake implements Serializable, Packet {
                 if (!ki.getChainMan().getByHeight(currentHeight).ID.equals(mostRecentBlock)) {
                     pg.onRightChain = false;
                 }
+            }else if(ki.getChainMan().currentHeight().compareTo(currentHeight) == 0 && ki.getChainMan().getByHeight(ki.getChainMan().currentHeight()).ID.equals(mostRecentBlock))
+            {
+                pg.doneDownloading = true;
             }
         if (ki.getChainMan().currentHeight().compareTo(currentHeight) < 0) {
             ki.debug("Requesting blocks we're missing from the network");
+            pg.doneDownloading = true;
             BlockRequest br = new BlockRequest();
             br.fromHeight = ki.getChainMan().currentHeight();
             connMan.sendPacket(br);
