@@ -21,6 +21,7 @@ class PacketGlobal {
         this.ki = ki;
     }
 
+    List<Block> addedBlocks = new ArrayList<>();
     boolean doneDownloading = false;
     BigInteger startHeight;
     boolean laFlag = false;

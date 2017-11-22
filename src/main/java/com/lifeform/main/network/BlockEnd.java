@@ -2,6 +2,7 @@ package com.lifeform.main.network;
 
 import com.lifeform.main.IKi;
 import com.lifeform.main.blockchain.Block;
+import com.lifeform.main.blockchain.BlockState;
 import com.lifeform.main.blockchain.CPUMiner;
 import com.lifeform.main.transactions.ITrans;
 
@@ -49,7 +50,18 @@ public class BlockEnd implements Serializable, Packet {
             }
             if (block.height.compareTo(ki.getChainMan().currentHeight().add(BigInteger.ONE)) == 0) {
                 ki.debug("Verifying block");
-                if (!ki.getChainMan().addBlock(block)) {
+                BlockState state = ki.getChainMan().addBlock(block);
+                if (state.retry()) {
+                    for (int p = 0; p < 5; p++) {
+                        //retry last block as well in case it didn't save correctly, very specific use case
+                        //may reroute some logic here to do this only on certain ones
+                        ki.getChainMan().addBlock(pg.addedBlocks.get(pg.addedBlocks.size() - 1));
+                        state = ki.getChainMan().addBlock(block);
+                        if (state.success()) break;
+                    }
+                }
+                if (!state.success()) {
+
                     pg.onRightChain = false;
                     if (ki.getNetMan().isRelay()) {
 
@@ -66,6 +78,10 @@ public class BlockEnd implements Serializable, Packet {
                     pg.laFlag = true;
                     connMan.sendPacket(las);
                 } else {
+                    pg.addedBlocks.add(block);
+                    if (pg.addedBlocks.size() > 25) {
+                        pg.addedBlocks.remove(0);
+                    }
                     ki.debug("Block verified and added");
                     if (ki.getNetMan().isRelay()) {
                         ki.debug("Relaying block now");

@@ -135,7 +135,7 @@ public class GPUMiner extends Thread implements IMiner {
                         e.printStackTrace();
                     }
                      */
-                        if (ki.getChainMan().softVerifyBlock(b)) {
+                        if (ki.getChainMan().softVerifyBlock(b).success()) {
                             sendBlock(b);
                             mining = false;
                         } else if (ki.getChainMan().getCurrentDifficulty().compareTo(new BigInteger(Utils.fromBase64(b.ID))) < 0) {

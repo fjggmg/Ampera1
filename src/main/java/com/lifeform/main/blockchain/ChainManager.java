@@ -132,9 +132,11 @@ public class ChainManager implements IChainMan {
         cmDB.close();
     }
 
-    public synchronized boolean addBlock(Block block){
-       
-        if(!verifyBlock(block)) return false; else exMap.put(block.ID,block.toJSON());
+    public synchronized BlockState addBlock(Block block) {
+
+        BlockState state = verifyBlock(block);
+        if (!state.success()) return state;
+        else exMap.put(block.ID, block.toJSON());
         ki.blockTick(block);
         current = block;
         currentHeight = block.height;
@@ -160,7 +162,12 @@ public class ChainManager implements IChainMan {
             verifyLater.remove(b.height);
         }
         */
-        return true;
+        return BlockState.SUCCESS;
+    }
+
+    @Override
+    public void setHeight(BigInteger height) {
+        this.currentHeight = height;
     }
 
     @Override
@@ -243,7 +250,7 @@ public class ChainManager implements IChainMan {
     }
 
     @Override
-    public synchronized boolean softVerifyBlock(Block block) {
+    public synchronized BlockState softVerifyBlock(Block block) {
 
         Block current = getByHeight(block.height.subtract(BigInteger.ONE));
         if (bDebug)
@@ -251,7 +258,7 @@ public class ChainManager implements IChainMan {
         if(block.height.compareTo(currentHeight()) < 0)
         {
             //this is a "replacement" for an older block, we need the rest of the chain to verify this is actually part of it
-            return false;
+            return BlockState.WRONG_HEIGHT;
         }
         if (bDebug)
             ki.debug("Height is ok");
@@ -261,30 +268,30 @@ public class ChainManager implements IChainMan {
         {
             if (block.height.compareTo(BigInteger.ZERO) != 0) {
                 ki.debug("Height is not 0 and current block is null, bad block");
-                return false;
+                return BlockState.NO_PREVIOUS;
             }
         }
 
 
         if (bDebug)
             ki.debug("Height check 2 is ok");
-        if(current != null && !block.prevID.equalsIgnoreCase(current.ID)) return false;
+        if (current != null && !block.prevID.equalsIgnoreCase(current.ID)) return BlockState.PREVID_MISMATCH;
 
         if (bDebug)
             ki.debug("prev ID is ok");
-        if (current != null && block.timestamp < current.timestamp) return false;
+        if (current != null && block.timestamp < current.timestamp) return BlockState.BACKWARDS_TIMESTAMP;
         //TODO: check this shit out, timestamps have been fucking us since day 1
-        if (block.timestamp > System.currentTimeMillis() + 60000L) return false;
+        if (block.timestamp > System.currentTimeMillis() + 60000L) return BlockState.TIMESTAMP_WRONG;
         if (bDebug)
             ki.debug("timestamp is OK");
         String hash = EncryptionManager.sha512(block.header());
-        if(!block.ID.equals(hash)) return false;
+        if (!block.ID.equals(hash)) return BlockState.ID_MISMATCH;
         if (bDebug)
             ki.debug("ID is ok");
-        if(new BigInteger(Utils.fromBase64(hash)).abs().compareTo(currentDifficulty) > 0) return false;
+        if (new BigInteger(Utils.fromBase64(hash)).abs().compareTo(currentDifficulty) > 0) return BlockState.NO_SOLVE;
         if (bDebug)
             ki.debug("Solves for difficulty");
-        if(block.getCoinbase() == null) return false;
+        if (block.getCoinbase() == null) return BlockState.NO_COINBASE;
         if (bDebug)
             ki.debug("coinbase is in block");
         BigInteger fees = BigInteger.ZERO;
@@ -294,23 +301,24 @@ public class ChainManager implements IChainMan {
             fees = fees.add(block.getTransaction(t).getFee());
         }
 
-        if(!ki.getTransMan().verifyCoinbase(block.getCoinbase(),block.height,fees)) return false;
+        if (!ki.getTransMan().verifyCoinbase(block.getCoinbase(), block.height, fees)) return BlockState.BAD_COINBASE;
         if (bDebug)
             ki.debug("Coinbase verifies ok");
         BlockVerificationHelper bvh = new BlockVerificationHelper(ki, block);
-        if (!bvh.verifyTransactions()) return false;
+        if (!bvh.verifyTransactions()) return BlockState.BAD_TRANSACTIONS;
         List<String> inputs = new ArrayList<>();
         for(String t: block.getTransactionKeys())
         {
             //if(!ki.getTransMan().verifyTransaction(block.getTransaction(t))) return false;
             for(Input i:block.getTransaction(t).getInputs())
             {
-                if(inputs.contains(i.getID())) return false; else inputs.add(i.getID());
+                if (inputs.contains(i.getID())) return BlockState.DOUBLE_SPEND;
+                else inputs.add(i.getID());
             }
         }
         if (bDebug)
             ki.debug("transactions verify ok");
-        return true;
+        return BlockState.SUCCESS;
     }
 
     private synchronized int getCurrentSegment()
@@ -320,10 +328,11 @@ public class ChainManager implements IChainMan {
 
     private synchronized int getSegment(BigInteger height) {return height.subtract(BigInteger.ONE).divide(BigInteger.valueOf(1000L)).intValueExact(); }
 
-    public synchronized boolean verifyBlock(Block block){
+    public synchronized BlockState verifyBlock(Block block) {
         if (bDebug)
         ki.getMainLog().info("Block has: " + block.getTransactionKeys().size() + " transactions");
-        if(!softVerifyBlock(block)) return false;
+        BlockState state = softVerifyBlock(block);
+        if (!state.success()) return state;
         BigInteger fees = BigInteger.ZERO;
 
         for(String t:block.getTransactionKeys())
@@ -331,14 +340,15 @@ public class ChainManager implements IChainMan {
             fees = fees.add(block.getTransaction(t).getFee());
         }
 
-        if(!ki.getTransMan().addCoinbase(block.getCoinbase(),block.height,fees)) return false;
+        if (!ki.getTransMan().addCoinbase(block.getCoinbase(), block.height, fees))
+            return BlockState.FAILED_ADD_COINBASE;
 
         //IBlockVerificationHelper bvh = new BlockVerificationHelper(ki,block);
         //if(!bvh.addTransactions()) return false;
 
         for(String key:block.getTransactionKeys())
         {
-            if (!ki.getTransMan().addTransactionNoVerify(block.getTransaction(key))) return false;
+            if (!ki.getTransMan().addTransactionNoVerify(block.getTransaction(key))) return BlockState.FAILED_ADD_TRANS;
         }
 
         ki.getTransMan().commit();
@@ -375,7 +385,7 @@ public class ChainManager implements IChainMan {
             }
         }
 
-        return true;
+        return BlockState.SUCCESS;
     }
 
     public BigInteger currentHeight()

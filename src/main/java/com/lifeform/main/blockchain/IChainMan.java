@@ -10,11 +10,13 @@ public interface IChainMan {
 
     Map<String,Block> getChain();
 
-    boolean softVerifyBlock(Block b);
-    boolean verifyBlock(Block b);
+    BlockState softVerifyBlock(Block b);
 
-    boolean addBlock(Block b);
+    BlockState verifyBlock(Block b);
 
+    BlockState addBlock(Block b);
+
+    void setHeight(BigInteger height);
     void loadChain();
 
     @Deprecated

@@ -80,7 +80,7 @@ public class CPUMiner extends Thread implements IMiner{
                     if(!canMine) return;
                     if (!mining) return;
 
-                        if(!ki.getChainMan().softVerifyBlock(b)) return;
+                    if (!ki.getChainMan().softVerifyBlock(b).success()) return;
                         if (!ki.getChainMan().canMine()) return;
                     if (cDebug)
                         ki.getMainLog().info("Block verified");

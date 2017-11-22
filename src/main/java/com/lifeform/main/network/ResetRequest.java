@@ -26,8 +26,9 @@ public class ResetRequest implements Serializable, Packet {
                     }
                     ki.getChainMan().clearFile();
                     ki.getTransMan().clear();
+                    ki.getChainMan().setHeight(new BigInteger("-1"));
                     for (Block b : blocks) {
-                        if (!ki.getChainMan().addBlock(b)) {
+                        if (!ki.getChainMan().addBlock(b).success()) {
                             ki.debug("The block chain is corrupted beyond repair, you will need to manually delete the chain and transaction folders AFTER closing the program. After restarting the program will redownload the chain and should work correctly");
                             return;
                         }

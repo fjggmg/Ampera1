@@ -29,7 +29,7 @@ public class ChainUpEnd implements Serializable, Packet {
 
         for (; height.compareTo(max) <= 0; height = height.add(BigInteger.ONE)) {
             ki.debug("Verifying block with height: " + height + " before doing final commit");
-            if (!pg.temp.addBlock(heightMap.get(height))) {
+            if (!pg.temp.addBlock(heightMap.get(height)).success()) {
                 return;
             }
         }
@@ -39,7 +39,7 @@ public class ChainUpEnd implements Serializable, Packet {
         height = startHeight;
         for (; height.compareTo(max) <= 0; height = height.add(BigInteger.ONE)) {
             ki.debug("Adding block with height: " + height + " to local files");
-            if (!ki.getChainMan().addBlock(heightMap.get(height))) {
+            if (!ki.getChainMan().addBlock(heightMap.get(height)).success()) {
                 ki.getMainLog().info("Error updating chain to larger competing chain, chain unfinished, will attempt to pull updates for this chain");
                 return;
             }
