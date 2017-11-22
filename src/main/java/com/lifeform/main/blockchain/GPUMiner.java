@@ -49,6 +49,7 @@ public class GPUMiner extends Thread implements IMiner {
         return jcacqs.size();
     }
 
+    private long hashrate = -1;
 
     public GPUMiner(IKi ki) {
         this.ki = ki;
@@ -88,6 +89,10 @@ public class GPUMiner extends Thread implements IMiner {
                     //It will take a while to mine, so whatever thread is using the miner object will need to wait for it to finish.
                     while (miner.isMining() && mining) //Any conditions on when to stop mining go in here with miner.hasMiningThread(). You can also stop mining with miner.stopAndClear() from another thread if that thread has a reference to the JOCLSHA3Miner object.
                     {
+                        if (miner.getHashesPerSecond() != -1) {
+                            hashrate = miner.getHashesPerSecond();
+                            ki.getMinerMan().setHashrate(devName, hashrate);
+                        }
                     }
 
                     ki.debug("Mining on OpenCL device: " + jcacq.getDInfo().getDeviceName() + " has stopped.");
@@ -161,11 +166,17 @@ public class GPUMiner extends Thread implements IMiner {
         super.interrupt();
     }
 
+    @Override
+    public long getHashrate() {
+        return hashrate;
+    }
     private boolean disabled = false;
+    private String devName;
     @Override
     public void setup(int index) {
         miner = gpuMiners.get(index);
         jcacq = jcacqs_.get(index);
+        devName = jcacq.getDInfo().getDeviceName();
         disabled = !ki.getMinerMan().getDevNames().contains(jcacq.getDInfo().getDeviceName());
     }
 

@@ -3,7 +3,6 @@ package com.lifeform.main.network;
 import com.lifeform.main.IKi;
 import com.lifeform.main.blockchain.Block;
 import com.lifeform.main.blockchain.BlockState;
-import com.lifeform.main.blockchain.CPUMiner;
 import com.lifeform.main.transactions.ITrans;
 
 import java.io.Serializable;
@@ -55,6 +54,7 @@ public class BlockEnd implements Serializable, Packet {
                     for (int p = 0; p < 5; p++) {
                         //retry last block as well in case it didn't save correctly, very specific use case
                         //may reroute some logic here to do this only on certain ones
+                        ki.getChainMan().setHeight(block.height.subtract(new BigInteger("2")));
                         ki.getChainMan().addBlock(pg.addedBlocks.get(pg.addedBlocks.size() - 1));
                         state = ki.getChainMan().addBlock(block);
                         if (state.success()) break;

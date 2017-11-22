@@ -8,7 +8,9 @@ import gpuminer.JOCL.JOCLMaster;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class MinerManager implements IMinerMan{
 
@@ -16,6 +18,7 @@ public class MinerManager implements IMinerMan{
     private boolean mDebug;
     private boolean miningCompatible = true;
     private List<String> disabledDevNames = new ArrayList<>();
+    private Map<String, Long> hashrates = new HashMap<>();
     public MinerManager(IKi ki, boolean mDebug)
     {
         this.ki = ki;
@@ -69,6 +72,20 @@ public class MinerManager implements IMinerMan{
     public void disableDev(String dev) {
         devNames.remove(dev);
         disabledDevNames.add(dev);
+    }
+
+    @Override
+    public long cumulativeHashrate() {
+        long rate = 0;
+        for (String dev : hashrates.keySet()) {
+            rate += hashrates.get(dev);
+        }
+        return rate;
+    }
+
+    @Override
+    public void setHashrate(String dev, long rate) {
+        hashrates.put(dev, rate);
     }
 
     private boolean isRestarting = false;

@@ -11,4 +11,6 @@ public interface IMiner {
 
     void setup(int index);
 
+    long getHashrate();
+
 }

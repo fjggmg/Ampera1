@@ -1,18 +1,9 @@
 package com.lifeform.main.network;
 
 import com.lifeform.main.IKi;
-import com.lifeform.main.blockchain.Block;
-import com.lifeform.main.blockchain.CPUMiner;
-import com.lifeform.main.blockchain.ChainManager;
-import com.lifeform.main.transactions.ITrans;
-import com.lifeform.main.transactions.Input;
-import com.lifeform.main.transactions.Transaction;
 
-import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class PacketProcessor implements IPacketProcessor{
 

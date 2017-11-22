@@ -1,5 +1,6 @@
 package com.lifeform.main;
 
+import com.lifeform.main.blockchain.IMiner;
 import com.lifeform.main.data.JSONManager;
 import com.lifeform.main.data.files.StringFileHandler;
 import com.lifeform.main.network.TransactionPacket;
@@ -340,6 +341,9 @@ public class FXMLController {
     @FXML
     private Pane exportPane;
 
+    @FXML
+    private Label cHashrate;
+
     private boolean run = true;
     private boolean versionSet = false;
 
@@ -452,6 +456,10 @@ public class FXMLController {
                         }
                     }
                 });
+            }
+            if (cHashrate != null) {
+
+                cHashrate.setText("Current Hashrate - " + ki.getMinerMan().cumulativeHashrate());
             }
             if (rTrans1 != null) {
                 int i = 1;

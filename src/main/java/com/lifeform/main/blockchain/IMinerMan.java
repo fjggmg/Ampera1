@@ -18,4 +18,8 @@ public interface IMinerMan {
     void enableDev(String dev);
 
     void disableDev(String dev);
+
+    long cumulativeHashrate();
+
+    void setHashrate(String dev, long rate);
 }
