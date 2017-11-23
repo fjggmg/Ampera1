@@ -63,6 +63,8 @@ public class Server {
 
             // Bind and start to accept incoming connections.
             b.bind(port).sync().channel().closeFuture().sync();
+        } catch (Exception e) {
+            ki.debug("Connection closed unexpectedly with message: " + e.getMessage());
         } finally {
             bossGroup.shutdownGracefully();
             workerGroup.shutdownGracefully();

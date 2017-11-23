@@ -81,10 +81,11 @@ public class Client implements INetworkEndpoint{
                         }
                     });
 
-
-
             // Start the connection attempt.
             b.connect(host, port).channel().closeFuture().sync();
+        } catch (Exception e) {
+            ki.debug("Connection closed unexpectedly with message: " + e.getMessage());
+            ki.restartNetwork();
         } finally {
             group.shutdownGracefully();
             connMan.disconnect();

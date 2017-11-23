@@ -20,5 +20,7 @@ public interface INetworkManager {
 
     void attemptConnect(String IP);
 
+    void interrupt();
+
 
 }

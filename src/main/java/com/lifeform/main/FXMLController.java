@@ -344,6 +344,16 @@ public class FXMLController {
     @FXML
     private Label cHashrate;
 
+    @FXML
+    private Label minHashrate;
+    @FXML
+    private Label maxHashrate;
+    @FXML
+    private Label aHashrate;
+
+    private long minimumHash = Long.MAX_VALUE;
+    private long maximumHash = 0;
+    private List<Long> last25Hash = new ArrayList<>();
     private boolean run = true;
     private boolean versionSet = false;
 
@@ -364,6 +374,7 @@ public class FXMLController {
         disabledDevices.add(dev);
     }
 
+    private DecimalFormat format2 = new DecimalFormat("###,###,###,###,###,###,###,###,##0.#########");
     private boolean firstDevTick = true;
     public void tick()
     {
@@ -457,9 +468,36 @@ public class FXMLController {
                     }
                 });
             }
-            if (cHashrate != null) {
+            if (cHashrate != null && minHashrate != null && maxHashrate != null && aHashrate != null) {
 
-                cHashrate.setText("Current Hashrate - " + ki.getMinerMan().cumulativeHashrate());
+                long cumulativeHash = ki.getMinerMan().cumulativeHashrate();
+                cHashrate.setText("Current Hashrate - " + format2.format(cumulativeHash) + " hashes/second");
+                if (cumulativeHash < minimumHash || minimumHash == 0) {
+                    minimumHash = ki.getMinerMan().cumulativeHashrate();
+                }
+                minHashrate.setText("Min - " + format2.format(minimumHash));
+                if (cumulativeHash > maximumHash) {
+                    maximumHash = ki.getMinerMan().cumulativeHashrate();
+                }
+                maxHashrate.setText("Max - " + format2.format(maximumHash));
+                if (last25Hash.size() >= 25) {
+                    last25Hash.remove(0);
+                }
+                if (cumulativeHash != 0) {
+                    last25Hash.add(cumulativeHash);
+                }
+                long total = 0;
+                if (last25Hash.size() != 0) {
+                    for (long l : last25Hash) {
+                        total += l;
+                    }
+
+
+                    total = total / last25Hash.size();
+                }
+                aHashrate.setText("Average - " + format2.format(total));
+
+
             }
             if (rTrans1 != null) {
                 int i = 1;

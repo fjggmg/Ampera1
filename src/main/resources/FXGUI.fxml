@@ -590,6 +590,12 @@
                                textFill="WHITE"/>
                         <Label fx:id="cHashrate" layoutX="132.0" layoutY="221.0" opacity="0.5" text="Current Hashrate -"
                                textFill="WHITE"/>
+                        <Label fx:id="minHashrate" layoutX="132.0" layoutY="238.0" opacity="0.5" text="Min -"
+                               textFill="WHITE"/>
+                        <Label fx:id="maxHashrate" layoutX="132.0" layoutY="255.0" opacity="0.5" text="Max -"
+                               textFill="WHITE"/>
+                        <Label fx:id="aHashrate" layoutX="132.0" layoutY="272.0" opacity="0.5" text="Average -"
+                               textFill="WHITE"/>
                      </children></Pane>
                   <Pane fx:id="settingsContentPane" prefHeight="200.0" prefWidth="200.0" style="-fx-background-color: rgba(0,0,255,0.1);" visible="false">
                      <children>

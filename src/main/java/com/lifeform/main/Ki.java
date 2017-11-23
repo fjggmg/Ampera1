@@ -52,7 +52,7 @@ public class Ki extends Thread implements IKi {
     private IKi ki = this;
     private boolean run = true;
     //TODO: need to start saving version number to file for future conversion of files
-    public static final String VERSION = "0.14.1-BETA";
+    public static final String VERSION = "0.14.2-BETA";
     private boolean relay = false;
     private FXMLController guiHook;
     public static boolean debug = true;
@@ -116,6 +116,19 @@ public class Ki extends Thread implements IKi {
     }
 
     @Override
+    public void run() {
+        while (true) {
+            try {
+                Thread.sleep(5000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            if (rn) {
+                rn();
+            }
+        }
+    }
+    @Override
     public void setGUIHook(FXMLController guiHook) {
         this.guiHook = guiHook;
     }
@@ -145,6 +158,18 @@ public class Ki extends Thread implements IKi {
         return relay;
     }
 
+    private volatile boolean rn = false;
+
+    @Override
+    public void restartNetwork() {
+        rn = true;
+    }
+
+    private void rn() {
+        rn = false;
+        netMan.interrupt();
+        netMan = new NetMan(ki, o.relay);
+    }
     private String relayer;
     @Override
     public String getRelayer() {

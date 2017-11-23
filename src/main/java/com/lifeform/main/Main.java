@@ -30,8 +30,8 @@ public class Main {
     public static void main(String[] args)
     {
         Options o = decode(args);
-        IKi main = new Ki(o); //TODO no need for this to be a thread presently, investigate removing that from the code and just creating a new instance
-        //main.start();
+        IKi main = new Ki(o);
+        main.start();
     }
 
     public static Options decode(String[] args)

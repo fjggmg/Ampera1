@@ -51,4 +51,6 @@ public interface IKi {
 
     void setGUIHook(FXMLController guiHook);
     IMinerMan getMinerMan();
+
+    void restartNetwork();
 }

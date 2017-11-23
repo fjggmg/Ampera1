@@ -1,10 +1,8 @@
 package com.lifeform.main.network;
 
-
 import com.lifeform.main.IKi;
 import com.lifeform.main.network.logic.Client;
 import com.lifeform.main.network.logic.Server;
-
 import java.util.*;
 
 public class NetMan extends Thread implements INetworkManager {
@@ -56,12 +54,13 @@ public class NetMan extends Thread implements INetworkManager {
         }.start();
     }
 
+    private List<Thread> threads = new ArrayList<>();
     @Override
     public void run()
     {
         setName("Networking-Main");
         if (isRelay) {
-            new Thread() {
+            Thread t = new Thread() {
 
                 public void run() {
                     setName("server:" + PORT);
@@ -70,14 +69,17 @@ public class NetMan extends Thread implements INetworkManager {
                         server.start();
                     } catch (Exception e)
                     {
+                        ki.debug("Server stopped, error follows: ");
                         e.printStackTrace();
                     }
                 }
-            }.start();
+            };
+            threads.add(t);
+            t.start();
 
         }
         for(String ip:bootstrap) {
-            new Thread() {
+            Thread t = new Thread() {
 
                 public void run() {
                     setName("client:" + ip);
@@ -88,14 +90,24 @@ public class NetMan extends Thread implements INetworkManager {
                         client.start(connMan);
                     } catch (Exception e)
                     {
+                        ki.debug("Client stopped, error follows: ");
                         e.printStackTrace();
                     }
                 }
-            }.start();
+            };
+            threads.add(t);
+            t.start();
 
         }
     }
 
+    @Override
+    public void interrupt() {
+        for (Thread t : threads) {
+            t.interrupt();
+        }
+        super.interrupt();
+    }
     @Override
     public Set<IConnectionManager> getConnections() {
         return connections;
