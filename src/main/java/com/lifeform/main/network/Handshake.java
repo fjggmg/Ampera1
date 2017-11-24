@@ -64,15 +64,15 @@ public class Handshake implements Serializable, Packet {
         }
 
         if (ki.getChainMan().currentHeight().compareTo(BigInteger.valueOf(-1L)) != 0)
-            if (currentHeight.compareTo(ki.getChainMan().currentHeight()) == 0 && mostRecentBlock.equals(ki.getChainMan().getByHeight(ki.getChainMan().currentHeight()).ID)) {
+            if (currentHeight.compareTo(ki.getChainMan().currentHeight()) == 0) {
                 for (ITrans trans : ki.getTransMan().getPending()) {
                     TransactionPacket tp = new TransactionPacket();
                     tp.trans = trans.toJSON();
                     connMan.sendPacket(tp);
-
-
                 }
                 pg.doneDownloading = true;
+                if (ki.getOptions().pDebug)
+                    ki.debug("Relay and Node agree on last block, done downloading");
             }
         if (currentHeight.compareTo(BigInteger.valueOf(-1L)) != 0)
             if (ki.getChainMan().currentHeight().compareTo(currentHeight) > 0) {
