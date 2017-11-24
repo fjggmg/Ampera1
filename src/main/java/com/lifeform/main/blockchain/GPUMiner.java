@@ -144,9 +144,9 @@ public class GPUMiner extends Thread implements IMiner {
                             sendBlock(b);
                             mining = false;
                         } else if (ki.getChainMan().getCurrentDifficulty().compareTo(new BigInteger(Utils.fromBase64(b.ID))) < 0) {
-                            miner.stopAndClear();
                             ki.debug("FOUND AN ERROR ON OPENCL DEVICE: " + jcacq.getDInfo().getDeviceName());
-                            //run();
+                            miner.stopAndClear();
+                            run();
                         } else {
                             ki.debug("An error was found with the block verification. Block will not be sent to the network");
                             miner.stopAndClear();
@@ -181,6 +181,8 @@ public class GPUMiner extends Thread implements IMiner {
     }
 
     private void sendBlock(Block b) {
+        if (ki.getOptions().mDebug)
+            ki.debug("Sending block to network from miner");
         BlockHeader bh2 = formHeader(b);
         ki.getNetMan().broadcast(bh2);
 
@@ -194,6 +196,8 @@ public class GPUMiner extends Thread implements IMiner {
         BlockEnd be = new BlockEnd();
         be.ID = b.ID;
         ki.getNetMan().broadcast(be);
+        if (ki.getOptions().mDebug)
+            ki.debug("Done sending block");
     }
 
     private BlockHeader formHeader(Block b) {

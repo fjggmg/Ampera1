@@ -422,7 +422,7 @@ public class FXMLController {
                 tokenLabel.setText(currentWallet.name());
             }
 
-        if (enabledDevList != null && disabledDevList != null && enabledDevices != null) {
+        if (enabledDevList != null && disabledDevList != null && enabledDevices != null && ki.getMinerMan().isSetup()) {
             if (firstDevTick) {
                 firstDevTick = false;
                 enabledDevList.setItems(enabledDevices);

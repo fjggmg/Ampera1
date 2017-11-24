@@ -52,14 +52,14 @@ public class Ki extends Thread implements IKi {
     private IKi ki = this;
     private boolean run = true;
     //TODO: need to start saving version number to file for future conversion of files
-    public static final String VERSION = "0.14.2-BETA";
+    public static final String VERSION = "0.14.3-BETA";
     private boolean relay = false;
     private FXMLController guiHook;
     public static boolean debug = true;
     private static IKi instance;
     private InputHandler ih;
-    public Ki(Options o)
-    {
+
+    public Ki(Options o) {
         JOCLContextAndCommandQueue.setWorkaround(true);
         ih = new InputHandler(this);
         ih.start();
@@ -68,7 +68,7 @@ public class Ki extends Thread implements IKi {
         relay = o.relay;
         logMan = new LogMan(new ConsoleLogger());
 
-        main = logMan.createLogger("Main","console", Level.DEBUG);
+        main = logMan.createLogger("Main", "console", Level.DEBUG);
         main.info("Ki starting up");
         chainMan = new ChainManager(this, (o.testNet) ? ChainManager.TEST_NET : ChainManager.POW_CHAIN, "blocks/", "chain.state", "transaction.meta", "extra.chains", "chain.meta", o.bDebug);
         Handshake.CHAIN_VER = (o.testNet) ? ChainManager.TEST_NET : ChainManager.POW_CHAIN;
@@ -87,8 +87,7 @@ public class Ki extends Thread implements IKi {
         }
         addMan = new AddressManager(this);
         addMan.load();
-        if(addMan.getMainAdd() == null)
-        {
+        if (addMan.getMainAdd() == null) {
             addMan.setMainAdd(addMan.getNewAdd());
         }
         if (o.rebuild) {
@@ -107,19 +106,36 @@ public class Ki extends Thread implements IKi {
 
         minerMan = new MinerManager(this, o.mDebug);
 
-        netMan = new NetMan(this,o.relay);
+        netMan = new NetMan(this, o.relay);
         netMan.start();
         //gui = MainGUI.guiFactory(this);
-        if(!o.nogui)
-        FXGUI.subLaunch();
+        Thread t = new Thread() {
+
+            @Override
+            public void run() {
+                if (!o.nogui)
+                    FXGUI.subLaunch();
+            }
+        };
+        t.start();
 
     }
 
+    boolean setupDone = false;
     @Override
     public void run() {
         while (true) {
             try {
-                Thread.sleep(5000);
+                Thread.sleep(500);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            if (!setupDone) {
+                minerMan.setup();
+                setupDone = true;
+            }
+            try {
+                Thread.sleep(4500);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }

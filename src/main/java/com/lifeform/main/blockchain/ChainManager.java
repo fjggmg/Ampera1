@@ -249,14 +249,14 @@ public class ChainManager implements IChainMan {
         return blockchainMap;
     }
 
+    //TODO: removing synchronized on this method as it appears to be locking up sometimes during mining, see what affect this has elsewhere
     @Override
-    public synchronized BlockState softVerifyBlock(Block block) {
+    public BlockState softVerifyBlock(Block block) {
 
         Block current = getByHeight(block.height.subtract(BigInteger.ONE));
         if (bDebug)
             ki.debug("verifying block...");
-        if(block.height.compareTo(currentHeight()) < 0)
-        {
+        if(block.height.compareTo(currentHeight()) < 0) {
             //this is a "replacement" for an older block, we need the rest of the chain to verify this is actually part of it
             return BlockState.WRONG_HEIGHT;
         }
@@ -264,8 +264,7 @@ public class ChainManager implements IChainMan {
             ki.debug("Height is ok");
 
 
-        if (current == null)
-        {
+        if (current == null) {
             if (block.height.compareTo(BigInteger.ZERO) != 0) {
                 ki.debug("Height is not 0 and current block is null, bad block");
                 return BlockState.NO_PREVIOUS;
@@ -296,8 +295,7 @@ public class ChainManager implements IChainMan {
             ki.debug("coinbase is in block");
         BigInteger fees = BigInteger.ZERO;
 
-        for(String t:block.getTransactionKeys())
-        {
+        for(String t:block.getTransactionKeys()) {
             fees = fees.add(block.getTransaction(t).getFee());
         }
 
@@ -307,11 +305,9 @@ public class ChainManager implements IChainMan {
         BlockVerificationHelper bvh = new BlockVerificationHelper(ki, block);
         if (!bvh.verifyTransactions()) return BlockState.BAD_TRANSACTIONS;
         List<String> inputs = new ArrayList<>();
-        for(String t: block.getTransactionKeys())
-        {
+        for(String t: block.getTransactionKeys()) {
             //if(!ki.getTransMan().verifyTransaction(block.getTransaction(t))) return false;
-            for(Input i:block.getTransaction(t).getInputs())
-            {
+            for(Input i:block.getTransaction(t).getInputs()) {
                 if (inputs.contains(i.getID())) return BlockState.DOUBLE_SPEND;
                 else inputs.add(i.getID());
             }

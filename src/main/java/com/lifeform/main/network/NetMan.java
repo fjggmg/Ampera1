@@ -115,11 +115,18 @@ public class NetMan extends Thread implements INetworkManager {
 
     @Override
     public void broadcast(Object o) {
+        if (ki.getOptions().pDebug)
+            ki.debug("Beginning broadcast");
         for(IConnectionManager connMan:connections)
         {
             if(!(connMan == null)) {
-                if(connMan.getPacketProcessor().getPacketGlobal().doneDownloading)
+                if (ki.getOptions().pDebug)
+                    ki.debug("Connection Manager not null");
+                if (connMan.getPacketProcessor().getPacketGlobal().doneDownloading) {
                     connMan.sendPacket(o);
+                    if (ki.getOptions().pDebug)
+                        ki.debug("Broadcasting packet: " + o.toString() + " to " + connMan.getAddress());
+                }
                 else
                     connMan.queueUntilDone(o);
             }

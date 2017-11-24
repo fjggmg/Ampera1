@@ -22,4 +22,8 @@ public interface IMinerMan {
     long cumulativeHashrate();
 
     void setHashrate(String dev, long rate);
+
+    void setup();
+
+    boolean isSetup();
 }

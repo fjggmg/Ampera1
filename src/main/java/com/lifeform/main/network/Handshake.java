@@ -69,9 +69,10 @@ public class Handshake implements Serializable, Packet {
                     TransactionPacket tp = new TransactionPacket();
                     tp.trans = trans.toJSON();
                     connMan.sendPacket(tp);
-                    pg.doneDownloading = true;
+
 
                 }
+                pg.doneDownloading = true;
             }
         if (currentHeight.compareTo(BigInteger.valueOf(-1L)) != 0)
             if (ki.getChainMan().currentHeight().compareTo(currentHeight) > 0) {

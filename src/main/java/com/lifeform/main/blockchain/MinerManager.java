@@ -19,10 +19,15 @@ public class MinerManager implements IMinerMan{
     private boolean miningCompatible = true;
     private List<String> disabledDevNames = new ArrayList<>();
     private Map<String, Long> hashrates = new HashMap<>();
-    public MinerManager(IKi ki, boolean mDebug)
-    {
+    private boolean setup = false;
+    public MinerManager(IKi ki, boolean mDebug) {
         this.ki = ki;
         this.mDebug = mDebug;
+
+    }
+
+    @Override
+    public void setup() {
         try {
 
             JOCLMaster platforms = new JOCLMaster();
@@ -44,7 +49,14 @@ public class MinerManager implements IMinerMan{
             e.printStackTrace();
             ki.debug("Previous errors are from miner startup, this system is not compatible with the mining program, disabling mining. Contact support with this error and your hardware info if you believe yours is compatible");
             miningCompatible = false;
+        } finally {
+            setup = true;
         }
+    }
+
+    @Override
+    public boolean isSetup() {
+        return setup;
     }
 
     @Override
