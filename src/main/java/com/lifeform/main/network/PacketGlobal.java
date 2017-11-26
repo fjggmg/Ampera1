@@ -43,10 +43,12 @@ class PacketGlobal {
             if (height.compareTo(BigInteger.valueOf(-1L)) != 0)
                 sendBlock(height);
         }
+        if (ki.getChainMan().getTemp() != null && ki.getChainMan().getTemp().height.compareTo(ki.getChainMan().currentHeight()) > 0) {
+            sendBlock(ki.getChainMan().getTemp());
+        }
     }
 
-    void sendBlock(final BigInteger height) {
-        Block b = ki.getChainMan().getByHeight(height);
+    void sendBlock(Block b) {
         BlockHeader bh2 = formHeader(b);
         connMan.sendPacket(bh2);
 
@@ -68,9 +70,9 @@ class PacketGlobal {
             }
         }
 
-        if(!resendMap.containsKey(height)) {
-            resendTimesMap.merge(height, 1, (a, b1) -> a + b1);
-            if (resendTimesMap.get(height) > 5) {
+        if (!resendMap.containsKey(b.height)) {
+            resendTimesMap.merge(b.height, 1, (a, b1) -> a + b1);
+            if (resendTimesMap.get(b.height) > 5) {
                 ki.debug("Disconnecting connection since retry to send a single block has taken more than 5 tries");
                 connMan.disconnect();
                 return;
@@ -81,20 +83,23 @@ class PacketGlobal {
                 } catch (InterruptedException e) {
                     //fail silently as we expect this to happen
                     if (ki.getOptions().pDebug)
-                        ki.debug("Block resend #" + height.toString() + " interrupted");
+                        ki.debug("Block resend #" + b.height.toString() + " interrupted");
                     return;
                 }
                 ki.debug("Did not receive BlockAck within 45 seconds, resending");
-                sendBlock(height);
+                sendBlock(b.height);
             });
-            t.setName("Block #" + height.toString() + " Resend Thread");
+            t.setName("Block #" + b.height.toString() + " Resend Thread");
             t.start();
-            if(lastCancelled.compareTo(height) >= 0)
+            if (lastCancelled.compareTo(b.height) >= 0)
                 t.interrupt();
             else
-                resendMap.put(height, t);
+                resendMap.put(b.height, t);
         }
-
+    }
+    void sendBlock(final BigInteger height) {
+        Block b = ki.getChainMan().getByHeight(height);
+        sendBlock(b);
     }
     private BigInteger lastCancelled = BigInteger.ZERO;
     private Map<BigInteger,Integer> resendTimesMap = new HashMap<>();

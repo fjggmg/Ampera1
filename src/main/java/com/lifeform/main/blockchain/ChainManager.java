@@ -36,6 +36,7 @@ public class ChainManager implements IChainMan {
     DB tmDB;
     DB exDB;
     DB cmDB;
+    private Block tempBlock = null;
     //===============CHAIN IDS========================\\
     public static final short POW_CHAIN = 0x0001;
     public static final short TEST_NET= 0x1110;
@@ -89,6 +90,14 @@ public class ChainManager implements IChainMan {
         tmDB.commit();
         cmMap.put(block.ID,block.height.toString());
         cmDB.commit();
+    }
+
+    public Block getTemp() {
+        return tempBlock;
+    }
+
+    public void setTemp(Block b) {
+        tempBlock = b;
     }
 
     /**

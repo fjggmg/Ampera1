@@ -44,6 +44,8 @@ public class ChainUpEnd implements Serializable, Packet {
                 return;
             }
         }
+        //redo connection so we can resync the chains
+        connMan.connected();
     }
 
     @Override

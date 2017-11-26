@@ -12,13 +12,15 @@ public class LastAgreedStart implements Serializable, Packet {
     @Override
     public void process(IKi ki, IConnectionManager connMan, PacketGlobal pg) {
         ki.debug("Received last agreed start");
+        /*
         if (pg.onRightChain) {
             ResetRequest rr = new ResetRequest();
             rr.proof = pg.formHeader(ki.getChainMan().getByHeight(height));
             connMan.sendPacket(rr);
             return;
         }
-
+        */
+        //reset request is not working correctly right now, we need to figure this out
         BlockHeader bh;
         Block b = ki.getChainMan().getByHeight(height);
         bh = pg.formHeader(b);

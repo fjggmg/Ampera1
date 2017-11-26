@@ -50,4 +50,8 @@ public interface IChainMan {
 
     short getChainVer();
 
+    Block getTemp();
+
+    void setTemp(Block b);
+
 }
