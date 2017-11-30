@@ -48,7 +48,7 @@ class PacketGlobal {
         }
     }
 
-    void sendBlock(Block b) {
+    void sendBlock(final Block b) {
         BlockHeader bh2 = formHeader(b);
         connMan.sendPacket(bh2);
 
@@ -87,7 +87,7 @@ class PacketGlobal {
                     return;
                 }
                 ki.debug("Did not receive BlockAck within 45 seconds, resending");
-                sendBlock(b.height);
+                sendBlock(b);
             });
             t.setName("Block #" + b.height.toString() + " Resend Thread");
             t.start();

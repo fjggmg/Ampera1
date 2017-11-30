@@ -8,7 +8,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.List;
 import java.util.regex.Pattern;
-
+//TODO: convert whole file to try with resources and java nio
 /**
  * Created by Bryan on 7/17/2017.
  */
@@ -97,18 +97,20 @@ public class StringFileHandler extends FileManager implements IStringFileHandler
 
     private void insertNoLoad(String line, int index, List<String> lines)
     {
+        lines.add(index, line);
         try {
-
-            lines.add(index,line);
-            if(!file.delete()) throw new IOException("Could not delete file");
-            if(!file.createNewFile()) throw new IOException("Could not create new file");
-            PrintWriter writer = new PrintWriter(new OutputStreamWriter(new FileOutputStream(file),StandardCharsets.UTF_8));
+            if (!Files.deleteIfExists(file.toPath())) throw new IOException("Could not delete file");
+        } catch (IOException e) {
+            Ki.getInstance().debug("File manager for: " + file.getName() + " failed on insertNoLoad with message: " + e.getMessage());
+        }
+        //PrintWriter writer = null;
+        try (PrintWriter writer = new PrintWriter(Files.newBufferedWriter(file.toPath(), StandardCharsets.UTF_8))) {
+            //if(!file.createNewFile()) throw new IOException("Could not create new file");
+            //new PrintWriter(new OutputStreamWriter(new FileOutputStream(file),StandardCharsets.UTF_8));
             for(String l:lines)
             {
                 writer.println(l);
             }
-            writer.close();
-
         } catch (IOException e) {
             Ki.getInstance().debug("File manager for: " + file.getName() + " failed on insertNoLoad with message: " + e.getMessage());
         }

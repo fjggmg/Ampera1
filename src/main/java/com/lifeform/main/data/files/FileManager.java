@@ -16,12 +16,13 @@ public class FileManager implements IFileManager {
     {
         file = new File(fileName);
         if(!file.exists()) try {
-            if(file.getParentFile() != null)
+            if (file.getParentFile() != null && !file.getParentFile().exists())
                 if(!file.getParentFile().mkdirs()) {
                     Ki.getInstance().debug("Failed to make parent folder for file manager: " + fileName);
                     //return; TODO: investigate if we should return here or not
                 }
-            if(!file.createNewFile()) {
+            if (!file.exists())
+                if (!file.createNewFile()) {
                 Ki.getInstance().debug("Failed to make file: " + fileName);
 
             }
@@ -33,6 +34,8 @@ public class FileManager implements IFileManager {
     //TODO what the fuck was I supposed to be doing here
     @Override
     public boolean save() {
+
+
         return false;
     }
 

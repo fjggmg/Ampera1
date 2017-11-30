@@ -45,7 +45,6 @@ public class ChainUpEnd implements Serializable, Packet {
             }
         }
         //redo connection so we can resync the chains
-        //connMan.connected();
         BlockSync bs = new BlockSync();
         bs.height = ki.getChainMan().currentHeight();
         connMan.sendPacket(bs);
