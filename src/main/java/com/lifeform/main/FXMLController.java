@@ -5,10 +5,11 @@ import com.lifeform.main.data.JSONManager;
 import com.lifeform.main.data.files.StringFileHandler;
 import com.lifeform.main.network.TransactionPacket;
 import com.lifeform.main.transactions.*;
-import gpuminer.JOCL.JOCLConstants;
-import gpuminer.JOCL.JOCLContextAndCommandQueue;
-import gpuminer.JOCL.JOCLDevices;
-import gpuminer.JOCL.JOCLMaster;
+import gpuminer.JOCL.constants.JOCLConstants;
+import gpuminer.JOCL.context.JOCLContextAndCommandQueue;
+import gpuminer.JOCL.context.JOCLDevices;
+import gpuminer.miner.context.ContextMaster;
+import gpuminer.miner.context.DeviceContext;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -34,9 +35,17 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 /**
- * Copyright (C) Bryan Sharpe
+ * Copyright (C) Ampex Technologies LLC.
  *
- * All rights reserved.
+ * All rights reserved. The code in this file and all linked art assets (found in the resources folder) involving the GUI
+ * are not covered under the GPL license like the rest of the code. Permission must be
+ * obtained in written form to duplicate, use, copy, or otherwise make use of the code
+ * or files pertaining to the GUI from Ampex Technologies LLC or an active manager of
+ * Ampex Technologies LLC. Distributing binaries of this code is permitted under a
+ * no-derivative basis. This means you may distribute unmodified copies of Origin,
+ * but you may not distribute modified copies that include the GUI code or files
+ * mentioned above. If you intend to modify Origin or use it in your own program,
+ * Omit the GUI code and you will be in compliance with the license.
  *
  *
  */
@@ -438,8 +447,8 @@ public class FXMLController {
                 JOCLContextAndCommandQueue.setWorkaround(false);
                 JOCLDevices.setDeviceFilter(JOCLConstants.ALL_DEVICES);
 
-                JOCLMaster jm = new JOCLMaster();
-                for (JOCLContextAndCommandQueue dev : jm.getContextsAndCommandQueues()) {
+                ContextMaster jm = new ContextMaster();
+                for (DeviceContext dev : jm.getContexts()) {
                     if (!enabledDevices.contains(dev.getDInfo().getDeviceName())) {
                         disabledDevices.add(dev.getDInfo().getDeviceName());
                     }

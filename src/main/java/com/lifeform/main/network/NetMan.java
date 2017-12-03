@@ -12,6 +12,7 @@ public class NetMan extends Thread implements INetworkManager {
     private IKi ki;
     private boolean isRelay;
     public static final int PORT = 29555;
+    public boolean live = false;
     Set<IConnectionManager> connections = new HashSet<>();
     Map<String,IConnectionManager> connMap = new HashMap<>();
     Map<String,Client> clientMap = new HashMap<>();
@@ -21,6 +22,16 @@ public class NetMan extends Thread implements INetworkManager {
         this.ki = ki;
         this.isRelay = isRelay;
         //Log.set(Log.LEVEL_TRACE);
+    }
+
+    @Override
+    public boolean live() {
+        return live;
+    }
+
+    @Override
+    public void setLive(boolean live) {
+        this.live = live;
     }
 
     @Override
@@ -119,6 +130,7 @@ public class NetMan extends Thread implements INetworkManager {
             ki.debug("Beginning broadcast");
         for(IConnectionManager connMan:connections)
         {
+            ki.debug("Attempting broadcast...");
             if(!(connMan == null)) {
                 if (ki.getOptions().pDebug)
                     ki.debug("Connection Manager not null");

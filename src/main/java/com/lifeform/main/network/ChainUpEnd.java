@@ -44,6 +44,8 @@ public class ChainUpEnd implements Serializable, Packet {
                 return;
             }
         }
+        pg.temp.clearFile();
+        pg.temp.close();
         //redo connection so we can resync the chains
         BlockSync bs = new BlockSync();
         bs.height = ki.getChainMan().currentHeight();

@@ -9,8 +9,7 @@ import com.lifeform.main.network.Handshake;
 import com.lifeform.main.network.INetworkManager;
 import com.lifeform.main.network.NetMan;
 import com.lifeform.main.transactions.*;
-import gpuminer.JOCL.JOCLContextAndCommandQueue;
-import gpuminer.JOCL.JOCLDevices;
+import gpuminer.JOCL.context.JOCLContextAndCommandQueue;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.Logger;
 import org.bitbucket.backspace119.generallib.Logging.ConsoleLogger;
@@ -23,7 +22,7 @@ import java.util.List;
 /**
  * Created by Bryan on 5/10/2017.
  *
- * Copyright (C) 2017  Bryan Sharpe
+ * Copyright (C) 2017 Ampex Technologies LLC.
 
  This program is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -52,7 +51,7 @@ public class Ki extends Thread implements IKi {
     private IKi ki = this;
     private boolean run = true;
     //TODO: need to start saving version number to file for future conversion of files
-    public static final String VERSION = "0.14.7-BETA";
+    public static final String VERSION = "0.14.8-BETA";
     private boolean relay = false;
     private FXMLController guiHook;
     public static boolean debug = true;

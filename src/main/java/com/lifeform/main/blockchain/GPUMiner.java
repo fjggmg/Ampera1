@@ -6,15 +6,23 @@ import com.lifeform.main.data.Utils;
 import com.lifeform.main.network.BlockEnd;
 import com.lifeform.main.network.BlockHeader;
 import com.lifeform.main.network.TransactionPacket;
-import gpuminer.JOCL.JOCLContextAndCommandQueue;
-import gpuminer.JOCL.JOCLMaster;
-import gpuminer.JOCL.miner.JOCLSHA3Miner;
-import gpuminer.JOCL.miner.autotune.Autotune;
+import gpuminer.JOCL.constants.JOCLConstants;
+import gpuminer.JOCL.context.JOCLContextAndCommandQueue;
+import gpuminer.JOCL.context.JOCLContextMaster;
+import gpuminer.JOCL.context.JOCLDevices;
+import gpuminer.miner.SHA3.SHA3Miner;
+import gpuminer.miner.autotune.Autotune;
+import gpuminer.miner.context.ContextMaster;
+import gpuminer.miner.context.DeviceContext;
+import gpuminer.miner.databuckets.BlockAndSharePayloads;
+
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
+
+import static org.jocl.CL.CL_DEVICE_TYPE_GPU;
 
 public class GPUMiner extends Thread implements IMiner {
 
@@ -22,16 +30,60 @@ public class GPUMiner extends Thread implements IMiner {
 
     public static volatile boolean mining = false;
 
-    private JOCLSHA3Miner miner;
-    private JOCLContextAndCommandQueue jcacq;
-    private static List<JOCLSHA3Miner> gpuMiners = new ArrayList<>();
-    private static List<JOCLContextAndCommandQueue> jcacqs_;
+    private SHA3Miner miner;
+    private DeviceContext jcacq;
+    private static List<SHA3Miner> gpuMiners = new ArrayList<>();
+    private static List<DeviceContext> jcacqs_;
+    private static volatile boolean autotuneDone = false;
+    private static volatile boolean stopAutotune = false;
+    private static volatile boolean triedNoCPU = false;
 
-    public static int init(IKi ki) {
+    public static int init(IKi ki) throws MiningIncompatibleException {
         gpuMiners.clear();
-        JOCLMaster platforms = new JOCLMaster();
-        List<JOCLContextAndCommandQueue> jcacqs = platforms.getContextsAndCommandQueues();
-        Autotune.setup(jcacqs, false);
+        ContextMaster platforms = new ContextMaster();
+        List<DeviceContext> jcacqs = platforms.getContexts();
+        final Thread t = new Thread() {
+
+            public void run() {
+                Autotune.setup(jcacqs, false);
+                autotuneDone = true;
+            }
+        };
+        t.start();
+        new Thread() {
+            public void run() {
+                long startTime = System.currentTimeMillis();
+                while (System.currentTimeMillis() < startTime + 300000) {
+                    try {
+                        sleep(5000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+                stopAutotune = true;
+                t.interrupt();
+                autotuneDone = true;
+
+            }
+        }.start();
+        while (!autotuneDone) {
+            try {
+                sleep(100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        if (stopAutotune) {
+            if (!triedNoCPU) {
+                triedNoCPU = true;
+                JOCLDevices.setDeviceFilter(CL_DEVICE_TYPE_GPU);
+                return init(ki);
+            }
+        } else
+            throw new MiningIncompatibleException("Autotune took more than 5 minutes, your device may be compatible, but is running so slowly that it would not be profitable to mine on.");
+
+
+
         byte[] difficulty = new byte[64];
         int p = 63;
         for (int i = ki.getChainMan().getCurrentDifficulty().toByteArray().length - 1; i >= 0; i--) {
@@ -39,8 +91,8 @@ public class GPUMiner extends Thread implements IMiner {
             p--;
         }
 
-        for (JOCLContextAndCommandQueue jcaq : jcacqs) {
-            JOCLSHA3Miner miner = new JOCLSHA3Miner(jcaq, difficulty, Autotune.getAtSettingsMap().get(jcaq.getDInfo().getDeviceName()).kernelType);
+        for (DeviceContext jcaq : jcacqs) {
+            SHA3Miner miner = new SHA3Miner(jcaq, difficulty, null, Autotune.getAtSettingsMap().get(jcaq.getDInfo().getDeviceName()).kernelType);
             gpuMiners.add(miner);
 
         }
@@ -87,7 +139,7 @@ public class GPUMiner extends Thread implements IMiner {
                     ki.debug("Started mining on OpenCL device: " + jcacq.getDInfo().getDeviceName());
 
                     //It will take a while to mine, so whatever thread is using the miner object will need to wait for it to finish.
-                    while (miner.isMining() && mining) //Any conditions on when to stop mining go in here with miner.hasMiningThread(). You can also stop mining with miner.stopAndClear() from another thread if that thread has a reference to the JOCLSHA3Miner object.
+                    while (miner.isMining() && mining) //Any conditions on when to stop mining go in here with miner.hasMiningThread(). You can also stop mining with miner.stopAndClear() from another thread if that thread has a reference to the SHA3Miner object.
                     {
                         if (miner.getHashesPerSecond() != -1) {
                             hashrate = miner.getHashesPerSecond();
@@ -112,7 +164,7 @@ public class GPUMiner extends Thread implements IMiner {
 
                     //The miner outputs the winning seeded message, not the hash itself, so if you need the hash you'll need to use bouncycastle for it.
                     //If the miner hasn't found a winning seeded message this will return null, so you need to check for that.
-                    if (miner.getWinningPayload() != null) {
+                    if (miner.getPayloads() != null) {
 
                         ki.debug("Found a block, sending to network");
 
@@ -120,7 +172,8 @@ public class GPUMiner extends Thread implements IMiner {
                             ki.debug("Current hash rate on OpenCL device: " + jcacq.getDInfo().getDeviceName() + " is: " + format.format(miner.getHashesPerSecond()) + " H/s");
                         }
 
-                        byte[] winningPayload = miner.getWinningPayload();
+                        BlockAndSharePayloads[] basp = miner.getPayloads();
+                        byte[] winningPayload = basp[0].getBlockPayload().getBytes();
 
                         try {
                             ki.debug("Payload is: " + new String(winningPayload, "UTF-8"));

@@ -22,5 +22,9 @@ public interface INetworkManager {
 
     void interrupt();
 
+    boolean live();
+
+    void setLive(boolean live);
+
 
 }

@@ -4,7 +4,7 @@ import com.lifeform.main.data.Options;
 
 /**
  * Created by Bryan on 4/7/2017.
- * Copyright (C) 2017  Bryan Sharpe
+ * Copyright (C) 2017  Ampex Technologies LLC
 
  This program is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by

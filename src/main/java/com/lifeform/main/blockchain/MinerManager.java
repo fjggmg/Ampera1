@@ -1,10 +1,11 @@
 package com.lifeform.main.blockchain;
 
 import com.lifeform.main.IKi;
-import gpuminer.JOCL.JOCLConstants;
-import gpuminer.JOCL.JOCLContextAndCommandQueue;
-import gpuminer.JOCL.JOCLDevices;
-import gpuminer.JOCL.JOCLMaster;
+import gpuminer.JOCL.constants.JOCLConstants;
+import gpuminer.JOCL.context.JOCLContextAndCommandQueue;
+import gpuminer.JOCL.context.JOCLDevices;
+import gpuminer.miner.context.ContextMaster;
+import gpuminer.miner.context.DeviceContext;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -30,16 +31,16 @@ public class MinerManager implements IMinerMan{
     public void setup() {
         try {
 
-            JOCLMaster platforms = new JOCLMaster();
-            for (JOCLContextAndCommandQueue jcacq : platforms.getContextsAndCommandQueues()) {
+            ContextMaster platforms = new ContextMaster();
+            for (DeviceContext jcacq : platforms.getContexts()) {
                 devNames.add(jcacq.getDInfo().getDeviceName());
 
             }
             JOCLContextAndCommandQueue.setWorkaround(false);
             JOCLDevices.setDeviceFilter(JOCLConstants.ALL_DEVICES);
-            platforms = new JOCLMaster();
+            platforms = new ContextMaster();
             ocls = GPUMiner.init(ki);
-            for (JOCLContextAndCommandQueue jcacq : platforms.getContextsAndCommandQueues()) {
+            for (DeviceContext jcacq : platforms.getContexts()) {
 
                 if (!devNames.contains(jcacq.getDInfo().getDeviceName())) {
                     disabledDevNames.add(jcacq.getDInfo().getDeviceName());
@@ -47,6 +48,7 @@ public class MinerManager implements IMinerMan{
             }
         } catch (Exception e) {
             e.printStackTrace();
+            ki.debug("Message: " + e.getMessage());
             ki.debug("Previous errors are from miner startup, this system is not compatible with the mining program, disabling mining. Contact support with this error and your hardware info if you believe yours is compatible");
             miningCompatible = false;
         } finally {

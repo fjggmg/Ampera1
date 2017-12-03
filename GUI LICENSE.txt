@@ -1,0 +1,4 @@
+The GUI and art elements for the GUI, (including the fxml files) are under a different license than the rest of the code,
+this only matters if you intend on using all or part of the Origin codebase in your code or you wish to modify the existing
+codebase and distribute it. If you plan on doing so, please read the license text at the top of the FXMLController.java file.
+As it states, you must omit the GUI code and elements from your codebase.

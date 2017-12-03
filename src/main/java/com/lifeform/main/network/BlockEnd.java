@@ -47,6 +47,10 @@ public class BlockEnd implements Serializable, Packet {
                 ki.debug("Transaction " + i + " added");
                 block.addTransaction(t);
             }
+            ki.debug("===============Block data===================");
+            ki.debug("Height: " + block.height + " Current Local Height: " + ki.getChainMan().currentHeight());
+            ki.debug("ID: " + block.ID + " Current Local ID: " + ki.getChainMan().getByHeight(ki.getChainMan().currentHeight()).ID);
+
             if (block.height.compareTo(ki.getChainMan().currentHeight().add(BigInteger.ONE)) == 0) {
                 ki.debug("Verifying block");
                 BlockState state = ki.getChainMan().addBlock(block);
@@ -108,8 +112,10 @@ public class BlockEnd implements Serializable, Packet {
                     br.fromHeight = ki.getChainMan().currentHeight().add(BigInteger.ONE);
                     connMan.sendPacket(br);
                      */
+                ki.debug("Adding block to future blocks");
                 pg.futureBlocks.add(block);
             }
+            ki.debug("Done processing block end");
             BlockAck ba = new BlockAck();
             ba.height = block.height;
             ba.verified = false;

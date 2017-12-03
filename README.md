@@ -1,6 +1,6 @@
 # README #
 
-This is the official home to the code for Origin, part of the Ki Global Hedge project.
+This is the official home to the code for Origin, part of the Ki Global Hedge project. The wiki has useful information to help with the program, feel free to add to it.
 
 ### What is this repository for? ###
 
