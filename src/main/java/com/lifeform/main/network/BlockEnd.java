@@ -47,10 +47,12 @@ public class BlockEnd implements Serializable, Packet {
                 ki.debug("Transaction " + i + " added");
                 block.addTransaction(t);
             }
-            ki.debug("===============Block data===================");
-            ki.debug("Height: " + block.height + " Current Local Height: " + ki.getChainMan().currentHeight());
-            ki.debug("ID: " + block.ID + " Current Local ID: " + ki.getChainMan().getByHeight(ki.getChainMan().currentHeight()).ID);
+            if (ki.getChainMan().currentHeight().compareTo(BigInteger.ZERO) > 0) {
+                ki.debug("===============Block data===================");
+                ki.debug("Height: " + block.height + " Current Local Height: " + ki.getChainMan().currentHeight());
 
+                ki.debug("ID: " + block.ID + " Current Local ID: " + ki.getChainMan().getByHeight(ki.getChainMan().currentHeight()).ID);
+            }
             if (block.height.compareTo(ki.getChainMan().currentHeight().add(BigInteger.ONE)) == 0) {
                 ki.debug("Verifying block");
                 BlockState state = ki.getChainMan().addBlock(block);

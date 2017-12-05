@@ -45,6 +45,7 @@ public class GPUMiner extends Thread implements IMiner {
         final Thread t = new Thread() {
 
             public void run() {
+                ki.debug("Starting autotune");
                 Autotune.setup(jcacqs, false);
                 autotuneDone = true;
             }
@@ -53,13 +54,14 @@ public class GPUMiner extends Thread implements IMiner {
         new Thread() {
             public void run() {
                 long startTime = System.currentTimeMillis();
-                while (System.currentTimeMillis() < startTime + 300000) {
+                while (System.currentTimeMillis() < startTime + 300000L) {
                     try {
                         sleep(5000);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
                 }
+                ki.debug("Stopping autotune because it took too long");
                 stopAutotune = true;
                 t.interrupt();
                 autotuneDone = true;
@@ -67,20 +69,24 @@ public class GPUMiner extends Thread implements IMiner {
             }
         }.start();
         while (!autotuneDone) {
+            //ki.debug("Autotune not done");
             try {
-                sleep(100);
+                sleep(1000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         }
-        if (stopAutotune) {
+        ki.debug("Autotune done");
+        if (stopAutotune && !triedNoCPU) {
+            ki.debug("Autotune was stopped");
             if (!triedNoCPU) {
                 triedNoCPU = true;
                 JOCLDevices.setDeviceFilter(CL_DEVICE_TYPE_GPU);
                 return init(ki);
             }
-        } else
+        } else if (stopAutotune) {
             throw new MiningIncompatibleException("Autotune took more than 5 minutes, your device may be compatible, but is running so slowly that it would not be profitable to mine on.");
+        }
 
 
 
