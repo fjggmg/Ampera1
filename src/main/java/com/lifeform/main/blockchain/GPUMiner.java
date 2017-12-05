@@ -76,7 +76,7 @@ public class GPUMiner extends Thread implements IMiner {
                 e.printStackTrace();
             }
         }
-        ki.debug("Autotune done");
+        /*ki.debug("Autotune done");
         if (stopAutotune && !triedNoCPU) {
             ki.debug("Autotune was stopped");
             if (!triedNoCPU) {
@@ -84,7 +84,8 @@ public class GPUMiner extends Thread implements IMiner {
                 JOCLDevices.setDeviceFilter(CL_DEVICE_TYPE_GPU);
                 return init(ki);
             }
-        } else if (stopAutotune) {
+        } else */
+        if (stopAutotune) {
             throw new MiningIncompatibleException("Autotune took more than 5 minutes, your device may be compatible, but is running so slowly that it would not be profitable to mine on.");
         }
 
@@ -149,6 +150,7 @@ public class GPUMiner extends Thread implements IMiner {
                     {
                         if (miner.getHashesPerSecond() != -1) {
                             hashrate = miner.getHashesPerSecond();
+                            ki.debug("Current hashrate on device: " + devName + " is " + hashrate + " hashes/second");
                             ki.getMinerMan().setHashrate(devName, hashrate);
                         }
                     }
