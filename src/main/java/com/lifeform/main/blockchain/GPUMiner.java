@@ -51,23 +51,6 @@ public class GPUMiner extends Thread implements IMiner {
             }
         };
         t.start();
-        new Thread() {
-            public void run() {
-                long startTime = System.currentTimeMillis();
-                while (System.currentTimeMillis() < startTime + 300000L) {
-                    try {
-                        sleep(5000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-                ki.debug("Stopping autotune because it took too long");
-                stopAutotune = true;
-                t.interrupt();
-                autotuneDone = true;
-
-            }
-        }.start();
         while (!autotuneDone) {
             //ki.debug("Autotune not done");
             try {
@@ -85,9 +68,11 @@ public class GPUMiner extends Thread implements IMiner {
                 return init(ki);
             }
         } else */
+        /*
         if (stopAutotune) {
             throw new MiningIncompatibleException("Autotune took more than 5 minutes, your device may be compatible, but is running so slowly that it would not be profitable to mine on.");
         }
+        */
 
 
 
@@ -114,6 +99,7 @@ public class GPUMiner extends Thread implements IMiner {
         this.ki = ki;
     }
 
+    private long lastPrint = System.currentTimeMillis();
     private DecimalFormat format = new DecimalFormat("###,###,###,###");
     @Override
     public void run() {
@@ -150,7 +136,11 @@ public class GPUMiner extends Thread implements IMiner {
                     {
                         if (miner.getHashesPerSecond() != -1) {
                             hashrate = miner.getHashesPerSecond();
-                            ki.debug("Current hashrate on device: " + devName + " is " + hashrate + " hashes/second");
+
+                            if (System.currentTimeMillis() > lastPrint + 5000) {
+                                ki.debug("Current hashrate on device: " + devName + " is " + hashrate + " hashes/second");
+                                lastPrint = System.currentTimeMillis();
+                            }
                             ki.getMinerMan().setHashrate(devName, hashrate);
                         }
                     }

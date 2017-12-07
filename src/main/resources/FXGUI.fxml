@@ -21,7 +21,7 @@
 <?import javafx.scene.text.Font?>
 
 <AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="480.0"
-            prefWidth="640.0" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1"
+            prefWidth="640.0" xmlns="http://javafx.com/javafx/8.0.141" xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="com.lifeform.main.FXMLController">
    <children>
       <ImageView fitHeight="480.0" fitWidth="640.0">
@@ -275,26 +275,26 @@
                            </children>
                         </Pane>
                         <Label fx:id="heightLabel" layoutX="110.0" layoutY="245.0" opacity="0.4" text="Height: " textFill="WHITE" />
-                        <Pane id="generateAddPanel" fx:id="addGenPanel" layoutX="367.0" layoutY="273.0"
-                              onMouseEntered="#addGenHover" onMouseExited="#addGenHoverOff"
-                              onMousePressed="#addGenClicked" onMouseReleased="#addGenUnclicked" opacity="0.8"
-                              prefHeight="21.0" prefWidth="93.0" style="-fx-background-color: rgba(127,127,127,0.5);">
+                         <Pane id="generateAddPanel" fx:id="addGenPanel" layoutX="367.0" layoutY="273.0"
+                               onMouseEntered="#addGenHover" onMouseExited="#addGenHoverOff"
+                               onMousePressed="#addGenClicked" onMouseReleased="#addGenUnclicked" opacity="0.8"
+                               prefHeight="21.0" prefWidth="93.0" style="-fx-background-color: rgba(127,127,127,0.5);">
                            <children>
-                              <Label alignment="CENTER" contentDisplay="CENTER" layoutX="20.0" layoutY="1.0"
-                                     opacity="0.8" prefHeight="17.0" prefWidth="51.0" text="Generate"
-                                     textAlignment="CENTER" textFill="WHITE"/>
+                               <Label alignment="CENTER" contentDisplay="CENTER" layoutX="20.0" layoutY="1.0"
+                                      opacity="0.8" prefHeight="17.0" prefWidth="51.0" text="Generate"
+                                      textAlignment="CENTER" textFill="WHITE"/>
                            </children>
                         </Pane>
-                        <TextField focusTraversable="false" layoutX="110.0" layoutY="271.0" opacity="0.3"
-                                   promptText="Password"/>
-                        <Pane id="generateAddPanel" fx:id="addManagePanel" layoutX="367.0" layoutY="305.0"
-                              onMouseEntered="#addManHover" onMouseExited="#addManHoverOff"
-                              onMousePressed="#addManClicked" onMouseReleased="#addManUnclicked" opacity="0.8"
-                              prefHeight="21.0" prefWidth="93.0" style="-fx-background-color: rgba(127,127,127,0.5);">
+                         <TextField focusTraversable="false" layoutX="110.0" layoutY="271.0" opacity="0.3"
+                                    promptText="Password"/>
+                         <Pane id="generateAddPanel" fx:id="addManagePanel" layoutX="367.0" layoutY="305.0"
+                               onMouseEntered="#addManHover" onMouseExited="#addManHoverOff"
+                               onMousePressed="#addManClicked" onMouseReleased="#addManUnclicked" opacity="0.8"
+                               prefHeight="21.0" prefWidth="93.0" style="-fx-background-color: rgba(127,127,127,0.5);">
                            <children>
-                              <Label alignment="CENTER" contentDisplay="CENTER" layoutX="20.0" layoutY="1.0"
-                                     opacity="0.8" prefHeight="17.0" prefWidth="51.0" text="Manage"
-                                     textAlignment="CENTER" textFill="WHITE"/>
+                               <Label alignment="CENTER" contentDisplay="CENTER" layoutX="20.0" layoutY="1.0"
+                                      opacity="0.8" prefHeight="17.0" prefWidth="51.0" text="Manage"
+                                      textAlignment="CENTER" textFill="WHITE"/>
                            </children>
                         </Pane>
                      </children>
@@ -321,32 +321,32 @@
                         </Pane>
                         <VBox layoutX="129.0" layoutY="297.0" prefHeight="85.0" prefWidth="80.0">
                            <children>
-                              <Label fx:id="rTrans1" opacity="0.6" prefHeight="17.0" prefWidth="79.0" text="None"
-                                     textFill="WHITE">
+                               <Label fx:id="rTrans1" opacity="0.6" prefHeight="17.0" prefWidth="79.0" text="None"
+                                      textFill="WHITE">
                                  <font>
                                     <Font name="System Italic" size="12.0" />
                                  </font>
                               </Label>
-                              <Label fx:id="rTrans2" opacity="0.6" prefHeight="17.0" prefWidth="78.0" text="None"
-                                     textFill="WHITE">
+                               <Label fx:id="rTrans2" opacity="0.6" prefHeight="17.0" prefWidth="78.0" text="None"
+                                      textFill="WHITE">
                                  <font>
                                     <Font name="System Italic" size="12.0" />
                                  </font>
                               </Label>
-                              <Label fx:id="rTrans3" opacity="0.6" prefHeight="17.0" prefWidth="77.0" text="None"
-                                     textFill="WHITE">
+                               <Label fx:id="rTrans3" opacity="0.6" prefHeight="17.0" prefWidth="77.0" text="None"
+                                      textFill="WHITE">
                                  <font>
                                     <Font name="System Italic" size="12.0" />
                                  </font>
                               </Label>
-                              <Label fx:id="rTrans4" opacity="0.6" prefHeight="17.0" prefWidth="78.0" text="None"
-                                     textFill="WHITE">
+                               <Label fx:id="rTrans4" opacity="0.6" prefHeight="17.0" prefWidth="78.0" text="None"
+                                      textFill="WHITE">
                                  <font>
                                     <Font name="System Italic" size="12.0" />
                                  </font>
                               </Label>
-                              <Label fx:id="rTrans5" opacity="0.6" prefHeight="17.0" prefWidth="77.0" text="None"
-                                     textFill="WHITE">
+                               <Label fx:id="rTrans5" opacity="0.6" prefHeight="17.0" prefWidth="77.0" text="None"
+                                      textFill="WHITE">
                                  <font>
                                     <Font name="System Italic" size="12.0" />
                                  </font>
@@ -495,126 +495,129 @@
                         <Label layoutX="383.0" layoutY="280.0" opacity="0.4" text="Message" textFill="WHITE" />
                         <VBox layoutX="220.0" layoutY="298.0" prefHeight="88.0" prefWidth="155.0">
                            <children>
-                              <Label fx:id="rTrans1a" opacity="0.6" prefHeight="17.0" prefWidth="154.0" text="None"
-                                     textFill="WHITE">
+                               <Label fx:id="rTrans1a" opacity="0.6" prefHeight="17.0" prefWidth="154.0" text="None"
+                                      textFill="WHITE">
                                  <font>
-                                    <Font name="System Italic" size="12.0"/>
+                                     <Font name="System Italic" size="12.0"/>
                                  </font>
                               </Label>
-                              <Label fx:id="rTrans2a" opacity="0.6" prefHeight="17.0" prefWidth="155.0" text="None"
-                                     textFill="WHITE">
+                               <Label fx:id="rTrans2a" opacity="0.6" prefHeight="17.0" prefWidth="155.0" text="None"
+                                      textFill="WHITE">
                                  <font>
-                                    <Font name="System Italic" size="12.0"/>
+                                     <Font name="System Italic" size="12.0"/>
                                  </font>
                               </Label>
-                              <Label fx:id="rTrans3a" opacity="0.6" prefHeight="17.0" prefWidth="155.0" text="None"
-                                     textFill="WHITE">
+                               <Label fx:id="rTrans3a" opacity="0.6" prefHeight="17.0" prefWidth="155.0" text="None"
+                                      textFill="WHITE">
                                  <font>
-                                    <Font name="System Italic" size="12.0"/>
+                                     <Font name="System Italic" size="12.0"/>
                                  </font>
                               </Label>
-                              <Label fx:id="rTrans4a" opacity="0.6" prefHeight="17.0" prefWidth="159.0" text="None"
-                                     textFill="WHITE">
+                               <Label fx:id="rTrans4a" opacity="0.6" prefHeight="17.0" prefWidth="159.0" text="None"
+                                      textFill="WHITE">
                                  <font>
-                                    <Font name="System Italic" size="12.0"/>
+                                     <Font name="System Italic" size="12.0"/>
                                  </font>
                               </Label>
-                              <Label fx:id="rTrans5a" opacity="0.6" prefHeight="17.0" prefWidth="157.0" text="None"
-                                     textFill="WHITE">
+                               <Label fx:id="rTrans5a" opacity="0.6" prefHeight="17.0" prefWidth="157.0" text="None"
+                                      textFill="WHITE">
                                  <font>
-                                    <Font name="System Italic" size="12.0"/>
+                                     <Font name="System Italic" size="12.0"/>
                                  </font>
                               </Label>
                            </children>
                         </VBox>
                         <VBox layoutX="376.0" layoutY="298.0" prefHeight="91.0" prefWidth="98.0">
                            <children>
-                              <Label fx:id="rTrans1m" opacity="0.6" prefHeight="17.0" prefWidth="98.0" text="None"
-                                     textFill="WHITE">
+                               <Label fx:id="rTrans1m" opacity="0.6" prefHeight="17.0" prefWidth="98.0" text="None"
+                                      textFill="WHITE">
                                  <font>
-                                    <Font name="System Italic" size="12.0"/>
+                                     <Font name="System Italic" size="12.0"/>
                                  </font>
                               </Label>
-                              <Label fx:id="rTrans2m" opacity="0.6" prefHeight="17.0" prefWidth="97.0" text="None"
-                                     textFill="WHITE">
+                               <Label fx:id="rTrans2m" opacity="0.6" prefHeight="17.0" prefWidth="97.0" text="None"
+                                      textFill="WHITE">
                                  <font>
-                                    <Font name="System Italic" size="12.0"/>
+                                     <Font name="System Italic" size="12.0"/>
                                  </font>
                               </Label>
-                              <Label fx:id="rTrans3m" opacity="0.6" prefHeight="17.0" prefWidth="97.0" text="None"
-                                     textFill="WHITE">
+                               <Label fx:id="rTrans3m" opacity="0.6" prefHeight="17.0" prefWidth="97.0" text="None"
+                                      textFill="WHITE">
                                  <font>
-                                    <Font name="System Italic" size="12.0"/>
+                                     <Font name="System Italic" size="12.0"/>
                                  </font>
                               </Label>
-                              <Label fx:id="rTrans4m" opacity="0.6" prefHeight="17.0" prefWidth="97.0" text="None"
-                                     textFill="WHITE">
+                               <Label fx:id="rTrans4m" opacity="0.6" prefHeight="17.0" prefWidth="97.0" text="None"
+                                      textFill="WHITE">
                                  <font>
-                                    <Font name="System Italic" size="12.0"/>
+                                     <Font name="System Italic" size="12.0"/>
                                  </font>
                               </Label>
-                              <Label fx:id="rTrans5m" opacity="0.6" prefHeight="17.0" prefWidth="97.0" text="None"
-                                     textFill="WHITE">
+                               <Label fx:id="rTrans5m" opacity="0.6" prefHeight="17.0" prefWidth="97.0" text="None"
+                                      textFill="WHITE">
                                  <font>
-                                    <Font name="System Italic" size="12.0"/>
+                                     <Font name="System Italic" size="12.0"/>
                                  </font>
                               </Label>
                            </children>
                         </VBox>
-                        <Pane fx:id="exportPane" layoutX="3.0" layoutY="330.0" onMouseClicked="#exportClicked"
-                              onMouseEntered="#exportHovered" onMouseExited="#exportHoveredOff" opacity="0.5"
-                              prefHeight="17.0" prefWidth="121.0" style="-fx-background-color: gray;">
+                         <Pane fx:id="exportPane" layoutX="3.0" layoutY="330.0" onMouseClicked="#exportClicked"
+                               onMouseEntered="#exportHovered" onMouseExited="#exportHoveredOff" opacity="0.5"
+                               prefHeight="17.0" prefWidth="121.0" style="-fx-background-color: gray;">
                            <children>
-                              <Label layoutY="-3.0" prefHeight="21.0" prefWidth="122.0" text="Export All Transactions"
-                                     textFill="WHITE"/>
+                               <Label layoutY="-3.0" prefHeight="21.0" prefWidth="122.0" text="Export All Transactions"
+                                      textFill="WHITE"/>
                            </children>
                         </Pane>
                      </children></Pane>
-                  <Pane fx:id="miningContentPane" prefHeight="200.0" prefWidth="200.0"
-                        style="-fx-background-color: rgba(0,0,255,0.1);" visible="false">
+                   <Pane fx:id="miningContentPane" prefHeight="200.0" prefWidth="200.0"
+                         style="-fx-background-color: rgba(0,0,255,0.1);" visible="false">
                      <children>
-                        <Pane fx:id="startMiningPane" layoutX="132.0" layoutY="129.0" onMouseEntered="#startMiningHover"
-                              onMouseExited="#startMiningHoverOff" onMousePressed="#startMiningClicked"
-                              onMouseReleased="#startMiningUnclicked" opacity="0.5" prefHeight="65.0" prefWidth="210.0"
-                              style="-fx-background-color: LightGray;">
+                         <Pane fx:id="startMiningPane" layoutX="132.0" layoutY="129.0"
+                               onMouseEntered="#startMiningHover" onMouseExited="#startMiningHoverOff"
+                               onMousePressed="#startMiningClicked" onMouseReleased="#startMiningUnclicked"
+                               opacity="0.5" prefHeight="65.0" prefWidth="210.0"
+                               style="-fx-background-color: LightGray;">
                            <children>
-                              <Label fx:id="startMiningLabel" alignment="CENTER" layoutX="40.0" layoutY="15.0"
-                                     text="Start Mining">
+                               <Label fx:id="startMiningLabel" alignment="CENTER" layoutX="40.0" layoutY="15.0"
+                                      text="Start Mining">
                                  <font>
                                     <Font name="ADAM.CGPRO" size="24.0" />
                                  </font>
                               </Label>
                            </children>
                         </Pane>
-                        <Label fx:id="blocksFound" layoutX="132.0" layoutY="204.0" opacity="0.5" text="Blocks found - "
-                               textFill="WHITE"/>
-                        <Label fx:id="cHashrate" layoutX="132.0" layoutY="221.0" opacity="0.5" text="Current Hashrate -"
-                               textFill="WHITE"/>
-                        <Label fx:id="minHashrate" layoutX="132.0" layoutY="238.0" opacity="0.5" text="Min -"
-                               textFill="WHITE"/>
-                        <Label fx:id="maxHashrate" layoutX="132.0" layoutY="255.0" opacity="0.5" text="Max -"
-                               textFill="WHITE"/>
-                        <Label fx:id="aHashrate" layoutX="132.0" layoutY="272.0" opacity="0.5" text="Average -"
-                               textFill="WHITE"/>
+                         <Label fx:id="blocksFound" layoutX="132.0" layoutY="204.0" opacity="0.5" text="Blocks found - "
+                                textFill="WHITE"/>
+                         <Label fx:id="cHashrate" layoutX="132.0" layoutY="221.0" opacity="0.5"
+                                text="Current Hashrate -" textFill="WHITE"/>
+                         <Label fx:id="minHashrate" layoutX="132.0" layoutY="238.0" opacity="0.5" text="Min -"
+                                textFill="WHITE"/>
+                         <Label fx:id="maxHashrate" layoutX="132.0" layoutY="255.0" opacity="0.5" text="Max -"
+                                textFill="WHITE"/>
+                         <Label fx:id="aHashrate" layoutX="132.0" layoutY="272.0" opacity="0.5" text="Average -"
+                                textFill="WHITE"/>
                      </children></Pane>
                   <Pane fx:id="settingsContentPane" prefHeight="200.0" prefWidth="200.0" style="-fx-background-color: rgba(0,0,255,0.1);" visible="false">
                      <children>
-                        <CheckBox fx:id="debugButton" layoutX="368.0" layoutY="14.0" mnemonicParsing="false"
-                                  opacity="0.5" selected="true" text="Debug Mode" textFill="WHITE"/>
-                        <ListView fx:id="disabledDevList" layoutX="14.0" layoutY="179.0" opacity="0.35"
-                                  prefHeight="122.0" prefWidth="200.0"/>
-                        <ListView fx:id="enabledDevList" layoutX="14.0" layoutY="40.0" opacity="0.35" prefHeight="122.0"
-                                  prefWidth="200.0"/>
-                        <Label layoutX="13.0" layoutY="162.0" opacity="0.5" text="Disabled OpenCL devices"
-                               textFill="WHITE"/>
-                        <Label layoutX="14.0" layoutY="22.0" opacity="0.5" text="Enabled OpenCL Devices"
-                               textFill="WHITE"/>
-                        <Label layoutX="14.0" layoutY="6.0" opacity="0.5" text="Double click to enable/disable device"
-                               textFill="WHITE"/>
+                         <CheckBox fx:id="debugButton" layoutX="368.0" layoutY="14.0" mnemonicParsing="false"
+                                   opacity="0.5" selected="true" text="Debug Mode" textFill="WHITE"/>
+                         <ListView fx:id="disabledDevList" layoutX="14.0" layoutY="179.0" opacity="0.35"
+                                   prefHeight="122.0" prefWidth="200.0"/>
+                         <ListView fx:id="enabledDevList" layoutX="14.0" layoutY="40.0" opacity="0.35"
+                                   prefHeight="122.0" prefWidth="200.0"/>
+                         <Label layoutX="13.0" layoutY="162.0" opacity="0.5" text="Disabled OpenCL devices"
+                                textFill="WHITE"/>
+                         <Label layoutX="14.0" layoutY="22.0" opacity="0.5" text="Enabled OpenCL Devices"
+                                textFill="WHITE"/>
+                         <Label layoutX="14.0" layoutY="6.0" opacity="0.5" text="Double click to enable/disable device"
+                                textFill="WHITE"/>
                      </children></Pane>
                   <Pane fx:id="helpContentPane" prefHeight="200.0" prefWidth="200.0" style="-fx-background-color: rgba(0,0,255,0.1);" visible="false">
                      <children>
-                        <Label layoutX="93.0" layoutY="20.0" opacity="0.5" prefHeight="249.0" prefWidth="285.0" text="&#10;If you encounter an error either email Bryan at the address listed below or submit a ticket on the bitbucket page if you have access. Mining is not enabled for public or private BETA or ALPHA versions&#10;&#10;&#10;Email: bryansharpe@lifeformcapital.com" textAlignment="CENTER" textFill="WHITE" wrapText="true" />
+                         <Label layoutX="93.0" layoutY="20.0" opacity="0.5" prefHeight="249.0" prefWidth="285.0"
+                                text="&#10;If you encounter an error either email Bryan at the address listed below or submit a ticket on the bitbucket page.&#10;&#10;&#10;Email: bryansharpe@lifeformcapital.com"
+                                textAlignment="CENTER" textFill="WHITE" wrapText="true"/>
                         <Hyperlink layoutX="175.0" layoutY="246.0" onAction="#issuesPageLinkClicked" text="Bitbucket Issues Page" />
                         <Label fx:id="versionLabel" alignment="CENTER" layoutX="155.0" layoutY="58.0" opacity="0.5" prefHeight="17.0" prefWidth="167.0" text="Version:" textAlignment="CENTER" textFill="WHITE" />
                      </children></Pane>
@@ -657,15 +660,15 @@
                            </effect>
                         </ImageView>
                         <Pane layoutX="171.0" layoutY="11.0" onMousePressed="#closeClicked" prefHeight="25.0" prefWidth="28.0" />
-                        <Pane id="minimizePane" layoutX="140.0" layoutY="14.0" onMousePressed="#minimizeClicked"
-                              prefHeight="25.0" prefWidth="31.0">
+                         <Pane id="minimizePane" layoutX="140.0" layoutY="14.0" onMousePressed="#minimizeClicked"
+                               prefHeight="25.0" prefWidth="31.0">
                            <children>
                               <ImageView fitHeight="26.0" fitWidth="29.0" layoutX="3.0" layoutY="5.0" opacity="0.7">
                                  <image>
-                                    <Image url="@minimize.png"/>
+                                     <Image url="@minimize.png"/>
                                  </image>
                                  <effect>
-                                    <Glow level="1.0"/>
+                                     <Glow level="1.0"/>
                                  </effect>
                               </ImageView>
                            </children>

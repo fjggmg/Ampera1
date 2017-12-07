@@ -37,7 +37,7 @@ public class MinerManager implements IMinerMan{
 
             }
             JOCLContextAndCommandQueue.setWorkaround(false);
-            JOCLDevices.setDeviceFilter(JOCLConstants.ALL_DEVICES);
+            //JOCLDevices.setDeviceFilter(JOCLConstants.ALL_DEVICES);
             platforms = new ContextMaster();
             ocls = GPUMiner.init(ki);
             for (DeviceContext jcacq : platforms.getContexts()) {

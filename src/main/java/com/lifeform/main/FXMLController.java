@@ -445,7 +445,7 @@ public class FXMLController {
                     }
                 }
                 JOCLContextAndCommandQueue.setWorkaround(false);
-                JOCLDevices.setDeviceFilter(JOCLConstants.ALL_DEVICES);
+                //JOCLDevices.setDeviceFilter(JOCLConstants.ALL_DEVICES);
 
                 ContextMaster jm = new ContextMaster();
                 for (DeviceContext dev : jm.getContexts()) {

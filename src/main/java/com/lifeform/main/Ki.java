@@ -51,7 +51,7 @@ public class Ki extends Thread implements IKi {
     private IKi ki = this;
     private boolean run = true;
     //TODO: need to start saving version number to file for future conversion of files
-    public static final String VERSION = "0.14.10-BETA";
+    public static final String VERSION = "0.14.11-BETA";
     private boolean relay = false;
     private FXMLController guiHook;
     public static boolean debug = true;
@@ -60,6 +60,7 @@ public class Ki extends Thread implements IKi {
 
     public Ki(Options o) {
         JOCLContextAndCommandQueue.setWorkaround(true);
+        JOCLContextAndCommandQueue.noIntel = true;
         ih = new InputHandler(this);
         ih.start();
         this.o = o;

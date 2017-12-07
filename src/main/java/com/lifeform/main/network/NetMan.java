@@ -13,10 +13,10 @@ public class NetMan extends Thread implements INetworkManager {
     private boolean isRelay;
     public static final int PORT = 29555;
     public boolean live = false;
-    Set<IConnectionManager> connections = new HashSet<>();
-    Map<String,IConnectionManager> connMap = new HashMap<>();
-    Map<String,Client> clientMap = new HashMap<>();
-    List<Client> clients = new ArrayList<>();
+    volatile Set<IConnectionManager> connections = new HashSet<>();
+    volatile Map<String, IConnectionManager> connMap = new HashMap<>();
+    volatile Map<String, Client> clientMap = new HashMap<>();
+    volatile List<Client> clients = new ArrayList<>();
     public NetMan(IKi ki,boolean isRelay)
     {
         this.ki = ki;
