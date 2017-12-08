@@ -32,20 +32,23 @@ public class MinerManager implements IMinerMan{
         try {
 
             ContextMaster platforms = new ContextMaster();
+            int i = 0;
             for (DeviceContext jcacq : platforms.getContexts()) {
-                devNames.add(jcacq.getDInfo().getDeviceName());
-
+                devNames.add(jcacq.getDInfo().getDeviceName() + " #" + i);
+                i++;
             }
-            JOCLContextAndCommandQueue.setWorkaround(false);
+            //JOCLContextAndCommandQueue.setWorkaround(false);
             //JOCLDevices.setDeviceFilter(JOCLConstants.ALL_DEVICES);
-            platforms = new ContextMaster();
+            //platforms = new ContextMaster();
             ocls = GPUMiner.init(ki);
-            for (DeviceContext jcacq : platforms.getContexts()) {
+            //since we stopped using CPUs, we don't need this next part anymore
+            /*for (DeviceContext jcacq : platforms.getContexts()) {
 
                 if (!devNames.contains(jcacq.getDInfo().getDeviceName())) {
                     disabledDevNames.add(jcacq.getDInfo().getDeviceName());
                 }
-            }
+            }*/
+
         } catch (Exception e) {
             e.printStackTrace();
             ki.debug("Message: " + e.getMessage());
@@ -180,7 +183,7 @@ public class MinerManager implements IMinerMan{
                 }
 
                 for (int i = 0; i < ocls; i++) {
-                    GPUMiner miner = new GPUMiner(ki);
+                    GPUMiner miner = new GPUMiner(ki, i);
                     miner.setup(i);
                     miner.setName("Miner#" + i);
                     gpuMiners.add(miner);

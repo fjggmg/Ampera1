@@ -444,15 +444,16 @@ public class FXMLController {
                         enabledDevices.add(dev);
                     }
                 }
-                JOCLContextAndCommandQueue.setWorkaround(false);
+                //JOCLContextAndCommandQueue.setWorkaround(false);
                 //JOCLDevices.setDeviceFilter(JOCLConstants.ALL_DEVICES);
-
+                /* don't need this part now that we don't use CPUs
                 ContextMaster jm = new ContextMaster();
                 for (DeviceContext dev : jm.getContexts()) {
                     if (!enabledDevices.contains(dev.getDInfo().getDeviceName())) {
                         disabledDevices.add(dev.getDInfo().getDeviceName());
                     }
                 }
+                */
 
                 enabledDevList.setOnMouseClicked(new EventHandler<MouseEvent>() {
                     @Override

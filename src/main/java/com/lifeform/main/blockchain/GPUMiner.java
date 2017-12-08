@@ -23,11 +23,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.jocl.CL.CL_DEVICE_TYPE_GPU;
+import static org.jocl.CL.stringFor_cl_device_address_info;
 
 public class GPUMiner extends Thread implements IMiner {
 
     private IKi ki;
-
+    private int index;
     public static volatile boolean mining = false;
 
     private SHA3Miner miner;
@@ -82,10 +83,11 @@ public class GPUMiner extends Thread implements IMiner {
             difficulty[p] = ki.getChainMan().getCurrentDifficulty().toByteArray()[i];
             p--;
         }
-
+        int i = 0;
         for (DeviceContext jcaq : jcacqs) {
             SHA3Miner miner = new SHA3Miner(jcaq, difficulty, null, Autotune.getAtSettingsMap().get(jcaq.getDInfo().getDeviceName()).kernelType);
             gpuMiners.add(miner);
+            i++;
 
         }
 
@@ -95,8 +97,9 @@ public class GPUMiner extends Thread implements IMiner {
 
     private long hashrate = -1;
 
-    public GPUMiner(IKi ki) {
+    public GPUMiner(IKi ki, int index) {
         this.ki = ki;
+        this.devName = devName + " #" + index;
     }
 
     private long lastPrint = System.currentTimeMillis();
@@ -228,8 +231,8 @@ public class GPUMiner extends Thread implements IMiner {
     public void setup(int index) {
         miner = gpuMiners.get(index);
         jcacq = jcacqs_.get(index);
-        devName = jcacq.getDInfo().getDeviceName();
-        disabled = !ki.getMinerMan().getDevNames().contains(jcacq.getDInfo().getDeviceName());
+        devName = jcacq.getDInfo().getDeviceName() + " #" + index;
+        disabled = !ki.getMinerMan().getDevNames().contains(devName);
     }
 
     private void sendBlock(Block b) {
