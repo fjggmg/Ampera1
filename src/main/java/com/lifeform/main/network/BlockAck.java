@@ -21,6 +21,7 @@ public class BlockAck implements Serializable,Packet {
             {
                 pg.doneDownloading = true;
                 connMan.doneDownloading();
+                connMan.sendPacket(new DoneDownloading());
             }
         }
     }
