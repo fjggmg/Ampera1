@@ -26,5 +26,7 @@ public interface INetworkManager {
 
     void setLive(boolean live);
 
+    void addRelays(List<String> relays);
+
 
 }

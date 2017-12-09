@@ -33,4 +33,8 @@ public abstract class IConnectionManager{
 
     public abstract void setCurrentLatency(long latency);
 
+    public abstract long uptime();
+
+    public abstract void setStartTime(long startTime);
+
 }

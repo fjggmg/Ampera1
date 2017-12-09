@@ -49,6 +49,7 @@ public class Main {
             if (s.equals("-dump")) o.dump = true;
             if (s.equals("-rebuild")) o.rebuild = true;
             if (s.equals("-pd")) o.pDebug = true;
+            if (s.equals("-lite")) o.lite = true;
 
         }
         return o;

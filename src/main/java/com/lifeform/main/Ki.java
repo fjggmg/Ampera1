@@ -9,6 +9,7 @@ import com.lifeform.main.network.Handshake;
 import com.lifeform.main.network.INetworkManager;
 import com.lifeform.main.network.NetMan;
 import com.lifeform.main.transactions.*;
+import com.sun.net.httpserver.Filter;
 import gpuminer.JOCL.context.JOCLContextAndCommandQueue;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.Logger;
@@ -44,14 +45,14 @@ public class Ki extends Thread implements IKi {
     private LogMan logMan;
     private Logger main;
     private INetworkManager netMan;
-    private ChainManager chainMan;
+    private IChainMan chainMan;
     private ITransMan transMan;
     private EncryptionManager encMan;
     private IAddMan addMan;
     private IKi ki = this;
     private boolean run = true;
     //TODO: need to start saving version number to file for future conversion of files
-    public static final String VERSION = "0.15.2-BETA";
+    public static final String VERSION = "0.15.3-BETA";
     private boolean relay = false;
     private FXMLController guiHook;
     public static boolean debug = true;
@@ -70,11 +71,19 @@ public class Ki extends Thread implements IKi {
 
         main = logMan.createLogger("Main", "console", Level.DEBUG);
         main.info("Ki starting up");
-        chainMan = new ChainManager(this, (o.testNet) ? ChainManager.TEST_NET : ChainManager.POW_CHAIN, "blocks/", "chain.state", "transaction.meta", "extra.chains", "chain.meta", o.bDebug);
+        if (o.lite) {
+            chainMan = new ChainManagerLite(this, (o.testNet) ? ChainManager.TEST_NET : ChainManager.POW_CHAIN);
+        } else {
+            chainMan = new ChainManager(this, (o.testNet) ? ChainManager.TEST_NET : ChainManager.POW_CHAIN, "blocks/", "chain.state", "transaction.meta", "extra.chains", "chain.meta", o.bDebug);
+        }
         Handshake.CHAIN_VER = (o.testNet) ? ChainManager.TEST_NET : ChainManager.POW_CHAIN;
         chainMan.loadChain();
         getMainLog().info("Chain loaded. Current height: " + chainMan.currentHeight());
-        transMan = new TransactionManager(this, o.dump);
+        if (o.lite) {
+            transMan = new TransactionManagerLite(this);
+        } else {
+            transMan = new TransactionManager(this, o.dump);
+        }
         encMan = new EncryptionManager(this);
         EncryptionManager.initStatic();
 

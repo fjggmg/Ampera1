@@ -58,7 +58,7 @@ public class BlockEnd implements Serializable, Packet {
                     ki.debug("Block data unavailable");
                 }
             }
-            if (block.height.compareTo(ki.getChainMan().currentHeight().add(BigInteger.ONE)) == 0) {
+            if (block.height.compareTo(ki.getChainMan().currentHeight().add(BigInteger.ONE)) == 0 || ki.getOptions().lite) {
                 ki.debug("Verifying block");
                 BlockState state = ki.getChainMan().addBlock(block);
                 if (state.retry()) {

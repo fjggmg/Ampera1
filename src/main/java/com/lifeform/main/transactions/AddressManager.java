@@ -187,4 +187,14 @@ public class AddressManager implements IAddMan {
         addresses.add(a);
         save();
     }
+
+    @Override
+    public List<Address> getAll() {
+        List<Address> all = new ArrayList<>();
+        all.addAll(inactive);
+        all.addAll(addresses);
+        all.add(main);
+        return all;
+
+    }
 }

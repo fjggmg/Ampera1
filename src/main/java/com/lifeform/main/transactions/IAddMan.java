@@ -19,4 +19,6 @@ public interface IAddMan {
     String getEntropyForAdd(Address a);
     void setMainAdd(Address a);
 
+    List<Address> getAll();
+
 }

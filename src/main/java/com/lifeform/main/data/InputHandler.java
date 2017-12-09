@@ -53,6 +53,18 @@ public class InputHandler extends Thread {
                         ki.getMainLog().info("Connection #" + i);
                         ki.getMainLog().info("Status: " + ((conn.isConnected()) ? "Connected" : "Disconnected"));
                         if (conn.isConnected()) {
+                            long uptime = conn.uptime();
+                            long days = uptime / 86400000;
+                            uptime -= days * 8640000;
+                            long hours = uptime / 3600000;
+                            uptime -= hours * 3600000;
+                            long minutes = uptime / 60000;
+                            uptime -= minutes * 60000;
+                            long seconds = uptime / 1000;
+                            uptime -= seconds * 1000;
+                            long milliseconds = uptime;
+
+                            ki.getMainLog().info("Uptime: " + days + "D " + hours + "H " + seconds + "S " + milliseconds + "ms");
                             ki.getNetMan().setLive(false);
 
 

@@ -1,6 +1,7 @@
 package com.lifeform.main.network;
 
 import com.lifeform.main.IKi;
+import com.lifeform.main.data.EncryptionManager;
 import com.lifeform.main.transactions.ITrans;
 
 import java.io.Serializable;
@@ -19,6 +20,7 @@ public class Handshake implements Serializable, Packet {
     String mostRecentBlock;
     short chainVer;
     boolean isRelay;
+    long startTime;
 
     @Override
     public void process(IKi ki, IConnectionManager connMan, PacketGlobal pg) {
@@ -40,7 +42,7 @@ public class Handshake implements Serializable, Packet {
             connMan.disconnect();
             return;
         }
-        if (ID.equals(ki.getEncryptMan().getPublicKeyString())) {
+        if (ID.equals(EncryptionManager.sha224(ki.getEncryptMan().getPublicKeyString() + startTime))) {
             ki.debug("Connected to ourself, disconnecting");
             connMan.disconnect();
             return;
@@ -48,7 +50,13 @@ public class Handshake implements Serializable, Packet {
 
         connMan.setID(ID);
         ki.getNetMan().connectionInit(ID, connMan);
-
+        if (ki.getOptions().lite) {
+            TransactionDataRequest tdr = new TransactionDataRequest();
+            tdr.addresses = ki.getAddMan().getAll();
+            connMan.sendPacket(tdr);
+            DifficultyRequest dr = new DifficultyRequest();
+            connMan.sendPacket(dr);
+        }
         if (isRelay) {
             if (pg.relays == null) pg.relays = new ArrayList<>();
             pg.relays.add(connMan.getAddress());
@@ -85,8 +93,9 @@ public class Handshake implements Serializable, Packet {
             }
         if (ki.getChainMan().currentHeight().compareTo(currentHeight) < 0) {
             ki.debug("Requesting blocks we're missing from the network");
-            pg.doneDownloading = true;
+            //pg.doneDownloading = true;
             BlockRequest br = new BlockRequest();
+            br.lite = ki.getOptions().lite;
             br.fromHeight = ki.getChainMan().currentHeight();
             connMan.sendPacket(br);
         } else if (ki.getChainMan().currentHeight().compareTo(BigInteger.ZERO) > 0 && !ki.getChainMan().getByHeight(ki.getChainMan().currentHeight()).ID.equals(mostRecentBlock)) {

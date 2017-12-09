@@ -1,6 +1,8 @@
 package com.lifeform.main.network;
 
 import com.lifeform.main.IKi;
+import com.lifeform.main.data.JSONManager;
+import com.lifeform.main.data.files.StringFileHandler;
 import com.lifeform.main.network.logic.Client;
 import com.lifeform.main.network.logic.Server;
 import java.util.*;
@@ -8,7 +10,7 @@ import java.util.*;
 public class NetMan extends Thread implements INetworkManager {
 
     public static final String[] bootstrap = {"73.108.51.16","221.0.236.161","75.74.67.19"};
-    public static final String NET_VER = "2.0.5";
+    public static final String NET_VER = "2.0.6";
     private IKi ki;
     private boolean isRelay;
     public static final int PORT = 29555;
@@ -17,10 +19,16 @@ public class NetMan extends Thread implements INetworkManager {
     volatile Map<String, IConnectionManager> connMap = new HashMap<>();
     volatile Map<String, Client> clientMap = new HashMap<>();
     volatile List<Client> clients = new ArrayList<>();
+    private volatile List<String> relays = new ArrayList<>();
+    private StringFileHandler rList;
     public NetMan(IKi ki,boolean isRelay)
     {
         this.ki = ki;
         this.isRelay = isRelay;
+        rList = new StringFileHandler(ki, "relays.json");
+        if (rList.getLines() != null && rList.getLine(0) != null && !rList.getLine(0).isEmpty()) {
+            relays = JSONManager.parseJSONToList(rList.getLine(0));
+        }
         //Log.set(Log.LEVEL_TRACE);
     }
 
@@ -32,6 +40,15 @@ public class NetMan extends Thread implements INetworkManager {
     @Override
     public void setLive(boolean live) {
         this.live = live;
+    }
+
+    @Override
+    public void addRelays(List<String> relays) {
+        for (String relay : relays) {
+            if (!this.relays.contains(relay))
+                this.relays.add(relay);
+        }
+        rList.replaceLine(0, JSONManager.parseListToJSON(this.relays).toJSONString());
     }
 
     @Override
@@ -91,9 +108,16 @@ public class NetMan extends Thread implements INetworkManager {
             t.start();
 
         }
-        for(String ip:bootstrap) {
+        if (!relays.isEmpty()) {
+            for (String ip : relays) {
+                attemptConnect(ip);
+            }
+        }
+        if (connections.size() < 4) {
+            for (String ip : bootstrap) {
 
-            attemptConnect(ip);
+                attemptConnect(ip);
+            }
         }
     }
 

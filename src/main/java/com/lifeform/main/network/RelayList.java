@@ -11,6 +11,7 @@ public class RelayList implements Serializable, Packet {
     @Override
     public void process(IKi ki, IConnectionManager connMan, PacketGlobal pg) {
         pg.relays = relays;
+        ki.getNetMan().addRelays(relays);
         if (ki.getNetMan().getConnections().size() < 4) {
             for (String IP : relays) {
                 ki.getNetMan().attemptConnect(IP);

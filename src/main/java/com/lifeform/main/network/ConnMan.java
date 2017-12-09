@@ -1,6 +1,7 @@
 package com.lifeform.main.network;
 
 import com.lifeform.main.IKi;
+import com.lifeform.main.data.EncryptionManager;
 import com.lifeform.main.network.logic.INetworkEndpoint;
 import java.math.BigInteger;
 
@@ -12,6 +13,7 @@ public class ConnMan extends IConnectionManager {
     private String ID;
     private INetworkEndpoint endpoint;
     private long currentLatency;
+    private long startTime;
     public ConnMan(IKi ki, boolean isRelay, INetworkEndpoint endpoint, IPacketProcessor pp)
     {
         this(ki,isRelay,endpoint);
@@ -64,8 +66,9 @@ public class ConnMan extends IConnectionManager {
         //sendPacket("This is a test 5");
         Handshake hs = new Handshake();
         hs.isRelay = isRelay;
+        hs.startTime = System.currentTimeMillis();
         hs.currentHeight = ki.getChainMan().currentHeight();
-        hs.ID = ki.getEncryptMan().getPublicKeyString();
+        hs.ID = EncryptionManager.sha224(ki.getEncryptMan().getPublicKeyString() + hs.startTime);
         if(ki.getChainMan().currentHeight().compareTo(BigInteger.ZERO) > 0)
             hs.mostRecentBlock = ki.getChainMan().getByHeight(ki.getChainMan().currentHeight()).ID;
         else
@@ -89,6 +92,16 @@ public class ConnMan extends IConnectionManager {
     @Override
     public void setCurrentLatency(long latency) {
         currentLatency = latency;
+    }
+
+    @Override
+    public long uptime() {
+        return System.currentTimeMillis() - startTime;
+    }
+
+    @Override
+    public void setStartTime(long startTime) {
+        this.startTime = startTime;
     }
 
     @Override
