@@ -95,7 +95,8 @@ public class MinerManager implements IMinerMan{
     public long cumulativeHashrate() {
         long rate = 0;
         for (String dev : hashrates.keySet()) {
-            rate += hashrates.get(dev);
+            if (!disabledDevNames.contains(dev))
+                rate += hashrates.get(dev);
         }
         return rate;
     }

@@ -11,6 +11,7 @@ public class Pong implements Serializable, Packet {
 
         connMan.setCurrentLatency(latency);
         ki.getNetMan().setLive(true);
+
     }
 
     @Override

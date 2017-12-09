@@ -51,7 +51,7 @@ public class Ki extends Thread implements IKi {
     private IKi ki = this;
     private boolean run = true;
     //TODO: need to start saving version number to file for future conversion of files
-    public static final String VERSION = "0.15.0-BETA";
+    public static final String VERSION = "0.15.1-BETA";
     private boolean relay = false;
     private FXMLController guiHook;
     public static boolean debug = true;
@@ -104,7 +104,8 @@ public class Ki extends Thread implements IKi {
             }
         }
 
-        minerMan = new MinerManager(this, o.mDebug);
+        if (!o.relay)
+            minerMan = new MinerManager(this, o.mDebug);
 
         netMan = new NetMan(this, o.relay);
         netMan.start();
@@ -130,7 +131,7 @@ public class Ki extends Thread implements IKi {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            if (!setupDone) {
+            if (!setupDone && !o.relay) {
                 minerMan.setup();
                 setupDone = true;
             }

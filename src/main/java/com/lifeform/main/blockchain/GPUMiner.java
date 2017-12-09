@@ -112,11 +112,12 @@ public class GPUMiner extends Thread implements IMiner {
     public GPUMiner(IKi ki, int index) {
         this.ki = ki;
         this.devName = devName + " #" + index;
+        threadCount = Autotune.getAtSettingsMap().get(jcacq.getDInfo().getDeviceName()).threadFactor;
     }
 
     private long lastPrint = System.currentTimeMillis();
     private DecimalFormat format = new DecimalFormat("###,###,###,###");
-
+    private int threadCount;
 
     @Override
     public void run() {
@@ -134,7 +135,7 @@ public class GPUMiner extends Thread implements IMiner {
                 byte[] message = b.gpuHeader();
 
 
-                int threadCount = Autotune.getAtSettingsMap().get(jcacq.getDInfo().getDeviceName()).threadFactor;
+
                 //Six preceding zeroes on the difficulty is hard enough that the miner is likely to be able to time its hashrate.
 
                 byte[] difficulty = new byte[64];
@@ -163,7 +164,8 @@ public class GPUMiner extends Thread implements IMiner {
                                 ki.debug("Current hashrate on device: " + devName + " is " + hashrate + " hashes/second");
                                 lastPrint = System.currentTimeMillis();
                             }
-                            ki.getMinerMan().setHashrate(devName, hashrate);
+                            if (System.currentTimeMillis() % 1000 == 0)
+                                ki.getMinerMan().setHashrate(devName, hashrate);
                         }
                     }
 

@@ -48,13 +48,14 @@ public class InputHandler extends Thread {
                     for (IConnectionManager conn : ki.getNetMan().getConnections()) {
                         Ping ping = new Ping();
                         ping.currentTime = System.currentTimeMillis();
+                        long currentTime = System.currentTimeMillis();
                         conn.sendPacket(ping);
                         ki.getMainLog().info("Connection #" + i);
                         ki.getMainLog().info("Status: " + ((conn.isConnected()) ? "Connected" : "Disconnected"));
                         if (conn.isConnected()) {
                             ki.getNetMan().setLive(false);
 
-                            long currentTime = System.currentTimeMillis();
+
                             boolean over5k = false;
                             while (!ki.getNetMan().live()) {
                                 try {
@@ -68,7 +69,7 @@ public class InputHandler extends Thread {
                                 }
                             }
                             if (!over5k)
-                                ki.getMainLog().info("Current latency: " + conn.currentLatency());
+                                ki.getMainLog().info("Current latency: " + (System.currentTimeMillis() - currentTime));
                             else
                                 ki.getMainLog().info("Current latency is over 5,000");
                         }
