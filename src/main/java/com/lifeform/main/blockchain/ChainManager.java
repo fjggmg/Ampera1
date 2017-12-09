@@ -424,7 +424,7 @@ public class ChainManager implements IChainMan {
 
         //currentDifficulty = currentDifficulty.multiply((BigInteger.valueOf(System.currentTimeMillis() - (currentHeight.intValueExact() * 300000L)).multiply(BigInteger.valueOf(100L))).divide(BigInteger.valueOf(GENESIS_DAY))).divide(BigInteger.valueOf(100L));
         ki.getMainLog().info("New Difficulty: " + Utils.toHexArray(currentDifficulty.toByteArray()));
-        if (ki.getMinerMan().miningCompatible() && ki.getOptions().mining) {
+        if (ki.getMinerMan() != null && ki.getMinerMan().miningCompatible() && ki.getOptions().mining) {
             boolean isMining = false;
             if (ki.getMinerMan().isMining()) {
                 ki.getMinerMan().stopMiners();

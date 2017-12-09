@@ -114,8 +114,11 @@ public class ChainManagerLite implements IChainMan {
         }
         BlockState bs = softVerifyBlock(b);
         if (bs.success()) {
-            if (formEmptyBlock().height.mod(BigInteger.valueOf(1000)).compareTo(BigInteger.ZERO) == 0) {
+            if (b.height.mod(BigInteger.valueOf(1000)).compareTo(BigInteger.ZERO) == 0) {
                 ki.getNetMan().broadcast(new DifficultyRequest());
+            }
+            if (b.solver.equals(ki.getEncryptMan().getPublicKeyString())) {
+                ki.getGUIHook().blockFound();
             }
             for (String trans : b.getTransactionKeys()) {
                 boolean add = false;
