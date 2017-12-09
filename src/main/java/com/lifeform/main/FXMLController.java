@@ -64,6 +64,8 @@ public class FXMLController {
     @FXML
     public Label startMiningLabel;
     private volatile int blocksFoundInt = 0;
+
+    private BigInteger latestBlock = BigInteger.ZERO;
     private IKi ki;
     private StringFileHandler guiData;
     private Map<String, String> guiMap = new HashMap<>();
@@ -84,6 +86,9 @@ public class FXMLController {
                         for (String trans : transactions) {
                             this.transactions.add(Transaction.fromJSON(trans));
                         }
+                }
+                if (guiMap.get("latest") != null) {
+                    latestBlock = new BigInteger(guiMap.get("latest"));
                 }
                 if (guiMap.get("heightMap") != null) {
                     heightMap = JSONManager.parseJSONtoMap(guiMap.get("heightMap"));
@@ -162,10 +167,14 @@ public class FXMLController {
     }
 
     public void blockFound() {
-        blocksFoundInt++;
-        guiMap.put("blocksFound", "" + blocksFoundInt);
-        guiData.replaceLine(0, JSONManager.parseMapToJSON(guiMap).toJSONString());
-        guiData.save();
+        if (ki.getChainMan().currentHeight().compareTo(latestBlock) > 0) {
+            blocksFoundInt++;
+            latestBlock = ki.getChainMan().currentHeight();
+            guiMap.put("blocksFound", "" + blocksFoundInt);
+            guiMap.put("latest", latestBlock.toString());
+            guiData.replaceLine(0, JSONManager.parseMapToJSON(guiMap).toJSONString());
+            guiData.save();
+        }
     }
 
     //TODO why are these public?
