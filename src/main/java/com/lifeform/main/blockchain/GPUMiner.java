@@ -38,10 +38,21 @@ public class GPUMiner extends Thread implements IMiner {
     private static volatile boolean autotuneDone = false;
     private static volatile boolean stopAutotune = false;
     private static volatile boolean triedNoCPU = false;
+    public static ContextMaster platforms = new ContextMaster();
 
     public static int init(IKi ki) throws MiningIncompatibleException {
+        //You have to shut these down when you're done with them.
+        for (SHA3Miner m : gpuMiners) {
+            //This takes the place of stopAndClear() for putting the SHA3Miner and its SHA3MinerThread object in an unrecoverable state.
+            //It will completely kill the thread that interacts with the GPU.
+            m.shutdown();
+        }
         gpuMiners.clear();
-        ContextMaster platforms = new ContextMaster();
+        //Gotta shut this down, too, and after the SHA3Miner objects are shut down.
+        if (platforms != null) {
+            platforms.shutdown();
+        }
+        platforms = new ContextMaster();
         List<DeviceContext> jcacqs = platforms.getContexts();
         final Thread t = new Thread() {
 
@@ -85,7 +96,8 @@ public class GPUMiner extends Thread implements IMiner {
         }
         int i = 0;
         for (DeviceContext jcaq : jcacqs) {
-            SHA3Miner miner = new SHA3Miner(jcaq, difficulty, null, Autotune.getAtSettingsMap().get(jcaq.getDInfo().getDeviceName()).kernelType);
+            int threadCount = Autotune.getAtSettingsMap().get(jcaq.getDInfo().getDeviceName()).threadFactor;
+            SHA3Miner miner = new SHA3Miner(jcaq, difficulty, null, threadCount, Autotune.getAtSettingsMap().get(jcaq.getDInfo().getDeviceName()).kernelType);
             gpuMiners.add(miner);
             i++;
 
@@ -104,9 +116,13 @@ public class GPUMiner extends Thread implements IMiner {
 
     private long lastPrint = System.currentTimeMillis();
     private DecimalFormat format = new DecimalFormat("###,###,###,###");
+
+
     @Override
     public void run() {
+        boolean hasPrinted = false;
         if (disabled) return;
+        ki.debug("Attempting to start mining on OpenCL device: " + jcacq.getDInfo().getDeviceName());
         while (mining) {
             if (mining) {
                 Block b = ki.getChainMan().formEmptyBlock();
@@ -127,12 +143,15 @@ public class GPUMiner extends Thread implements IMiner {
                     difficulty[p] = ki.getChainMan().getCurrentDifficulty().toByteArray()[i];
                     p--;
                 }
+                if (!hasPrinted) {
+                    ki.debug("Successfully started mining on device: " + devName);
+                    hasPrinted = true;
+                }
                 ki.debug("Current difficulty is: " + Utils.toHexArray(difficulty));
-                ki.debug("Attempting to start mining on OpenCL device: " + jcacq.getDInfo().getDeviceName());
+
 
                 //And if you have data ready for it you can start mining right away.
-                if (miner.startMining(message, threadCount, difficulty)) {
-                    ki.debug("Started mining on OpenCL device: " + jcacq.getDInfo().getDeviceName());
+                miner.resumeMining(message);
 
                     //It will take a while to mine, so whatever thread is using the miner object will need to wait for it to finish.
                     while (miner.isMining() && mining) //Any conditions on when to stop mining go in here with miner.hasMiningThread(). You can also stop mining with miner.stopAndClear() from another thread if that thread has a reference to the SHA3Miner object.
@@ -148,7 +167,7 @@ public class GPUMiner extends Thread implements IMiner {
                         }
                     }
 
-                    ki.debug("Mining on OpenCL device: " + jcacq.getDInfo().getDeviceName() + " has stopped.");
+
 
                 /*old diagnostics
                 if (miner.queryDiagnosticDifficulty() != null) {
@@ -167,6 +186,7 @@ public class GPUMiner extends Thread implements IMiner {
                     //If the miner hasn't found a winning seeded message this will return null, so you need to check for that.
                     if (miner.getPayloads() != null) {
 
+                        ki.debug("Mining on OpenCL device: " + jcacq.getDInfo().getDeviceName() + " has stopped.");
                         ki.debug("Found a block, sending to network");
 
                         if (miner.getHashesPerSecond() != -1) {
@@ -200,24 +220,24 @@ public class GPUMiner extends Thread implements IMiner {
                             mining = false;
                         } else if (ki.getChainMan().getCurrentDifficulty().compareTo(new BigInteger(Utils.fromBase64(b.ID))) < 0) {
                             ki.debug("FOUND AN ERROR ON OPENCL DEVICE: " + jcacq.getDInfo().getDeviceName());
-                            miner.stopAndClear();
+
                             run();
                         } else {
                             ki.debug("An error was found with the block verification. Block will not be sent to the network");
-                            miner.stopAndClear();
+
                             run();
                         }
                     }
-                    miner.stopAndClear();
-                }
-                //If you're ever going to send the miner to the GC, you need to call this first.
+
             }
+                //If you're ever going to send the miner to the GC, you need to call this first.
+
         }
     }
 
     @Override
     public void interrupt() {
-        miner.stopAndClear();
+        miner.pauseMining();
         super.interrupt();
     }
 

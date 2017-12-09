@@ -8,7 +8,7 @@ import java.util.*;
 public class NetMan extends Thread implements INetworkManager {
 
     public static final String[] bootstrap = {"73.108.51.16","221.0.236.161","75.74.67.19"};
-    public static final String NET_VER = "2.0.4";
+    public static final String NET_VER = "2.0.5";
     private IKi ki;
     private boolean isRelay;
     public static final int PORT = 29555;
@@ -47,22 +47,24 @@ public class NetMan extends Thread implements INetworkManager {
 
     @Override
     public void attemptConnect(final String IP) {
-        new Thread() {
+        Thread t = new Thread() {
 
             public void run() {
                 setName("client:" + IP);
                 Client client = new Client(ki, IP, PORT);
                 IConnectionManager connMan = new ConnMan(ki, isRelay, client);
                 connections.add(connMan);
-                try
-                {
+                try {
                     client.start(connMan);
                 } catch (Exception e)
                 {
+                    ki.debug("Client stopped, error follows: ");
                     e.printStackTrace();
                 }
             }
-        }.start();
+        };
+        threads.add(t);
+        t.start();
     }
 
     private List<Thread> threads = new ArrayList<>();
@@ -90,25 +92,8 @@ public class NetMan extends Thread implements INetworkManager {
 
         }
         for(String ip:bootstrap) {
-            Thread t = new Thread() {
 
-                public void run() {
-                    setName("client:" + ip);
-                    Client client = new Client(ki, ip, PORT);
-                    IConnectionManager connMan = new ConnMan(ki, isRelay, client);
-                    connections.add(connMan);
-                    try {
-                        client.start(connMan);
-                    } catch (Exception e)
-                    {
-                        ki.debug("Client stopped, error follows: ");
-                        e.printStackTrace();
-                    }
-                }
-            };
-            threads.add(t);
-            t.start();
-
+            attemptConnect(ip);
         }
     }
 
@@ -124,10 +109,27 @@ public class NetMan extends Thread implements INetworkManager {
         return connections;
     }
 
+    List<Integer> nullConns = new ArrayList<>();
     @Override
     public void broadcast(Object o) {
+        nullConns.clear();
         if (ki.getOptions().pDebug)
             ki.debug("Beginning broadcast");
+        if (connections.isEmpty()) {
+            if (ki.getOptions().pDebug)
+                ki.debug("Connections empty, attempting reconnect");
+            for (String ip : bootstrap) {
+                attemptConnect(ip);
+            }
+            try {
+                sleep(200);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            broadcast(o);
+        }
+
+        int i = 0;
         for(IConnectionManager connMan:connections)
         {
             ki.debug("Attempting broadcast...");
@@ -138,12 +140,21 @@ public class NetMan extends Thread implements INetworkManager {
                     connMan.sendPacket(o);
                     if (ki.getOptions().pDebug)
                         ki.debug("Broadcasting packet: " + o.toString() + " to " + connMan.getAddress());
-                }
-                else
+                } else
                     connMan.queueUntilDone(o);
+            } else {
+                nullConns.add(i);
+            }
+            i++;
+        }
+        if (!nullConns.isEmpty()) {
+            for (int index : nullConns) {
+                if (ki.getOptions().pDebug)
+                    ki.debug("Removing connection: " + index + " because it is null");
+                connections.remove(index);
             }
         }
-        connections.remove(null);
+        //connections.remove(null);
     }
 
     @Override
@@ -159,7 +170,7 @@ public class NetMan extends Thread implements INetworkManager {
                 }
             }
         }
-        connections.remove(null);
+        //connections.remove(null);
     }
 
     @Override

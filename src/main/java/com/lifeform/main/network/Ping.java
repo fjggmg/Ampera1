@@ -5,9 +5,12 @@ import com.lifeform.main.IKi;
 import java.io.Serializable;
 
 public class Ping implements Serializable, Packet {
+    public long currentTime;
     @Override
     public void process(IKi ki, IConnectionManager connMan, PacketGlobal pg) {
-        connMan.sendPacket(new Pong());
+        Pong pong = new Pong();
+        pong.latency = System.currentTimeMillis() - currentTime;
+        connMan.sendPacket(pong);
     }
 
     @Override

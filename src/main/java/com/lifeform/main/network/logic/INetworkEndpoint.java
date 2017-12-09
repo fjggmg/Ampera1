@@ -6,6 +6,7 @@ public interface INetworkEndpoint {
     void sendPacket(Object o);
     void setChannel(Channel c);
 
+    boolean isConnected();
     String getAddress();
     void disconnect();
 }

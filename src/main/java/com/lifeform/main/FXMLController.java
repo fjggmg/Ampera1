@@ -119,6 +119,7 @@ public class FXMLController {
 
 
 
+
         Thread t = new Thread() {
 
             public void run() {
@@ -618,17 +619,48 @@ public class FXMLController {
 
     @FXML
     public void topDragged(MouseEvent event) {
-        primaryStage.setX(event.getScreenX() + xOffset);
-        primaryStage.setY(event.getScreenY() + yOffset);
+
+        //xOffset = primaryStage.getX() - event.getScreenX();
+        //xOffset = event.getSceneX();
+
+        //if(!(event.getScreenX() - xOffset < 0) && !(event.getScreenX() - xOffset > 3840))
+        primaryStage.setX(event.getScreenX() - xOffset);
+
+
+        primaryStage.setY(event.getScreenY() - yOffset);
+        //lastxOff = xOffset;
+        //System.out.println("current screenX " + event.getScreenX());
+        //System.out.println("Current scene X " + primaryStage.getX());
+        //System.out.println("Xoff is: " + xOffset);
 
     }
 
     private double xOffset = 0;
     private double yOffset = 0;
+    boolean offsetSet = false;
+
+    @FXML
+    public void topReleased(MouseEvent event) {
+        offsetSet = false;
+        //System.out.println("Top released");
+    }
     @FXML
     public void topPressed(MouseEvent event) {
-        xOffset = primaryStage.getX() - event.getScreenX();
-        yOffset = primaryStage.getY() - event.getScreenY();
+        /*
+        if(event.getScreenX() < lastxOff + 400)
+        {
+            xOffset = lastxOff + 200;
+        }else {*/
+        if (!offsetSet) {
+            //System.out.println("Top pressed");
+            offsetSet = true;
+            xOffset = event.getScreenX() - primaryStage.getX();
+            //}
+            yOffset = event.getScreenY() - primaryStage.getY();
+            //lastlastx = lastx;
+            //lastx = event.getScreenX();
+            //lastxOff = xOffset;
+        }
     }
 
     public void walletHover(MouseEvent mouseEvent) {

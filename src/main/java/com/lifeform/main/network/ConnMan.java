@@ -11,6 +11,7 @@ public class ConnMan extends IConnectionManager {
     private IKi ki;
     private String ID;
     private INetworkEndpoint endpoint;
+    private long currentLatency;
     public ConnMan(IKi ki, boolean isRelay, INetworkEndpoint endpoint, IPacketProcessor pp)
     {
         this(ki,isRelay,endpoint);
@@ -73,6 +74,21 @@ public class ConnMan extends IConnectionManager {
         hs.chainVer = Handshake.CHAIN_VER;
         sendPacket(hs);
 
+    }
+
+    @Override
+    public boolean isConnected() {
+        return endpoint.isConnected();
+    }
+
+    @Override
+    public long currentLatency() {
+        return currentLatency;
+    }
+
+    @Override
+    public void setCurrentLatency(long latency) {
+        currentLatency = latency;
     }
 
     @Override

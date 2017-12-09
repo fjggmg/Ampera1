@@ -39,6 +39,11 @@ public class Client implements INetworkEndpoint{
     }
 
     @Override
+    public boolean isConnected() {
+        return channel.isActive();
+    }
+
+    @Override
     public String getAddress() {
         return channel.remoteAddress().toString();
     }

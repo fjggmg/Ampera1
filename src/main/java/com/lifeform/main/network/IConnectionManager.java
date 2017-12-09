@@ -16,6 +16,7 @@ public abstract class IConnectionManager{
     public abstract String getAddress();
     private List<Object> queue = new ArrayList<>();
 
+    public abstract boolean isConnected();
     public void queueUntilDone(Object packet)
     {
         queue.add(packet);
@@ -27,5 +28,9 @@ public abstract class IConnectionManager{
             sendPacket(p);
         }
     }
+
+    public abstract long currentLatency();
+
+    public abstract void setCurrentLatency(long latency);
 
 }
