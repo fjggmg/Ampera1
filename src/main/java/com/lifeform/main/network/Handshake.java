@@ -50,6 +50,7 @@ public class Handshake implements Serializable, Packet {
 
         connMan.setID(ID);
         ki.getNetMan().connectionInit(ID, connMan);
+        connMan.setStartTime(startTime);
         if (ki.getOptions().lite) {
             TransactionDataRequest tdr = new TransactionDataRequest();
             tdr.addresses = ki.getAddMan().getAll();
