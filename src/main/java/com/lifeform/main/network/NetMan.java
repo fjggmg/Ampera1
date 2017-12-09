@@ -52,6 +52,11 @@ public class NetMan extends Thread implements INetworkManager {
     }
 
     @Override
+    public List<String> getRelays() {
+        return relays;
+    }
+
+    @Override
     public boolean isRelay()
     {
         return isRelay;

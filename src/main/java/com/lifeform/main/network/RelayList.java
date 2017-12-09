@@ -3,6 +3,7 @@ package com.lifeform.main.network;
 import com.lifeform.main.IKi;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
 public class RelayList implements Serializable, Packet {
@@ -10,7 +11,8 @@ public class RelayList implements Serializable, Packet {
 
     @Override
     public void process(IKi ki, IConnectionManager connMan, PacketGlobal pg) {
-        pg.relays = relays;
+        if (pg.relays == null) pg.relays = new ArrayList<>();
+        pg.relays.addAll(relays);
         ki.getNetMan().addRelays(relays);
         if (ki.getNetMan().getConnections().size() < 4) {
             for (String IP : relays) {

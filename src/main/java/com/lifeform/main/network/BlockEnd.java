@@ -47,6 +47,14 @@ public class BlockEnd implements Serializable, Packet {
                 ki.debug("Transaction " + i + " added");
                 block.addTransaction(t);
             }
+            if (ki.getChainMan().getByHeight(block.height) != null && ki.getChainMan().getByHeight(block.height).ID.equals(block.ID)) {
+                ki.debug("Already have this block");
+                BlockAck ba = new BlockAck();
+                ba.height = block.height;
+                ba.verified = true;
+                connMan.sendPacket(ba);
+                return;
+            }
             if (ki.getChainMan().currentHeight().compareTo(BigInteger.ZERO) > 0) {
 
                 try {

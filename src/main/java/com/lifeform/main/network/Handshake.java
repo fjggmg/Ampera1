@@ -31,6 +31,7 @@ public class Handshake implements Serializable, Packet {
         ki.debug("Height: " + currentHeight);
         ki.debug("Chain ver: " + chainVer);
         ki.debug("Address: " + connMan.getAddress());
+        ki.debug("Is Relay: " + isRelay);
         pg.startHeight = currentHeight;
         if (chainVer != Handshake.CHAIN_VER) {
             ki.debug("Mismatched chain versions, disconnecting");
@@ -60,17 +61,20 @@ public class Handshake implements Serializable, Packet {
         }
         if (isRelay) {
             if (pg.relays == null) pg.relays = new ArrayList<>();
-            pg.relays.add(connMan.getAddress());
+            pg.relays.add(connMan.getAddress().split(":")[0].replace("/", ""));
+            ki.getNetMan().addRelays(pg.relays);
         }
-        if (pg.relays != null) {
+
             RelayList rl = new RelayList();
             rl.relays = pg.relays;
+        if (rl.relays == null) rl.relays = new ArrayList<>();
+        rl.relays.addAll(ki.getNetMan().getRelays());
             connMan.sendPacket(rl);
             if (ki.getNetMan().getConnections().size() > 10 && ki.getNetMan().isRelay()) {
                 DisconnectRequest dr = new DisconnectRequest();
-                connMan.sendPacket(dr);
+                //connMan.sendPacket(dr);
             }
-        }
+
 
         if (ki.getChainMan().currentHeight().compareTo(BigInteger.valueOf(-1L)) != 0)
             if (currentHeight.compareTo(ki.getChainMan().currentHeight()) == 0) {

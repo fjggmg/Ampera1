@@ -50,7 +50,8 @@ public class Client implements INetworkEndpoint{
 
     @Override
     public void disconnect() {
-        channel.disconnect();
+        if (channel != null)
+            channel.disconnect();
     }
 
     private Channel channel;

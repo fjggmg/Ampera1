@@ -28,5 +28,7 @@ public interface INetworkManager {
 
     void addRelays(List<String> relays);
 
+    List<String> getRelays();
+
 
 }

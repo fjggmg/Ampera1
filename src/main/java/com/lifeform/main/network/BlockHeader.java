@@ -38,7 +38,7 @@ public class BlockHeader implements Serializable, Packet {
         } else {
             pg.bMap.put(this, new ArrayList<>());
             if (ki.getNetMan().isRelay()) {
-                ki.getNetMan().broadcast(this);
+                ki.getNetMan().broadcastAllBut(connMan.getID(), this);
             }
         }
     }

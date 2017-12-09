@@ -216,6 +216,11 @@ public class InputHandler extends Thread {
                         }
 
                     }
+                } else if (line.startsWith("relays")) {
+                    ki.getMainLog().info("Relay list: ");
+                    for (String relay : ki.getNetMan().getRelays()) {
+                        ki.getMainLog().info(relay);
+                    }
                 } else {
 
                     System.out.println("unrecognized input");
