@@ -11,7 +11,7 @@ import java.math.BigInteger;
 /**
  * Created by Bryan on 8/8/2017.
  */
-public class Output implements TXIO, Serializable {
+public class Output implements TXIO {
 
     public Output(BigInteger amount, Address receiver,Token token, int index,long timestamp)
     {
@@ -70,7 +70,7 @@ public class Output implements TXIO, Serializable {
     }
 
 
-    static Output fromJSON(String json)
+    public static Output fromJSON(String json)
     {
         try {
             JSONObject jo = (JSONObject) (new JSONParser().parse(json));

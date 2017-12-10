@@ -19,7 +19,11 @@ public class TransactionDataRequest implements Serializable, Packet {
             List<Output> utxos = ki.getTransMan().getUTXOs(address);
             if (utxos == null) continue;
             UTXOData ud = new UTXOData();
-            ud.utxos = utxos;
+            List<String> sUtxos = new ArrayList<>();
+            for (Output o : utxos) {
+                sUtxos.add(o.toJSON());
+            }
+            ud.utxos = sUtxos;
             connMan.sendPacket(ud);
         }
     }

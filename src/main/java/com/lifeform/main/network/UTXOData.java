@@ -5,20 +5,23 @@ import com.lifeform.main.transactions.Output;
 import com.lifeform.main.transactions.TransactionManagerLite;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
 public class UTXOData implements Serializable, Packet {
 
-    List<Output> utxos;
+    List<String> utxos;
 
     @Override
     public void process(IKi ki, IConnectionManager connMan, PacketGlobal pg) {
         if (ki.getOptions().lite) {
             ki.getMainLog().info("Received transaction data: ");
-            for (Output o : utxos) {
-                ki.getMainLog().info("Output: " + o.getID());
+            List<Output> outputs = new ArrayList<>();
+            for (String o : utxos) {
+                outputs.add(Output.fromJSON(o));
+                ki.getMainLog().info("Output: " + Output.fromJSON(o).getID());
             }
-            ((TransactionManagerLite) ki.getTransMan()).addUTXOs(utxos);
+            ((TransactionManagerLite) ki.getTransMan()).addUTXOs(outputs);
 
         }
     }
