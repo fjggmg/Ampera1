@@ -4,10 +4,12 @@ import com.lifeform.main.data.EncryptionManager;
 import com.lifeform.main.data.Utils;
 import org.json.simple.JSONObject;
 
+import java.io.Serializable;
+
 /**
  * Created by Bryan on 8/8/2017.
  */
-public class Address {
+public class Address implements Serializable {
 
     public static final byte VERSION = 0X7F;
     public Address(byte version, String ID, String checksum)

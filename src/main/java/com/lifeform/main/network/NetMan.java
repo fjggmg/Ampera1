@@ -113,15 +113,20 @@ public class NetMan extends Thread implements INetworkManager {
             t.start();
 
         }
+        List<String> alreadyAttempted = new ArrayList<>();
         if (!relays.isEmpty()) {
             for (String ip : relays) {
+                if (alreadyAttempted.contains(ip)) continue;
                 attemptConnect(ip);
+                alreadyAttempted.add(ip);
             }
         }
         if (connections.size() < 4) {
             for (String ip : bootstrap) {
 
+                if (alreadyAttempted.contains(ip)) continue;
                 attemptConnect(ip);
+                alreadyAttempted.add(ip);
             }
         }
     }
@@ -210,6 +215,10 @@ public class NetMan extends Thread implements INetworkManager {
     @Override
     public void connectionInit(String ID, IConnectionManager connMan) {
 
+        for (IConnectionManager cm : connections) {
+            if (cm.getAddress().replace("/", "").split(":")[0].equals(connMan.getAddress().replace("/", "").split(":")[0]))
+                return;
+        }
         connMap.put(ID,connMan);
         connections.add(connMan);
 

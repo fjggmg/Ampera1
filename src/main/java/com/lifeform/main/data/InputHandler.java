@@ -3,6 +3,7 @@ package com.lifeform.main.data;
 import com.lifeform.main.IKi;
 import com.lifeform.main.network.IConnectionManager;
 import com.lifeform.main.network.Ping;
+import com.lifeform.main.network.TransactionDataRequest;
 import com.lifeform.main.network.TransactionPacket;
 import com.lifeform.main.transactions.*;
 
@@ -64,7 +65,7 @@ public class InputHandler extends Thread {
                             uptime -= seconds * 1000;
                             long milliseconds = uptime;
 
-                            ki.getMainLog().info("Uptime: " + days + "D " + hours + "H " + seconds + "S " + milliseconds + "ms");
+                            ki.getMainLog().info("Uptime: " + days + "D " + hours + "H " + minutes + "M " + seconds + "S " + milliseconds + "ms");
                             ki.getNetMan().setLive(false);
 
 
@@ -221,8 +222,17 @@ public class InputHandler extends Thread {
                     for (String relay : ki.getNetMan().getRelays()) {
                         ki.getMainLog().info(relay);
                     }
-                } else {
+                } else if (line.startsWith("requestTransactions")) {
+                    ki.getMainLog().info("Requesting transaction data for addresses:");
+                    TransactionDataRequest tdr = new TransactionDataRequest();
+                    for (Address a : ki.getAddMan().getAll()) {
+                        ki.getMainLog().info(a.encodeForChain());
+                    }
+                    tdr.addresses = ki.getAddMan().getAll();
+                    ki.getNetMan().broadcast(tdr);
 
+
+                } else {
                     System.out.println("unrecognized input");
                 }
 

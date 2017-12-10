@@ -14,7 +14,12 @@ public class UTXOData implements Serializable, Packet {
     @Override
     public void process(IKi ki, IConnectionManager connMan, PacketGlobal pg) {
         if (ki.getOptions().lite) {
+            ki.getMainLog().info("Received transaction data: ");
+            for (Output o : utxos) {
+                ki.getMainLog().info("Output: " + o.getID());
+            }
             ((TransactionManagerLite) ki.getTransMan()).addUTXOs(utxos);
+
         }
     }
 

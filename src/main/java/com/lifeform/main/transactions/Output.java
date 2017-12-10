@@ -5,12 +5,13 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
+import java.io.Serializable;
 import java.math.BigInteger;
 
 /**
  * Created by Bryan on 8/8/2017.
  */
-public class Output implements TXIO{
+public class Output implements TXIO, Serializable {
 
     public Output(BigInteger amount, Address receiver,Token token, int index,long timestamp)
     {
