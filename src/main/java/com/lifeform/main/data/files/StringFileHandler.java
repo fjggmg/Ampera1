@@ -102,6 +102,7 @@ public class StringFileHandler extends FileManager implements IStringFileHandler
             if (!Files.deleteIfExists(file.toPath())) throw new IOException("Could not delete file");
         } catch (IOException e) {
             Ki.getInstance().debug("File manager for: " + file.getName() + " failed on insertNoLoad with message: " + e.getMessage());
+            insertNoLoad(line, index, lines);
         }
         //PrintWriter writer = null;
         try (PrintWriter writer = new PrintWriter(Files.newBufferedWriter(file.toPath(), StandardCharsets.UTF_8))) {
@@ -113,6 +114,7 @@ public class StringFileHandler extends FileManager implements IStringFileHandler
             }
         } catch (IOException e) {
             Ki.getInstance().debug("File manager for: " + file.getName() + " failed on insertNoLoad with message: " + e.getMessage());
+            insertNoLoad(line, index, lines);
         }
     }
 

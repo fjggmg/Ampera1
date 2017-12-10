@@ -30,7 +30,13 @@ public class Handshake implements Serializable, Packet {
         ki.debug("version: " + version);
         ki.debug("Height: " + currentHeight);
         ki.debug("Chain ver: " + chainVer);
-        ki.debug("Address: " + connMan.getAddress());
+        if (connMan.getChannel() != null && connMan.getChannel().remoteAddress() != null)
+            ki.debug("Address: " + connMan.getAddress());
+        else {
+            //SOMETHING IS SERIOUSLY FUCKED UP
+            connMan.disconnect();
+            return;
+        }
         ki.debug("Is Relay: " + isRelay);
         pg.startHeight = currentHeight;
         if (chainVer != Handshake.CHAIN_VER) {

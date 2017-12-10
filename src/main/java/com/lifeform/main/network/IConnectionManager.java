@@ -1,5 +1,7 @@
 package com.lifeform.main.network;
 
+import io.netty.channel.Channel;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,6 +31,7 @@ public abstract class IConnectionManager{
         }
     }
 
+    public abstract Channel getChannel();
     public abstract long currentLatency();
 
     public abstract void setCurrentLatency(long latency);

@@ -9,4 +9,6 @@ public interface INetworkEndpoint {
     boolean isConnected();
     String getAddress();
     void disconnect();
+
+    Channel getChannel();
 }

@@ -45,6 +45,9 @@ public class Client implements INetworkEndpoint{
 
     @Override
     public String getAddress() {
+
+        if (channel == null) return "Channel Null";
+        if (channel.remoteAddress() == null) return "Address Null";
         return channel.remoteAddress().toString();
     }
 
@@ -52,6 +55,11 @@ public class Client implements INetworkEndpoint{
     public void disconnect() {
         if (channel != null)
             channel.disconnect();
+    }
+
+    @Override
+    public Channel getChannel() {
+        return channel;
     }
 
     private Channel channel;

@@ -4,6 +4,7 @@ import com.lifeform.main.IKi;
 import com.lifeform.main.data.EncryptionManager;
 import com.lifeform.main.data.JSONManager;
 import com.lifeform.main.data.Utils;
+import com.lifeform.main.data.XodusStringMap;
 import com.lifeform.main.data.files.StringFileHandler;
 import com.lifeform.main.transactions.*;
 import org.json.simple.JSONObject;
@@ -36,6 +37,8 @@ public class ChainManager implements IChainMan {
     DB tmDB;
     DB exDB;
     DB cmDB;
+    private XodusStringMap blockHeightMap;
+    private XodusStringMap blockIDMap;
     private Block tempBlock = null;
     //===============CHAIN IDS========================\\
     public static final short POW_CHAIN = 0x0001;
@@ -127,6 +130,9 @@ public class ChainManager implements IChainMan {
 
         cmMap = cmDB.hashMap("cmDB", Serializer.STRING,Serializer.STRING).createOrOpen();
 
+        blockHeightMap = new XodusStringMap(folderName + chainID + "heights");
+        blockIDMap = new XodusStringMap(folderName + chainID + "IDs");
+
     }
 
     public void close()
@@ -141,7 +147,7 @@ public class ChainManager implements IChainMan {
         cmDB.close();
     }
 
-    public synchronized BlockState addBlock(Block block) {
+    public BlockState addBlock(Block block) {
 
         BlockState state = verifyBlock(block);
         if (!state.success()) return state;
@@ -164,6 +170,11 @@ public class ChainManager implements IChainMan {
         tmDB.commit();
         cmMap.put(block.ID,block.height.toString());
         cmDB.commit();
+        if (block.height.mod(BigInteger.valueOf(1000L)).equals(BigInteger.valueOf(0)) && block.height.compareTo(BigInteger.ZERO) != 0) {
+            if (this.current != null) {
+                recalculateDifficulty();
+            }
+        }
         /*
         Block b = verifyLater.get(block.height.add(BigInteger.ONE));
         if(b != null) {
@@ -237,7 +248,12 @@ public class ChainManager implements IChainMan {
 
 
     @Override
-    public synchronized void saveBlock(Block b) {
+    public void saveBlock(Block b) {
+
+
+        blockHeightMap.put(b.height.toString(), b.toJSON());
+        blockIDMap.put(b.ID, b.toJSON());
+        /*
         StringFileHandler fh = new StringFileHandler(ki,folderName + b.height.divide(BigInteger.valueOf(16L)) + fileName);
         if(fh.getLines() == null || fh.getLines().isEmpty())
         {
@@ -249,7 +265,7 @@ public class ChainManager implements IChainMan {
         }
 
         fh.replaceLine(b.height.mod(BigInteger.valueOf(16L)).intValueExact(),b.toJSON());
-
+        */
     }
 
 
@@ -333,7 +349,7 @@ public class ChainManager implements IChainMan {
 
     private synchronized int getSegment(BigInteger height) {return height.subtract(BigInteger.ONE).divide(BigInteger.valueOf(1000L)).intValueExact(); }
 
-    public synchronized BlockState verifyBlock(Block block) {
+    public BlockState verifyBlock(Block block) {
         if (bDebug)
         ki.getMainLog().info("Block has: " + block.getTransactionKeys().size() + " transactions");
         BlockState state = softVerifyBlock(block);
@@ -357,12 +373,8 @@ public class ChainManager implements IChainMan {
         }
 
         ki.getTransMan().commit();
-        if(block.height.mod(BigInteger.valueOf(1000L)).equals(BigInteger.valueOf(0)) && block.height.compareTo(BigInteger.ZERO) != 0)
-        {
-            if(this.current != null) {
-                recalculateDifficulty();
-            }
-        }
+        //setHeight(block.height);
+
         if (!ki.getOptions().nogui) {
             if (ki.getEncryptMan().getPublicKeyString().equals(block.solver)) {
                 ki.getGUIHook().blockFound();
@@ -399,7 +411,13 @@ public class ChainManager implements IChainMan {
     }
 
     @Override
-    public synchronized Block getByHeight(BigInteger height) {
+    public Block getByHeight(BigInteger height) {
+
+        if (blockHeightMap.get(height.toString()) == null) return null;
+
+        return Block.fromJSON(blockHeightMap.get(height.toString()));
+
+        /*
        StringFileHandler fh = new StringFileHandler(ki,folderName + height.divide(BigInteger.valueOf(16L)) + fileName);
 
        String line = fh.getLine(height.mod(BigInteger.valueOf(16L)).intValueExact());
@@ -408,15 +426,16 @@ public class ChainManager implements IChainMan {
            return null;
        }
 
-       return Block.fromJSON(line);
+       return Block.fromJSON(line);*/
     }
 
 
-
-    private synchronized void recalculateDifficulty()
+    private void recalculateDifficulty()
     {
         BigInteger correctDelta = BigInteger.valueOf(300000000L);
-        BigInteger actualDelta = BigInteger.valueOf(getByHeight(currentHeight()).timestamp - getByHeight(currentHeight().subtract(BigInteger.valueOf(1000L))).timestamp);
+        if (getByHeight(currentHeight()) == null) ki.debug("current height was null");
+        if (getByHeight(currentHeight().subtract(BigInteger.valueOf(1000L))) == null) ki.debug("last 1000 was null");
+        BigInteger actualDelta = BigInteger.valueOf(getByHeight(currentHeight().subtract(BigInteger.ONE)).timestamp - getByHeight(currentHeight().subtract(BigInteger.valueOf(1000L))).timestamp);
         BigInteger percentage = actualDelta.divide(correctDelta.divide(BigInteger.valueOf(100000000L)));
         currentDifficulty = currentDifficulty.multiply(percentage);
         currentDifficulty = currentDifficulty.divide(BigInteger.valueOf(100000000L));
@@ -441,7 +460,7 @@ public class ChainManager implements IChainMan {
     }
 
 
-    public synchronized  BigInteger calculateDiff(BigInteger currentDifficulty, long timeElapsed)
+    public BigInteger calculateDiff(BigInteger currentDifficulty, long timeElapsed)
     {
 
         BigInteger correctDelta = BigInteger.valueOf(300000000L);
@@ -498,8 +517,13 @@ public class ChainManager implements IChainMan {
 
     @Override
     public synchronized Block getByID(String ID) {
+
+        if (blockIDMap.get(ID) == null) return null;
+        return Block.fromJSON(blockIDMap.get(ID));
+        /*
         if(cmMap.get(ID) == null) return null;
         return getByHeight(new BigInteger(cmMap.get(ID)));
+        */
     }
 
     @Override
@@ -526,14 +550,14 @@ public class ChainManager implements IChainMan {
     }
 
     @Override
-    public synchronized void verifyLater(Block b) {
+    public void verifyLater(Block b) {
 
         verifyLater.put(b.height,b);
 
     }
 
     @Override
-    public synchronized Block formEmptyBlock() {
+    public Block formEmptyBlock() {
         Block b = new Block();
         b.solver = ki.getEncryptMan().getPublicKeyString();
         b.timestamp = System.currentTimeMillis();

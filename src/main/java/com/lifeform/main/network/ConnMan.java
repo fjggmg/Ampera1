@@ -3,6 +3,8 @@ package com.lifeform.main.network;
 import com.lifeform.main.IKi;
 import com.lifeform.main.data.EncryptionManager;
 import com.lifeform.main.network.logic.INetworkEndpoint;
+import io.netty.channel.Channel;
+
 import java.math.BigInteger;
 
 public class ConnMan extends IConnectionManager {
@@ -82,6 +84,11 @@ public class ConnMan extends IConnectionManager {
     @Override
     public boolean isConnected() {
         return endpoint.isConnected();
+    }
+
+    @Override
+    public Channel getChannel() {
+        return endpoint.getChannel();
     }
 
     @Override

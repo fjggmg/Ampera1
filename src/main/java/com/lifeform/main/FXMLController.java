@@ -2,6 +2,7 @@ package com.lifeform.main;
 
 import com.lifeform.main.blockchain.IMiner;
 import com.lifeform.main.data.JSONManager;
+import com.lifeform.main.data.XodusStringMap;
 import com.lifeform.main.data.files.StringFileHandler;
 import com.lifeform.main.network.TransactionPacket;
 import com.lifeform.main.transactions.*;
@@ -67,34 +68,14 @@ public class FXMLController {
 
     private BigInteger latestBlock = BigInteger.ZERO;
     private IKi ki;
-    private StringFileHandler guiData;
-    private Map<String, String> guiMap = new HashMap<>();
+    //private StringFileHandler guiData;
+    private XodusStringMap guiMap = new XodusStringMap("gui.data");
     private volatile List<ITrans> transactions = new ArrayList<>();
     public FXMLController()
     {
         ki = Ki.getInstance();
         ki.setGUIHook(this);
-        guiData = new StringFileHandler(ki, "gui.data");
-        if (guiData.getLine(0) != null && !guiData.getLine(0).isEmpty()) {
-            guiMap = JSONManager.parseJSONtoMap(guiData.getLine(0));
-            if (guiMap != null) {
-                if (guiMap.get("blocksFound") != null)
-                    blocksFoundInt = Integer.parseInt(guiMap.get("blocksFound"));
-                if (guiMap.get("transactions") != null) {
-                    List<String> transactions = JSONManager.parseJSONToList(guiMap.get("transactions"));
-                    if (transactions != null)
-                        for (String trans : transactions) {
-                            this.transactions.add(Transaction.fromJSON(trans));
-                        }
-                }
-                if (guiMap.get("latest") != null) {
-                    latestBlock = new BigInteger(guiMap.get("latest"));
-                }
-                if (guiMap.get("heightMap") != null) {
-                    heightMap = JSONManager.parseJSONtoMap(guiMap.get("heightMap"));
-                }
-            }
-        }
+
 
         Task task = new Task<Void>() {
             @Override
@@ -172,8 +153,6 @@ public class FXMLController {
             latestBlock = ki.getChainMan().currentHeight();
             guiMap.put("blocksFound", "" + blocksFoundInt);
             guiMap.put("latest", latestBlock.toString());
-            guiData.replaceLine(0, JSONManager.parseMapToJSON(guiMap).toJSONString());
-            guiData.save();
         }
     }
 
@@ -579,7 +558,6 @@ public class FXMLController {
 
         heightMap.put(trans.getID(), height.toString());
         guiMap.put("heightMap", JSONManager.parseMapToJSON(heightMap).toJSONString());
-        guiData.save();
         for (ITrans t : transactions) {
             //in case of collision and our chain dying we check to make sure
             //we're not adding a second time, the other issue we may need to consider is
@@ -595,8 +573,6 @@ public class FXMLController {
             sTrans.add(t.toJSON());
         }
         guiMap.put("transactions", JSONManager.parseListToJSON(sTrans).toJSONString());
-        guiData.replaceLine(0, JSONManager.parseMapToJSON(guiMap).toJSONString());
-        guiData.save();
 
     }
 

@@ -15,7 +15,16 @@ public class RelayList implements Serializable, Packet {
         pg.relays.addAll(relays);
         ki.getNetMan().addRelays(relays);
         if (ki.getNetMan().getConnections().size() < 4) {
-            for (String IP : relays) {
+            for (String IP : ki.getNetMan().getRelays()) {
+                boolean cont = false;
+                for (IConnectionManager c : ki.getNetMan().getConnections()) {
+                    if (c.getAddress().split(":")[0].replace("/", "").equals(IP)) {
+                        cont = true;
+                        break;
+                    }
+                }
+                if (cont) continue;
+
                 ki.getNetMan().attemptConnect(IP);
             }
         }
