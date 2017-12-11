@@ -6,6 +6,7 @@ import com.lifeform.main.data.files.StringFileHandler;
 import com.lifeform.main.network.logic.Client;
 import com.lifeform.main.network.logic.Server;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class NetMan extends Thread implements INetworkManager {
 
@@ -16,7 +17,7 @@ public class NetMan extends Thread implements INetworkManager {
     public static final int PORT = 29555;
     public boolean live = false;
     volatile Set<IConnectionManager> connections = new HashSet<>();
-    volatile Map<String, IConnectionManager> connMap = new HashMap<>();
+    volatile Map<String, IConnectionManager> connMap = new ConcurrentHashMap<>();
     volatile Map<String, Client> clientMap = new HashMap<>();
     volatile List<Client> clients = new ArrayList<>();
     private volatile List<String> relays = new ArrayList<>();

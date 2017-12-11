@@ -75,7 +75,17 @@ public class FXMLController {
     {
         ki = Ki.getInstance();
         ki.setGUIHook(this);
-
+        if (guiMap.get("blocksFound") != null)
+            blocksFoundInt = Integer.parseInt(guiMap.get("blocksFound"));
+        if (guiMap.get("transactions") != null) {
+            List<String> sTrans = JSONManager.parseJSONToList(guiMap.get("transactions"));
+            for (String s : sTrans) {
+                transactions.add(Transaction.fromJSON(s));
+            }
+        }
+        if (guiMap.get("heightMap") != null) {
+            heightMap = JSONManager.parseJSONtoMap(guiMap.get("heightMap"));
+        }
 
         Task task = new Task<Void>() {
             @Override

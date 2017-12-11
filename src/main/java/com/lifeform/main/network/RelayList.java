@@ -11,6 +11,7 @@ public class RelayList implements Serializable, Packet {
 
     @Override
     public void process(IKi ki, IConnectionManager connMan, PacketGlobal pg) {
+        /*
         if (pg.relays == null) pg.relays = new ArrayList<>();
         pg.relays.addAll(relays);
         ki.getNetMan().addRelays(relays);
@@ -28,6 +29,7 @@ public class RelayList implements Serializable, Packet {
                 ki.getNetMan().attemptConnect(IP);
             }
         }
+        */
     }
 
     @Override

@@ -58,6 +58,8 @@ public class Handshake implements Serializable, Packet {
         connMan.setID(ID);
         ki.getNetMan().connectionInit(ID, connMan);
         connMan.setStartTime(startTime);
+        if (ki.getChainMan().currentHeight().compareTo(BigInteger.valueOf(-1L)) == 0)
+            connMan.sendPacket(new DoneDownloading());
         if (ki.getOptions().lite) {
             TransactionDataRequest tdr = new TransactionDataRequest();
             tdr.addresses = ki.getAddMan().getAll();
@@ -98,7 +100,7 @@ public class Handshake implements Serializable, Packet {
                 if (!ki.getChainMan().getByHeight(currentHeight).ID.equals(mostRecentBlock)) {
                     pg.onRightChain = false;
                 }
-            }else if(ki.getChainMan().currentHeight().compareTo(currentHeight) == 0 && ki.getChainMan().getByHeight(ki.getChainMan().currentHeight()).ID.equals(mostRecentBlock))
+            } else if (ki.getChainMan().currentHeight().compareTo(currentHeight) == 0)
             {
                 pg.doneDownloading = true;
             }
