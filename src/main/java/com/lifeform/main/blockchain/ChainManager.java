@@ -377,6 +377,8 @@ public class ChainManager implements IChainMan {
 
         if (!ki.getOptions().nogui) {
             if (ki.getEncryptMan().getPublicKeyString().equals(block.solver)) {
+                while (ki.getGUIHook() == null) {
+                }
                 ki.getGUIHook().blockFound();
             }
             for (String trans : block.getTransactionKeys()) {

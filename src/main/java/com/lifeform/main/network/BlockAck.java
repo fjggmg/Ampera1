@@ -17,10 +17,11 @@ public class BlockAck implements Serializable,Packet {
             if(ki.getChainMan().currentHeight().compareTo(height) > 0)
             {
                 pg.sendBlock(height.add(BigInteger.ONE));
-            }else if(ki.getChainMan().currentHeight().compareTo(height) == 0 && !pg.doneDownloading)
-            {
+            }else if(ki.getChainMan().currentHeight().compareTo(height) == 0 && !pg.doneDownloading) {
                 pg.doneDownloading = true;
                 connMan.doneDownloading();
+                connMan.sendPacket(new DoneDownloading());
+            } else if (ki.getChainMan().currentHeight().compareTo(height) == 0) {
                 connMan.sendPacket(new DoneDownloading());
             }
         }

@@ -10,7 +10,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class NetMan extends Thread implements INetworkManager {
 
-    public static final String[] bootstrap = {"73.108.51.16","221.0.236.161","75.74.67.19"};
+    public static final String[] bootstrap = {"73.108.51.16"};
     public static final String NET_VER = "2.0.6";
     private IKi ki;
     private boolean isRelay;
@@ -162,13 +162,14 @@ public class NetMan extends Thread implements INetworkManager {
                 e.printStackTrace();
             }
             broadcast(o);
+            return;
         }
 
         int i = 0;
         for(IConnectionManager connMan:connections)
         {
             ki.debug("Attempting broadcast...");
-            if(!(connMan == null)) {
+            if (connMan != null) {
                 if (ki.getOptions().pDebug)
                     ki.debug("Connection Manager not null");
                 if (connMan.getPacketProcessor().getPacketGlobal().doneDownloading) {
@@ -216,9 +217,11 @@ public class NetMan extends Thread implements INetworkManager {
     @Override
     public void connectionInit(String ID, IConnectionManager connMan) {
 
-        for (IConnectionManager cm : connections) {
-            if (cm.getAddress().replace("/", "").split(":")[0].equals(connMan.getAddress().replace("/", "").split(":")[0]))
-                return;
+        if (!isRelay) {
+            for (IConnectionManager cm : connections) {
+                if (cm.getAddress().replace("/", "").split(":")[0].equals(connMan.getAddress().replace("/", "").split(":")[0]))
+                    return;
+            }
         }
         connMap.put(ID,connMan);
         connections.add(connMan);
