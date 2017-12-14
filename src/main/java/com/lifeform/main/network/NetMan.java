@@ -8,6 +8,7 @@ import com.lifeform.main.network.logic.Client;
 import com.lifeform.main.network.logic.Server;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 public class NetMan extends Thread implements INetworkManager {
 
@@ -17,7 +18,7 @@ public class NetMan extends Thread implements INetworkManager {
     private boolean isRelay;
     public static final int PORT = 29555;
     public boolean live = false;
-    volatile Set<IConnectionManager> connections = new HashSet<>();
+    volatile Set<IConnectionManager> connections = new CopyOnWriteArraySet<>();
     volatile Map<String, IConnectionManager> connMap = new ConcurrentHashMap<>();
     volatile Map<String, Client> clientMap = new HashMap<>();
     volatile List<Client> clients = new ArrayList<>();
