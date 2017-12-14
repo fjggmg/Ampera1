@@ -2,6 +2,7 @@ package com.lifeform.main.network;
 
 import com.lifeform.main.IKi;
 import com.lifeform.main.data.JSONManager;
+import com.lifeform.main.data.XodusStringMap;
 import com.lifeform.main.data.files.StringFileHandler;
 import com.lifeform.main.network.logic.Client;
 import com.lifeform.main.network.logic.Server;
@@ -21,14 +22,15 @@ public class NetMan extends Thread implements INetworkManager {
     volatile Map<String, Client> clientMap = new HashMap<>();
     volatile List<Client> clients = new ArrayList<>();
     private volatile List<String> relays = new ArrayList<>();
-    private StringFileHandler rList;
+    private XodusStringMap rList;
     public NetMan(IKi ki,boolean isRelay)
     {
         this.ki = ki;
         this.isRelay = isRelay;
-        rList = new StringFileHandler(ki, "relays.json");
-        if (rList.getLines() != null && rList.getLine(0) != null && !rList.getLine(0).isEmpty()) {
-            relays = JSONManager.parseJSONToList(rList.getLine(0));
+        //rList = new StringFileHandler(ki, "relays.json");
+        rList = new XodusStringMap("relays");
+        if (rList.get("relays") != null) {
+            relays = JSONManager.parseJSONToList(rList.get("relays"));
         }
         //Log.set(Log.LEVEL_TRACE);
     }
@@ -49,7 +51,7 @@ public class NetMan extends Thread implements INetworkManager {
             if (!this.relays.contains(relay))
                 this.relays.add(relay);
         }
-        rList.replaceLine(0, JSONManager.parseListToJSON(this.relays).toJSONString());
+        rList.put("relays", JSONManager.parseListToJSON(this.relays).toJSONString());
     }
 
     @Override
