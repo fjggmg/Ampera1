@@ -17,14 +17,16 @@ public class Address implements Serializable {
         this.version = version;
         this.ID = ID;
         this.checksum = checksum;
+        encoded = version + ID + checksum;
     }
     private byte version;
     private String ID;
     private String checksum;
+    private String encoded;
 
     public String encodeForChain()
     {
-        return version + ID + checksum;
+        return encoded;
     }
 
     public byte getVersion()

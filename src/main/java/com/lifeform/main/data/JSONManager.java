@@ -41,10 +41,7 @@ public class JSONManager {
     public static JSONArray parseListToJSON(List<String> array)
     {
         JSONArray jArray = new JSONArray();
-        for(String s:array)
-        {
-            jArray.add(s);
-        }
+        jArray.addAll(array);
 
         return jArray;
     }

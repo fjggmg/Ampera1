@@ -171,7 +171,7 @@ public class ChainManager implements IChainMan {
         //TODO: find out why there is an occasional Access Denied error on this line, most likely due to how quickly we're accessing it
         cmMap.put(block.ID,block.height.toString());
         cmDB.commit();
-        if (block.height.mod(BigInteger.valueOf(1000L)).equals(BigInteger.valueOf(0)) && block.height.compareTo(BigInteger.ZERO) != 0) {
+        if (block.height.mod(BigInteger.valueOf(1000L)).equals(BigInteger.ZERO) && block.height.compareTo(BigInteger.ZERO) != 0) {
             if (this.current != null) {
                 recalculateDifficulty();
             }

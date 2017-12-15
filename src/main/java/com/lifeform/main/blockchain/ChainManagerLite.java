@@ -114,9 +114,6 @@ public class ChainManagerLite implements IChainMan {
         }
         BlockState bs = softVerifyBlock(b);
         if (bs.success()) {
-            if (b.height.mod(BigInteger.valueOf(1000)).compareTo(BigInteger.ZERO) == 0) {
-                ki.getNetMan().broadcast(new DifficultyRequest());
-            }
             if (b.solver.equals(ki.getEncryptMan().getPublicKeyString())) {
                 ki.getGUIHook().blockFound();
             }
@@ -148,6 +145,10 @@ public class ChainManagerLite implements IChainMan {
             for (String trans : b.getTransactionKeys()) {
                 ki.getTransMan().addTransaction(b.getTransaction(trans));
             }
+            if (chain.keySet().size() > 100) {
+                chain.remove(currentHeight.subtract(BigInteger.valueOf(100L)));
+            }
+            ki.getNetMan().broadcast(new DifficultyRequest());
             return bs;
         }
         return bs;

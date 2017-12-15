@@ -68,47 +68,63 @@ public class TransactionManager implements ITransMan {
 
     @Override
     public boolean verifyTransaction(ITrans transaction) {
-        ki.debug("Verifying transaction: " + transaction.getID());
+        if (ki.getOptions().tDebug)
+            ki.debug("Verifying transaction: " + transaction.getID());
 
         for (Input i : transaction.getInputs()) {
-            ki.debug("Verifying input");
+            if (ki.getOptions().tDebug)
+                ki.debug("Verifying input");
             if (utxoSpent == null) {
-                ki.debug("UTXO file uninitialized, installation corrupted or fatal program error");
+                if (ki.getOptions().tDebug)
+                    ki.debug("UTXO file uninitialized, installation corrupted or fatal program error");
                 return false;
             }
             if (i == null) {
-                ki.debug("Input is null, malformed transaction.");
+                if (ki.getOptions().tDebug)
+                    ki.debug("Input is null, malformed transaction.");
                 return false;
             }
             if (utxoSpent.get(i.getID()) == null || utxoSpent.get(i.getID())) {
-                ki.debug("Input already spent, bad transaction");
+                if (ki.getOptions().tDebug)
+                    ki.debug("Input already spent, bad transaction");
                 return false;
             }
-            ki.debug("input not spent");
+            if (ki.getOptions().tDebug)
+                ki.debug("input not spent");
 
             if (new BigInteger(utxoValueMap.get(i.getID())).compareTo(i.getAmount()) != 0) {
-                ki.debug("input is incorrect amount");
+                if (ki.getOptions().tDebug)
+                    ki.debug("input is incorrect amount");
                 return false;
             }
-            ki.debug("input correct amount");
+            if (ki.getOptions().tDebug)
+                ki.debug("input correct amount");
         }
-        ki.debug("all inputs verified");
+        if (ki.getOptions().tDebug)
+            ki.debug("all inputs verified");
         if (!transaction.verifyInputToOutput()) {
-            ki.debug("Input values are not equal to output values");
+            if (ki.getOptions().tDebug)
+                ki.debug("Input values are not equal to output values");
             return false;
         }
-        ki.debug("input to output verifies");
+        if (ki.getOptions().tDebug)
+            ki.debug("input to output verifies");
         if (!transaction.verifyCanSpend()) {
-            ki.debug("this address cannot spend this input");
+            if (ki.getOptions().tDebug)
+                ki.debug("this address cannot spend this input");
             return false;
         }
-        ki.debug("verified can spend");
+        if (ki.getOptions().tDebug)
+            ki.debug("verified can spend");
         if (!transaction.verifySigs()) {
-            ki.debug("the signature on this transaction does not match");
+            if (ki.getOptions().tDebug)
+                ki.debug("the signature on this transaction does not match");
             return false;
         }
-        ki.debug("verified signature");
-        ki.debug("Transaction verified");
+        if (ki.getOptions().tDebug) {
+            ki.debug("verified signature");
+            ki.debug("Transaction verified");
+        }
         return true;
     }
 
@@ -126,14 +142,16 @@ public class TransactionManager implements ITransMan {
      */
     @Override
     public boolean addTransactionNoVerify(ITrans transaction) {
-        ki.debug("Saving transaction to disk");
-        ki.debug("Transaction has: " + transaction.getInputs().size() + " inputs");
+        if (ki.getOptions().tDebug)
+            ki.debug("Saving transaction to disk");
+        if (ki.getOptions().tDebug)
+            ki.debug("Transaction has: " + transaction.getInputs().size() + " inputs");
         List<String> inputs = new ArrayList<>();
         String carry = null;
         String lastAdd = "";
         boolean sameAdd = false;
         for (Input i : transaction.getInputs()) {
-
+            if (ki.getOptions().tDebug)
             ki.debug("Saving input: " + i.getID());
             utxoSpent.put(i.getID(), true);
             if(lastAdd.equals(i.getAddress().encodeForChain()))
@@ -157,9 +175,11 @@ public class TransactionManager implements ITransMan {
         lastAdd = "";
         sameAdd = false;
         carry = "";
-        ki.debug("Transaction has: " + transaction.getOutputs().size() + " outputs");
+        if (ki.getOptions().tDebug)
+            ki.debug("Transaction has: " + transaction.getOutputs().size() + " outputs");
         for (Output o : transaction.getOutputs()) {
-            ki.debug("Saving output: " + o.getID() + " Token: " + o.getToken() + " Amount: " + o.getAmount());
+            if (ki.getOptions().tDebug)
+                ki.debug("Saving output: " + o.getID() + " Token: " + o.getToken() + " Amount: " + o.getAmount());
             ki.getAddMan().receivedOn(o.getAddress());
             utxoSpent.put(o.getID(), false);
             utxoValueMap.put(o.getID(), o.getAmount().toString());
@@ -184,7 +204,8 @@ public class TransactionManager implements ITransMan {
             if (t.getID().equals(transaction.getID())) toRemove.add(t);
         }
         pending.removeAll(toRemove);
-        ki.debug("Transaction removed from pending pool, done adding transaction");
+        if (ki.getOptions().tDebug)
+            ki.debug("Transaction removed from pending pool, done adding transaction");
         return true;
     }
 
@@ -224,8 +245,10 @@ public class TransactionManager implements ITransMan {
 
     @Override
     public boolean verifyCoinbase(ITrans transaction, BigInteger blockHeight, BigInteger fees) {
-        ki.debug("Verifying coinbase transaction");
-        ki.debug("It has: " + transaction.getOutputs().size() + " outputs");
+        if (ki.getOptions().tDebug) {
+            ki.debug("Verifying coinbase transaction");
+            ki.debug("It has: " + transaction.getOutputs().size() + " outputs");
+        }
         if (blockHeight.compareTo(BigInteger.ZERO) != 0) {
             if (transaction.getOutputs().size() > 1) return false;
 
@@ -244,10 +267,12 @@ public class TransactionManager implements ITransMan {
 
         if (!verifyCoinbase(transaction, blockHeight, fees)) return false;
         for (Output o : transaction.getOutputs()) {
-            ki.debug("Address " + o.getAddress().encodeForChain());
-            ki.debug("ID: " + o.getID());
-            ki.debug("Token " + o.getToken());
-            ki.debug("Amount " + o.getAmount());
+            if (ki.getOptions().tDebug) {
+                ki.debug("Address " + o.getAddress().encodeForChain());
+                ki.debug("ID: " + o.getID());
+                ki.debug("Token " + o.getToken());
+                ki.debug("Amount " + o.getAmount());
+            }
             utxoSpent.put(o.getID(), false);
             utxoValueMap.put(o.getID(), o.getAmount().toString());
             ki.getAddMan().receivedOn(o.getAddress());

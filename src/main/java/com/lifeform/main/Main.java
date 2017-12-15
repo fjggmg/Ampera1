@@ -50,6 +50,7 @@ public class Main {
             if (s.equals("-rebuild")) o.rebuild = true;
             if (s.equals("-pd")) o.pDebug = true;
             if (s.equals("-lite")) o.lite = true;
+            if (s.equals("-td")) o.tDebug = true;
 
         }
         return o;
