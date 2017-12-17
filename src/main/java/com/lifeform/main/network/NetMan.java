@@ -34,6 +34,35 @@ public class NetMan extends Thread implements INetworkManager {
             relays = JSONManager.parseJSONToList(rList.get("relays"));
         }
         //Log.set(Log.LEVEL_TRACE);
+        new Thread() {
+            public void run() {
+                while (true) {
+                    List<IConnectionManager> toRemove = new ArrayList<>();
+                    for (IConnectionManager connMan : connections) {
+                        if (connMan == null || !connMan.isConnected()) {
+                            toRemove.add(connMan);
+                        }
+                    }
+                    List<Thread> tToRemove = new ArrayList<>();
+                    for (Thread t : threads) {
+                        if (!t.isAlive()) {
+                            tToRemove.add(t);
+                        }
+                    }
+                    if (!toRemove.isEmpty()) {
+                        connections.removeAll(toRemove);
+                    }
+                    if (!tToRemove.isEmpty()) {
+                        threads.removeAll(tToRemove);
+                    }
+                    try {
+                        sleep(300000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }.start();
     }
 
     @Override

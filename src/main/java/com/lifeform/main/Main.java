@@ -37,10 +37,9 @@ public class Main {
     public static Options decode(String[] args)
     {
         Options o = new Options();
-        for(String s:args)
-        {
-            if(s.equals("-r")) o.relay = true;
-            if(s.equals("-enableMining")) o.mining = true;
+        for (String s : args) {
+
+            if (s.equals("-enableMining")) o.mining = true;
             if (s.startsWith("-ur")) o.relayToUse = Integer.parseInt(s.replaceFirst("-ur", ""));
             if (s.equals("-testnet")) o.testNet = true;
             if (s.equals("-nogui")) o.nogui = true;
@@ -49,8 +48,12 @@ public class Main {
             if (s.equals("-dump")) o.dump = true;
             if (s.equals("-rebuild")) o.rebuild = true;
             if (s.equals("-pd")) o.pDebug = true;
-            if (s.equals("-lite")) o.lite = true;
+            if (s.equals("-full")) o.lite = false;
             if (s.equals("-td")) o.tDebug = true;
+            if (s.equals("-r")) {
+                o.relay = true;
+                o.lite = false;
+            }
 
         }
         return o;
