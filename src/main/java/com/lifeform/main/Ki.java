@@ -5,6 +5,7 @@ import com.lifeform.main.data.EncryptionManager;
 import com.lifeform.main.data.IEncryptMan;
 import com.lifeform.main.data.InputHandler;
 import com.lifeform.main.data.Options;
+import com.lifeform.main.network.DifficultyRequest;
 import com.lifeform.main.network.Handshake;
 import com.lifeform.main.network.INetworkManager;
 import com.lifeform.main.network.NetMan;
@@ -52,7 +53,7 @@ public class Ki extends Thread implements IKi {
     private IKi ki = this;
     private boolean run = true;
     //TODO: need to start saving version number to file for future conversion of files
-    public static final String VERSION = "0.15.17-BETA";
+    public static final String VERSION = "0.15.18-BETA";
     private boolean relay = false;
     private FXMLController guiHook;
     public static boolean debug = true;
@@ -114,10 +115,18 @@ public class Ki extends Thread implements IKi {
         }
 
 
-        minerMan = new MinerManager(this, o.mDebug);
+
 
         netMan = new NetMan(this, o.relay);
         netMan.start();
+        if (o.lite) {
+            netMan.broadcast(new DifficultyRequest());
+            try {
+                sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
         //gui = MainGUI.guiFactory(this);
         Thread t = new Thread() {
 
@@ -128,6 +137,7 @@ public class Ki extends Thread implements IKi {
             }
         };
         t.start();
+        minerMan = new MinerManager(this, o.mDebug);
 
     }
 

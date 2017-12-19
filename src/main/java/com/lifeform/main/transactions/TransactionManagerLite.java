@@ -18,7 +18,7 @@ public class TransactionManagerLite implements ITransMan {
 
     }
 
-    Map<String, Output> utxoMap = new HashMap<>();
+    Map<String, TXIO> utxoMap = new HashMap<>();
 
     @Override
     public boolean verifyTransaction(ITrans transaction) {
@@ -78,7 +78,7 @@ public class TransactionManagerLite implements ITransMan {
     public List<Output> getUTXOs(Address address) {
         List<Output> utxos = new ArrayList<>();
         for (String ID : utxoMap.keySet()) {
-            utxos.add(utxoMap.get(ID));
+            utxos.add((Output) utxoMap.get(ID));
         }
         return utxos;
     }
@@ -103,6 +103,24 @@ public class TransactionManagerLite implements ITransMan {
     @Override
     public List<String> getUsedUTXOs() {
         return null;
+    }
+
+    @Override
+    public void undoTransaction(ITrans transaction) {
+        for (Output output : transaction.getOutputs()) {
+            for (Address a : ki.getAddMan().getAll()) {
+                if (output.getAddress().encodeForChain().equals(a.encodeForChain())) {
+                    utxoMap.remove(output.getID());
+                }
+            }
+        }
+        for (Input input : transaction.getInputs()) {
+            for (Address a : ki.getAddMan().getAll()) {
+                if (input.getAddress().encodeForChain().equals(a.encodeForChain())) {
+                    utxoMap.put(input.getID(), input);
+                }
+            }
+        }
     }
 
     @Override

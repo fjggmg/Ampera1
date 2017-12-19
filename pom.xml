@@ -6,7 +6,7 @@
 
     <groupId>com.lifeform</groupId>
     <artifactId>Origin</artifactId>
-    <version>0.15.17-BETA</version>
+    <version>0.15.18-BETA</version>
 
     <build>
         <plugins>
