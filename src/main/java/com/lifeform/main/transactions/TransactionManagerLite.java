@@ -78,7 +78,8 @@ public class TransactionManagerLite implements ITransMan {
     public List<Output> getUTXOs(Address address) {
         List<Output> utxos = new ArrayList<>();
         for (String ID : utxoMap.keySet()) {
-            utxos.add((Output) utxoMap.get(ID));
+            if (!usedUTXO.contains(ID))
+                utxos.add((Output) utxoMap.get(ID));
         }
         return utxos;
     }
@@ -100,9 +101,10 @@ public class TransactionManagerLite implements ITransMan {
         return pending;
     }
 
+    List<String> usedUTXO = new ArrayList<>();
     @Override
     public List<String> getUsedUTXOs() {
-        return null;
+        return usedUTXO;
     }
 
     @Override

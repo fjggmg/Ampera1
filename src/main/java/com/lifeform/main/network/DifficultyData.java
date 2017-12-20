@@ -14,6 +14,7 @@ public class DifficultyData implements Serializable, Packet {
     public void process(IKi ki, IConnectionManager connMan, PacketGlobal pg) {
         if (ki.getOptions().lite) {
             ((ChainManagerLite) ki.getChainMan()).setDifficulty(difficulty);
+            NetMan.DIFF_SET = true;
         }
     }
 

@@ -30,7 +30,7 @@ public class XodusStringBooleanMap {
 
         //@Override
         ByteIterable output = env.computeInReadonlyTransaction(txn -> store.get(txn, convertedKey));
-
+        if (output == null) return null;
         return BooleanBinding.entryToBoolean(output);
     }
 

@@ -7,7 +7,7 @@ import java.io.Serializable;
 import java.math.BigInteger;
 
 public class LastAgreedStart implements Serializable, Packet {
-    BigInteger height;
+    public BigInteger height;
 
     @Override
     public void process(IKi ki, IConnectionManager connMan, PacketGlobal pg) {

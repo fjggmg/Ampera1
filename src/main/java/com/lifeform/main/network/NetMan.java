@@ -24,6 +24,7 @@ public class NetMan extends Thread implements INetworkManager {
     volatile List<Client> clients = new ArrayList<>();
     private volatile List<String> relays = new ArrayList<>();
     private XodusStringMap rList;
+    public static boolean DIFF_SET = false;
     public NetMan(IKi ki,boolean isRelay)
     {
         this.ki = ki;

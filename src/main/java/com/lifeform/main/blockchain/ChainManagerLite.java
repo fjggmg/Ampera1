@@ -115,7 +115,8 @@ public class ChainManagerLite implements IChainMan {
         BlockState bs = softVerifyBlock(b);
         if (bs.success()) {
             if (b.solver.equals(ki.getEncryptMan().getPublicKeyString())) {
-                ki.getGUIHook().blockFound();
+                if (ki.getGUIHook() != null)
+                    ki.getGUIHook().blockFound();
             }
             for (String trans : b.getTransactionKeys()) {
                 boolean add = false;
