@@ -3,21 +3,22 @@ package com.lifeform.main.network;
 import com.lifeform.main.IKi;
 import com.lifeform.main.transactions.Address;
 import com.lifeform.main.transactions.Output;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class TransactionDataRequest implements Serializable, Packet {
 
 
-    public List<Address> addresses = new ArrayList<>();
+    public List<Address> addresses = new CopyOnWriteArrayList<>();
 
     @Override
     public void process(IKi ki, IConnectionManager connMan, PacketGlobal pg) {
         for (Address address : addresses) {
-            List<Output> utxos = ki.getTransMan().getUTXOs(address);
-            if (utxos == null) continue;
+            List<Output> utxos = new ArrayList<>();
+            if (ki.getTransMan().getUTXOs(address) != null)
+                utxos.addAll(ki.getTransMan().getUTXOs(address));
             UTXOData ud = new UTXOData();
             List<String> sUtxos = new ArrayList<>();
             for (Output o : utxos) {

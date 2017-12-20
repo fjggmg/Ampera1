@@ -14,6 +14,7 @@ public class ResetRequest implements Serializable, Packet {
     @Override
     public void process(IKi ki, IConnectionManager connMan, PacketGlobal pg) {
         ki.debug("Received a reset request");
+        /*
         if (proof.height.compareTo(ki.getChainMan().currentHeight()) == 0 && pg.laFlag) {
             if (proof.ID.equals(ki.getChainMan().getByHeight(ki.getChainMan().currentHeight()).ID)) {
                 //this should be sufficient check but really we need to do a full fucking check of the block, will implement ease of use method for this later
@@ -35,7 +36,7 @@ public class ResetRequest implements Serializable, Packet {
                     }
                 }
             }
-        }
+        }*/
     }
 
     @Override

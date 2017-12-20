@@ -13,7 +13,7 @@ import java.util.concurrent.CopyOnWriteArraySet;
 public class NetMan extends Thread implements INetworkManager {
 
     public static final String[] bootstrap = {"73.108.51.16"};
-    public static final String NET_VER = "2.0.6";
+    public static final String NET_VER = "2.0.7";
     private IKi ki;
     private boolean isRelay;
     public static final int PORT = 29555;
@@ -109,7 +109,7 @@ public class NetMan extends Thread implements INetworkManager {
                 setName("client:" + IP);
                 Client client = new Client(ki, IP, PORT);
                 IConnectionManager connMan = new ConnMan(ki, isRelay, client);
-                connections.add(connMan);
+                //connections.add(connMan);
                 try {
                     client.start(connMan);
                 } catch (Exception e)
@@ -256,8 +256,10 @@ public class NetMan extends Thread implements INetworkManager {
                     return;
             }
         }
+
         connMap.put(ID,connMan);
         connections.add(connMan);
+        ki.debug("Connection init for: " + ID + " is complete");
 
     }
 }

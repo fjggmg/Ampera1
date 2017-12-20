@@ -5,10 +5,7 @@ import com.lifeform.main.data.EncryptionManager;
 import com.lifeform.main.data.IEncryptMan;
 import com.lifeform.main.data.InputHandler;
 import com.lifeform.main.data.Options;
-import com.lifeform.main.network.DifficultyRequest;
-import com.lifeform.main.network.Handshake;
-import com.lifeform.main.network.INetworkManager;
-import com.lifeform.main.network.NetMan;
+import com.lifeform.main.network.*;
 import com.lifeform.main.transactions.*;
 import gpuminer.JOCL.context.JOCLContextAndCommandQueue;
 import org.apache.logging.log4j.Level;
@@ -52,7 +49,7 @@ public class Ki extends Thread implements IKi {
     private IKi ki = this;
     private boolean run = true;
     //TODO: need to start saving version number to file for future conversion of files
-    public static final String VERSION = "0.15.19-BETA";
+    public static final String VERSION = "0.16.0-BETA";
     private boolean relay = false;
     private FXMLController guiHook;
     public static boolean debug = true;
@@ -112,8 +109,12 @@ public class Ki extends Thread implements IKi {
                 chainMan.addBlock(block);
             }
         }
-        stateMan = new StateManager(this);
-
+        if (o.lite) {
+            stateMan = new StateManagerLite(this);
+        } else {
+            stateMan = new StateManager(this);
+        }
+        stateMan.start();
 
 
         netMan = new NetMan(this, o.relay);
@@ -207,6 +208,22 @@ public class Ki extends Thread implements IKi {
     @Override
     public IStateManager getStateManager() {
         return stateMan;
+    }
+
+    @Override
+    public void resetLite() {
+        if (o.lite) {
+            transMan = new TransactionManagerLite(this);
+            chainMan = new ChainManagerLite(this, (o.testNet) ? ChainManager.TEST_NET : ChainManager.POW_CHAIN);
+            netMan.broadcast(new DifficultyRequest());
+            TransactionDataRequest tdr = new TransactionDataRequest();
+            tdr.addresses = ki.getAddMan().getAll();
+            netMan.broadcast(tdr);
+            BlockRequest br = new BlockRequest();
+            br.lite = ki.getOptions().lite;
+            br.fromHeight = ki.getChainMan().currentHeight();
+            netMan.broadcast(br);
+        }
     }
 
     private void rn() {

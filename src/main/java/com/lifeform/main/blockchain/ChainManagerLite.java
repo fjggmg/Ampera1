@@ -136,7 +136,8 @@ public class ChainManagerLite implements IChainMan {
                     }
                 }
                 if (add) {
-                    ki.getGUIHook().addTransaction(transaction, b.height);
+                    if (ki.getGUIHook() != null)
+                        ki.getGUIHook().addTransaction(transaction, b.height);
                 }
             }
             mostRecent = b;

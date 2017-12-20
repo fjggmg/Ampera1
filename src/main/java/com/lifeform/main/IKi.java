@@ -56,4 +56,6 @@ public interface IKi {
     void restartNetwork();
 
     IStateManager getStateManager();
+
+    void resetLite();
 }

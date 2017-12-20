@@ -6,8 +6,8 @@ import java.io.Serializable;
 import java.math.BigInteger;
 
 public class BlockRequest implements Serializable, Packet {
-    BigInteger fromHeight;
-    boolean lite = false;
+    public BigInteger fromHeight;
+    public boolean lite = false;
     @Override
     public void process(IKi ki, IConnectionManager connMan, PacketGlobal pg) {
         ki.debug("Received block request");

@@ -22,19 +22,18 @@ public class BlockHeader implements Serializable, Packet {
         ki.debug("Received block header");
         ki.debug("Height: " + height);
         pg.headerMap.put(ID, this);
-        if (pg.laFlag && laFlag) {
+        if (laFlag) {
             if (ki.getChainMan().getByHeight(height).ID.equals(ID)) {
                 LastAgreedEnd lae = new LastAgreedEnd();
                 lae.height = height;
-                laFlag = false;
+                pg.laFlag = false;
+                ki.debug("Found last agreed block: " + height);
                 connMan.sendPacket(lae);
             } else {
                 LastAgreedContinue lac = new LastAgreedContinue();
                 lac.height = height.subtract(BigInteger.ONE);
                 connMan.sendPacket(lac);
             }
-        } else if (pg.cuFlag) {
-            pg.cuMap.put(this, new ArrayList<>());
         } else {
             pg.bMap.put(this, new ArrayList<>());
             if (ki.getNetMan().isRelay() && ki.getChainMan().currentHeight().compareTo(height) < 0) {

@@ -11,13 +11,7 @@ public class LastAgreedEnd implements Serializable, Packet {
     @Override
     public void process(IKi ki, IConnectionManager connMan, PacketGlobal pg) {
         ki.debug("Received last agreed end");
-        ChainUpStart cus = new ChainUpStart();
-        cus.startHeight = height.add(BigInteger.ONE);
-        connMan.sendPacket(cus);
-        pg.sendFromHeight(cus.startHeight);
-        ChainUpEnd cue = new ChainUpEnd();
-        cue.startHeight = cus.startHeight;
-        connMan.sendPacket(cue);
+        pg.sendFromHeight(height);
     }
 
     @Override

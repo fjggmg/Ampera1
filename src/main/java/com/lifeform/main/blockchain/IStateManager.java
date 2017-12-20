@@ -4,4 +4,6 @@ public interface IStateManager {
 
     void addBlock(Block block, String connID);
 
+    void start();
+
 }

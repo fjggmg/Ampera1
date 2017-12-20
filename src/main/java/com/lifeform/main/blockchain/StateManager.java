@@ -1,39 +1,42 @@
 package com.lifeform.main.blockchain;
 
 import com.lifeform.main.IKi;
-import com.lifeform.main.network.BlockEnd;
-import com.lifeform.main.network.BlockHeader;
-import com.lifeform.main.network.LastAgreedStart;
-import com.lifeform.main.network.TransactionPacket;
+import com.lifeform.main.network.*;
 import com.lifeform.main.transactions.ITrans;
 
 import java.math.BigInteger;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 public class StateManager extends Thread implements IStateManager {
-    private volatile Map<String, Map<BigInteger, Block>> connBlocks = new HashMap<>();
-    private volatile boolean changed = false;
+    private volatile ConcurrentMap<String, ConcurrentMap<BigInteger, Block>> connBlocks = new ConcurrentHashMap<>();
     private IKi ki;
 
     public StateManager(IKi ki) {
         this.ki = ki;
     }
 
+    private BigInteger addHeight = BigInteger.ZERO;
     @Override
     public void addBlock(Block block, String connID) {
         if (connBlocks.get(connID) != null) {
             connBlocks.get(connID).put(block.height, block);
         } else {
-            Map<BigInteger, Block> map = new HashMap<>();
+            ConcurrentMap<BigInteger, Block> map = new ConcurrentHashMap<>();
             map.put(block.height, block);
             connBlocks.put(connID, map);
         }
+        if (block.height.compareTo(addHeight) > 0) {
+            addHeight = block.height;
+        }
+        ki.debug("Adding block of height: " + block.height);
 
-        changed = true;
     }
 
     private volatile List<String> deleted = new ArrayList<>();
     private volatile Map<String, Boolean> deleteMap = new HashMap<>();
+    private volatile Map<String, Boolean> sentLA = new HashMap<>();
     public void run() {
 
         ML:
@@ -49,8 +52,22 @@ public class StateManager extends Thread implements IStateManager {
             }
             deleted.clear();
 
-            if (changed) {
+            if (addHeight.compareTo(ki.getChainMan().currentHeight()) > 0) {
+
+                ki.debug("State changed, adjusting block chain.");
                 for (String connID : connBlocks.keySet()) {
+                    //TODO works with linear progression, will cause small leak with mitigation
+                    connBlocks.get(connID).remove(ki.getChainMan().currentHeight().subtract(BigInteger.valueOf(100L)));
+                    if (ki.getNetMan().getConnection(connID) == null) {
+                        ki.debug("Connection: " + connID + " has gone null, removing from list");
+                        deleteMap.put(connID, true);
+                        continue;
+                    }
+                    if (!ki.getNetMan().getConnection(connID).isConnected()) {
+                        ki.debug("Connection: " + connID + " has disconnected, removing from list");
+                        deleteMap.put(connID, true);
+                        continue;
+                    }
 
                     if (connBlocks.get(connID).get(ki.getChainMan().currentHeight().add(BigInteger.ONE)) != null) {
                         Block b = connBlocks.get(connID).get(ki.getChainMan().currentHeight().add(BigInteger.ONE));
@@ -59,11 +76,17 @@ public class StateManager extends Thread implements IStateManager {
                             if (bs.retry()) {
                                 for (int i = 0; i < 5; i++) {
                                     if (ki.getChainMan().addBlock(b).success()) {
+                                        ki.debug("Block verified, broadcasting.");
+                                        sendBlock(b);
+                                        sentLA.put(connID, false);
                                         continue ML;
                                     }
                                 }
                             }
                         } else {
+                            ki.debug("Block verified, broadcasting.");
+                            sendBlock(b);
+                            sentLA.put(connID, false);
                             continue ML;
                         }
                     }
@@ -95,18 +118,32 @@ public class StateManager extends Thread implements IStateManager {
 
                                 }
 
+
                                 if (!foundLastAgreed) {
-                                    LastAgreedStart las = new LastAgreedStart();
-                                    las.height = ki.getChainMan().currentHeight();
-                                    ki.getNetMan().getConnection(connID).sendPacket(las);
+                                    ki.debug("Failed to find last agreed block");
+                                    if ((sentLA.get(connID) != null && !sentLA.get(connID)) || sentLA.get(connID) == null) {
+                                        sentLA.put(connID, true);
+                                        LastAgreedStart las = new LastAgreedStart();
+                                        las.height = ki.getChainMan().currentHeight();
+                                        ki.getNetMan().getConnection(connID).sendPacket(las);
+                                    }
+
                                 } else {
+                                    ki.debug("Found last agreed block");
                                     for (BigInteger h : connBlocks.get(connID).keySet()) {
-                                        if (connBlocks.get(connID).get(h.subtract(BigInteger.ONE)) != null)
-                                            if (!connBlocks.get(connID).get(h).prevID.matches(connBlocks.get(connID).get(h.subtract(BigInteger.ONE)).ID)) {
+
+                                        if (connBlocks.get(connID).get(h.subtract(BigInteger.ONE)) != null) {
+                                            ki.debug("PREVID: " + connBlocks.get(connID).get(h).prevID);
+                                            ki.debug("ID: " + connBlocks.get(connID).get(h.subtract(BigInteger.ONE)).ID);
+                                            if (!connBlocks.get(connID).get(h).prevID.equals(connBlocks.get(connID).get(h.subtract(BigInteger.ONE)).ID)) {
+
                                                 deleteMap.put(connID, true);
+                                                ki.debug("Chain is invalid, deleting blocks");
                                                 continue ML;
                                             }
+                                        }
                                     }
+                                    ki.debug("Mitigating collision");
                                     Map<BigInteger, Set<ITrans>> transMap = new HashMap<>();
                                     BigInteger laCarry = new BigInteger(lastAgreed.toByteArray());
                                     Map<BigInteger, Block> archive = new HashMap<>();
@@ -118,6 +155,7 @@ public class StateManager extends Thread implements IStateManager {
 
                                             transactions.add(ki.getChainMan().getByHeight(lastAgreed).getTransaction(trans));
                                         }
+                                        transactions.add(ki.getChainMan().getByHeight(lastAgreed).getCoinbase());
                                         transMap.put(new BigInteger(lastAgreed.toByteArray()), transactions);
                                     }
 
@@ -131,6 +169,7 @@ public class StateManager extends Thread implements IStateManager {
                                     BigInteger laCarry2 = new BigInteger(laCarry.toByteArray());
                                     boolean doneMitigating = false;
                                     transMap.clear();
+                                    ki.debug("Undid chain and transactions back to last agreed block");
                                     while (!doneMitigating) {
                                         if (connBlocks.get(connID).get(laCarry) == null) {
                                             doneMitigating = true;
@@ -148,6 +187,7 @@ public class StateManager extends Thread implements IStateManager {
                                     }
 
                                     if (!doneMitigating) {
+
                                         for (BigInteger h : transMap.keySet()) {
                                             for (ITrans t : transMap.get(h)) {
                                                 ki.getTransMan().undoTransaction(t);
@@ -161,12 +201,23 @@ public class StateManager extends Thread implements IStateManager {
                                                 break;
                                             }
                                         }
+                                    } else {
+                                        ki.debug("Collision mitigated");
+                                        sentLA.put(connID, false);
+                                        sendFromHeight(laCarry2);
                                     }
 
 
                                 }
 
 
+                            } else {
+                                //TODO if something fucks up look here first
+                                //request blocks here
+                                BlockRequest br = new BlockRequest();
+                                br.fromHeight = ki.getChainMan().currentHeight();
+                                br.lite = ki.getOptions().lite;
+                                ki.getNetMan().getConnection(connID).sendPacket(br);
                             }
                         }
                     }
@@ -215,6 +266,14 @@ public class StateManager extends Thread implements IStateManager {
         bh.height = b.height;
         bh.coinbase = b.getCoinbase().toJSON();
         return bh;
+    }
+
+    private void sendFromHeight(BigInteger height) {
+        for (; height.compareTo(ki.getChainMan().currentHeight()) <= 0; height = height.add(BigInteger.ONE)) {
+            if (height.compareTo(BigInteger.valueOf(-1L)) != 0)
+                sendBlock(ki.getChainMan().getByHeight(height));
+        }
+
     }
 
 

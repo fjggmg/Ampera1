@@ -15,6 +15,45 @@ public class BlockEnd implements Serializable, Packet {
     @Override
     public void process(IKi ki, IConnectionManager connMan, PacketGlobal pg) {
         ki.debug("Received block end");
+        BlockHeader bh = pg.headerMap.get(ID);
+        List<ITrans> trans = pg.bMap.get(bh);
+        Block block = pg.formBlock(bh);
+        if (block == null) {
+            ki.debug("Something fucked up, block is null");
+            return;
+        }
+        ki.debug("Block formed, adding transactions:");
+        int i = 0;
+        for (ITrans t : trans) {
+            i++;
+            ki.debug("Transaction " + i + " added");
+            block.addTransaction(t);
+        }
+        /*
+        if (ki.getChainMan().getByHeight(block.height) != null && ki.getChainMan().getByHeight(block.height).ID.equals(block.ID)) {
+            ki.debug("Already have this block");
+            BlockAck ba = new BlockAck();
+            ba.height = block.height;
+            ba.verified = true;
+            connMan.sendPacket(ba);
+            return;
+        }
+        */
+        ki.getStateManager().addBlock(block, connMan.getID());
+        if (ki.getMinerMan() != null && ki.getMinerMan().isMining()) {
+            ki.debug("Restarting miners");
+            /** old miner stuff
+             CPUMiner.height = ki.getChainMan().currentHeight().add(BigInteger.ONE);
+             CPUMiner.prevID = ki.getChainMan().getByHeight(ki.getChainMan().currentHeight()).ID;
+             */
+
+            ki.getMinerMan().restartMiners();
+        }
+        BlockAck ba = new BlockAck();
+        ba.height = block.height;
+        ba.verified = true;
+        connMan.sendPacket(ba);
+        /*
         if (pg.cuFlag) {
             BlockHeader bh = pg.headerMap.get(ID);
             List<ITrans> trans = pg.cuMap.get(bh);
@@ -114,6 +153,7 @@ public class BlockEnd implements Serializable, Packet {
                         CPUMiner.height = ki.getChainMan().currentHeight().add(BigInteger.ONE);
                         CPUMiner.prevID = ki.getChainMan().getByHeight(ki.getChainMan().currentHeight()).ID;
                         */
+        /*
                         ki.getMinerMan().restartMiners();
                     }
                     BlockAck ba = new BlockAck();
@@ -127,6 +167,7 @@ public class BlockEnd implements Serializable, Packet {
                     br.fromHeight = ki.getChainMan().currentHeight().add(BigInteger.ONE);
                     connMan.sendPacket(br);
                      */
+        /*
                 ki.debug("Adding block to future blocks");
                 pg.futureBlocks.add(block);
             }
@@ -141,9 +182,10 @@ public class BlockEnd implements Serializable, Packet {
                         BigInteger height = block.height;
                         sendFromHeight(height);
                     }
-                }*/
+                }
 
-        }
+        }*/
+
     }
 
     @Override
