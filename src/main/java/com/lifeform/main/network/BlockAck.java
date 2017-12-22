@@ -21,6 +21,7 @@ public class BlockAck implements Serializable,Packet {
                 pg.doneDownloading = true;
                 connMan.doneDownloading();
                 connMan.sendPacket(new DoneDownloading());
+                connMan.sendPacket(new DDFullChain());
             } else if (ki.getChainMan().currentHeight().compareTo(height) == 0) {
                 connMan.sendPacket(new DoneDownloading());
             }

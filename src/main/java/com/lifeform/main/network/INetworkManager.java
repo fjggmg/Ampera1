@@ -13,7 +13,8 @@ public interface INetworkManager {
     void broadcast(Object o);
     void broadcastAllBut(String ID,Object o);
     IConnectionManager getConnection(String ID);
-    void connectionInit(String ID, IConnectionManager connMan);
+
+    boolean connectionInit(String ID, IConnectionManager connMan);
     void start();
     boolean isRelay();
     Client getClient(String ID);
@@ -29,6 +30,8 @@ public interface INetworkManager {
     void addRelays(List<String> relays);
 
     List<String> getRelays();
+
+    void close();
 
 
 }

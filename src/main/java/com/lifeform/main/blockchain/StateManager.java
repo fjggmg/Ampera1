@@ -17,7 +17,7 @@ public class StateManager extends Thread implements IStateManager {
         this.ki = ki;
     }
 
-    private BigInteger addHeight = BigInteger.ZERO;
+    private BigInteger addHeight = BigInteger.valueOf(-1L);
     @Override
     public void addBlock(Block block, String connID) {
         if (connBlocks.get(connID) != null) {
@@ -38,7 +38,7 @@ public class StateManager extends Thread implements IStateManager {
     private volatile Map<String, Boolean> deleteMap = new HashMap<>();
     private volatile Map<String, Boolean> sentLA = new HashMap<>();
     public void run() {
-
+        setName("StateManager");
         ML:
         while (true) {
             for (String key : deleteMap.keySet()) {
@@ -76,16 +76,20 @@ public class StateManager extends Thread implements IStateManager {
                             if (bs.retry()) {
                                 for (int i = 0; i < 5; i++) {
                                     if (ki.getChainMan().addBlock(b).success()) {
-                                        ki.debug("Block verified, broadcasting.");
-                                        sendBlock(b);
+                                        if (ki.getNetMan().isRelay()) {
+                                            ki.debug("Block verified, broadcasting.");
+                                            sendBlock(b);
+                                        }
                                         sentLA.put(connID, false);
                                         continue ML;
                                     }
                                 }
                             }
                         } else {
-                            ki.debug("Block verified, broadcasting.");
-                            sendBlock(b);
+                            if (ki.getNetMan().isRelay()) {
+                                ki.debug("Block verified, broadcasting.");
+                                sendBlock(b);
+                            }
                             sentLA.put(connID, false);
                             continue ML;
                         }
@@ -212,18 +216,18 @@ public class StateManager extends Thread implements IStateManager {
 
 
                             } else {
+                                /*
                                 //TODO if something fucks up look here first
                                 //request blocks here
                                 BlockRequest br = new BlockRequest();
                                 br.fromHeight = ki.getChainMan().currentHeight();
                                 br.lite = ki.getOptions().lite;
                                 ki.getNetMan().getConnection(connID).sendPacket(br);
+                                */
                             }
                         }
                     }
                 }
-
-
             }
 
 
@@ -236,8 +240,6 @@ public class StateManager extends Thread implements IStateManager {
     }
 
     private void sendBlock(Block b) {
-        if (ki.getOptions().mDebug)
-            ki.debug("Sending block to network from miner");
         BlockHeader bh2 = formHeader(b);
         ki.getNetMan().broadcast(bh2);
 
@@ -251,8 +253,6 @@ public class StateManager extends Thread implements IStateManager {
         BlockEnd be = new BlockEnd();
         be.ID = b.ID;
         ki.getNetMan().broadcast(be);
-        if (ki.getOptions().mDebug)
-            ki.debug("Done sending block");
     }
 
     private BlockHeader formHeader(Block b) {

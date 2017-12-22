@@ -56,7 +56,11 @@ public class Handshake implements Serializable, Packet {
         }
 
         connMan.setID(ID);
-        ki.getNetMan().connectionInit(ID, connMan);
+        if (!ki.getNetMan().connectionInit(ID, connMan)) {
+            //connMan.disconnect();
+            ki.debug("Already connected to this address");
+            return;
+        }
         connMan.setStartTime(startTime);
         if (ki.getChainMan().currentHeight().compareTo(BigInteger.valueOf(-1L)) == 0)
             connMan.sendPacket(new DoneDownloading());
@@ -111,15 +115,6 @@ public class Handshake implements Serializable, Packet {
             br.lite = ki.getOptions().lite;
             br.fromHeight = ki.getChainMan().currentHeight();
             connMan.sendPacket(br);
-        } else if (ki.getChainMan().currentHeight().compareTo(BigInteger.ZERO) > 0 && !ki.getChainMan().getByHeight(ki.getChainMan().currentHeight()).ID.equals(mostRecentBlock)) {
-            if (ki.getChainMan().currentHeight().compareTo(currentHeight) < 0) {
-                ki.debug("Discrepency between chains, starting resolution process");
-                LastAgreedStart las = new LastAgreedStart();
-                las.height = ki.getChainMan().currentHeight();
-                pg.laFlag = true;
-                connMan.sendPacket(las);
-            }
-
         }
     }
 

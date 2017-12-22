@@ -1,6 +1,7 @@
 package com.lifeform.main.data;
 
 import com.lifeform.main.IKi;
+import com.lifeform.main.blockchain.Block;
 import com.lifeform.main.network.IConnectionManager;
 import com.lifeform.main.network.Ping;
 import com.lifeform.main.network.TransactionDataRequest;
@@ -230,6 +231,52 @@ public class InputHandler extends Thread {
                     }
                     tdr.addresses = ki.getAddMan().getAll();
                     ki.getNetMan().broadcast(tdr);
+
+
+                } else if (line.startsWith("blockData")) {
+                    String[] args = line.split(" ");
+                    if (args.length < 2) {
+                        ki.debug("Not enough args");
+                        continue;
+                    }
+                    ki.debug("========Block Data For #" + args[1] + "==============");
+                    BigInteger height;
+                    try {
+                        height = new BigInteger(args[1]);
+                    } catch (Exception e) {
+                        continue;
+                    }
+                    Block b = ki.getChainMan().getByHeight(height);
+                    if (b == null) {
+                        ki.debug("Block is null");
+                        continue;
+                    }
+
+                    ki.debug("Block header: " + b.header());
+                    ki.debug("Block ID: " + b.ID);
+                    ki.debug("Block hash: " + EncryptionManager.sha512(b.header()));
+                    ki.debug("Transactions: " + b.getTransactionKeys().size());
+                    ki.debug("TransactionIDs: ");
+                    for (String key : b.getTransactionKeys()) {
+                        ki.debug("ID: " + key);
+                    }
+
+                    ki.debug("Block PrevID: " + b.prevID);
+
+                } else if (line.startsWith("setHeight")) {
+                    String[] args = line.split(" ");
+                    if (args.length < 2) {
+                        ki.debug("Not enough args");
+                        continue;
+                    }
+                    BigInteger height;
+                    try {
+                        height = new BigInteger(args[1]);
+                    } catch (Exception e) {
+                        continue;
+                    }
+                    ki.debug("Setting height to: " + height);
+                    ki.getChainMan().setHeight(height);
 
 
                 } else {

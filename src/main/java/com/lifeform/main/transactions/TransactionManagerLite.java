@@ -20,6 +20,9 @@ public class TransactionManagerLite implements ITransMan {
 
     Map<String, TXIO> utxoMap = new HashMap<>();
 
+    public void resetLite() {
+        utxoMap.clear();
+    }
     @Override
     public boolean verifyTransaction(ITrans transaction) {
 
@@ -31,6 +34,7 @@ public class TransactionManagerLite implements ITransMan {
     @Override
     public boolean addTransaction(ITrans transaction) {
 
+        pending.remove(transaction);
         for (Output output : transaction.getOutputs()) {
             for (Address a : ki.getAddMan().getAll()) {
                 if (output.getAddress().encodeForChain().equals(a.encodeForChain())) {

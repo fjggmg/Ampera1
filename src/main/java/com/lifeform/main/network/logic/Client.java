@@ -99,7 +99,7 @@ public class Client implements INetworkEndpoint{
             b.connect(host, port).channel().closeFuture().sync();
         } catch (Exception e) {
             ki.debug("Connection closed unexpectedly with message: " + e.getMessage());
-            ki.restartNetwork();
+            //ki.restartNetwork();
         } finally {
             group.shutdownGracefully();
             connMan.disconnect();

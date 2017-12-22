@@ -13,7 +13,7 @@ import java.util.concurrent.CopyOnWriteArraySet;
 public class NetMan extends Thread implements INetworkManager {
 
     public static final String[] bootstrap = {"73.108.51.16"};
-    public static final String NET_VER = "2.0.7";
+    public static final String NET_VER = "2.0.8";
     private IKi ki;
     private boolean isRelay;
     public static final int PORT = 29555;
@@ -42,6 +42,8 @@ public class NetMan extends Thread implements INetworkManager {
                     for (IConnectionManager connMan : connections) {
                         if (connMan == null || !connMan.isConnected()) {
                             toRemove.add(connMan);
+                            if (connMan != null)
+                                connMan.getPacketProcessor().getPacketGlobal().cancelAllResends();
                         }
                     }
                     List<Thread> tToRemove = new ArrayList<>();
@@ -88,6 +90,11 @@ public class NetMan extends Thread implements INetworkManager {
     @Override
     public List<String> getRelays() {
         return relays;
+    }
+
+    @Override
+    public void close() {
+        rList.close();
     }
 
     @Override
@@ -150,17 +157,18 @@ public class NetMan extends Thread implements INetworkManager {
         List<String> alreadyAttempted = new ArrayList<>();
         if (!relays.isEmpty()) {
             for (String ip : relays) {
-                if (alreadyAttempted.contains(ip)) continue;
+                if (ip == null || ip.isEmpty()) continue;
+                if (alreadyAttempted.contains(ip.replace("/", "").split(":")[0])) continue;
                 attemptConnect(ip);
-                alreadyAttempted.add(ip);
+                alreadyAttempted.add(ip.replace("/", "").split(":")[0]);
             }
         }
         if (connections.size() < 4) {
             for (String ip : bootstrap) {
-
-                if (alreadyAttempted.contains(ip)) continue;
+                if (ip == null || ip.isEmpty()) continue;
+                if (alreadyAttempted.contains(ip.replace("/", "").split(":")[0])) continue;
                 attemptConnect(ip);
-                alreadyAttempted.add(ip);
+                alreadyAttempted.add(ip.replace("/", "").split(":")[0]);
             }
         }
     }
@@ -247,19 +255,33 @@ public class NetMan extends Thread implements INetworkManager {
         return connMap.get(ID);
     }
 
+    private static boolean canInit = true;
     @Override
-    public void connectionInit(String ID, IConnectionManager connMan) {
-
+    public boolean connectionInit(String ID, IConnectionManager connMan) {
+        while (!canInit) {
+        }
+        canInit = false;
         if (!isRelay) {
             for (IConnectionManager cm : connections) {
-                if (cm.getAddress().replace("/", "").split(":")[0].equals(connMan.getAddress().replace("/", "").split(":")[0]))
-                    return;
+                if (cm.getAddress().replace("/", "").split(":")[0].equals(connMan.getAddress().replace("/", "").split(":")[0])) {
+                    canInit = true;
+                    return false;
+                }
+            }
+        }
+
+        for (IConnectionManager cm : connections) {
+            if (cm.getID().equals(ID)) {
+                canInit = true;
+                return false;
             }
         }
 
         connMap.put(ID,connMan);
         connections.add(connMan);
         ki.debug("Connection init for: " + ID + " is complete");
+        canInit = true;
+        return true;
 
     }
 }

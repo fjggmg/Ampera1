@@ -107,13 +107,10 @@ public class ChainManagerLite implements IChainMan {
 
     @Override
     public BlockState addBlock(Block b) {
-        if (mostRecent == null) {
+        if (mostRecent == null || (b.height.compareTo(mostRecent.height) > 0)) {
             mostRecent = b;
             chain.put(b.height, b);
-            return BlockState.SUCCESS;
-        }
-        BlockState bs = softVerifyBlock(b);
-        if (bs.success()) {
+
             if (b.solver.equals(ki.getEncryptMan().getPublicKeyString())) {
                 if (ki.getGUIHook() != null)
                     ki.getGUIHook().blockFound();
@@ -151,9 +148,9 @@ public class ChainManagerLite implements IChainMan {
                 chain.remove(currentHeight.subtract(BigInteger.valueOf(100L)));
             }
             ki.getNetMan().broadcast(new DifficultyRequest());
-            return bs;
+            return BlockState.SUCCESS;
         }
-        return bs;
+        return BlockState.WRONG_HEIGHT;
     }
 
     @Override

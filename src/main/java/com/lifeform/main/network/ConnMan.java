@@ -1,6 +1,7 @@
 package com.lifeform.main.network;
 
 import com.lifeform.main.IKi;
+import com.lifeform.main.Ki;
 import com.lifeform.main.data.EncryptionManager;
 import com.lifeform.main.network.logic.INetworkEndpoint;
 import io.netty.channel.Channel;
@@ -16,6 +17,8 @@ public class ConnMan extends IConnectionManager {
     private INetworkEndpoint endpoint;
     private long currentLatency;
     private long startTime;
+    private static long OURSTARTTIME = System.currentTimeMillis();
+    private static String OURID;
     public ConnMan(IKi ki, boolean isRelay, INetworkEndpoint endpoint, IPacketProcessor pp)
     {
         this(ki,isRelay,endpoint);
@@ -23,6 +26,8 @@ public class ConnMan extends IConnectionManager {
     }
     public ConnMan(IKi ki, boolean isRelay, INetworkEndpoint endpoint)
     {
+        if (OURID == null)
+            OURID = EncryptionManager.sha224(Ki.getInstance().getEncryptMan().getPublicKeyString() + OURSTARTTIME);
         this.isRelay = isRelay;
         this.ki = ki;
         pp = new PacketProcessor(ki,this);
@@ -68,9 +73,9 @@ public class ConnMan extends IConnectionManager {
         //sendPacket("This is a test 5");
         Handshake hs = new Handshake();
         hs.isRelay = isRelay;
-        hs.startTime = System.currentTimeMillis();
+        hs.startTime = OURSTARTTIME;
         hs.currentHeight = ki.getChainMan().currentHeight();
-        hs.ID = EncryptionManager.sha224(ki.getEncryptMan().getPublicKeyString() + hs.startTime);
+        hs.ID = OURID;
         if(ki.getChainMan().currentHeight().compareTo(BigInteger.ZERO) > 0)
             hs.mostRecentBlock = ki.getChainMan().getByHeight(ki.getChainMan().currentHeight()).ID;
         else

@@ -920,7 +920,7 @@ public class FXMLController {
     }
 
     public void closeClicked(MouseEvent mouseEvent) {
-
+        ki.close();
         System.exit(0);
     }
 

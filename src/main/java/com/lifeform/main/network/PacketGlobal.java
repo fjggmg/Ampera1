@@ -5,13 +5,9 @@ import com.lifeform.main.blockchain.Block;
 import com.lifeform.main.blockchain.ChainManager;
 import com.lifeform.main.transactions.ITrans;
 import com.lifeform.main.transactions.Transaction;
-import org.eclipse.collections.impl.bimap.mutable.HashBiMap;
 
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 class PacketGlobal {
 
@@ -27,7 +23,7 @@ class PacketGlobal {
     boolean laFlag = false;
     boolean onRightChain = true;
     Map<BlockHeader, List<ITrans>> bMap = new HashMap<>();
-    Map<BlockHeader, List<ITrans>> cuMap = new HashMap<>();
+    Map<BlockHeader, Set<ITrans>> cuMap = new HashMap<>();
     List<Block> cuBlocks = new ArrayList<>();
     List<Block> futureBlocks = new ArrayList<>();
     Map<String, BlockHeader> headerMap = new HashMap<>();
@@ -48,6 +44,12 @@ class PacketGlobal {
         }
     }
 
+    void cancelAllResends() {
+        for (BigInteger height : resendMap.keySet()) {
+            resendMap.get(height).interrupt();
+        }
+        resendMap.clear();
+    }
     void sendBlock(final Block b) {
         BlockHeader bh2 = formHeader(b);
         connMan.sendPacket(bh2);
@@ -62,6 +64,7 @@ class PacketGlobal {
         BlockEnd be = new BlockEnd();
         be.ID = b.ID;
         connMan.sendPacket(be);
+        /*
         if (b.height.compareTo(ki.getChainMan().currentHeight()) == 0) {
             for (ITrans trans : ki.getTransMan().getPending()) {
                 TransactionPacket tp = new TransactionPacket();
@@ -69,6 +72,7 @@ class PacketGlobal {
                 connMan.sendPacket(tp);
             }
         }
+        */
 
         if (!resendMap.containsKey(b.height)) {
             resendTimesMap.merge(b.height, 1, (a, b1) -> a + b1);
@@ -79,7 +83,7 @@ class PacketGlobal {
             }
             Thread t = new Thread(() -> {
                 try {
-                    Thread.sleep(450000);
+                    Thread.sleep(45000);
                 } catch (InterruptedException e) {
                     //fail silently as we expect this to happen
                     if (ki.getOptions().pDebug)

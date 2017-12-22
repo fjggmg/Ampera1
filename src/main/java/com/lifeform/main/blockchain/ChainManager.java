@@ -1,6 +1,7 @@
 package com.lifeform.main.blockchain;
 
 import com.lifeform.main.IKi;
+import com.lifeform.main.Ki;
 import com.lifeform.main.data.EncryptionManager;
 import com.lifeform.main.data.JSONManager;
 import com.lifeform.main.data.Utils;
@@ -8,9 +9,6 @@ import com.lifeform.main.data.XodusStringMap;
 import com.lifeform.main.data.files.StringFileHandler;
 import com.lifeform.main.transactions.*;
 import org.json.simple.JSONObject;
-import org.mapdb.DB;
-import org.mapdb.DBMaker;
-import org.mapdb.Serializer;
 
 import java.io.File;
 import java.math.BigInteger;
@@ -33,10 +31,10 @@ public class ChainManager implements IChainMan {
     private Block current;
     private BigInteger currentDifficulty = new BigInteger("00000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF", 16);
     private volatile BigInteger currentHeight = BigInteger.valueOf(-1L);
-    DB csDB;
-    DB tmDB;
-    DB exDB;
-    DB cmDB;
+    //DB csDB;
+    //DB tmDB;
+    //DB exDB;
+    //DB cmDB;
     private XodusStringMap blockHeightMap;
     private XodusStringMap blockIDMap;
     private Block tempBlock = null;
@@ -49,10 +47,10 @@ public class ChainManager implements IChainMan {
      */
     Map<String, Block> blockchainMap = new HashMap<>();
     Map<BigInteger,Block> heightMap = new HashMap<>();
-    ConcurrentMap<String,String> csMap;
-    ConcurrentMap<String,String> tmMap;
-    ConcurrentMap<String,String> exMap;
-    ConcurrentMap<String,String> cmMap;
+    XodusStringMap csMap;
+    //ConcurrentMap<String,String> tmMap;
+    //ConcurrentMap<String,String> exMap;
+    //ConcurrentMap<String,String> cmMap;
     private String fileName = "block.data";
     private String folderName;
     private short chainID;
@@ -72,27 +70,17 @@ public class ChainManager implements IChainMan {
      * ONLY FOR USE WITH TEMP CHAIN MANAGER FOR PRIMING CHAIN! NOT FOR USE WITH NORMAL CHAIN, FORCES BLOCK ONTO STACK
      * @param block
      */
-    private synchronized void primeChain(Block block)
-    {
+    private synchronized void primeChain(Block block) {
         if (bDebug)
             ki.debug("Priming temp chain with block of height: " + block.height);
         current = block;
         currentHeight = block.height;
-        blockchainMap.put(block.ID,block);
-        heightMap.put(block.height,block);
+        blockchainMap.put(block.ID, block);
+        heightMap.put(block.height, block);
 
         saveBlock(block);
-        csMap.put("current",block.toJSON());
-        csMap.put("height",block.height.toString());
-        csDB.commit();
-        for(String ID:block.getTransactionKeys())
-        {
-            //System.out.println("ID for trans block is: " + ID);
-            tmMap.put(ID,block.height.toString());
-        }
-        tmDB.commit();
-        cmMap.put(block.ID,block.height.toString());
-        cmDB.commit();
+        csMap.put("current", block.toJSON());
+        csMap.put("height", block.height.toString());
     }
 
     public Block getTemp() {
@@ -114,21 +102,8 @@ public class ChainManager implements IChainMan {
         this.chainID = chainID;
         this.bDebug = bDebug;
         new File("chain" + chainID + "/").mkdirs();
-        csDB = DBMaker.fileDB("chain" + chainID + "/" + csFile).fileMmapEnableIfSupported().transactionEnable().make();
 
-        csMap = csDB.hashMap("csDB", Serializer.STRING,Serializer.STRING).createOrOpen();
-
-        tmDB = DBMaker.fileDB("chain" + chainID + "/" + transFile).fileMmapEnableIfSupported().transactionEnable().make();
-
-        tmMap = tmDB.hashMap("tmDB",Serializer.STRING,Serializer.STRING).createOrOpen();
-
-        exDB = DBMaker.fileDB("chain" + chainID + "/" + extraFile).fileMmapEnableIfSupported().transactionEnable().make();
-
-        exMap = exDB.hashMap("exDB",Serializer.STRING,Serializer.STRING).createOrOpen();
-
-        cmDB = DBMaker.fileDB("chain" + chainID + "/" + cmFile).fileMmapEnableIfSupported().transactionEnable().make();
-
-        cmMap = cmDB.hashMap("cmDB", Serializer.STRING,Serializer.STRING).createOrOpen();
+        csMap = new XodusStringMap("chain" + chainID + "/" + csFile + "xodus");
 
         blockHeightMap = new XodusStringMap(folderName + chainID + "heights");
         blockIDMap = new XodusStringMap(folderName + chainID + "IDs");
@@ -137,21 +112,17 @@ public class ChainManager implements IChainMan {
 
     public void close()
     {
-        csDB.commit();
-        csDB.close();
-        tmDB.commit();
-        tmDB.close();
-        exDB.commit();
-        exDB.close();
-        cmDB.commit();
-        cmDB.close();
+        csMap.close();
     }
 
     public BlockState addBlock(Block block) {
-
+        Ki.canClose = false;
         BlockState state = verifyBlock(block);
-        if (!state.success()) return state;
-        else exMap.put(block.ID, block.toJSON());
+        if (!state.success()) {
+            Ki.canClose = true;
+            return state;
+        }
+
         ki.blockTick(block);
         current = block;
         currentHeight = block.height;
@@ -161,16 +132,6 @@ public class ChainManager implements IChainMan {
         saveBlock(block);
         csMap.put("current",block.toJSON());
         csMap.put("height",block.height.toString());
-        csDB.commit();
-        for(String ID:block.getTransactionKeys())
-        {
-            //System.out.println("ID for trans block is: " + ID);
-            tmMap.put(ID,block.height.toString());
-        }
-        tmDB.commit();
-        //TODO: find out why there is an occasional Access Denied error on this line, most likely due to how quickly we're accessing it
-        cmMap.put(block.ID,block.height.toString());
-        cmDB.commit();
         if (block.height.mod(BigInteger.valueOf(1000L)).equals(BigInteger.ZERO) && block.height.compareTo(BigInteger.ZERO) != 0) {
             if (this.current != null) {
                 recalculateDifficulty();
@@ -183,12 +144,15 @@ public class ChainManager implements IChainMan {
             verifyLater.remove(b.height);
         }
         */
+        Ki.canClose = true;
         return BlockState.SUCCESS;
     }
 
     @Override
     public void setHeight(BigInteger height) {
         this.currentHeight = height;
+        csMap.put("height", height.toString());
+
     }
 
     @Override
@@ -203,11 +167,6 @@ public class ChainManager implements IChainMan {
         {
             currentHeight = BigInteger.valueOf(-1);
             csMap.clear();
-            tmMap.clear();
-            cmMap.clear();
-            csDB.commit();
-            tmDB.commit();
-            cmDB.commit();
 
         }
         /** old miner
@@ -240,11 +199,6 @@ public class ChainManager implements IChainMan {
             all[i].delete();
         }
         csMap.clear();
-        tmMap.clear();
-        cmMap.clear();
-        csDB.commit();
-        tmDB.commit();
-        cmDB.commit();
     }
 
 
@@ -538,7 +492,6 @@ public class ChainManager implements IChainMan {
         currentHeight = block.height;
         csMap.put("current",block.toJSON());
         csMap.put("height",block.height.toString());
-        csDB.commit();
         canMine = true;
     }
 

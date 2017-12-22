@@ -55,7 +55,7 @@ public class Server {
                             }
                             p.addLast(
                                     new ObjectEncoder(),
-                                    new ObjectDecoder(1500000000, ClassResolvers.cacheDisabled(null)),
+                                    new ObjectDecoder(150000000, ClassResolvers.cacheDisabled(null)),
                                     new ServerHandler(ki));
 
                         }

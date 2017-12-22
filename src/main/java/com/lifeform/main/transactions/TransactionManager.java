@@ -213,20 +213,32 @@ public class TransactionManager implements ITransMan {
     List<String> sUtxos;
     List<String> toRemove = new ArrayList<>();
     Set<String> hs = new HashSet<>();
+    private static volatile boolean lock = false;
     @Override
     public List<Output> getUTXOs(Address address) {
-        if(utxoMap.get(address.encodeForChain()) == null) return null;
+        while (lock) {
+        }
+        lock = true;
+        if (utxoMap.get(address.encodeForChain()) == null) {
+            lock = false;
+            return null;
+        }
         sUtxos = JSONManager.parseJSONToList(utxoMap.get(address.encodeForChain()));
-        if (sUtxos != null) {
+        if (sUtxos != null && !sUtxos.isEmpty()) {
             utxos.clear();
             toRemove.clear();
-            if (sUtxos != null) {
+            if (sUtxos != null && !sUtxos.isEmpty()) {
                 hs.clear();
                 hs.addAll(sUtxos);
                 sUtxos.clear();
                 sUtxos.addAll(hs);
                 for (String s : sUtxos) {
-                    Output o = Output.fromJSON(s);
+                    Output o;
+                    try {
+                        o = Output.fromJSON(s);
+                    } catch (Exception e) {
+                        continue;
+                    }
                     if (!utxoSpent.get(o.getID())) {
                         if (!usedUTXOs.contains(Input.fromOutput(o).getID()))
                             utxos.add(o);
@@ -238,8 +250,10 @@ public class TransactionManager implements ITransMan {
                     utxoMap.put(address.encodeForChain(), JSONManager.parseListToJSON(sUtxos).toJSONString());
                 }
             }
+            lock = false;
             return utxos;
         }
+        lock = false;
         return null;
     }
 

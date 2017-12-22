@@ -8,6 +8,7 @@ import com.lifeform.main.transactions.ITrans;
 import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.List;
+import java.util.Set;
 
 public class BlockEnd implements Serializable, Packet {
     public String ID;
@@ -42,7 +43,7 @@ public class BlockEnd implements Serializable, Packet {
         ki.getStateManager().addBlock(block, connMan.getID());
         if (ki.getMinerMan() != null && ki.getMinerMan().isMining()) {
             ki.debug("Restarting miners");
-            /** old miner stuff
+            /* old miner stuff
              CPUMiner.height = ki.getChainMan().currentHeight().add(BigInteger.ONE);
              CPUMiner.prevID = ki.getChainMan().getByHeight(ki.getChainMan().currentHeight()).ID;
              */

@@ -12,16 +12,10 @@ public class BlockRequest implements Serializable, Packet {
     public void process(IKi ki, IConnectionManager connMan, PacketGlobal pg) {
         ki.debug("Received block request");
         if (!lite) {
-            if (fromHeight.compareTo(ki.getChainMan().currentHeight()) <= 0)
+            if (fromHeight.compareTo(ki.getChainMan().currentHeight()) < 0)
                 pg.sendBlock(fromHeight.add(BigInteger.ONE));
-            else {
-                LastAgreedStart las = new LastAgreedStart();
-                las.height = ki.getChainMan().currentHeight();
-                pg.laFlag = true;
-                connMan.sendPacket(las);
-            }
         } else {
-            pg.sendBlock(ki.getChainMan().currentHeight().subtract(BigInteger.valueOf(30L)));
+            pg.sendBlock(ki.getChainMan().currentHeight());
         }
 
     }

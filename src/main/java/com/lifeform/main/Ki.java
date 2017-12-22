@@ -49,13 +49,14 @@ public class Ki extends Thread implements IKi {
     private IKi ki = this;
     private boolean run = true;
     //TODO: need to start saving version number to file for future conversion of files
-    public static final String VERSION = "0.16.0-BETA";
+    public static final String VERSION = "0.16.1-BETA";
     private boolean relay = false;
     private FXMLController guiHook;
     public static boolean debug = true;
     private static IKi instance;
     private InputHandler ih;
     private IStateManager stateMan;
+    public static volatile boolean canClose = true;
     public Ki(Options o) {
         JOCLContextAndCommandQueue.setWorkaround(true);
         JOCLContextAndCommandQueue.noIntel = true;
@@ -163,9 +164,7 @@ public class Ki extends Thread implements IKi {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            if (rn) {
-                rn();
-            }
+
         }
     }
     @Override
@@ -179,9 +178,12 @@ public class Ki extends Thread implements IKi {
     }
     public void close()
     {
+        while (!canClose) {
+        }
         chainMan.close();
         transMan.close();
         addMan.save();
+        netMan.close();
     }
 
     /**
@@ -213,6 +215,9 @@ public class Ki extends Thread implements IKi {
     @Override
     public void resetLite() {
         if (o.lite) {
+            for (int i = 0; i < 100; i++) {
+                ki.debug("RESETTING LITE!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+            }
             transMan = new TransactionManagerLite(this);
             chainMan = new ChainManagerLite(this, (o.testNet) ? ChainManager.TEST_NET : ChainManager.POW_CHAIN);
             netMan.broadcast(new DifficultyRequest());

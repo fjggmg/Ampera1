@@ -5,6 +5,8 @@ import com.lifeform.main.IKi;
 import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class BlockHeader implements Serializable, Packet {
     public String solver;
@@ -35,7 +37,7 @@ public class BlockHeader implements Serializable, Packet {
                 connMan.sendPacket(lac);
             }
         } else {
-            pg.bMap.put(this, new ArrayList<>());
+            pg.bMap.put(this, new CopyOnWriteArrayList<>());
             if (ki.getNetMan().isRelay() && ki.getChainMan().currentHeight().compareTo(height) < 0) {
                 ki.getNetMan().broadcast(this);
             }
