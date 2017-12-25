@@ -86,11 +86,18 @@ public class StateManager extends Thread implements IStateManager {
                                 }
                             }
                         } else {
+
                             if (ki.getNetMan().isRelay()) {
                                 ki.debug("Block verified, broadcasting.");
                                 sendBlock(b);
                             }
                             sentLA.put(connID, false);
+                            continue ML;
+                        }
+
+                        if (bs != BlockState.PREVID_MISMATCH) {
+                            addHeight = ki.getChainMan().currentHeight();
+                            deleteMap.put(connID, true);
                             continue ML;
                         }
                     }

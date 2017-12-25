@@ -30,7 +30,11 @@ public class InputHandler extends Thread {
         setName("CommandLine Input");
         BufferedReader s = new BufferedReader(new InputStreamReader(System.in));
         while (true) {
-
+            try {
+                sleep(500);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
 
             try {
                 String line = s.readLine();
@@ -274,6 +278,14 @@ public class InputHandler extends Thread {
                         height = new BigInteger(args[1]);
                     } catch (Exception e) {
                         continue;
+                    }
+                    if (height.compareTo(ki.getChainMan().currentHeight()) < 0) {
+                        BigInteger h1 = new BigInteger(height.toByteArray());
+                        for (; h1.compareTo(ki.getChainMan().currentHeight()) <= 0; h1 = h1.add(BigInteger.ONE)) {
+                            for (String trans : ki.getChainMan().getByHeight(h1).getTransactionKeys()) {
+                                ki.getTransMan().undoTransaction(ki.getChainMan().getByHeight(h1).getTransaction(trans));
+                            }
+                        }
                     }
                     ki.debug("Setting height to: " + height);
                     ki.getChainMan().setHeight(height);

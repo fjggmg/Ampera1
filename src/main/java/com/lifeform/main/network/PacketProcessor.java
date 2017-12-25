@@ -8,6 +8,7 @@ import java.util.List;
 public class PacketProcessor implements IPacketProcessor{
 
     private IKi ki;
+    private int ncTimes = 0;
     public PacketProcessor(IKi ki,IConnectionManager connMan)
     {
         this.connMan = connMan;
@@ -26,9 +27,25 @@ public class PacketProcessor implements IPacketProcessor{
     {
         while(run)
         {
+            if (connMan != null)
+                try {
+                    if (connMan.getChannel() != null)
+                        if (!connMan.isConnected()) {
+                            if (ncTimes > 1000) {
+                                connMan.disconnect();
+                                ki.getNetMan().getConnections().remove(connMan);
+                                return;
+                            }
+                            ncTimes++;
+                        }
+                } catch (Exception e) {
+
+                }
+
             //ki.debug("Heartbeat of packet processor, current queue size: " + packets.size());
             if(packets.size() > 0)
             {
+                ncTimes = 0;
                 if (packets.get(0) == null) {
                     packets.remove(0);
                     continue;
