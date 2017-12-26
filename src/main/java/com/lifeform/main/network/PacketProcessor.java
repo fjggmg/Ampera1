@@ -32,8 +32,10 @@ public class PacketProcessor implements IPacketProcessor{
                     if (connMan.getChannel() != null)
                         if (!connMan.isConnected()) {
                             if (ncTimes > 1000) {
+                                ki.debug("Disconnecting: " + connMan.getAddress() + " because the connection appears to already be dead");
                                 connMan.disconnect();
                                 ki.getNetMan().getConnections().remove(connMan);
+
                                 return;
                             }
                             ncTimes++;
@@ -52,8 +54,14 @@ public class PacketProcessor implements IPacketProcessor{
                 }
                 if(ki.getOptions().pDebug)
                 ki.debug("Processing packet: " + packets.get(0).toString());
-                process(packets.get(0));
-                packets.remove(0);
+                try {
+                    process(packets.get(0));
+
+                } catch (Exception e) {
+                    ki.debug("Error while processing packet on connection to: " + connMan.getAddress());
+                } finally {
+                    packets.remove(0);
+                }
             }
             if (packets.size() == 0) {
                 try {
