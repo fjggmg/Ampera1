@@ -12,8 +12,9 @@ import java.util.concurrent.CopyOnWriteArraySet;
 
 public class NetMan extends Thread implements INetworkManager {
 
-    public static final String[] bootstrap = {"73.108.51.16"};
-    public static final String NET_VER = "2.0.8";
+    public static final String[] testBoot = {"73.108.51.16"};
+    public static final String[] bootstrap = {"mimpve.host"};
+    public static final String NET_VER = "2.0.9";
     private IKi ki;
     private boolean isRelay;
     public static final int PORT = 29555;
@@ -177,7 +178,7 @@ public class NetMan extends Thread implements INetworkManager {
             }
         }
         if (connections.size() < 4) {
-            for (String ip : bootstrap) {
+            for (String ip : (ki.getOptions().testNet) ? testBoot:bootstrap) {
                 if (ip == null || ip.isEmpty()) continue;
                 if (alreadyAttempted.contains(ip.replace("/", "").split(":")[0])) continue;
                 attemptConnect(ip);
@@ -204,19 +205,17 @@ public class NetMan extends Thread implements INetworkManager {
         nullConns.clear();
         if (ki.getOptions().pDebug)
             ki.debug("Beginning broadcast");
-        if (connections.isEmpty()) {
+        while (connections.isEmpty()) {
             if (ki.getOptions().pDebug)
                 ki.debug("Connections empty, attempting reconnect");
             for (String ip : bootstrap) {
                 attemptConnect(ip);
             }
             try {
-                sleep(200);
+                sleep(20000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            broadcast(o);
-            return;
         }
 
         int i = 0;
