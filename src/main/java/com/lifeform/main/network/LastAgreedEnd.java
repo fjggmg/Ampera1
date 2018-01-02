@@ -10,6 +10,7 @@ public class LastAgreedEnd implements Serializable, Packet {
 
     @Override
     public void process(IKi ki, IConnectionManager connMan, PacketGlobal pg) {
+        if(ki.getOptions().pDebug)
         ki.debug("Received last agreed end");
         pg.sendFromHeight(height);
     }

@@ -37,10 +37,7 @@ public class StateManagerLite extends Thread implements IStateManager {
                     if (blockMap.get(connID).get(addHeight) != null) {
                         if (addHeight.compareTo(ki.getChainMan().currentHeight()) > 0) {
                             if (ki.getChainMan().addBlock(blockMap.get(connID).get(addHeight)).success()) {
-                                ((TransactionManagerLite) ki.getTransMan()).resetLite();
-                                TransactionDataRequest tdr = new TransactionDataRequest();
-                                tdr.addresses = ki.getAddMan().getAll();
-                                ki.getNetMan().getConnection(connID).sendPacket(tdr);
+
                             }
                         }
                     }

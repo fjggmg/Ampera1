@@ -32,11 +32,12 @@ public class PacketProcessor implements IPacketProcessor{
                     if (connMan.getChannel() != null)
                         if (!connMan.isConnected()) {
                             if (ncTimes > 1000) {
+                                if(ki.getOptions().pDebug)
                                 ki.debug("Disconnecting: " + connMan.getAddress() + " because the connection appears to already be dead");
                                 connMan.disconnect();
                                 ki.getNetMan().getConnections().remove(connMan);
-
                                 return;
+
                             }
                             ncTimes++;
                         }
@@ -52,8 +53,8 @@ public class PacketProcessor implements IPacketProcessor{
                     packets.remove(0);
                     continue;
                 }
-                if(ki.getOptions().pDebug)
-                ki.debug("Processing packet: " + packets.get(0).toString());
+                //if(ki.getOptions().pDebug)
+                //ki.debug("Processing packet: " + packets.get(0).toString());
                 try {
                     process(packets.get(0));
 
@@ -91,8 +92,8 @@ public class PacketProcessor implements IPacketProcessor{
 
     @Override
     public void enqueue(Object packet) {
-        if(ki.getOptions().pDebug)
-        ki.debug("Enqueued new packet for processing: " + packet.toString());
+        //if(ki.getOptions().pDebug)
+        //ki.debug("Enqueued new packet for processing: " + packet.toString());
         packets.add(packet);
     }
 

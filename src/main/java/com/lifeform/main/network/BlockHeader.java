@@ -21,7 +21,9 @@ public class BlockHeader implements Serializable, Packet {
 
     @Override
     public void process(IKi ki, IConnectionManager connMan, PacketGlobal pg) {
+        if(ki.getOptions().pDebug)
         ki.debug("Received block header");
+        if(ki.getOptions().pDebug)
         ki.debug("Height: " + height);
         pg.headerMap.put(ID, this);
         if (laFlag) {

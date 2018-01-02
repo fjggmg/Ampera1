@@ -1,6 +1,7 @@
 package com.lifeform.main.network;
 
 import com.lifeform.main.IKi;
+import com.lifeform.main.transactions.ITrans;
 
 import java.io.Serializable;
 import java.math.BigInteger;
@@ -22,6 +23,13 @@ public class BlockAck implements Serializable,Packet {
                 connMan.doneDownloading();
                 connMan.sendPacket(new DoneDownloading());
                 connMan.sendPacket(new DDFullChain());
+                if(ki.getNetMan().isRelay())
+                for(ITrans t:ki.getTransMan().getPending())
+                {
+                    TransactionPacket tp = new TransactionPacket();
+                    tp.trans = t.toJSON();
+                    connMan.sendPacket(tp);
+                }
             } else if (ki.getChainMan().currentHeight().compareTo(height) == 0) {
                 connMan.sendPacket(new DoneDownloading());
             }

@@ -51,7 +51,7 @@ public class ConnMan extends IConnectionManager {
     public void sendPacket(Object o) {
 
         if(ki.getOptions().pDebug)
-            ki.debug("Sending packet: " + o.toString() + " to " + getAddress());
+            //ki.debug("Sending packet: " + o.toString() + " to " + getAddress());
         //connection.sendTCP(new FrameworkMessage.KeepAlive());
         endpoint.sendPacket(o);
     }

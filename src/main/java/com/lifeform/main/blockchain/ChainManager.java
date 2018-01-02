@@ -169,7 +169,7 @@ public class ChainManager implements IChainMan {
             csMap.clear();
 
         }
-        /** old miner
+        /* old miner
         CPUMiner.height = currentHeight().add(BigInteger.ONE);
         if(getByHeight(currentHeight()) != null)
             CPUMiner.prevID = getByHeight(currentHeight()).ID;

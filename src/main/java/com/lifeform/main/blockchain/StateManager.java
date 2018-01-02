@@ -54,7 +54,7 @@ public class StateManager extends Thread implements IStateManager {
 
             if (addHeight.compareTo(ki.getChainMan().currentHeight()) > 0) {
 
-                ki.debug("State changed, adjusting block chain.");
+                //ki.debug("State changed, adjusting block chain.");
                 for (String connID : connBlocks.keySet()) {
                     //TODO works with linear progression, will cause small leak with mitigation
                     connBlocks.get(connID).remove(ki.getChainMan().currentHeight().subtract(BigInteger.valueOf(100L)));

@@ -30,7 +30,8 @@ public class ClientHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
         try {
-            ki.debug("Received packet: " + msg.toString());
+            //if(ki.getOptions().pDebug)
+            //ki.debug("Received packet: " + msg.toString());
 
             connMan.received(msg);
         }finally{

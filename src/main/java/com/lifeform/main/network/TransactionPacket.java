@@ -18,6 +18,7 @@ public class TransactionPacket implements Serializable, Packet {
     private static ConcurrentHashMap.KeySetView<Object, Boolean> done = ConcurrentHashMap.newKeySet();
     @Override
     public void process(IKi ki, IConnectionManager connMan, PacketGlobal pg) {
+        if(ki.getOptions().pDebug)
         ki.debug("Received transaction packet");
         if (done.contains(trans) && (block == null || block.isEmpty())) {
             return;
@@ -40,7 +41,12 @@ public class TransactionPacket implements Serializable, Packet {
                 }
                 ki.getTransMan().getPending().add(trans);
                 if (ki.getNetMan().isRelay()) {
+                    ki.debug("BROADCASTING TRANSACTION PACKET");
                     ki.getNetMan().broadcastAllBut(connMan.getID(), this);
+                }
+                if(ki.getOptions().pDebug)
+                {
+                    ki.debug("====TRANSACTION IS VERIFIED AND ADDED====");
                 }
             }
         } else {

@@ -24,6 +24,26 @@ public class Handshake implements Serializable, Packet {
 
     @Override
     public void process(IKi ki, IConnectionManager connMan, PacketGlobal pg) {
+
+
+        pg.startHeight = currentHeight;
+        if (chainVer != Handshake.CHAIN_VER) {
+
+            //ki.debug("Mismatched chain versions, disconnecting");
+            connMan.disconnect();
+            return;
+        }
+        if (!version.equals(Handshake.VERSION)) {
+            //ki.debug("Mismatched network versions, disconnecting");
+            connMan.disconnect();
+            return;
+        }
+        if (ID.equals(EncryptionManager.sha224(ki.getEncryptMan().getPublicKeyString() + startTime))) {
+            ki.debug("Connected to ourself, disconnecting");
+            connMan.disconnect();
+            return;
+        }
+
         ki.debug("Received handshake: ");
         ki.debug("ID: " + ID);
         ki.debug("Most recent block: " + mostRecentBlock);
@@ -38,23 +58,6 @@ public class Handshake implements Serializable, Packet {
             return;
         }
         ki.debug("Is Relay: " + isRelay);
-        pg.startHeight = currentHeight;
-        if (chainVer != Handshake.CHAIN_VER) {
-            ki.debug("Mismatched chain versions, disconnecting");
-            connMan.disconnect();
-            return;
-        }
-        if (!version.equals(Handshake.VERSION)) {
-            ki.debug("Mismatched network versions, disconnecting");
-            connMan.disconnect();
-            return;
-        }
-        if (ID.equals(EncryptionManager.sha224(ki.getEncryptMan().getPublicKeyString() + startTime))) {
-            ki.debug("Connected to ourself, disconnecting");
-            connMan.disconnect();
-            return;
-        }
-
         connMan.setID(ID);
         if (!ki.getNetMan().connectionInit(ID, connMan)) {
             //connMan.disconnect();
@@ -66,7 +69,6 @@ public class Handshake implements Serializable, Packet {
             connMan.sendPacket(new DoneDownloading());
         if (ki.getOptions().lite) {
             TransactionDataRequest tdr = new TransactionDataRequest();
-            tdr.addresses = ki.getAddMan().getAll();
             connMan.sendPacket(tdr);
             DifficultyRequest dr = new DifficultyRequest();
             connMan.sendPacket(dr);
@@ -108,7 +110,7 @@ public class Handshake implements Serializable, Packet {
             {
                 pg.doneDownloading = true;
             }
-        if (ki.getChainMan().currentHeight().compareTo(currentHeight) < 0) {
+        if (ki.getChainMan().currentHeight().compareTo(currentHeight) < 0 && !ki.getNetMan().isRelay()) {
             ki.debug("Requesting blocks we're missing from the network");
             //pg.doneDownloading = true;
             BlockRequest br = new BlockRequest();

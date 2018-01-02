@@ -10,6 +10,7 @@ public class BlockRequest implements Serializable, Packet {
     public boolean lite = false;
     @Override
     public void process(IKi ki, IConnectionManager connMan, PacketGlobal pg) {
+        if(ki.getOptions().pDebug)
         ki.debug("Received block request");
         if (!lite) {
             if (fromHeight.compareTo(ki.getChainMan().currentHeight()) < 0)

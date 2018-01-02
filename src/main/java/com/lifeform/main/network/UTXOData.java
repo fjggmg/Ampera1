@@ -15,7 +15,7 @@ public class UTXOData implements Serializable, Packet {
     @Override
     public void process(IKi ki, IConnectionManager connMan, PacketGlobal pg) {
         if (ki.getOptions().lite) {
-            ki.getMainLog().info("Received transaction data: ");
+            ki.getMainLog().info("Received transaction data");
             List<Output> outputs = new ArrayList<>();
             for (String o : utxos) {
                 outputs.add(Output.fromJSON(o));

@@ -233,7 +233,6 @@ public class InputHandler extends Thread {
                     for (Address a : ki.getAddMan().getAll()) {
                         ki.getMainLog().info(a.encodeForChain());
                     }
-                    tdr.addresses = ki.getAddMan().getAll();
                     ki.getNetMan().broadcast(tdr);
 
 

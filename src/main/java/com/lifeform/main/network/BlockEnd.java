@@ -15,6 +15,7 @@ public class BlockEnd implements Serializable, Packet {
 
     @Override
     public void process(IKi ki, IConnectionManager connMan, PacketGlobal pg) {
+        if(ki.getOptions().pDebug)
         ki.debug("Received block end");
         BlockHeader bh = pg.headerMap.get(ID);
         List<ITrans> trans = pg.bMap.get(bh);

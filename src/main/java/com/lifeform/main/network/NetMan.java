@@ -13,8 +13,8 @@ import java.util.concurrent.CopyOnWriteArraySet;
 public class NetMan extends Thread implements INetworkManager {
 
     public static final String[] testBoot = {"73.108.51.16"};
-    public static final String[] bootstrap = {"mimpve.host"};
-    public static final String NET_VER = "2.0.9";
+    public static final String[] bootstrap = {"73.108.51.16","mimpve.host"};
+    public static final String NET_VER = "2.0.10";
     private IKi ki;
     private boolean isRelay;
     public static final int PORT = 29555;
@@ -135,6 +135,7 @@ public class NetMan extends Thread implements INetworkManager {
                     client.start(connMan);
                 } catch (Exception e)
                 {
+                    if(ki.getOptions().pDebug)
                     ki.debug("Client stopped, error follows: ");
                     e.printStackTrace();
                 }

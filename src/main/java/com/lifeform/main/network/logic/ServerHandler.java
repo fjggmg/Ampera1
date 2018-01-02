@@ -20,7 +20,8 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
         // Echo back the received object to the client.
         try {
-            ki.debug("Received packet: " + msg.toString());
+            //if(ki.getOptions().pDebug)
+            //ki.debug("Received packet: " + msg.toString());
 
             connMan.received(msg);
         }finally{

@@ -11,6 +11,7 @@ public class LastAgreedContinue implements Serializable, Packet {
 
     @Override
     public void process(IKi ki, IConnectionManager connMan, PacketGlobal pg) {
+        if(ki.getOptions().pDebug)
         ki.debug("received last agreed continue");
         BlockHeader bh;
         Block b = ki.getChainMan().getByHeight(height);
