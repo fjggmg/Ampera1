@@ -33,8 +33,11 @@ class PacketGlobal {
     boolean gotPending = false;
     boolean cuFlag = false;
     List<String> relays;
-
+    private boolean sfhLock = false;
     void sendFromHeight(BigInteger height) {
+        if(sfhLock) return;
+        sfhLock = true;
+
         for (; height.compareTo(ki.getChainMan().currentHeight()) <= 0; height = height.add(BigInteger.ONE)) {
             if (height.compareTo(BigInteger.valueOf(-1L)) != 0)
                 sendBlock(height);
@@ -42,6 +45,7 @@ class PacketGlobal {
         if (ki.getChainMan().getTemp() != null && ki.getChainMan().getTemp().height.compareTo(ki.getChainMan().currentHeight()) > 0) {
             sendBlock(ki.getChainMan().getTemp());
         }
+        sfhLock = false;
     }
 
     void cancelAllResends() {
@@ -76,21 +80,21 @@ class PacketGlobal {
 
         if (!resendMap.containsKey(b.height)) {
             resendTimesMap.merge(b.height, 1, (a, b1) -> a + b1);
-            if (resendTimesMap.get(b.height) > 5) {
-                ki.debug("Disconnecting connection since retry to send a single block has taken more than 5 tries");
-                connMan.disconnect();
+            if (resendTimesMap.get(b.height) > 2) {
+                ki.debug("Disconnecting connection since retry to send a single block has taken more than 2 tries");
+                //connMan.disconnect();
                 return;
             }
             Thread t = new Thread(() -> {
                 try {
-                    Thread.sleep(45000);
-                } catch (InterruptedException e) {
+                    b.height.wait(5000);
+                } catch (Exception e) {
                     //fail silently as we expect this to happen
-                    if (ki.getOptions().pDebug)
-                        ki.debug("Block resend #" + b.height.toString() + " interrupted");
+                    //if (ki.getOptions().pDebug)
+                        //ki.debug("Block resend #" + b.height.toString() + " interrupted");
                     return;
                 }
-                ki.debug("Did not receive BlockAck within 45 seconds, resending");
+                ki.debug("Did not receive BlockAck within 5 seconds, resending");
                 sendBlock(b);
             });
             t.setName("Block #" + b.height.toString() + " Resend Thread");

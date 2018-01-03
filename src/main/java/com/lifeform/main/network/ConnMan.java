@@ -50,7 +50,7 @@ public class ConnMan extends IConnectionManager {
     @Override
     public void sendPacket(Object o) {
 
-        if(ki.getOptions().pDebug)
+        //if(ki.getOptions().pDebug)
             //ki.debug("Sending packet: " + o.toString() + " to " + getAddress());
         //connection.sendTCP(new FrameworkMessage.KeepAlive());
         endpoint.sendPacket(o);
@@ -63,12 +63,18 @@ public class ConnMan extends IConnectionManager {
         process = false;
         endpoint.disconnect();
         ki.getNetMan().getConnections().remove(this);
+        pp.getThread().interrupt();
 
     }
 
     @Override
     public void connected()
     {
+        if(ki.getOptions().lite)
+        {
+            while(ki.getTransMan() == null) {}
+            ki.resetLite();
+        }
         ki.debug("Connection established, forming and sending Handshake");
         //sendPacket("This is a test 5");
         Handshake hs = new Handshake();

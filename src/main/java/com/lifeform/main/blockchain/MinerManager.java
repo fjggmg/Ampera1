@@ -154,6 +154,7 @@ public class MinerManager implements IMinerMan{
     @Override
     public void startMiners() {
         if (!miningCompatible) return;
+        while(!GPUMiner.initDone) {}
         if(ki.getOptions().mining) {
             mining = true;
             /* old miner, OCL miner can use both CPU and GPU now

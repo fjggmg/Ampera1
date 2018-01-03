@@ -39,7 +39,7 @@ public class GPUMiner extends Thread implements IMiner {
     private static volatile boolean stopAutotune = false;
     private static volatile boolean triedNoCPU = false;
     public static ContextMaster platforms = new ContextMaster();
-
+    public static boolean initDone = false;
     public static int init(IKi ki) throws MiningIncompatibleException {
         //You have to shut these down when you're done with them.
         for (SHA3Miner m : gpuMiners) {
@@ -60,6 +60,7 @@ public class GPUMiner extends Thread implements IMiner {
                 ki.debug("Starting autotune");
                 Autotune.setup(jcacqs, false);
                 autotuneDone = true;
+
             }
         };
         t.start();
@@ -104,6 +105,7 @@ public class GPUMiner extends Thread implements IMiner {
         }
 
         jcacqs_ = jcacqs;
+        initDone = true;
         return jcacqs.size();
     }
 

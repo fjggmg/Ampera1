@@ -159,6 +159,7 @@ public class Ki extends Thread implements IKi {
                     continue;
                 minerMan.setup();
                 setupDone = true;
+                break;
             }
             try {
                 Thread.sleep(4500);

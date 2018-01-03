@@ -9,66 +9,75 @@ public class PacketProcessor implements IPacketProcessor{
 
     private IKi ki;
     private int ncTimes = 0;
+    private Thread heartbeat;
     public PacketProcessor(IKi ki,IConnectionManager connMan)
     {
         this.connMan = connMan;
         this.ki = ki;
-        new Thread() {
+        heartbeat = new Thread() {
             public void run() {
                 setName("PacketProcessor");
                 heartbeat();
+
             }
 
-        }.start();
+        };
+        heartbeat.start();
         pg = new PacketGlobal(ki, connMan);
     }
-
+    public Thread getThread()
+    {
+        return heartbeat;
+    }
     private void heartbeat()
     {
         while(run)
         {
-            if (connMan != null)
-                try {
-                    if (connMan.getChannel() != null)
-                        if (!connMan.isConnected()) {
-                            if (ncTimes > 1000) {
-                                if(ki.getOptions().pDebug)
-                                ki.debug("Disconnecting: " + connMan.getAddress() + " because the connection appears to already be dead");
-                                connMan.disconnect();
-                                ki.getNetMan().getConnections().remove(connMan);
-                                return;
+            synchronized (packets) {
+                if (connMan != null)
+                    try {
+                        if (connMan.getChannel() != null)
+                            if (!connMan.isConnected()) {
+                                if (ncTimes > 1000) {
+                                    if (ki.getOptions().pDebug)
+                                        ki.debug("Disconnecting: " + connMan.getAddress() + " because the connection appears to already be dead");
+                                    connMan.disconnect();
+                                    ki.getNetMan().getConnections().remove(connMan);
+                                    heartbeat.interrupt();
+                                    return;
 
+                                }
+                                ncTimes++;
                             }
-                            ncTimes++;
-                        }
-                } catch (Exception e) {
+                    } catch (Exception e) {
 
-                }
+                    }
 
-            //ki.debug("Heartbeat of packet processor, current queue size: " + packets.size());
-            if(packets.size() > 0)
-            {
-                ncTimes = 0;
-                if (packets.get(0) == null) {
-                    packets.remove(0);
-                    continue;
-                }
-                //if(ki.getOptions().pDebug)
-                //ki.debug("Processing packet: " + packets.get(0).toString());
-                try {
-                    process(packets.get(0));
+                //ki.debug("Heartbeat of packet processor, current queue size: " + packets.size());
+                if (packets.size() > 0) {
+                    ncTimes = 0;
+                    if (packets.get(0) == null) {
+                        packets.remove(0);
+                        continue;
+                    }
+                    //if(ki.getOptions().pDebug)
+                    //ki.debug("Processing packet: " + packets.get(0).toString());
+                    try {
+                        process(packets.get(0));
 
-                } catch (Exception e) {
-                    ki.debug("Error while processing packet on connection to: " + connMan.getAddress());
-                } finally {
-                    packets.remove(0);
+                    } catch (Exception e) {
+                        ki.debug("Error while processing packet on connection to: " + connMan.getAddress());
+                    } finally {
+                        packets.remove(0);
+                    }
                 }
-            }
-            if (packets.size() == 0) {
-                try {
-                    Thread.sleep(5);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+                if (packets.size() == 0) {
+                    try {
+                        packets.wait();
+                    } catch (InterruptedException e) {
+                        if(ki.getOptions().pDebug)
+                       ki.debug("PacketProccessor: " + connMan.getID() + " has been killed");
+                    }
                 }
             }
         }
@@ -94,7 +103,10 @@ public class PacketProcessor implements IPacketProcessor{
     public void enqueue(Object packet) {
         //if(ki.getOptions().pDebug)
         //ki.debug("Enqueued new packet for processing: " + packet.toString());
-        packets.add(packet);
+        synchronized (packets) {
+            packets.add(packet);
+            packets.notifyAll();
+        }
     }
 
     @Override

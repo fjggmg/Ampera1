@@ -11,7 +11,7 @@ public class BlockSyncRequest implements Packet, Serializable {
     @Override
     public void process(IKi ki, IConnectionManager connMan, PacketGlobal pg) {
         if (height.compareTo(ki.getChainMan().currentHeight()) < 0) {
-            pg.sendFromHeight(height);
+            pg.sendBlock(height.add(BigInteger.ONE));
         }
     }
 

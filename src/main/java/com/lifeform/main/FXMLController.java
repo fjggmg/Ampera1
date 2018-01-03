@@ -423,7 +423,7 @@ public class FXMLController {
                     }
 
                 }
-                heightLabel.setText("Height: " + ki.getChainMan().currentHeight());
+                heightLabel.setText("Chain Height: " + ki.getChainMan().currentHeight());
             }
             if(tokenLabel != null)
             {
@@ -479,8 +479,9 @@ public class FXMLController {
             }
             if (cHashrate != null && minHashrate != null && maxHashrate != null && aHashrate != null) {
 
-                long cumulativeHash = ki.getMinerMan().cumulativeHashrate();
-                cHashrate.setText("Current Hashrate - " + format2.format(cumulativeHash) + " hashes/second");
+                long cHash = ki.getMinerMan().cumulativeHashrate();
+                double cumulativeHash = cHash/1000000;
+                cHashrate.setText("Current Hashrate - " + format2.format(cumulativeHash) + " megahashes/second");
                 if (cumulativeHash < minimumHash || minimumHash == 0) {
                     minimumHash = ki.getMinerMan().cumulativeHashrate();
                 }
@@ -493,7 +494,7 @@ public class FXMLController {
                     last25Hash.remove(0);
                 }
                 if (cumulativeHash != 0) {
-                    last25Hash.add(cumulativeHash);
+                    last25Hash.add(cHash);
                 }
                 long total = 0;
                 if (last25Hash.size() != 0) {
@@ -560,7 +561,7 @@ public class FXMLController {
 
         }
         if (blocksFound != null) {
-            blocksFound.setText("Blocks Found - " + blocksFoundInt);
+            blocksFound.setText("Blocks Found: " + blocksFoundInt);
         }
     }
 

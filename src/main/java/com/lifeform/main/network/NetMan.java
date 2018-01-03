@@ -36,6 +36,7 @@ public class NetMan extends Thread implements INetworkManager {
             relays = JSONManager.parseJSONToList(rList.get("relays"));
         }
         //Log.set(Log.LEVEL_TRACE);
+        //TODO USE ARRAY BLOCKING QUEUE
         new Thread(() -> {
             setName("Network Cleanup");
             while (true) {
@@ -178,7 +179,7 @@ public class NetMan extends Thread implements INetworkManager {
                 alreadyAttempted.add(ip.replace("/", "").split(":")[0]);
             }
         }
-        if (connections.size() < 4) {
+        if (connections.size() < 1) {
             for (String ip : (ki.getOptions().testNet) ? testBoot:bootstrap) {
                 if (ip == null || ip.isEmpty()) continue;
                 if (alreadyAttempted.contains(ip.replace("/", "").split(":")[0])) continue;
@@ -206,9 +207,20 @@ public class NetMan extends Thread implements INetworkManager {
         nullConns.clear();
         if (ki.getOptions().pDebug)
             ki.debug("Beginning broadcast");
+        int p = 0;
         while (connections.isEmpty()) {
+            if(p > 5)
+            {
+                ki.debug("We're unable to reconnect at the moment, the relay may be overloaded");
+                return;
+            }
             if (ki.getOptions().pDebug)
                 ki.debug("Connections empty, attempting reconnect");
+            try {
+                sleep(20000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
             for (String ip : bootstrap) {
                 attemptConnect(ip);
             }
@@ -217,6 +229,7 @@ public class NetMan extends Thread implements INetworkManager {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
+            p++;
         }
 
         int i = 0;
