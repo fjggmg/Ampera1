@@ -110,7 +110,7 @@ public class Handshake implements Serializable, Packet {
             {
                 pg.doneDownloading = true;
             }
-        if (ki.getChainMan().currentHeight().compareTo(currentHeight) < 0 && !ki.getNetMan().isRelay()) {
+        if (ki.getChainMan().currentHeight().compareTo(currentHeight) < 0) {
             ki.debug("Requesting blocks we're missing from the network");
             //pg.doneDownloading = true;
             BlockRequest br = new BlockRequest();

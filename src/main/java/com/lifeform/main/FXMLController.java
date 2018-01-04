@@ -485,11 +485,11 @@ public class FXMLController {
                 long cHash = ki.getMinerMan().cumulativeHashrate();
                 double cumulativeHash = cHash/1000000;
                 cHashrate.setText("Current Hashrate - " + format2.format(cumulativeHash) + " megahashes/second");
-                if (cumulativeHash < minimumHash || minimumHash == 0) {
+                if (cHash < minimumHash || minimumHash == 0) {
                     minimumHash = ki.getMinerMan().cumulativeHashrate();
                 }
                 minHashrate.setText("Min - " + format2.format(minimumHash));
-                if (cumulativeHash > maximumHash) {
+                if (cHash > maximumHash) {
                     maximumHash = ki.getMinerMan().cumulativeHashrate();
                 }
                 maxHashrate.setText("Max - " + format2.format(maximumHash));

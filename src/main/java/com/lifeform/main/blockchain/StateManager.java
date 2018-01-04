@@ -12,7 +12,7 @@ import java.util.concurrent.ConcurrentMap;
 public class StateManager extends Thread implements IStateManager {
     private volatile ConcurrentMap<String, ConcurrentMap<BigInteger, Block>> connBlocks = new ConcurrentHashMap<>();
     private IKi ki;
-
+    private final Object sync = new Object();
     public StateManager(IKi ki) {
         this.ki = ki;
     }
@@ -31,7 +31,9 @@ public class StateManager extends Thread implements IStateManager {
             addHeight = block.height;
         }
         ki.debug("Adding block of height: " + block.height);
-        connBlocks.notify();
+        synchronized (sync) {
+            sync.notify();
+        }
 
     }
 
@@ -238,11 +240,12 @@ public class StateManager extends Thread implements IStateManager {
                 }
             }
 
-
-            try {
-                connBlocks.wait();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+            synchronized (sync) {
+                try {
+                    sync.wait();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
         }
     }

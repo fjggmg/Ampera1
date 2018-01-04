@@ -66,6 +66,7 @@ public class PacketProcessor implements IPacketProcessor{
                         process(packets.get(0));
 
                     } catch (Exception e) {
+                        e.printStackTrace();
                         ki.debug("Error while processing packet on connection to: " + connMan.getAddress());
                     } finally {
                         packets.remove(0);
