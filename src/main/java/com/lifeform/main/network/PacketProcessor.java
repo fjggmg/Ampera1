@@ -38,7 +38,7 @@ public class PacketProcessor implements IPacketProcessor{
                     try {
                         if (connMan.getChannel() != null)
                             if (!connMan.isConnected()) {
-                                if (ncTimes > 1000) {
+                                if (ncTimes > 100000000) {
                                     if (ki.getOptions().pDebug)
                                         ki.debug("Disconnecting: " + connMan.getAddress() + " because the connection appears to already be dead");
                                     connMan.disconnect();

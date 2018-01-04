@@ -130,8 +130,11 @@ public class FXMLController {
                         checked.add(a.encodeForChain());
                         //ki.getMainLog().info("Getting info from Address: " + a.encodeForChain());
                         List<Output> utxos = ki.getTransMan().getUTXOs(a);
+
                         if (utxos != null) {
-                            for (Output o : utxos) {
+                            Set<Output> sUtxos = new HashSet<>();
+                            sUtxos.addAll(utxos);
+                            for (Output o : sUtxos) {
                                 if (tokenValueMap.get(o.getToken()) == null) {
                                     tokenValueMap.put(o.getToken(), o.getAmount());
                                 } else {

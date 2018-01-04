@@ -18,7 +18,9 @@ public class UTXOData implements Serializable, Packet {
             ki.getMainLog().info("Received transaction data");
             List<Output> outputs = new ArrayList<>();
             for (String o : utxos) {
-                outputs.add(Output.fromJSON(o));
+                Output out = Output.fromJSON(o);
+                ki.debug("Output info: " + out.getID() + " Address " + out.getAddress().encodeForChain());
+                outputs.add(out);
                 //ki.getMainLog().info("Output: " + Output.fromJSON(o).getID());
             }
             ((TransactionManagerLite) ki.getTransMan()).addUTXOs(outputs);

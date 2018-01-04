@@ -31,6 +31,7 @@ public class StateManager extends Thread implements IStateManager {
             addHeight = block.height;
         }
         ki.debug("Adding block of height: " + block.height);
+        connBlocks.notify();
 
     }
 
@@ -239,7 +240,7 @@ public class StateManager extends Thread implements IStateManager {
 
 
             try {
-                sleep(10);
+                connBlocks.wait();
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }

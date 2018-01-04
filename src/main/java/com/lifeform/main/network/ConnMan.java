@@ -4,6 +4,7 @@ import com.lifeform.main.IKi;
 import com.lifeform.main.Ki;
 import com.lifeform.main.data.EncryptionManager;
 import com.lifeform.main.network.logic.INetworkEndpoint;
+import com.lifeform.main.transactions.TransactionManagerLite;
 import io.netty.channel.Channel;
 
 import java.math.BigInteger;
@@ -73,9 +74,9 @@ public class ConnMan extends IConnectionManager {
         if(ki.getOptions().lite)
         {
             while(ki.getTransMan() == null) {}
-            ki.resetLite();
+            ((TransactionManagerLite)ki.getTransMan()).resetLite();
         }
-        ki.debug("Connection established, forming and sending Handshake");
+        ki.debug("Connection established");
         //sendPacket("This is a test 5");
         Handshake hs = new Handshake();
         hs.isRelay = isRelay;

@@ -290,7 +290,26 @@ public class InputHandler extends Thread {
                     ki.getChainMan().setHeight(height);
 
 
-                } else {
+                } else if (line.startsWith("allAdds")) {
+                    for (Address a : ki.getAddMan().getAll()) {
+                        ki.debug("Address: " + a.encodeForChain());
+                    }
+
+                }else if(line.startsWith("getUTXOs")){
+                    if(line.split(" ").length < 1)
+                    {
+                        ki.debug("Not enough args");
+                        continue;
+                    }
+
+                    for(Output out:ki.getTransMan().getUTXOs(Address.decodeFromChain(line.split(" ")[1])))
+                    {
+                        ki.debug("Output data : " + out.getID() + " Address: " + out.getAddress().encodeForChain());
+                    }
+
+
+
+                 }else {
                     System.out.println("unrecognized input");
                 }
 

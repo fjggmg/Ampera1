@@ -13,8 +13,8 @@ import java.util.concurrent.CopyOnWriteArraySet;
 public class NetMan extends Thread implements INetworkManager {
 
     public static final String[] testBoot = {"73.108.51.16"};
-    public static final String[] bootstrap = {"73.108.51.16","mimpve.host"};
-    public static final String NET_VER = "2.0.10";
+    public static final String[] bootstrap = {"mimpve.host"};
+    public static final String NET_VER = "2.0.11";
     private IKi ki;
     private boolean isRelay;
     public static final int PORT = 29555;
@@ -67,7 +67,7 @@ public class NetMan extends Thread implements INetworkManager {
                 }
             }
         }).start();
-
+        /*
         if (!isRelay)
             new Thread(() -> {
                 while (true) {
@@ -81,6 +81,7 @@ public class NetMan extends Thread implements INetworkManager {
                     broadcast(bsr);
             }
             }).start();
+            */
     }
 
     @Override
@@ -129,6 +130,7 @@ public class NetMan extends Thread implements INetworkManager {
 
             public void run() {
                 setName("client:" + IP);
+                ki.debug("Attempting connection to: " + IP);
                 Client client = new Client(ki, IP, PORT);
                 IConnectionManager connMan = new ConnMan(ki, isRelay, client);
                 //connections.add(connMan);
@@ -171,22 +173,26 @@ public class NetMan extends Thread implements INetworkManager {
 
         }
         List<String> alreadyAttempted = new ArrayList<>();
-        if (!relays.isEmpty()) {
-            for (String ip : relays) {
-                if (ip == null || ip.isEmpty()) continue;
-                if (alreadyAttempted.contains(ip.replace("/", "").split(":")[0])) continue;
-                attemptConnect(ip);
-                alreadyAttempted.add(ip.replace("/", "").split(":")[0]);
-            }
+        for (String ip : (ki.getOptions().testNet) ? testBoot:bootstrap) {
+            if (ip == null || ip.isEmpty()) continue;
+            if (alreadyAttempted.contains(ip.replace("/", "").split(":")[0])) continue;
+            attemptConnect(ip);
+            alreadyAttempted.add(ip.replace("/", "").split(":")[0]);
         }
+        /*
         if (connections.size() < 1) {
-            for (String ip : (ki.getOptions().testNet) ? testBoot:bootstrap) {
-                if (ip == null || ip.isEmpty()) continue;
-                if (alreadyAttempted.contains(ip.replace("/", "").split(":")[0])) continue;
-                attemptConnect(ip);
-                alreadyAttempted.add(ip.replace("/", "").split(":")[0]);
+
+
+            if (!relays.isEmpty()) {
+                for (String ip : relays) {
+                    if (ip == null || ip.isEmpty()) continue;
+                    if (alreadyAttempted.contains(ip.replace("/", "").split(":")[0])) continue;
+                    attemptConnect(ip);
+                    alreadyAttempted.add(ip.replace("/", "").split(":")[0]);
+                }
             }
         }
+        */
     }
 
     @Override
@@ -216,11 +222,6 @@ public class NetMan extends Thread implements INetworkManager {
             }
             if (ki.getOptions().pDebug)
                 ki.debug("Connections empty, attempting reconnect");
-            try {
-                sleep(20000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
             for (String ip : bootstrap) {
                 attemptConnect(ip);
             }

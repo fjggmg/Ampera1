@@ -8,6 +8,8 @@ public class UTXODataEnd implements Packet,Serializable {
     @Override
     public void process(IKi ki, IConnectionManager connMan, PacketGlobal pg) {
 
+            UTXODataStart.connIDs.remove(connMan.getID());
+
     }
 
     @Override
