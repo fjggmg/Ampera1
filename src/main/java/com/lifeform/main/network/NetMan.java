@@ -14,7 +14,7 @@ public class NetMan extends Thread implements INetworkManager {
 
     public static final String[] testBoot = {"73.108.51.16"};
     public static final String[] bootstrap = {"mimpve.host"};
-    public static final String NET_VER = "2.0.11";
+    public static final String NET_VER = "2.0.12";
     private IKi ki;
     private boolean isRelay;
     public static final int PORT = 29555;
@@ -67,21 +67,22 @@ public class NetMan extends Thread implements INetworkManager {
                 }
             }
         }).start();
-        /*
+
         if (!isRelay)
             new Thread(() -> {
                 while (true) {
                     try {
-                        sleep(150000);
+                        sleep(300000);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                 }
+
                     BlockSyncRequest bsr = new BlockSyncRequest();
                     bsr.height = ki.getChainMan().currentHeight();
                     broadcast(bsr);
             }
             }).start();
-            */
+
     }
 
     @Override

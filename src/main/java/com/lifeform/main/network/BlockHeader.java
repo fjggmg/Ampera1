@@ -25,6 +25,7 @@ public class BlockHeader implements Serializable, Packet {
         ki.debug("Received block header");
         if(ki.getOptions().pDebug)
         ki.debug("Height: " + height);
+
         pg.headerMap.put(ID, this);
         if (laFlag) {
             if (ki.getChainMan().getByHeight(height).ID.equals(ID)) {

@@ -207,12 +207,20 @@ public class Transaction implements ITrans{
             for (Input i : inputs) {
                 if(i.getToken().equals(t))
                 allInput = allInput.add(i.getAmount());
+                if(i.getAmount().compareTo(BigInteger.ZERO) < 0)
+                {
+                    return false;
+                }
             }
 
             BigInteger allOutput = BigInteger.ZERO;
             for (Output o : outputs) {
                 if(o.getToken().equals(t))
                 allOutput = allOutput.add(o.getAmount());
+                if(o.getAmount().compareTo(BigInteger.ZERO) < 0)
+                {
+                    return false;
+                }
             }
             if (allInput.compareTo(allOutput) < 0) {
                 return false;

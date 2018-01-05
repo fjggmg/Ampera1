@@ -28,12 +28,15 @@ import javafx.stage.Stage;
 import java.awt.*;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.text.DecimalFormat;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+
+import static java.lang.Thread.sleep;
 
 /**
  * Copyright (C) Ampex Technologies LLC.
@@ -64,6 +67,8 @@ public class FXMLController {
     public Pane addManagePanel;
     @FXML
     public Label startMiningLabel;
+    @FXML
+    public Label sendLabel;
     private volatile int blocksFoundInt = 0;
 
     private BigInteger latestBlock = BigInteger.ZERO;
@@ -98,7 +103,7 @@ public class FXMLController {
                         }
                     });
                     try {
-                        Thread.sleep(1000);
+                        sleep(1000);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
@@ -148,7 +153,7 @@ public class FXMLController {
                     try {
                         //TODO cheap and stupid fix
                         System.gc();
-                        Thread.sleep(1200);
+                        sleep(1200);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
@@ -824,9 +829,12 @@ public class FXMLController {
         if (ki.getEncryptMan().getPublicKey() != null) {
 
             Token token = currentTransaction;
-            double amt = Double.parseDouble(amountToSend.getText());
-            long lAmt = (long) (amt * 100000000D);
-            BigInteger amount = BigInteger.valueOf(lAmt);
+
+
+            BigDecimal amt = new BigDecimal(amountToSend.getText());
+
+
+            BigInteger amount = amt.multiply(new BigDecimal("100000000.0")).toBigInteger();
             int index = 0;
             Address receiver = Address.decodeFromChain(addressToSend.getText());
             Output output = new Output(amount, receiver, token, index,System.currentTimeMillis());
@@ -840,9 +848,8 @@ public class FXMLController {
             {
                 fee = BigInteger.ZERO;
             }else {
-                double dFee = Double.parseDouble(feeToSend.getText());
-                long lFee = (long) (dFee * 100000000D);
-                fee = BigInteger.valueOf(lFee);
+                BigDecimal dFee = new BigDecimal(feeToSend.getText());
+                fee = dFee.multiply(new BigDecimal("100000000.0")).toBigInteger();
             }
             ki.getMainLog().info("Fee is: " + fee.toString());
 
@@ -909,8 +916,22 @@ public class FXMLController {
                 TransactionPacket tp = new TransactionPacket();
                 tp.trans = trans.toJSON();
                 ki.getNetMan().broadcast(tp);
+                sendLabel.setText("Sent!");
+                try {
+                    sleep(20);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                sendLabel.setText("Send");
             } else {
                 ki.debug("Transaction did not verify, not sending and not adding to pending list");
+                sendLabel.setText("Failed!");
+                try {
+                    sleep(20);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                sendLabel.setText("Send");
             }
         }
     }

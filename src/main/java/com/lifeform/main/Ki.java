@@ -49,7 +49,7 @@ public class Ki extends Thread implements IKi {
     private IKi ki = this;
     private boolean run = true;
     //TODO: need to start saving version number to file for future conversion of files
-    public static final String VERSION = "0.16.6-BETA";
+    public static final String VERSION = "0.16.7-BETA";
     private boolean relay = false;
     private FXMLController guiHook;
     public static boolean debug = true;
@@ -120,8 +120,9 @@ public class Ki extends Thread implements IKi {
 
         netMan = new NetMan(this, o.relay);
         netMan.start();
-        while(netMan.getConnections().size() < 1){}
+
         if (o.lite) {
+            while(netMan.getConnections().size() < 1){}
             netMan.broadcast(new DifficultyRequest());
             try {
                 sleep(1000);
@@ -149,6 +150,7 @@ public class Ki extends Thread implements IKi {
     @Override
     public void run() {
         while (true) {
+            if(o.relay) return;
             try {
                 Thread.sleep(500);
             } catch (InterruptedException e) {

@@ -15,6 +15,7 @@ public class StateManager extends Thread implements IStateManager {
     private final Object sync = new Object();
     public StateManager(IKi ki) {
         this.ki = ki;
+        addHeight = ki.getChainMan().currentHeight();
     }
 
     private BigInteger addHeight = BigInteger.valueOf(-1L);

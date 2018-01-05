@@ -312,7 +312,7 @@
                         </Label>
                         <Pane fx:id="sendPane" layoutX="313.0" layoutY="239.0" onMouseEntered="#sendHover" onMouseExited="#sendHoverOff" onMousePressed="#sendClicked" onMouseReleased="#sendUnclicked" opacity="0.5" prefHeight="32.0" prefWidth="140.0" style="-fx-background-color: Gray;">
                            <children>
-                              <Label layoutX="41.0" layoutY="-2.0" prefHeight="36.0" prefWidth="101.0" text="Send">
+                              <Label fx:id="sendLabel" layoutX="41.0" layoutY="-2.0" prefHeight="36.0" prefWidth="101.0" text="Send">
                                  <font>
                                     <Font name="ADAM.CGPRO" size="24.0" />
                                  </font>

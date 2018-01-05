@@ -85,6 +85,8 @@ class PacketGlobal {
                 //connMan.disconnect();
                 return;
             }
+
+            /*
             Thread t = new Thread(() -> {
                 try {
                     b.height.wait(5000);
@@ -103,6 +105,7 @@ class PacketGlobal {
                 t.interrupt();
             else
                 resendMap.put(b.height, t);
+                */
         }
     }
     void sendBlock(final BigInteger height) {
@@ -114,6 +117,7 @@ class PacketGlobal {
     private Map<BigInteger,Thread> resendMap = new HashMap<>();
     public void cancelResend(BigInteger height)
     {
+        /*
         if(ki.getOptions().pDebug)
         ki.debug("Cancelling resend #" + height.toString());
         if(resendMap.get(height) != null)
@@ -121,6 +125,7 @@ class PacketGlobal {
 
         resendMap.remove(height);
         resendTimesMap.remove(height);
+        */
     }
 
     Block formBlock(BlockHeader bh) {
