@@ -24,6 +24,7 @@ public class ClientHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelActive(ChannelHandlerContext ctx) {
         // Send the first message if this handler is a client-side handler.
+        client.setChannel(ctx);
         connMan.connected();
     }
 
@@ -47,7 +48,7 @@ public class ClientHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        cause.printStackTrace();
+        ki.debug("Error caught on server connection: " + cause.getMessage());
         ctx.close();
     }
 }

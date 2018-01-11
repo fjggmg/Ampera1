@@ -33,7 +33,7 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelActive(ChannelHandlerContext ctx) {
         INetworkEndpoint endpoint = new ServerEndpointHandler();
-        endpoint.setChannel(ctx.channel());
+        endpoint.setChannel(ctx);
         connMan = new ConnMan(ki,true,endpoint);
         //ki.getNetMan().getConnections().add(connMan);
         connMan.connected();
@@ -46,7 +46,8 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        cause.printStackTrace();
+        //cause.printStackTrace();
+        ki.debug("Error caught on server connection: " + cause.getMessage());
         ctx.close();
     }
 }

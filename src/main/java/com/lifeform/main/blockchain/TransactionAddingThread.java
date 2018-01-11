@@ -14,7 +14,7 @@ public class TransactionAddingThread extends Thread {
     }
 
     public void run() {
-        if (!transMan.addTransactionNoVerify(trans))
+        if (!transMan.addTransaction(trans))
             state = TransactionVerifierThread.VerificationState.FAILURE;
         else
             state = TransactionVerifierThread.VerificationState.SUCCESS;

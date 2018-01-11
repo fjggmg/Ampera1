@@ -100,7 +100,7 @@ public class ConnMan extends IConnectionManager {
 
     @Override
     public Channel getChannel() {
-        return endpoint.getChannel();
+        return endpoint.getChannel().channel();
     }
 
     @Override

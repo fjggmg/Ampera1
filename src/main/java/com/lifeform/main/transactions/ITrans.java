@@ -21,6 +21,7 @@ public interface ITrans {
 
     boolean verifyInputToOutput();
 
+    boolean verifySpecial();
     /**
      *
      * @return fee calculated by taking all unassigned inputs

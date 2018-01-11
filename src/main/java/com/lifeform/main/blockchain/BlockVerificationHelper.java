@@ -66,6 +66,7 @@ public class BlockVerificationHelper implements IBlockVerificationHelper {
         }
         ki.debug("Created and started worker threads");
         List<TransactionAddingThread> toRemove = new ArrayList<>();
+        boolean revert = false;
         while (workers.size() > 0) {
 
             for (TransactionAddingThread worker : workers) {
@@ -73,12 +74,21 @@ public class BlockVerificationHelper implements IBlockVerificationHelper {
                     ki.debug("Worker finished, removing from list");
                     toRemove.add(worker);
                 } else if (worker.getVerificationState().equals(TransactionVerifierThread.VerificationState.FAILURE)) {
+                    revert = true;
                     ki.debug("Found bad transaction");
-                    return false;
+                    break;
                 }
             }
             workers.removeAll(toRemove);
             toRemove.clear();
+        }
+
+        if (revert) {
+            for (String trans : block.getTransactionKeys()) {
+                //ki.getTransMan().undoTransaction(block.getTransaction(trans));
+
+            }
+            return false;
         }
         ki.debug("Transactions all verified");
         return true;

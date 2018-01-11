@@ -1,28 +1,29 @@
 package com.lifeform.main.network.logic;
 
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelHandlerContext;
 
 public class ServerEndpointHandler implements INetworkEndpoint{
 
-    private Channel channel;
+    private ChannelHandlerContext channel;
     @Override
     public void sendPacket(Object o) {
         channel.writeAndFlush(o);
     }
 
     @Override
-    public void setChannel(Channel c) {
+    public void setChannel(ChannelHandlerContext c) {
         channel = c;
     }
 
     @Override
     public boolean isConnected() {
-        return channel.isActive();
+        return channel.channel().isActive();
     }
 
     @Override
     public String getAddress() {
-        return channel.remoteAddress().toString();
+        return channel.channel().remoteAddress().toString();
     }
 
     @Override
@@ -31,7 +32,7 @@ public class ServerEndpointHandler implements INetworkEndpoint{
     }
 
     @Override
-    public Channel getChannel() {
+    public ChannelHandlerContext getChannel() {
         return channel;
     }
 }

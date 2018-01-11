@@ -78,6 +78,7 @@ class PacketGlobal {
         }
         */
 
+        /*
         if (!resendMap.containsKey(b.height)) {
             resendTimesMap.merge(b.height, 1, (a, b1) -> a + b1);
             if (resendTimesMap.get(b.height) > 2) {
@@ -85,6 +86,7 @@ class PacketGlobal {
                 //connMan.disconnect();
                 return;
             }
+            */
 
             /*
             Thread t = new Thread(() -> {
@@ -106,7 +108,7 @@ class PacketGlobal {
             else
                 resendMap.put(b.height, t);
                 */
-        }
+
     }
     void sendBlock(final BigInteger height) {
         Block b = ki.getChainMan().getByHeight(height);

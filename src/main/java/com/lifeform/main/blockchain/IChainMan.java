@@ -44,7 +44,7 @@ public interface IChainMan {
 
     void verifyLater(Block b);
 
-    Block formEmptyBlock();
+    Block formEmptyBlock(BigInteger minFee);
 
     BigInteger calculateDiff(BigInteger currentDiff,long timeElapsed);
 
@@ -53,5 +53,9 @@ public interface IChainMan {
     Block getTemp();
 
     void setTemp(Block b);
+
+    void undoToBlock(BigInteger height);
+
+    void setDiff(BigInteger diff);
 
 }

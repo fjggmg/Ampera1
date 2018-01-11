@@ -115,7 +115,7 @@ public class ChainManager implements IChainMan {
         csMap.close();
     }
 
-    public BlockState addBlock(Block block) {
+    public synchronized BlockState addBlock(Block block) {
         Ki.canClose = false;
         BlockState state = verifyBlock(block);
         if (!state.success()) {
@@ -496,6 +496,22 @@ public class ChainManager implements IChainMan {
     }
 
     @Override
+    public synchronized void undoToBlock(BigInteger height) {
+        BigInteger h1 = new BigInteger(height.toByteArray());
+        for (; h1.compareTo(currentHeight()) <= 0; h1 = h1.add(BigInteger.ONE)) {
+            for (String trans : getByHeight(h1).getTransactionKeys()) {
+                ki.getTransMan().undoTransaction(ki.getChainMan().getByHeight(h1).getTransaction(trans));
+            }
+        }
+        setHeight(height);
+    }
+
+    @Override
+    public void setDiff(BigInteger diff) {
+        currentDifficulty = diff;
+    }
+
+    @Override
     public boolean canMine() {
         return canMine;
     }
@@ -513,7 +529,7 @@ public class ChainManager implements IChainMan {
     }
 
     @Override
-    public Block formEmptyBlock() {
+    public Block formEmptyBlock(BigInteger minFee) {
         Block b = new Block();
         b.solver = ki.getEncryptMan().getPublicKeyString();
         b.timestamp = System.currentTimeMillis();
@@ -521,7 +537,8 @@ public class ChainManager implements IChainMan {
         Map<String,ITrans> transactions = new HashMap<>();
         for(ITrans trans:ki.getTransMan().getPending())
         {
-            transactions.put(trans.getID(),trans);
+            if (trans.getFee().compareTo(minFee) >= 0)
+                transactions.put(trans.getID(),trans);
         }
         b.addAll(transactions);
 
@@ -552,7 +569,7 @@ public class ChainManager implements IChainMan {
                 }
             }
         }
-        ITrans coinbase = new Transaction("coinbase",0,new HashMap<String,String>(),outputs,new ArrayList<Input>(),new HashMap<>(),new ArrayList<String>());
+        ITrans coinbase = new Transaction("coinbase", 0, new HashMap<String, String>(), outputs, new ArrayList<Input>(), new HashMap<>(), new ArrayList<String>(), TransactionType.STANDARD);
 
         b.setCoinbase(coinbase);
         //b.addTransaction(coinbase);

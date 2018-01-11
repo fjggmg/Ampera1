@@ -53,6 +53,9 @@ public class Main {
                 o.relay = true;
                 o.lite = false;
             }
+            if (s.equals("-tgui")) {
+                o.tGUI = true;
+            }
 
         }
         return o;

@@ -121,6 +121,11 @@ public class TransactionManager implements ITransMan {
                 ki.debug("the signature on this transaction does not match");
             return false;
         }
+        if (!transaction.verifySpecial()) {
+            if (ki.getOptions().tDebug)
+                ki.debug("Special requirements for this transaction have not been met");
+            return false;
+        }
         if (ki.getOptions().tDebug) {
             ki.debug("verified signature");
             ki.debug("Transaction verified");

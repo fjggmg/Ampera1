@@ -44,8 +44,11 @@ public class NetMan extends Thread implements INetworkManager {
                 for (IConnectionManager connMan : connections) {
                     if (connMan == null || !connMan.isConnected()) {
                         toRemove.add(connMan);
-                        if (connMan != null)
+                        if (connMan != null) {
                             connMan.getPacketProcessor().getPacketGlobal().cancelAllResends();
+                            connMan.getPacketProcessor().getThread().interrupt();
+                            ki.debug("Cleaning up PacketProcessor: " + connMan.getID());
+                        }
                     }
                 }
                 List<Thread> tToRemove = new ArrayList<>();

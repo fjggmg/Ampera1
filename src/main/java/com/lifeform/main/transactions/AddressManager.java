@@ -8,6 +8,7 @@ import org.json.simple.parser.ParseException;
 
 import java.io.File;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Created by Bryan on 8/10/2017.
@@ -22,7 +23,7 @@ public class AddressManager implements IAddMan {
     private final int depth = 30;
     private List<Address> addresses = new ArrayList<>();
     private Map<Address,Integer> verifyCounter = new HashMap<>();
-    private Map<Address,String> entropyMap = new HashMap<>();
+    private Map<Address, String> entropyMap = new ConcurrentHashMap<>();
     private Address main;
     private List<Address> inactive = new ArrayList<>();
     public AddressManager(IKi ki)

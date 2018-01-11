@@ -55,10 +55,12 @@ public class TransactionPacket implements Serializable, Packet {
                     ki.debug("Adding transaction to block list");
                     pg.bMap.get(pg.headerMap.get(block)).add(Transaction.fromJSON(trans));
                     done.add(trans);
+                    /*
                     if (ki.getNetMan().isRelay()) {
 
                         ki.getNetMan().broadcast(this);
                     }
+                    */
                 }
 
         }

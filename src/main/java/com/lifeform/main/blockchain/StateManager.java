@@ -105,6 +105,7 @@ public class StateManager extends Thread implements IStateManager {
                             continue ML;
                         }
                     }
+                    /*
                     for (BigInteger height : connBlocks.get(connID).keySet()) {
                         if (height.compareTo(ki.getChainMan().currentHeight()) > 0) {
                             if (height.compareTo(ki.getChainMan().currentHeight().add(BigInteger.ONE)) == 0) {
@@ -145,6 +146,12 @@ public class StateManager extends Thread implements IStateManager {
 
                                 } else {
                                     ki.debug("Found last agreed block");
+                                    if(lastAgreed.compareTo(BigInteger.ZERO) == 0)
+                                    {
+                                        ki.debug("Last agreed is 0, discarding");
+                                        deleteMap.put(connID,true);
+                                        continue ML;
+                                    }
                                     for (BigInteger h : connBlocks.get(connID).keySet()) {
 
                                         if (connBlocks.get(connID).get(h.subtract(BigInteger.ONE)) != null) {
@@ -234,10 +241,10 @@ public class StateManager extends Thread implements IStateManager {
                                 br.fromHeight = ki.getChainMan().currentHeight();
                                 br.lite = ki.getOptions().lite;
                                 ki.getNetMan().getConnection(connID).sendPacket(br);
-                                */
+
                             }
                         }
-                    }
+                    }*/
                 }
             }
 

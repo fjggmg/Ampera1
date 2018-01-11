@@ -2,6 +2,7 @@ package com.lifeform.main.data;
 
 import com.lifeform.main.IKi;
 import com.lifeform.main.blockchain.Block;
+import com.lifeform.main.blockchain.BlockState;
 import com.lifeform.main.network.IConnectionManager;
 import com.lifeform.main.network.Ping;
 import com.lifeform.main.network.TransactionDataRequest;
@@ -12,10 +13,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Scanner;
+import java.util.*;
 
 public class InputHandler extends Thread {
 
@@ -200,7 +198,7 @@ public class InputHandler extends Thread {
                             }
 
 
-                            ITrans trans = new Transaction(message, 1, null, outputs, inputs, entropyMap, keys);
+                            ITrans trans = new Transaction(message, 1, null, outputs, inputs, entropyMap, keys, TransactionType.STANDARD);
                             ki.debug("Transaction has: " + trans.getOutputs().size() + " Outputs before finalization");
                             trans.makeChange(fee, ki.getAddMan().getMainAdd()); // TODO this just sends change back to the main address......will need to give option later
                             trans.addSig(ki.getEncryptMan().getPublicKeyString(), ki.getEncryptMan().sign(trans.toSign()));
@@ -255,7 +253,9 @@ public class InputHandler extends Thread {
                         continue;
                     }
 
+
                     ki.debug("Block header: " + b.header());
+                    ki.debug("Solver: " + b.getCoinbase().getOutputs().get(0).getAddress().encodeForChain());
                     ki.debug("Block ID: " + b.ID);
                     ki.debug("Block hash: " + EncryptionManager.sha512(b.header()));
                     ki.debug("Transactions: " + b.getTransactionKeys().size());
@@ -295,24 +295,166 @@ public class InputHandler extends Thread {
                         ki.debug("Address: " + a.encodeForChain());
                     }
 
-                }else if(line.startsWith("getUTXOs")){
-                    if(line.split(" ").length < 1)
-                    {
+                } else if (line.startsWith("getUTXOs")) {
+                    if (line.split(" ").length < 1) {
                         ki.debug("Not enough args");
                         continue;
                     }
+                    if (ki.getTransMan().getUTXOs(Address.decodeFromChain(line.split(" ")[1])) != null)
+                        for (Output out : ki.getTransMan().getUTXOs(Address.decodeFromChain(line.split(" ")[1]))) {
+                            ki.debug("Output data : " + out.getID() + " Address: " + out.getAddress().encodeForChain() + " Amount: " + out.getAmount());
+                        }
+                    ki.debug("Done getting UTXOs");
 
-                    for(Output out:ki.getTransMan().getUTXOs(Address.decodeFromChain(line.split(" ")[1])))
-                    {
-                        ki.debug("Output data : " + out.getID() + " Address: " + out.getAddress().encodeForChain());
+
+                } else if (line.startsWith("verifyTransactions")) {
+
+                    BigInteger height = BigInteger.ZERO;
+                    Set<String> inputs = new HashSet<>();
+                    boolean success = true;
+                    ML:
+                    while (height.compareTo(ki.getChainMan().currentHeight()) <= 0) {
+                        ki.debug("Verifying in block: " + height);
+                        for (String trans : ki.getChainMan().getByHeight(height).getTransactionKeys()) {
+                            for (Input i : ki.getChainMan().getByHeight(height).getTransaction(trans).getInputs()) {
+                                if (inputs.contains(i.getID())) {
+                                    ki.debug("Found double spend");
+                                    success = false;
+                                    break ML;
+                                }
+                                inputs.add(i.getID());
+                            }
+                        }
+                        height = height.add(BigInteger.ONE);
+                    }
+                    ki.debug("Done testing result: " + ((success) ? "Success" : "Failure"));
+                } else if (line.startsWith("rebuildChain")) {
+
+
+                    Map<BigInteger, Block> chain = new HashMap<>();
+
+                    BigInteger h = BigInteger.ZERO;
+                    while (h.compareTo(ki.getChainMan().currentHeight()) <= 0) {
+
+                        chain.put(new BigInteger(h.toByteArray()), ki.getChainMan().getByHeight(h));
+                        h = h.add(BigInteger.ONE);
+                    }
+                    BigInteger height = BigInteger.ZERO;
+                    ki.getChainMan().setDiff(new BigInteger("00000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF", 16));
+                    boolean success = true;
+                    BigInteger height2 = new BigInteger(ki.getChainMan().currentHeight().toByteArray());
+                    ki.getChainMan().undoToBlock(height);
+                    ki.getTransMan().clear();
+
+
+                    while (height.compareTo(height2) <= 0) {
+                        ki.debug("Rebuilding block: " + height);
+                        BlockState bs = ki.getChainMan().addBlock(chain.get(height));
+                        if (!bs.success()) {
+                            ki.debug("Failed: block state: " + bs);
+                            success = false;
+                            break;
+                        }
+                        height = height.add(BigInteger.ONE);
+                    }
+                    ki.debug("Done rebuilding result: " + ((success) ? "Success" : "Failure"));
+
+                } else if (line.startsWith("checkSolver")) {
+                    if (line.split(" ").length < 2) {
+                        ki.debug("Not enough arguments");
+                        continue;
+                    }
+                    ki.debug("Starting to check for solver in blocks");
+                    BigInteger height = BigInteger.ZERO;
+                    int found = 0;
+                    while (height.compareTo(ki.getChainMan().currentHeight()) <= 0) {
+                        if (ki.getChainMan().getByHeight(height).getCoinbase().getOutputs().get(0).getAddress().encodeForChain().equals(line.split(" ")[1])) {
+                            ki.debug("Found this one: " + height);
+                            found++;
+                        }
+                        height = height.add(BigInteger.ONE);
                     }
 
+                    ki.debug("Found " + found + " blocks");
+                } else if (line.startsWith("findTransaction")) {
+                    if (line.split(" ").length < 2) {
+                        ki.debug("Not enough arguments");
+                        continue;
+                    }
+                    ki.debug("Starting to look for transaction");
+                    BigInteger height = BigInteger.ZERO;
+                    String id = line.split(" ")[1];
+                    while (height.compareTo(ki.getChainMan().currentHeight()) <= 0) {
+                        for (String trans : ki.getChainMan().getByHeight(height).getTransactionKeys()) {
+                            if (ki.getChainMan().getByHeight(height).getTransaction(trans).getID().equals(id)) {
+                                ki.debug("Found instance in: " + height);
+                                ki.debug("INFO:");
+                                ki.debug("Inputs: ");
+                                for (Input i : ki.getChainMan().getByHeight(height).getTransaction(trans).getInputs()) {
+                                    ki.debug("ID: " + i.getID() + " Amount: " + i.getAmount());
+                                }
+                                ki.debug("Outputs: ");
+                                for (Output o : ki.getChainMan().getByHeight(height).getTransaction(trans).getOutputs()) {
+                                    ki.debug("ID: " + o.getID() + " Amount: " + o.getAmount());
+                                }
+                            }
+                        }
+                        height = height.add(BigInteger.ONE);
+                    }
+                    ki.debug("Done finding transaction instances");
+                } else if (line.startsWith("findInput")) {
+                    if (line.split(" ").length < 2) {
+                        ki.debug("Not enough arguments");
+                        continue;
+                    }
+                    ki.debug("Starting to look for input");
+                    BigInteger height = BigInteger.ZERO;
+                    String id = line.split(" ")[1];
+                    while (height.compareTo(ki.getChainMan().currentHeight()) <= 0) {
+                        for (String trans : ki.getChainMan().getByHeight(height).getTransactionKeys()) {
 
 
-                 }else {
+                            for (Input i : ki.getChainMan().getByHeight(height).getTransaction(trans).getInputs()) {
+                                if (i.getID().equals(id)) {
+                                    ki.debug("Found instance at: " + height);
+                                }
+                            }
+
+                            for (Output o : ki.getChainMan().getByHeight(height).getTransaction(trans).getOutputs()) {
+                                //ki.debug("Going over output: " + o.getID());
+                                if (o.getID().equals(id)) {
+                                    ki.debug("Found instance as output at: " + height);
+                                }
+                            }
+
+
+                        }
+                        if (ki.getChainMan().getByHeight(height).getCoinbase().getOutputs().get(0).getID().equals(id)) {
+                            ki.debug("Found instance as coinbase: " + height);
+                        }
+                        height = height.add(BigInteger.ONE);
+                    }
+                } else if (line.startsWith("countOutputs")) {
+
+                    BigInteger height = BigInteger.ZERO;
+                    int amt = 0;
+                    while (height.compareTo(ki.getChainMan().currentHeight()) <= 0) {
+                        for (String trans : ki.getChainMan().getByHeight(height).getTransactionKeys()) {
+
+
+                            for (Output o : ki.getChainMan().getByHeight(height).getTransaction(trans).getOutputs()) {
+
+                                amt++;
+                            }
+
+
+                        }
+                        height = height.add(BigInteger.ONE);
+                    }
+                    ki.debug("Amount: " + amt);
+                } else {
                     System.out.println("unrecognized input");
                 }
-
             } catch (IOException e) {
                 e.printStackTrace();
             }

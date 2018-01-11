@@ -17,5 +17,6 @@ public class Options {
     public boolean pDebug = false;
     public boolean tDebug = false;
     public boolean lite = true;
+    public boolean tGUI = false;
 
 }

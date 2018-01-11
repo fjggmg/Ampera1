@@ -40,6 +40,7 @@ public class GPUMiner extends Thread implements IMiner {
     private static volatile boolean triedNoCPU = false;
     public static ContextMaster platforms = new ContextMaster();
     public static boolean initDone = false;
+    public static BigInteger minFee = BigInteger.TEN;
     public static int init(IKi ki) throws MiningIncompatibleException {
         //You have to shut these down when you're done with them.
         for (SHA3Miner m : gpuMiners) {
@@ -128,7 +129,7 @@ public class GPUMiner extends Thread implements IMiner {
         ki.debug("Attempting to start mining on OpenCL device: " + jcacq.getDInfo().getDeviceName());
         while (mining) {
             if (mining) {
-                Block b = ki.getChainMan().formEmptyBlock();
+                Block b = ki.getChainMan().formEmptyBlock(minFee);
                 //In theory the message can be nearly as large as Java can make an array and the miner will barely suffer any slowdown.
                 //The slowdown from dealing with the message size happens every two terahashes, and it's unlikely to be longer than a second, though I have not timed it, so it is negligible.
                 //There is a practical limit on the size of the message because if it's too large then the miner won't have space to postpend guess data.
@@ -152,12 +153,10 @@ public class GPUMiner extends Thread implements IMiner {
                 }
                 ki.debug("Current difficulty is: " + Utils.toHexArray(difficulty));
 
-
-                //And if you have data ready for it you can start mining right away.
                 miner.resumeMining(message);
 
                     //It will take a while to mine, so whatever thread is using the miner object will need to wait for it to finish.
-                    while (miner.isMining() && mining) //Any conditions on when to stop mining go in here with miner.hasMiningThread(). You can also stop mining with miner.stopAndClear() from another thread if that thread has a reference to the SHA3Miner object.
+                while (miner.isMining() && mining)
                     {
                         if (miner.getHashesPerSecond() != -1) {
                             hashrate = miner.getHashesPerSecond();
@@ -170,21 +169,6 @@ public class GPUMiner extends Thread implements IMiner {
                                 ki.getMinerMan().setHashrate(devName, hashrate);
                         }
                     }
-
-
-
-                /*old diagnostics
-                if (miner.queryDiagnosticDifficulty() != null) {
-                    ki.debug("Current OpenCL device: " + jcacq.getDInfo().getDeviceName() + " diff is: " + Utils.toHexArray(miner.queryDiagnosticDifficulty()));
-                }
-                if (miner.queryDiagnosticMessageWithFrontPayload() != null) {
-                    try {
-                        ki.debug("Current OpenCL device: " + jcacq.getDInfo().getDeviceName() + " message is: " + new String(miner.queryDiagnosticMessageWithFrontPayload(), "UTF-8"));
-                    } catch (UnsupportedEncodingException e) {
-                        e.printStackTrace();
-                    }
-                }
-                 */
 
                     //The miner outputs the winning seeded message, not the hash itself, so if you need the hash you'll need to use bouncycastle for it.
                     //If the miner hasn't found a winning seeded message this will return null, so you need to check for that.
@@ -221,7 +205,11 @@ public class GPUMiner extends Thread implements IMiner {
                         if (ki.getChainMan().softVerifyBlock(b).success()) {
                             ki.getChainMan().setTemp(b);
                             sendBlock(b);
+                            ki.debug("YOU FOUND A BLOCK! If it verifies you will receive it back shortly from the network.");
                             mining = false;
+                            for (String t : b.getTransactionKeys()) {
+                                ki.getTransMan().getPending().remove(b.getTransaction(t));
+                            }
                         } else if (ki.getChainMan().getCurrentDifficulty().compareTo(new BigInteger(Utils.fromBase64(b.ID))) < 0) {
                             ki.debug("FOUND AN ERROR ON OPENCL DEVICE: " + jcacq.getDInfo().getDeviceName());
 

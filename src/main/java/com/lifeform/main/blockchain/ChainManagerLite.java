@@ -227,14 +227,15 @@ public class ChainManagerLite implements IChainMan {
         currentDifficulty = difficulty;
     }
     @Override
-    public Block formEmptyBlock() {
+    public Block formEmptyBlock(BigInteger minFee) {
         Block b = new Block();
         b.solver = ki.getEncryptMan().getPublicKeyString();
         b.timestamp = System.currentTimeMillis();
 
         Map<String, ITrans> transactions = new HashMap<>();
         for (ITrans trans : ki.getTransMan().getPending()) {
-            transactions.put(trans.getID(), trans);
+            if (trans.getFee().compareTo(minFee) >= 0)
+                transactions.put(trans.getID(), trans);
         }
         b.addAll(transactions);
 
@@ -262,7 +263,7 @@ public class ChainManagerLite implements IChainMan {
                 }
             }
         }
-        ITrans coinbase = new Transaction("coinbase", 0, new HashMap<String, String>(), outputs, new ArrayList<Input>(), new HashMap<>(), new ArrayList<String>());
+        ITrans coinbase = new Transaction("coinbase", 0, new HashMap<String, String>(), outputs, new ArrayList<Input>(), new HashMap<>(), new ArrayList<String>(), TransactionType.STANDARD);
 
         b.setCoinbase(coinbase);
         //b.addTransaction(coinbase);
@@ -289,5 +290,15 @@ public class ChainManagerLite implements IChainMan {
     @Override
     public void setTemp(Block b) {
         this.temp = temp;
+    }
+
+    @Override
+    public void undoToBlock(BigInteger height) {
+
+    }
+
+    @Override
+    public void setDiff(BigInteger diff) {
+
     }
 }

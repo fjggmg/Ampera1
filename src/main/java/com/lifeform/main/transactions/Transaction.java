@@ -26,7 +26,7 @@ public class Transaction implements ITrans{
      * @param entropyMap
      * @param keys this will be reordered automatically, multisig wallets order keys by lowest hash of key first and so on
      */
-    public Transaction(String message, int sigsRequired,Map<String,String> keySigMap,List<Output> outputs, List<Input> inputs,Map<String,String> entropyMap, List<String> keys)
+    public Transaction(String message, int sigsRequired, Map<String, String> keySigMap, List<Output> outputs, List<Input> inputs, Map<String, String> entropyMap, List<String> keys, TransactionType type)
     {
         Collections.sort(keys);
         this.keySigMap = keySigMap;
@@ -40,16 +40,19 @@ public class Transaction implements ITrans{
         this.message = message;
         this.entropyMap = entropyMap;
         this.keys = keys;
+        this.type = type;
     }
-    public Transaction(String message,int sigsRequired,List<Output> outputs,List<Input> inputs)
+
+    public Transaction(String message, int sigsRequired, List<Output> outputs, List<Input> inputs, TransactionType type)
     {
         this.outputs = outputs;
         this.inputs = inputs;
         this.sigsRequired = sigsRequired;
         this.message = message;
+        this.type = type;
     }
 
-
+    TransactionType type;
     List<String> keys;
     Map<String,String> entropyMap; //for keys
     Map<String,String> keySigMap = new HashMap<>();
@@ -87,6 +90,8 @@ public class Transaction implements ITrans{
         jo.put("keys", JSONManager.parseListToJSON(keys).toJSONString());
 
         jo.put("entropyMap",JSONManager.parseMapToJSON(entropyMap).toJSONString());
+        if (!type.equals(TransactionType.STANDARD))
+            jo.put("type", type.toString());
         return jo.toJSONString();
     }
 
@@ -119,7 +124,11 @@ public class Transaction implements ITrans{
             Map<String,String> entropyMap = JSONManager.parseJSONtoMap((String)jo.get("entropyMap"));
 
             List<String> keys = JSONManager.parseJSONToList((String)jo.get("keys"));
-            return new Transaction(message,sigsRequired,keySigMap,outputs,inputs,entropyMap,keys);
+            TransactionType type = TransactionType.STANDARD;
+            if (jo.get("type") != null) {
+                type = TransactionType.valueOf((String) jo.get("type"));
+            }
+            return new Transaction(message, sigsRequired, keySigMap, outputs, inputs, entropyMap, keys, type);
 
         } catch (ParseException e) {
             e.printStackTrace();
@@ -182,11 +191,12 @@ public class Transaction implements ITrans{
         Map<String,Integer> idMap = new HashMap<>();
         for(Input i:inputs)
         {
-            Ki.getInstance().debug("Input information:: ID: " + i.getID() + " Index: " + i.getIndex() );
+
+            //Ki.getInstance().debug("Input information:: ID: " + i.getID() + " Index: " + i.getIndex() );
             if(idMap.keySet().contains(i.getID()))
             {
                 if(idMap.get(i.getID()) == i.getIndex()) {
-                    Ki.getInstance().debug("input already used earlier in this transaction");
+                    //Ki.getInstance().debug("input already used earlier in this transaction");
                     return false;
                 }
             }
@@ -227,6 +237,14 @@ public class Transaction implements ITrans{
             }
         }
         return true;
+    }
+
+    @Override
+    public boolean verifySpecial() {
+        if (type.equals(TransactionType.STANDARD))
+            return true;
+
+        return false;
     }
 
     @Override

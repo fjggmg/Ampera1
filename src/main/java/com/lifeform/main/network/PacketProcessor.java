@@ -78,6 +78,7 @@ public class PacketProcessor implements IPacketProcessor{
                     } catch (InterruptedException e) {
                         if(ki.getOptions().pDebug)
                        ki.debug("PacketProccessor: " + connMan.getID() + " has been killed");
+                        return;
                     }
                 }
             }

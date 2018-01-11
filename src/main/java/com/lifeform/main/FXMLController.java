@@ -903,7 +903,7 @@ public class FXMLController {
             }
 
 
-            ITrans trans = new Transaction(messageToSend.getText(), 1, null, outputs, inputs, entropyMap, keys);
+            ITrans trans = new Transaction(messageToSend.getText(), 1, null, outputs, inputs, entropyMap, keys, TransactionType.STANDARD);
             ki.debug("Transaction has: " + trans.getOutputs().size() + " Outputs before finalization");
             trans.makeChange(fee, ki.getAddMan().getMainAdd()); // TODO this just sends change back to the main address......will need to give option later
             trans.addSig(ki.getEncryptMan().getPublicKeyString(), ki.getEncryptMan().sign(trans.toSign()));

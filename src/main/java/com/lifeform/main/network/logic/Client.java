@@ -33,22 +33,23 @@ public class Client implements INetworkEndpoint{
         this.port = port;
         instance = this;
     }
-    public void setChannel(Channel c)
+
+    public void setChannel(ChannelHandlerContext c)
     {
         this.channel = c;
     }
 
     @Override
     public boolean isConnected() {
-        return channel.isActive();
+        return channel.channel().isActive();
     }
 
     @Override
     public String getAddress() {
 
         if (channel == null) return "Channel Null";
-        if (channel.remoteAddress() == null) return "Address Null";
-        return channel.remoteAddress().toString();
+        if (channel.channel().remoteAddress() == null) return "Address Null";
+        return channel.channel().remoteAddress().toString();
     }
 
     @Override
@@ -58,11 +59,11 @@ public class Client implements INetworkEndpoint{
     }
 
     @Override
-    public Channel getChannel() {
+    public ChannelHandlerContext getChannel() {
         return channel;
     }
 
-    private Channel channel;
+    private ChannelHandlerContext channel;
     public void start(IConnectionManager connMan) throws Exception {
         // Configure SSL.
         final SslContext sslCtx;
@@ -91,7 +92,7 @@ public class Client implements INetworkEndpoint{
                                     new ObjectDecoder(ClassResolvers.cacheDisabled(null)),
                                     new ClientHandler(ki,connMan,instance));
                             //ch.write("This is a test 2");
-                            channel = ch;
+
                         }
                     });
 
