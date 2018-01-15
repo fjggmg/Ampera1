@@ -8,13 +8,13 @@ import com.lifeform.main.network.BlockHeader;
 import com.lifeform.main.network.TransactionPacket;
 import gpuminer.JOCL.constants.JOCLConstants;
 import gpuminer.JOCL.context.JOCLContextAndCommandQueue;
-import gpuminer.JOCL.context.JOCLContextMaster;
 import gpuminer.JOCL.context.JOCLDevices;
 import gpuminer.miner.SHA3.SHA3Miner;
 import gpuminer.miner.autotune.Autotune;
 import gpuminer.miner.context.ContextMaster;
 import gpuminer.miner.context.DeviceContext;
 import gpuminer.miner.databuckets.BlockAndSharePayloads;
+import gpuminer.miner.synchron.Synchron;
 
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
@@ -38,10 +38,11 @@ public class GPUMiner extends Thread implements IMiner {
     private static volatile boolean autotuneDone = false;
     private static volatile boolean stopAutotune = false;
     private static volatile boolean triedNoCPU = false;
-    public static ContextMaster platforms = new ContextMaster();
-    public static boolean initDone = false;
+    public static ContextMaster platforms;// = new ContextMaster();
+    public volatile static boolean initDone = false;
     public static BigInteger minFee = BigInteger.TEN;
-    public static int init(IKi ki) throws MiningIncompatibleException {
+
+    public static int init(IKi ki, ContextMaster cm) throws MiningIncompatibleException {
         //You have to shut these down when you're done with them.
         for (SHA3Miner m : gpuMiners) {
             //This takes the place of stopAndClear() for putting the SHA3Miner and its SHA3MinerThread object in an unrecoverable state.
@@ -53,7 +54,7 @@ public class GPUMiner extends Thread implements IMiner {
         if (platforms != null) {
             platforms.shutdown();
         }
-        platforms = new ContextMaster();
+        platforms = cm;
         List<DeviceContext> jcacqs = platforms.getContexts();
         final Thread t = new Thread() {
 
@@ -168,6 +169,7 @@ public class GPUMiner extends Thread implements IMiner {
                             if (System.currentTimeMillis() % 1000 == 0)
                                 ki.getMinerMan().setHashrate(devName, hashrate);
                         }
+                        Synchron.idle();
                     }
 
                     //The miner outputs the winning seeded message, not the hash itself, so if you need the hash you'll need to use bouncycastle for it.

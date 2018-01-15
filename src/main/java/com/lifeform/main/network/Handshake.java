@@ -29,12 +29,12 @@ public class Handshake implements Serializable, Packet {
         pg.startHeight = currentHeight;
         if (chainVer != Handshake.CHAIN_VER) {
 
-            //ki.debug("Mismatched chain versions, disconnecting");
+            ki.debug("Mismatched chain versions, disconnecting");
             connMan.disconnect();
             return;
         }
         if (!version.equals(Handshake.VERSION)) {
-            //ki.debug("Mismatched network versions, disconnecting");
+            ki.debug("Mismatched network versions, disconnecting");
             connMan.disconnect();
             return;
         }
@@ -43,7 +43,7 @@ public class Handshake implements Serializable, Packet {
             connMan.disconnect();
             return;
         }
-
+        connMan.gotHS();
         ki.debug("Received handshake: ");
         ki.debug("ID: " + ID);
         ki.debug("Most recent block: " + mostRecentBlock);

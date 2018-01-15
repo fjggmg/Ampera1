@@ -253,7 +253,7 @@ public class InputHandler extends Thread {
                         continue;
                     }
 
-
+                    ki.debug("Timestamp: " + new Date(ki.getChainMan().getByHeight(height).timestamp).toString());
                     ki.debug("Block header: " + b.header());
                     ki.debug("Solver: " + b.getCoinbase().getOutputs().get(0).getAddress().encodeForChain());
                     ki.debug("Block ID: " + b.ID);
@@ -284,6 +284,8 @@ public class InputHandler extends Thread {
                             for (String trans : ki.getChainMan().getByHeight(h1).getTransactionKeys()) {
                                 ki.getTransMan().undoTransaction(ki.getChainMan().getByHeight(h1).getTransaction(trans));
                             }
+
+                            ki.getTransMan().undoTransaction(ki.getChainMan().getByHeight(h1).getCoinbase());
                         }
                     }
                     ki.debug("Setting height to: " + height);

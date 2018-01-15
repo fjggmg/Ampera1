@@ -31,6 +31,7 @@ public abstract class IConnectionManager{
         }
     }
 
+    public abstract void gotHS();
     public abstract Channel getChannel();
     public abstract long currentLatency();
 

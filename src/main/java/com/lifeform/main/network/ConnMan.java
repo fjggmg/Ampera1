@@ -20,6 +20,7 @@ public class ConnMan extends IConnectionManager {
     private long startTime;
     private static long OURSTARTTIME = System.currentTimeMillis();
     private static String OURID;
+    private volatile boolean gotHS = false;
     public ConnMan(IKi ki, boolean isRelay, INetworkEndpoint endpoint, IPacketProcessor pp)
     {
         this(ki,isRelay,endpoint);
@@ -60,7 +61,7 @@ public class ConnMan extends IConnectionManager {
     private boolean process = true;
     @Override
     public void disconnect() {
-
+        pp.getThread().interrupt();
         process = false;
         endpoint.disconnect();
         ki.getNetMan().getConnections().remove(this);
@@ -91,11 +92,31 @@ public class ConnMan extends IConnectionManager {
         hs.chainVer = Handshake.CHAIN_VER;
         sendPacket(hs);
 
+        new Thread() {
+            public void run() {
+                setName("ConnManCleanup");
+                try {
+                    sleep(5000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                if (!gotHS) {
+                    disconnect();
+                }
+            }
+        }.start();
+
+
     }
 
     @Override
     public boolean isConnected() {
         return endpoint.isConnected();
+    }
+
+    @Override
+    public void gotHS() {
+        gotHS = true;
     }
 
     @Override

@@ -1,16 +1,10 @@
 package com.lifeform.main;
 
-import com.lifeform.main.blockchain.IMiner;
 import com.lifeform.main.data.JSONManager;
 import com.lifeform.main.data.XodusStringMap;
 import com.lifeform.main.data.files.StringFileHandler;
 import com.lifeform.main.network.TransactionPacket;
 import com.lifeform.main.transactions.*;
-import gpuminer.JOCL.constants.JOCLConstants;
-import gpuminer.JOCL.context.JOCLContextAndCommandQueue;
-import gpuminer.JOCL.context.JOCLDevices;
-import gpuminer.miner.context.ContextMaster;
-import gpuminer.miner.context.DeviceContext;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -451,16 +445,7 @@ public class FXMLController {
                         enabledDevices.add(dev);
                     }
                 }
-                //JOCLContextAndCommandQueue.setWorkaround(false);
-                //JOCLDevices.setDeviceFilter(JOCLConstants.ALL_DEVICES);
-                /* don't need this part now that we don't use CPUs
-                ContextMaster jm = new ContextMaster();
-                for (DeviceContext dev : jm.getContexts()) {
-                    if (!enabledDevices.contains(dev.getDInfo().getDeviceName())) {
-                        disabledDevices.add(dev.getDInfo().getDeviceName());
-                    }
-                }
-                */
+
 
                 enabledDevList.setOnMouseClicked(new EventHandler<MouseEvent>() {
                     @Override
@@ -846,10 +831,13 @@ public class FXMLController {
             BigInteger fee;
             if(feeToSend.getText() == null || feeToSend.getText().isEmpty())
             {
-                fee = BigInteger.ZERO;
+                fee = BigInteger.TEN;
             }else {
                 BigDecimal dFee = new BigDecimal(feeToSend.getText());
                 fee = dFee.multiply(new BigDecimal("100000000.0")).toBigInteger();
+                if (fee.compareTo(BigInteger.TEN) < 0) {
+                    fee = BigInteger.TEN;
+                }
             }
             ki.getMainLog().info("Fee is: " + fee.toString());
 

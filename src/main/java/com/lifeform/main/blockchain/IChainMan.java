@@ -46,6 +46,10 @@ public interface IChainMan {
 
     Block formEmptyBlock(BigInteger minFee);
 
+    void startCache(BigInteger height);
+
+    void stopCache();
+
     BigInteger calculateDiff(BigInteger currentDiff,long timeElapsed);
 
     short getChainVer();

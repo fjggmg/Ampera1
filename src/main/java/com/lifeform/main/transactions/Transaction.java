@@ -229,6 +229,7 @@ public class Transaction implements ITrans{
                 allOutput = allOutput.add(o.getAmount());
                 if(o.getAmount().compareTo(BigInteger.ZERO) < 0)
                 {
+                    //Ki.getInstance().debug("Zero or negative transaction");
                     return false;
                 }
             }

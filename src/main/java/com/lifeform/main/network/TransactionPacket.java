@@ -7,6 +7,7 @@ import com.lifeform.main.transactions.Transaction;
 import io.netty.util.internal.ConcurrentSet;
 
 import java.io.Serializable;
+import java.math.BigInteger;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -39,11 +40,24 @@ public class TransactionPacket implements Serializable, Packet {
                         }
                     }
                 }
+                if (trans.getOutputs().get(0).getTimestamp() < System.currentTimeMillis() - 3_600_000) {
+                    if (ki.getOptions().pDebug) {
+                        ki.debug("Old transaction, discarding");
+                    }
+                    return;
+                }
+
+                if (trans.getOutputs().get(0).getAmount().compareTo(BigInteger.ZERO) <= 0) {
+                    if (ki.getOptions().pDebug) {
+                        ki.debug("Zero output, discarding");
+                    }
+                }
                 ki.getTransMan().getPending().add(trans);
                 if (ki.getNetMan().isRelay()) {
                     ki.debug("BROADCASTING TRANSACTION PACKET");
                     ki.getNetMan().broadcastAllBut(connMan.getID(), this);
                 }
+
                 if(ki.getOptions().pDebug)
                 {
                     ki.debug("====TRANSACTION IS VERIFIED AND ADDED====");

@@ -368,8 +368,13 @@ public class ChainManager implements IChainMan {
     }
 
     @Override
-    public Block getByHeight(BigInteger height) {
+    public synchronized Block getByHeight(BigInteger height) {
 
+        if (useCache) {
+            if (cache.containsKey(height)) {
+                return cache.get(height);
+            }
+        }
         if (blockHeightMap.get(height.toString()) == null) return null;
 
         return Block.fromJSON(blockHeightMap.get(height.toString()));
@@ -407,7 +412,7 @@ public class ChainManager implements IChainMan {
                 isMining = true;
             }
             try {
-                GPUMiner.init(ki);
+                GPUMiner.init(ki, ki.getMinerMan().getContextMaster());
             } catch (MiningIncompatibleException e) {
                 ki.debug("Re-initializing miners failed after difficulty recalcuation, message: " + e.getMessage());
             }
@@ -577,6 +582,24 @@ public class ChainManager implements IChainMan {
 
         return b;
     }
+
+    Map<BigInteger, Block> cache = new HashMap<>();
+    private boolean useCache = false;
+
+    @Override
+    public synchronized void startCache(BigInteger height) {
+        cache.clear();
+        for (; height.compareTo(currentHeight) <= 0; height = height.add(BigInteger.ONE)) {
+            cache.put(height, getByHeight(height));
+        }
+        useCache = true;
+    }
+
+    public synchronized void stopCache() {
+        cache.clear();
+        useCache = false;
+    }
+
 
     @Deprecated
     private Map<String,Block> fromJSONOld(String json)

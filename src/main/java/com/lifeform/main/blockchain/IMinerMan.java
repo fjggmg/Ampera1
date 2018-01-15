@@ -1,5 +1,7 @@
 package com.lifeform.main.blockchain;
 
+import gpuminer.miner.context.ContextMaster;
+
 import java.util.List;
 
 public interface IMinerMan {
@@ -26,4 +28,6 @@ public interface IMinerMan {
     void setup();
 
     boolean isSetup();
+
+    ContextMaster getContextMaster();
 }

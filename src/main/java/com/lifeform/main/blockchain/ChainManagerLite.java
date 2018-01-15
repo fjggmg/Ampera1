@@ -273,6 +273,16 @@ public class ChainManagerLite implements IChainMan {
     }
 
     @Override
+    public void startCache(BigInteger height) {
+
+    }
+
+    @Override
+    public void stopCache() {
+
+    }
+
+    @Override
     public BigInteger calculateDiff(BigInteger currentDiff, long timeElapsed) {
         return null;
     }

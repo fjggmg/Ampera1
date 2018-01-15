@@ -49,7 +49,7 @@ public class Ki extends Thread implements IKi {
     private IKi ki = this;
     private boolean run = true;
     //TODO: need to start saving version number to file for future conversion of files
-    public static final String VERSION = "0.16.8-BETA";
+    public static final String VERSION = "0.16.9-RC1-BETA";
     private boolean relay = false;
     private FXMLController guiHook;
     public static boolean debug = true;

@@ -21,6 +21,7 @@ public class MinerManager implements IMinerMan{
     private List<String> disabledDevNames = new ArrayList<>();
     private Map<String, Long> hashrates = new HashMap<>();
     private boolean setup = false;
+    private ContextMaster cm;
     public MinerManager(IKi ki, boolean mDebug) {
         this.ki = ki;
         this.mDebug = mDebug;
@@ -32,6 +33,7 @@ public class MinerManager implements IMinerMan{
         try {
 
             ContextMaster platforms = new ContextMaster();
+            cm = platforms;
             int i = 0;
             for (DeviceContext jcacq : platforms.getContexts()) {
                 devNames.add(jcacq.getDInfo().getDeviceName() + " #" + i);
@@ -40,7 +42,7 @@ public class MinerManager implements IMinerMan{
             //JOCLContextAndCommandQueue.setWorkaround(false);
             //JOCLDevices.setDeviceFilter(JOCLConstants.ALL_DEVICES);
             //platforms = new ContextMaster();
-            ocls = GPUMiner.init(ki);
+            ocls = GPUMiner.init(ki, platforms);
             //since we stopped using CPUs, we don't need this next part anymore
             /*for (DeviceContext jcacq : platforms.getContexts()) {
 
@@ -62,6 +64,11 @@ public class MinerManager implements IMinerMan{
     @Override
     public boolean isSetup() {
         return setup;
+    }
+
+    @Override
+    public ContextMaster getContextMaster() {
+        return cm;
     }
 
     @Override

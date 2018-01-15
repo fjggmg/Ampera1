@@ -105,7 +105,7 @@ public class StateManager extends Thread implements IStateManager {
                             continue ML;
                         }
                     }
-                    /*
+
                     for (BigInteger height : connBlocks.get(connID).keySet()) {
                         if (height.compareTo(ki.getChainMan().currentHeight()) > 0) {
                             if (height.compareTo(ki.getChainMan().currentHeight().add(BigInteger.ONE)) == 0) {
@@ -165,6 +165,7 @@ public class StateManager extends Thread implements IStateManager {
                                             }
                                         }
                                     }
+                                    ki.getChainMan().startCache(lastAgreed);
                                     ki.debug("Mitigating collision");
                                     Map<BigInteger, Set<ITrans>> transMap = new HashMap<>();
                                     BigInteger laCarry = new BigInteger(lastAgreed.toByteArray());
@@ -223,12 +224,13 @@ public class StateManager extends Thread implements IStateManager {
                                                 break;
                                             }
                                         }
+
                                     } else {
                                         ki.debug("Collision mitigated");
                                         sentLA.put(connID, false);
                                         sendFromHeight(laCarry2);
                                     }
-
+                                    ki.getChainMan().stopCache();
 
                                 }
 
@@ -241,10 +243,10 @@ public class StateManager extends Thread implements IStateManager {
                                 br.fromHeight = ki.getChainMan().currentHeight();
                                 br.lite = ki.getOptions().lite;
                                 ki.getNetMan().getConnection(connID).sendPacket(br);
-
+                                */
                             }
                         }
-                    }*/
+                    }
                 }
             }
 

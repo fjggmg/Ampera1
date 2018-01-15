@@ -139,6 +139,7 @@ public class EncryptionManager  implements IEncryptMan{
             KeyPairGenerator gen = KeyPairGenerator.getInstance("EC","BC");
 
             SecureRandom random = SecureRandom.getInstance("SHA1PRNG");
+
             ECGenParameterSpec ecSpec = new ECGenParameterSpec(KEY_PROTOCOL);
             gen.initialize(ecSpec,random);
 
