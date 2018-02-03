@@ -116,7 +116,7 @@ public class Block {
     private String sHeight;
     public String header()
     {
-        if (payload.length > 64) return null;//limit on payload
+        if (payload.length > 192) return null;//limit on payload
         if(solverHash == null || solverHash.isEmpty())
         {
             solverHash = EncryptionManager.sha512(solver);

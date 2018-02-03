@@ -454,6 +454,13 @@ public class InputHandler extends Thread {
                         height = height.add(BigInteger.ONE);
                     }
                     ki.debug("Amount: " + amt);
+                } else if (line.contains("getThreads")) {
+                    int t = 0;
+                    for (Thread thread : Thread.getAllStackTraces().keySet()) {
+                        if (thread.isAlive()) t++;
+                    }
+                    ki.debug("Number of active threads: " + t);
+
                 } else {
                     System.out.println("unrecognized input");
                 }

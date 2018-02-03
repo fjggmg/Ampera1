@@ -13,6 +13,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static java.lang.Thread.sleep;
+
 public class MinerManager implements IMinerMan{
 
     private IKi ki;
@@ -72,6 +74,11 @@ public class MinerManager implements IMinerMan{
     }
 
     @Override
+    public long getHashrate(String dev) {
+        return hashrates.get(dev);
+    }
+
+    @Override
     public boolean miningCompatible() {
         return miningCompatible;
     }
@@ -124,25 +131,22 @@ public class MinerManager implements IMinerMan{
         while(isRestarting)
         {
             try {
-                Thread.sleep(5L);
+                sleep(5L);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         }
         isRestarting = true;
-        new Thread() {
 
-            public void run() {
-                stopMiners();
-                try {
-                    Thread.sleep(500L);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                startMiners();
-                isRestarting = false;
-            }
-        }.start();
+        stopMiners();
+        try {
+            sleep(5000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        startMiners();
+        isRestarting = false;
+
     }
     @Override
     public List<IMiner> getMiners()

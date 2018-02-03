@@ -148,6 +148,9 @@ public class ChainManagerLite implements IChainMan {
                 chain.remove(currentHeight.subtract(BigInteger.valueOf(100L)));
             }
             ki.getNetMan().broadcast(new DifficultyRequest());
+            if (ki.getOptions().poolRelay) {
+                ki.getPoolManager().updateCurrentHeight(ki.getChainMan().currentHeight());
+            }
             return BlockState.SUCCESS;
         }
         return BlockState.WRONG_HEIGHT;

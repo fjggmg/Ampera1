@@ -1,0 +1,47 @@
+.button {
+-fx-text-fill: WHITE;
+}
+.label{
+-fx-text-fill: WHITE;
+}
+.custom-color-picker{
+-fx-text-fill: BLACK;
+}
+.check-box{
+-fx-text-fill: WHITE;
+}
+.slider{
+-fx-text-fill: WHITE;
+}
+.text-field{
+-fx-text-fill: WHITE;
+}
+.combo-box {
+-fx-text-fill: BLACK;
+}
+.chart-plot-background{
+-fx-background-color:transparent;
+}
+.chart-legend{
+-fx-background-color:transparent;
+}
+.jfx-snackbar-content {
+    -fx-background-color: rgba(127,127,127,0.3);
+}
+.jfx-decorator .resize-border {
+
+    -fx-border-color:BLACK;
+    -fx-border-width:2;
+}
+
+.jfx-hamburger StackPane {
+    -fx-background-color:WHITE;
+
+}
+
+.scroll-pane > .viewport {
+   -fx-background-color: transparent;
+}
+.scroll-pane {
+   -fx-background-color: transparent;
+}

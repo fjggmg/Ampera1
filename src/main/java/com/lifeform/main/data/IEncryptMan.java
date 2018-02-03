@@ -9,13 +9,19 @@ import java.security.PublicKey;
  */
 public interface IEncryptMan {
 
-    public String sign(String toSign);
-    public PrivateKey privKeyFromString(String key);
-    public PublicKey getPublicKey();
-    public PrivateKey getPrivateKey();
-    public KeyPair generateKeys();
-    public void saveKeys();
-    public KeyPair loadKeys();
+    String sign(String toSign);
+
+    PrivateKey privKeyFromString(String key);
+
+    PublicKey getPublicKey();
+
+    PrivateKey getPrivateKey();
+
+    KeyPair generateKeys();
+
+    void saveKeys();
+
+    KeyPair loadKeys();
     String getPublicKeyString();
     PublicKey pubKeyFromShortenedString(String key);
 }

@@ -30,6 +30,31 @@ public class TransactionManager implements ITransMan {
         utxoMap = new XodusStringMap("transactions" + ki.getChainMan().getChainVer() + "/utxo.dat");//utxoDB.hashMap("utxoDB", Serializer.STRING, Serializer.STRING).createOrOpen();
         utxoSpent = new XodusStringBooleanMap("transactions" + ki.getChainMan().getChainVer() + "/utxoSpent.dat");//utxoDB.hashMap("utxoDBSpent", Serializer.STRING, Serializer.BOOLEAN).createOrOpen();
         utxoValueMap = new XodusStringMap("transactions" + ki.getChainMan().getChainVer() + "/utxoValue.dat");//utxoValueDB.hashMap("utxoValueDB", Serializer.STRING, Serializer.STRING).createOrOpen();
+
+        new Thread() {
+            public void run() {
+                List<ITrans> toRemove = new ArrayList<>();
+                setName("Transaction Cleanup");
+                while (true) {
+                    for (ITrans t : pending) {
+                        if (t.getOutputs().get(0).getTimestamp() < System.currentTimeMillis() - 3_600_000) {
+                            toRemove.add(t);
+                        }
+                    }
+                    if (!toRemove.isEmpty()) {
+                        pending.removeAll(toRemove);
+                        toRemove.clear();
+                    }
+
+                    try {
+                        sleep(3_600_0000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }.start();
+
         if (dump) {
             /*
             StringFileHandler fh = new StringFileHandler(ki,"utxoDump.txt");

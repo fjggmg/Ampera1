@@ -19,6 +19,7 @@ public interface IAddMan {
     String getEntropyForAdd(Address a);
     void setMainAdd(Address a);
 
+    Address createNew(String entropy);
     List<Address> getAll();
 
 }

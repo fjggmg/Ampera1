@@ -18,5 +18,7 @@ public class Options {
     public boolean tDebug = false;
     public boolean lite = true;
     public boolean tGUI = false;
+    public boolean poolRelay = false;
+    public boolean pool = false;
 
 }

@@ -42,15 +42,7 @@ public class BlockEnd implements Serializable, Packet {
         }
         */
         ki.getStateManager().addBlock(block, connMan.getID());
-        if (ki.getMinerMan() != null && ki.getMinerMan().isMining()) {
-            ki.debug("Restarting miners");
-            /* old miner stuff
-             CPUMiner.height = ki.getChainMan().currentHeight().add(BigInteger.ONE);
-             CPUMiner.prevID = ki.getChainMan().getByHeight(ki.getChainMan().currentHeight()).ID;
-             */
 
-            ki.getMinerMan().restartMiners();
-        }
         BlockAck ba = new BlockAck();
         ba.height = block.height;
         ba.verified = true;

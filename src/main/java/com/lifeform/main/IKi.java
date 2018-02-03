@@ -9,6 +9,7 @@ import com.lifeform.main.data.Options;
 import com.lifeform.main.network.INetworkManager;
 import com.lifeform.main.transactions.IAddMan;
 import com.lifeform.main.transactions.ITransMan;
+import mining_pool.Pool;
 import org.apache.logging.log4j.Logger;
 import org.bitbucket.backspace119.generallib.Logging.LogMan;
 
@@ -48,9 +49,9 @@ public interface IKi {
 
     void debug(String s);
 
-    FXMLController getGUIHook();
+    NewGUI getGUIHook();
 
-    void setGUIHook(FXMLController guiHook);
+    void setGUIHook(NewGUI guiHook);
     IMinerMan getMinerMan();
 
     void restartNetwork();
@@ -58,4 +59,6 @@ public interface IKi {
     IStateManager getStateManager();
 
     void resetLite();
+
+    Pool getPoolManager();
 }

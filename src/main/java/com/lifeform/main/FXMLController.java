@@ -73,7 +73,7 @@ public class FXMLController {
     public FXMLController()
     {
         ki = Ki.getInstance();
-        ki.setGUIHook(this);
+        //ki.setGUIHook(this);
         if (guiMap.get("blocksFound") != null)
             blocksFoundInt = Integer.parseInt(guiMap.get("blocksFound"));
         if (guiMap.get("transactions") != null) {

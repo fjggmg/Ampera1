@@ -30,4 +30,6 @@ public interface IMinerMan {
     boolean isSetup();
 
     ContextMaster getContextMaster();
+
+    long getHashrate(String dev);
 }

@@ -230,6 +230,7 @@ public class EncryptionManager  implements IEncryptMan{
 
     public KeyPair loadKeys() {
 
+
         //PublicKey pubKey = pubKeyFromString( trion.getDataMan().getStringFileHandler("pub." + KEY_FILE).getLine(0));
         StringFileHandler fh = new StringFileHandler(ki,KEY_FILE + ".pubk");
         PublicKey pubKey = pubKeyFromString(fh.getLine(0));

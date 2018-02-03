@@ -98,6 +98,7 @@ public class Handshake implements Serializable, Packet {
                     connMan.sendPacket(tp);
                 }
                 pg.doneDownloading = true;
+
                 if (ki.getOptions().pDebug)
                     ki.debug("Relay and Node agree on last block, done downloading");
             }
@@ -106,9 +107,6 @@ public class Handshake implements Serializable, Packet {
                 if (!ki.getChainMan().getByHeight(currentHeight).ID.equals(mostRecentBlock)) {
                     pg.onRightChain = false;
                 }
-            } else if (ki.getChainMan().currentHeight().compareTo(currentHeight) == 0)
-            {
-                pg.doneDownloading = true;
             }
         if (ki.getChainMan().currentHeight().compareTo(currentHeight) < 0) {
             ki.debug("Requesting blocks we're missing from the network");

@@ -190,6 +190,15 @@ public class AddressManager implements IAddMan {
     }
 
     @Override
+    public Address createNew(String entropy) {
+        Address a = Address.createNew(ki.getEncryptMan().getPublicKeyString(), entropy);
+        entropyMap.put(a, entropy);
+        addresses.add(a);
+        save();
+        return a;
+    }
+
+    @Override
     public List<Address> getAll() {
         List<Address> all = new ArrayList<>();
         all.addAll(inactive);

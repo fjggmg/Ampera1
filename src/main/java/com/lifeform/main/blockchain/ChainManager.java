@@ -145,6 +145,21 @@ public class ChainManager implements IChainMan {
         }
         */
         Ki.canClose = true;
+        if (ki.getMinerMan() != null && ki.getMinerMan().isMining()) {
+            ki.debug("Restarting miners");
+            /* old miner stuff
+             CPUMiner.height = ki.getChainMan().currentHeight().add(BigInteger.ONE);
+             CPUMiner.prevID = ki.getChainMan().getByHeight(ki.getChainMan().currentHeight()).ID;
+             */
+
+            ki.getMinerMan().restartMiners();
+        }
+        if (ki.getOptions().poolRelay) {
+            int i = 128 - currentDifficulty.toString().length();
+
+            ki.getPoolManager().updateCurrentHeight(ki.getChainMan().currentHeight());
+            ki.getPoolManager().updateCurrentPayPerShare((long) ((Math.pow(16, 8) / Math.pow(16, i) * blockRewardForHeight(currentHeight()).longValueExact()) * 0.99));
+        }
         return BlockState.SUCCESS;
     }
 
@@ -267,7 +282,35 @@ public class ChainManager implements IChainMan {
         if (!block.ID.equals(hash)) return BlockState.ID_MISMATCH;
         if (bDebug)
             ki.debug("ID is ok");
-        if (new BigInteger(Utils.fromBase64(hash)).abs().compareTo(currentDifficulty) > 0) return BlockState.NO_SOLVE;
+        byte[] bigIntDiffByteArray = currentDifficulty.toByteArray();
+        byte[] byteDiff = new byte[64];
+        int p = 63;
+        int k = bigIntDiffByteArray.length - 1;
+        while (k >= 0) {
+            byteDiff[p] = bigIntDiffByteArray[k];
+            k--;
+            p--;
+        }
+
+        int mostSignificant0Digits = 0;
+        for (int i = 0; i < byteDiff.length; i++) {
+            mostSignificant0Digits = i;
+            if (byteDiff[i] != 0) {
+                break;
+            }
+        }
+        int mostSignificantByte = byteDiff[mostSignificant0Digits] & 0x0ff;
+
+        byte[] byteHash = Utils.fromBase64(hash);
+
+        int precedingZeroes = 0;
+        for (int i = 0; i < mostSignificant0Digits; i++) {
+            precedingZeroes = (precedingZeroes | byteHash[i]) & 0x00ff;
+        }
+
+        if (!(precedingZeroes == 0 && byteHash[mostSignificant0Digits] <= mostSignificantByte)) {
+            return BlockState.NO_SOLVE;
+        }
         if (bDebug)
             ki.debug("Solves for difficulty");
         if (block.getCoinbase() == null) return BlockState.NO_COINBASE;

@@ -6,8 +6,11 @@ import com.lifeform.main.data.IEncryptMan;
 import com.lifeform.main.data.InputHandler;
 import com.lifeform.main.data.Options;
 import com.lifeform.main.network.*;
+import com.lifeform.main.network.pool.KiEventHandler;
+import com.lifeform.main.network.pool.PoolNetMan;
 import com.lifeform.main.transactions.*;
 import gpuminer.JOCL.context.JOCLContextAndCommandQueue;
+import mining_pool.Pool;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.Logger;
 import org.bitbucket.backspace119.generallib.Logging.ConsoleLogger;
@@ -49,13 +52,14 @@ public class Ki extends Thread implements IKi {
     private IKi ki = this;
     private boolean run = true;
     //TODO: need to start saving version number to file for future conversion of files
-    public static final String VERSION = "0.16.9-RC2-BETA";
+    public static final String VERSION = "0.17.0-RC1-BETA";
     private boolean relay = false;
-    private FXMLController guiHook;
+    private NewGUI guiHook;
     public static boolean debug = true;
     private static IKi instance;
     private InputHandler ih;
     private IStateManager stateMan;
+    private Pool miningPool;
     public static volatile boolean canClose = true;
     public Ki(Options o) {
         JOCLContextAndCommandQueue.setWorkaround(true);
@@ -69,7 +73,9 @@ public class Ki extends Thread implements IKi {
 
         main = logMan.createLogger("Main", "console", Level.DEBUG);
         main.info("Origin starting up");
-        if (o.lite) {
+        if (o.pool) {
+            chainMan = new PoolChainMan();
+        } else if (o.lite) {
             chainMan = new ChainManagerLite(this, (o.testNet) ? ChainManager.TEST_NET : ChainManager.POW_CHAIN);
         } else {
             chainMan = new ChainManager(this, (o.testNet) ? ChainManager.TEST_NET : ChainManager.POW_CHAIN, "blocks/", "chain.state", "transaction.meta", "extra.chains", "chain.meta", o.bDebug);
@@ -77,7 +83,9 @@ public class Ki extends Thread implements IKi {
         Handshake.CHAIN_VER = (o.testNet) ? ChainManager.TEST_NET : ChainManager.POW_CHAIN;
         chainMan.loadChain();
         getMainLog().info("Chain loaded. Current height: " + chainMan.currentHeight());
-        if (o.lite) {
+        if (o.pool) {
+            //no trans man
+        } else if (o.lite) {
             transMan = new TransactionManagerLite(this);
         } else {
             transMan = new TransactionManager(this, o.dump);
@@ -117,9 +125,15 @@ public class Ki extends Thread implements IKi {
         }
         stateMan.start();
 
-
-        netMan = new NetMan(this, o.relay);
-        netMan.start();
+        if (o.pool) {
+            netMan = new PoolNetMan(this);
+        } else {
+            netMan = new NetMan(this, o.relay);
+            netMan.start();
+        }
+        if (o.poolRelay) {
+            miningPool = new Pool(null, new BigInteger("00000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF", 16), 0, EncryptionManager.sha512(getAddMan().getMainAdd().encodeForChain()), new KiEventHandler(this));
+        }
 
         if (o.lite) {
             while(netMan.getConnections().size() < 1){}
@@ -130,7 +144,7 @@ public class Ki extends Thread implements IKi {
                 e.printStackTrace();
             }
         }
-        if(!o.relay)
+        if (!o.relay || !o.poolRelay)
         minerMan = new MinerManager(this, o.mDebug);
         //gui = MainGUI.guiFactory(this);
         Thread t = new Thread() {
@@ -150,7 +164,7 @@ public class Ki extends Thread implements IKi {
     @Override
     public void run() {
         while (true) {
-            if(o.relay) return;
+            if (o.relay || o.poolRelay) return;
             try {
                 Thread.sleep(500);
             } catch (InterruptedException e) {
@@ -172,12 +186,12 @@ public class Ki extends Thread implements IKi {
         }
     }
     @Override
-    public void setGUIHook(FXMLController guiHook) {
+    public void setGUIHook(NewGUI guiHook) {
         this.guiHook = guiHook;
     }
 
     @Override
-    public FXMLController getGUIHook() {
+    public NewGUI getGUIHook() {
         return guiHook;
     }
     public void close()
@@ -230,6 +244,11 @@ public class Ki extends Thread implements IKi {
             br.fromHeight = ki.getChainMan().currentHeight();
             netMan.broadcast(br);
         }
+    }
+
+    @Override
+    public Pool getPoolManager() {
+        return miningPool;
     }
 
     private void rn() {

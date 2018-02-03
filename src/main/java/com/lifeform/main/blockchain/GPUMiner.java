@@ -224,7 +224,7 @@ public class GPUMiner extends Thread implements IMiner {
                     }
 
             }
-                //If you're ever going to send the miner to the GC, you need to call this first.
+
 
         }
     }
