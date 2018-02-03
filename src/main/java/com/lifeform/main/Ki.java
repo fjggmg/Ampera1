@@ -1,10 +1,7 @@
 package com.lifeform.main;
 
 import com.lifeform.main.blockchain.*;
-import com.lifeform.main.data.EncryptionManager;
-import com.lifeform.main.data.IEncryptMan;
-import com.lifeform.main.data.InputHandler;
-import com.lifeform.main.data.Options;
+import com.lifeform.main.data.*;
 import com.lifeform.main.network.*;
 import com.lifeform.main.network.pool.KiEventHandler;
 import com.lifeform.main.network.pool.PoolNetMan;
@@ -52,7 +49,7 @@ public class Ki extends Thread implements IKi {
     private IKi ki = this;
     private boolean run = true;
     //TODO: need to start saving version number to file for future conversion of files
-    public static final String VERSION = "0.17.0-RC1-BETA";
+    public static final String VERSION = "0.17.0-TEST2-BETA";
     private boolean relay = false;
     private NewGUI guiHook;
     public static boolean debug = true;
@@ -61,7 +58,14 @@ public class Ki extends Thread implements IKi {
     private IStateManager stateMan;
     private Pool miningPool;
     public static volatile boolean canClose = true;
+    private XodusStringBooleanMap settings = new XodusStringBooleanMap("settings");
     public Ki(Options o) {
+        if (!settings.get(VERSION)) {
+            settings.put(VERSION, true);
+            settings.put(Settings.DEBUG_MODE.getKey(), false);
+            settings.put(Settings.HIGH_SECURITY.getKey(), false);
+            settings.put(Settings.REQUIRE_PASSWORD.getKey(), true);
+        }
         JOCLContextAndCommandQueue.setWorkaround(true);
         JOCLContextAndCommandQueue.noIntel = true;
         ih = new InputHandler(this);
@@ -249,6 +253,16 @@ public class Ki extends Thread implements IKi {
     @Override
     public Pool getPoolManager() {
         return miningPool;
+    }
+
+    @Override
+    public boolean getSetting(Settings setting) {
+        return settings.get(setting.getKey());
+    }
+
+    @Override
+    public void setSetting(Settings setting, boolean set) {
+        settings.put(setting.getKey(), set);
     }
 
     private void rn() {

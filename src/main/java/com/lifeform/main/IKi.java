@@ -61,4 +61,8 @@ public interface IKi {
     void resetLite();
 
     Pool getPoolManager();
+
+    boolean getSetting(Settings setting);
+
+    void setSetting(Settings setting, boolean set);
 }

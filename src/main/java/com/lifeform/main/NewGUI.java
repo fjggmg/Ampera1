@@ -279,7 +279,30 @@ public class NewGUI {
 
     @FXML
     void initialize() {
-        lockPane.setVisible(true);
+        highSecurity.setSelected(ki.getSetting(Settings.HIGH_SECURITY));
+        requirePassword.setSelected(ki.getSetting(Settings.REQUIRE_PASSWORD));
+        debugMode.setSelected(ki.getSetting(Settings.DEBUG_MODE));
+        if (requirePassword.isSelected())
+            lockPane.setVisible(true);
+
+        highSecurity.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                ki.setSetting(Settings.HIGH_SECURITY, highSecurity.isSelected());
+            }
+        });
+        requirePassword.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                ki.setSetting(Settings.REQUIRE_PASSWORD, highSecurity.isSelected());
+            }
+        });
+        debugMode.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                ki.setSetting(Settings.DEBUG_MODE, highSecurity.isSelected());
+            }
+        });
         /*
         if(!ki.getOptions().poolRelay && !ki.getOptions().pool)
         tokenValueMap.addListener(new MapChangeListener<Token, BigInteger>() {
@@ -560,7 +583,7 @@ public class NewGUI {
             feeText.setLayoutX(walletPane.getWidth() - (feeText.getWidth() + 5));
             sendButton.setLayoutX(walletPane.getWidth() - (sendButton.getWidth() + 5));
             walletAmount.setLayoutX(walletPane.getWidth() - ((walletAmount.getWidth() + 15)));
-            tokenLabel.setLayoutX(walletAmount.getLayoutX() + 80);
+            tokenLabel.setLayoutX(walletAmount.getLayoutX() + 10);
             transactionTable.setMinWidth(walletPane.getWidth() - (sendButton.getWidth() + 25));
             versionLabel.setLayoutX(helpPane.getWidth() / 2 - (versionLabel.getWidth() / 2));
             helpText.setLayoutX(helpPane.getWidth() / 2 - (helpText.getWidth() / 2));

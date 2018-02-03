@@ -98,7 +98,7 @@ public class TransactionManager implements ITransMan {
 
         for (Input i : transaction.getInputs()) {
             if (ki.getOptions().tDebug)
-                ki.debug("Verifying input");
+                ki.debug("Verifying input: " + i.getID());
             if (utxoSpent == null) {
                 if (ki.getOptions().tDebug)
                     ki.debug("UTXO file uninitialized, installation corrupted or fatal program error");
@@ -108,6 +108,12 @@ public class TransactionManager implements ITransMan {
                 if (ki.getOptions().tDebug)
                     ki.debug("Input is null, malformed transaction.");
                 return false;
+            } else {
+                ki.debug("Found in spend database");
+            }
+            if ((utxoSpent.get(i.getID()) == null)) {
+                if (ki.getOptions().tDebug)
+                    ki.debug("Input is null in spend db");
             }
             if (utxoSpent.get(i.getID()) == null || utxoSpent.get(i.getID())) {
                 if (ki.getOptions().tDebug)

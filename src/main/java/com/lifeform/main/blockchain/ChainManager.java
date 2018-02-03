@@ -455,8 +455,8 @@ public class ChainManager implements IChainMan {
                 isMining = true;
             }
             try {
-                GPUMiner.init(ki, ki.getMinerMan().getContextMaster());
-            } catch (MiningIncompatibleException e) {
+                ki.getMinerMan().setup();
+            } catch (Exception e) {
                 ki.debug("Re-initializing miners failed after difficulty recalcuation, message: " + e.getMessage());
             }
             if (isMining)
