@@ -349,7 +349,7 @@ public class ChainManager implements IChainMan {
 
     public BlockState verifyBlock(Block block) {
         if (bDebug)
-        ki.getMainLog().info("Block has: " + block.getTransactionKeys().size() + " transactions");
+            ki.debug("Block has: " + block.getTransactionKeys().size() + " transactions");
         BlockState state = softVerifyBlock(block);
         if (!state.success()) return state;
         BigInteger fees = BigInteger.ZERO;

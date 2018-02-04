@@ -64,6 +64,7 @@ public class Handshake implements Serializable, Packet {
             ki.debug("Already connected to this address");
             return;
         }
+        ki.getGUIHook().setStart(currentHeight);
         connMan.setStartTime(startTime);
         if (ki.getChainMan().currentHeight().compareTo(BigInteger.valueOf(-1L)) == 0)
             connMan.sendPacket(new DoneDownloading());

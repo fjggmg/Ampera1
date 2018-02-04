@@ -4,6 +4,7 @@ import com.jfoenix.controls.*;
 import com.jfoenix.transitions.hamburger.HamburgerSlideCloseTransition;
 import com.jfoenix.validation.RequiredFieldValidator;
 import com.lifeform.main.blockchain.Block;
+import com.lifeform.main.blockchain.GPUMiner;
 import com.lifeform.main.data.EncryptionManager;
 import com.lifeform.main.data.XodusStringMap;
 import com.lifeform.main.network.TransactionPacket;
@@ -15,6 +16,7 @@ import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.*;
+import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
@@ -69,8 +71,16 @@ public class NewGUI {
     public Label blockID;
     public Label solver;
     public Label numberOfTransactions;
+    public Pane poolPane;
+    public JFXTextField ipField;
+    public JFXButton poolConnect;
+    public Label shares;
+    public Label nextPayment;
+    public HBox miningDataHbox;
+    public JFXTextField fromBlock;
+    public JFXTextField toBlock;
+    public JFXButton goBE;
     private IKi ki;
-
     private ObservableMap<Token, BigInteger> tokenValueMap = FXCollections.observableMap(new HashMap<Token, BigInteger>());
     private volatile boolean isFinal = false;
     private volatile boolean run = true;
@@ -83,24 +93,18 @@ public class NewGUI {
         ki.setGUIHook(this);
         if (guiMap.get("blocksFound") != null)
             blocksFoundInt = Integer.parseInt(guiMap.get("blocksFound"));
-
         Thread t = new Thread() {
-
             public void run() {
                 while (run) {
-                    //System.out.println("Starting loop");
                     isFinal = false;
                     for (Token t : Token.values()) {
                         tokenValueMap.put(t, BigInteger.ZERO);
-                        //System.out.println("First for");
                     }
                     List<Output> utxos = ki.getTransMan().getUTXOs(ki.getAddMan().getMainAdd());
                     if (utxos != null) {
-                        //System.out.println("second scope");
                         Set<Output> sUtxos = new HashSet<>();
                         sUtxos.addAll(utxos);
                         for (Output o : sUtxos) {
-                            //System.out.println("second for");
                             if (tokenValueMap.get(o.getToken()) == null) {
                                 tokenValueMap.put(o.getToken(), o.getAmount());
                             } else {
@@ -119,28 +123,21 @@ public class NewGUI {
                         e.printStackTrace();
                     }
                 }
-
             }
         };
         t.setName("GUI-Backend");
         t.start();
-
-
     }
 
     @FXML
     public JFXHamburger menuHamburger;
     @FXML
     public JFXDrawer menuDrawer;
-
     @FXML
     public Pane topPane;
-
     @FXML
     public Pane walletPane;
-
     public volatile static Stage stage;
-
     @FXML
     public BorderPane borderPane;
     public JFXColorPicker colorPicker;
@@ -199,11 +196,9 @@ public class NewGUI {
     private XodusStringMap pmap = new XodusStringMap("security");
 
     private String metaHash(String data) throws UnsupportedEncodingException {
-        //System.out.println("STARTING AUTISM");
         StringBuilder totalhash = new StringBuilder();
         String hash = "";
         for (int i = 0; i < 1024; i++) {
-            //System.out.println("AUTISM STEP 1 ROUND: " + i);
             hash = EncryptionManager.sha512(data + hash);
             totalhash.append(hash);
         }
@@ -216,12 +211,13 @@ public class NewGUI {
         Random sr = new Random();
         sr.setSeed(pointer / 2);
         for (int i = 0; i < th.getBytes("UTF-8")[pointer]; i++) {
-            //System.out.println("AUTISM STEP 2 ROUND: " + i);
             hash = EncryptionManager.sha512(hash + sr.nextInt() + sr.nextInt());
             totalhash.append(hash);
         }
         return hash;
     }
+
+    Timeline lockAnimation;
 
     private String superAutism(String hash, int numberOfHashes) {
         String superHash = "";
@@ -272,19 +268,22 @@ public class NewGUI {
 
     }
 
-    long maxH = 0;
-    long minH = Long.MAX_VALUE;
+    private long maxH = 0;
+    private long minH = Long.MAX_VALUE;
     private DecimalFormat format2 = new DecimalFormat("###,###,###,###,###,###,###,###,##0.#########");
     private boolean mining = false;
+    private BigInteger loadHeight;
 
     @FXML
     void initialize() {
+        if (!ki.getOptions().pool)
+            loadHeight = ki.getChainMan().currentHeight();
         highSecurity.setSelected(ki.getSetting(Settings.HIGH_SECURITY));
         requirePassword.setSelected(ki.getSetting(Settings.REQUIRE_PASSWORD));
         debugMode.setSelected(ki.getSetting(Settings.DEBUG_MODE));
-        if (requirePassword.isSelected())
+        if (requirePassword.isSelected()) {
             lockPane.setVisible(true);
-
+        }
         highSecurity.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
@@ -294,27 +293,16 @@ public class NewGUI {
         requirePassword.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
-                ki.setSetting(Settings.REQUIRE_PASSWORD, highSecurity.isSelected());
+                ki.setSetting(Settings.REQUIRE_PASSWORD, requirePassword.isSelected());
             }
         });
         debugMode.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
-                ki.setSetting(Settings.DEBUG_MODE, highSecurity.isSelected());
+                ki.setSetting(Settings.DEBUG_MODE, debugMode.isSelected());
             }
         });
-        /*
-        if(!ki.getOptions().poolRelay && !ki.getOptions().pool)
-        tokenValueMap.addListener(new MapChangeListener<Token, BigInteger>() {
-            @Override
-            public void onChanged(Change<? extends Token, ? extends BigInteger> change) {
-                ki.debug("values changed");
-                while(!isFinal){}
-                walletAmount.setText(format2.format((double)tokenValueMap.get(Token.byName(tokenBox.getSelectionModel().getSelectedItem().getText())).longValueExact()/100_000_000));
 
-            }
-        });*/
-        //hashrateChart.setVerticalZeroLineVisible(false);\
         blocksFoundLabel.setText("Blocks Found - " + format2.format(blocksFoundInt));
         tokenBox.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<Label>() {
             @Override
@@ -342,10 +330,7 @@ public class NewGUI {
                         hashrateChart.getData().clear();
                         List<XYChart.Series<String, Number>> devs = new ArrayList<>();
                         for (String dev : ki.getMinerMan().getDevNames()) {
-                            //ki.debug("Adding device: " + dev + " to graph");
                             XYChart.Series<String, Number> series = new XYChart.Series<>();
-                            //hashrateChart.getData();
-                            //series.getData().add(new XYChart.Data<String,Number>("0",100));
                             hashrateChart.getData().add(series);
                             series.setName(dev);
                         }
@@ -355,6 +340,12 @@ public class NewGUI {
                         mining = false;
                     }
                 }
+            }
+        });
+        miningIntesity.valueProperty().addListener(new ChangeListener<Number>() {
+            @Override
+            public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
+                GPUMiner.miningIntensity = miningIntesity.getValue();
             }
         });
         backToBE.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
@@ -378,6 +369,7 @@ public class NewGUI {
                     setupBlockPane(currentBlock.add(BigInteger.ONE));
             }
         });
+        miningDataHbox.setSpacing(10);
         addressLabel.setText("Address - " + ki.getAddMan().getMainAdd().encodeForChain());
         syncProgress.setProgress(0);
         submitPassword.setBackground(new Background(new BackgroundFill(Color.valueOf("#18BC9C"), CornerRadii.EMPTY, Insets.EMPTY)));
@@ -391,63 +383,11 @@ public class NewGUI {
         tokenLabel.setMinWidth(walletAmount.getWidth());
         //tokenLabel.setPrefWidth(walletAmount.getWidth());
         //tokenLabel.setMaxWidth(walletAmount.getWidth());
-        Timeline lockAnimation = new Timeline(new KeyFrame(Duration.millis(500), new KeyValue(lockPane.layoutYProperty(), 500, EASE_BOTH)), new KeyFrame(Duration.millis(500), new KeyValue(lockPane.opacityProperty(), 0, EASE_BOTH)));
+        lockAnimation = new Timeline(new KeyFrame(Duration.millis(500), new KeyValue(lockPane.layoutYProperty(), 500, EASE_BOTH)), new KeyFrame(Duration.millis(500), new KeyValue(lockPane.opacityProperty(), 0, EASE_BOTH)));
         submitPassword.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
-                submitPassword.setDisable(true);
-                passwordWaiter.setVisible(true);
-                new Thread() {
-                    public void run() {
-                        if (pmap.get("fr") == null) {
-                            String hash = "";
-
-
-                            hash = superAutism(passwordField.getText() + hash, 64);
-
-
-                            pmap.put(hash, "p");
-                            pmap.put("fr", "fr");
-                            Platform.runLater(new Thread() {
-                                public void run() {
-                                    lockAnimation.play();
-                                    submitPassword.setDisable(false);
-                                    passwordWaiter.setVisible(false);
-
-                                }
-                            });
-                        } else
-
-                        {
-                            String hash = "";
-
-
-                            hash = superAutism(passwordField.getText() + hash, 64);
-
-                            String hash2 = hash;
-                            Platform.runLater(new Thread() {
-                                public void run() {
-                                    if (pmap.get(hash2) != null)
-
-                                    {
-                                        lockAnimation.play();
-                                    } else {
-
-                                        Label l = new Label("Incorrect");
-                                        l.setStyle("-fx-text-fill:RED");
-                                        l.setLayoutX(passwordField.getLayoutX());
-                                        l.setLayoutY(passwordField.getLayoutY() + 60);
-                                        lockPane.getChildren().add(l);
-                                    }
-
-                                    submitPassword.setDisable(false);
-
-                                    passwordWaiter.setVisible(false);
-                                }
-                            });
-                        }
-                    }
-                }.start();
+                handlePassword();
             }
         });
         versionLabel.setText("Version - " + Ki.VERSION);
@@ -455,7 +395,7 @@ public class NewGUI {
             @Override
             public void handle(WindowEvent event) {
                 System.out.println("Close requested");
-                System.exit(0);
+                ki.close();
             }
         });
         deleteAddress.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
@@ -474,6 +414,7 @@ public class NewGUI {
         content.add(blockExplorerPane);
         content.add(addressPane);
         content.add(blockPane);
+        content.add(poolPane);
         Label pc = new Label("Primary Color");
         Label sc = new Label("Secondary Color");
         Label pt = new Label("Primary Text Color");
@@ -517,11 +458,12 @@ public class NewGUI {
                 adds.add(add.encodeForChain());
             }
         }
+
         entropyLabel.setWrapText(true);
         entropyLabel.setMaxWidth(256);
-        addressList.getSelectionModel().selectedItemProperty().addListener(new ChangeListener() {
+        addressList.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<String>() {
             @Override
-            public void changed(ObservableValue observable, Object oldValue, Object newValue) {
+            public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
                 entropyLabel.setText("Entropy of Selection: \n" + ki.getAddMan().getEntropyForAdd(Address.decodeFromChain(addressList.getSelectionModel().getSelectedItem())));
             }
         });
@@ -546,14 +488,18 @@ public class NewGUI {
                 }
             }
         });
-        vb.getChildren().add(buildMainButton("Wallet", "/Wallet.png", 0, 0, content, walletPane));
-        vb.getChildren().add(buildMainButton("Address", "/home.png", 200, 0, content, addressPane));
+        if (!ki.getOptions().pool) {
+            vb.getChildren().add(buildMainButton("Wallet", "/Wallet.png", 0, 0, content, walletPane));
+            vb.getChildren().add(buildMainButton("Address", "/home.png", 100, 0, content, addressPane));
+        } else {
+            vb.getChildren().add(buildMainButton("Pool", "/home.png", 100, 0, content, addressPane));
+        }
         //vb.getChildren().add(buildButton("Transactions","/Transactions.png",100));
-        vb.getChildren().add(buildMainButton("Mining", "/Mining.png", 400, 1, content, miningTab));
-        if (!ki.getOptions().lite)
-            vb.getChildren().add(buildMainButton("Blocks", "/Block.png", 600, 0, content, blockExplorerPane));
-        vb.getChildren().add(buildMainButton("Settings", "/Settings.png", 800, 0, content, settingsPane));
-        vb.getChildren().add(buildMainButton("Help", "/Help.png", 1000, 7, content, helpPane));
+        vb.getChildren().add(buildMainButton("Mining", "/gpu.png", 200, 1, content, miningTab));
+        if (!ki.getOptions().lite && !ki.getOptions().pool)
+            vb.getChildren().add(buildMainButton("Blocks", "/Block.png", 300, 0, content, blockExplorerPane));
+        vb.getChildren().add(buildMainButton("Settings", "/Settings.png", 400, 0, content, settingsPane));
+        vb.getChildren().add(buildMainButton("Help", "/Help.png", 500, 7, content, helpPane));
         vb.getChildren().add(new Separator());
         if (!ki.getOptions().lite)
             fillMasonry(ki.getChainMan().currentHeight().subtract(BigInteger.valueOf(100)), ki.getChainMan().currentHeight());
@@ -584,17 +530,46 @@ public class NewGUI {
             sendButton.setLayoutX(walletPane.getWidth() - (sendButton.getWidth() + 5));
             walletAmount.setLayoutX(walletPane.getWidth() - ((walletAmount.getWidth() + 15)));
             tokenLabel.setLayoutX(walletAmount.getLayoutX() + 10);
-            transactionTable.setMinWidth(walletPane.getWidth() - (sendButton.getWidth() + 25));
+            transactionTable.setMinWidth(walletPane.getWidth() - (sendButton.getWidth() + 45));
             versionLabel.setLayoutX(helpPane.getWidth() / 2 - (versionLabel.getWidth() / 2));
             helpText.setLayoutX(helpPane.getWidth() / 2 - (helpText.getWidth() / 2));
             topPane2.setMinWidth(walletPane.getWidth());
             beScroll.setMinWidth(blockExplorerPane.getWidth());
-            beScroll.setMinHeight(blockExplorerPane.getHeight() - 10);
-            beScroll.setPrefHeight(blockExplorerPane.getHeight() - 10);
+            beScroll.setMinHeight(blockExplorerPane.getHeight() - 60);
+            beScroll.setPrefHeight(blockExplorerPane.getHeight() - 60);
             lockPane.setMinHeight(borderPane.getHeight());
+            miningDataHbox.setMinWidth(miningTab.getWidth());
 
         };
+        goBE.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                int start = 0;
+                try {
+                    start = Integer.parseInt(fromBlock.getText());
+                } catch (Exception e) {
+                    return;
+                }
+                int end = 0;
+                try {
+                    end = Integer.parseInt(toBlock.getText());
+                } catch (Exception e) {
+                    return;
+                }
 
+                if (start >= end) {
+                    return;
+                }
+                if (start < 0) {
+                    return;
+                }
+                if (BigInteger.valueOf(end).compareTo(ki.getChainMan().currentHeight()) > 0) {
+                    return;
+                }
+                fillMasonry(BigInteger.valueOf(start), BigInteger.valueOf(end));
+
+            }
+        });
         stage.widthProperty().addListener(stageSizeListener);
         stage.heightProperty().addListener(stageSizeListener);
         HamburgerSlideCloseTransition burgerTask = new HamburgerSlideCloseTransition(menuHamburger);
@@ -642,6 +617,7 @@ public class NewGUI {
                 backToBE.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
                 nextBlock.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
                 previousBlock.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
+                goBE.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
                 //miningIntesity.getClip().setStyle("-fx-background-color:"+color);
 
             } else if (colorCombos.getSelectionModel().getSelectedItem().getText().contains("Secondary Color")) {
@@ -656,14 +632,9 @@ public class NewGUI {
             }
 
         };
-
-        //colorPicker.setStyle("-fx-text-fill:BLACK");
-        //colorPicker.backgroundProperty().addListener(cpListener);
-        //colorPicker.styleProperty().addListener(cpListener);
         colorPicker.valueProperty().addListener(cpListener);
         colorPicker.setValue(Color.valueOf("#18BC9C"));
         menuHamburger.setStyle(vb.getStyle());
-        //topPane.setStyle(topPane.getStyle() + vb.getStyle());
         menuDrawer.addEventHandler(MouseEvent.MOUSE_RELEASED, new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
@@ -674,56 +645,18 @@ public class NewGUI {
             }
         });
 
-        List<XYChart.Series<String, Number>> devs = new ArrayList<>();
+
         for (String dev : ki.getMinerMan().getDevNames()) {
-            //ki.debug("Adding device: " + dev + " to graph");
             XYChart.Series<String, Number> series = new XYChart.Series<>();
-            //hashrateChart.getData();
-            //series.getData().add(new XYChart.Data<String,Number>("0",100));
             hashrateChart.getData().add(series);
             series.setName(dev);
         }
-        /*
-        XYChart.Series<String,Number> series = new XYChart.Series<>();
-        //hashrateChart.getData();
-        series.getData().add(new XYChart.Data<String,Number>("0",100));
-        hashrateChart.getData().add(series);
-        series.setName("gfx900");
 
-        XYChart.Series<String,Number> series2 = new XYChart.Series<>();
-
-        //hashrateChart.getData();
-        series2.setName("1080 TI");
-        hashrateChart.getData().add(series2);
-        series2.getData().add(new XYChart.Data<String,Number>("0",400));
-        XYChart.Series<String,Number> series3 = new XYChart.Series<>();
-        //hashrateChart.getData();
-        series3.getData().add(new XYChart.Data<String,Number>("0",series.getData().get(0).getYValue().intValue()+series2.getData().get(0).getYValue().intValue()));
-        hashrateChart.getData().add(series3);
-        series3.setName("Cumulative");
-        */
-        //hashrateChart.getXAxis().setSide(Side.TOP);
         hashrateChart.getXAxis().setLabel("");
         hashrateChart.setLegendVisible(true);
         hashrateChart.setCreateSymbols(false);
-        //hashrateChart.setLegendSide(Side.TOP);
         hashrateChart.getXAxis().setAnimated(false);
-        /*
-        for(Node n:hashrateChart.getChildrenUnmodifiable())
-        {
-            if(n instanceof Legend)
-            {
-                for(Node n2:((Legend)n).getChildren())
-                {
-                    if(n2 instanceof Label)
-                    {
-                        System.out.println("found label");
-                        ((Label)n2).setStyle("-fx-text-fill:BLACK");
-                    }
-                }
-            }
-        }
-        */
+
         sendButton.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
@@ -788,8 +721,6 @@ public class NewGUI {
 
                             }
                         }
-
-
                     }
 
                     if (feeInput.compareTo(fee) < 0) {
@@ -828,17 +759,14 @@ public class NewGUI {
                 }
             }
         });
+
         List<Long> average = new ArrayList<>();
         SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
         new Thread() {
             public void run() {
-
                 int i = 0;
                 while (true) {
                     i++;
-                    //startMining.layout();
-                    //System.out.println("width: " + miningTab.getWidth());
-                    int i2 = i;
                     if ((i % 10 == 0) && mining)
                         Platform.runLater(new Thread() {
                             public void run() {
@@ -876,10 +804,7 @@ public class NewGUI {
                                     }
                                     averageH = averageH / average.size();
                                     averageHashrate.setText("Average - " + averageH + " Mh/s");
-
                                 }
-
-
                             }
                         });
 
@@ -896,16 +821,24 @@ public class NewGUI {
                             sendButton.setLayoutX(walletPane.getWidth() - (sendButton.getWidth() + 5));
                             walletAmount.setLayoutX(walletPane.getWidth() - (walletAmount.getWidth() + 15));
                             tokenLabel.setLayoutX(walletAmount.getLayoutX() + 10);
-                            transactionTable.setMinWidth(walletPane.getWidth() - (sendButton.getWidth() + 25));
+                            transactionTable.setMinWidth(walletPane.getWidth() - (sendButton.getWidth() + 45));
                             versionLabel.setLayoutX(helpPane.getWidth() / 2 - (versionLabel.getWidth() / 2));
                             helpText.setLayoutX(helpPane.getWidth() / 2 - (helpText.getWidth() / 2));
                             topPane2.setMinWidth(walletPane.getWidth());
                             beScroll.setMinWidth(blockExplorerPane.getWidth());
-                            beScroll.setMinHeight(blockExplorerPane.getHeight() - 10);
-                            beScroll.setPrefHeight(blockExplorerPane.getHeight() - 10);
+                            beScroll.setMinHeight(blockExplorerPane.getHeight() - 60);
+                            beScroll.setPrefHeight(blockExplorerPane.getHeight() - 60);
                             lockPane.setMinHeight(borderPane.getHeight());
                             heightLabel.setText("Chain Height - " + ki.getChainMan().currentHeight());
                             chainHeight2.setText(" " + ki.getChainMan().currentHeight().toString());
+                            miningDataHbox.setMinWidth(miningTab.getWidth());
+
+                            if (startHeight != null && startHeight.compareTo(loadHeight) != 0) {
+                                //System.out.println("================CURRENT SYNC: " + startHeight.subtract(ki.getChainMan().currentHeight()).multiply(BigInteger.valueOf(100)).divide(startHeight.subtract(loadHeight)).doubleValue() / 100);
+                                syncProgress.setProgress(1 - (startHeight.subtract(ki.getChainMan().currentHeight()).multiply(BigInteger.valueOf(100)).divide(startHeight.subtract(loadHeight)).doubleValue() / 100));
+                            } else if (startHeight != null && startHeight.compareTo(loadHeight) == 0)
+                                syncProgress.setProgress(1);
+
                         }
                     });
                     Platform.runLater(new Thread() {
@@ -937,8 +870,6 @@ public class NewGUI {
 
         }
         tokenBox.getSelectionModel().select(0);
-
-
     }
 
     private JFXButton buildMainButton(String text, String image, int offset, int graphicOffset, List<Pane> content, Pane show) {
@@ -1037,12 +968,9 @@ public class NewGUI {
         mp.setCellWidth(70);
         mp.setCellHeight(20);
         mp.setLayoutMode(JFXMasonryPane.LayoutMode.MASONRY);
-        //mp.setLimitColumn(40);
-        //mp.setMinSize(0,0);
-        //mp.setMaxSize(Double.MAX_VALUE,Double.MAX_VALUE);
 
         for (int i = 0; i < i2; i++) {
-            Block b = ki.getChainMan().getByHeight(ki.getChainMan().currentHeight().subtract(BigInteger.valueOf(i)));
+            Block b = ki.getChainMan().getByHeight(topRange.subtract(BigInteger.valueOf(i)));
 
             JFXButton btn = new JFXButton("Block\n" + b.height);
             btn.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
@@ -1057,15 +985,13 @@ public class NewGUI {
             btn.setPrefSize(400, 400);
             StackPane sp = new StackPane();
             double width = 70;
-            double height = (b.getTransactionKeys().size() / 10) * 20 + 50;
+            double height = (b.getTransactionKeys().size() / 20) * 5 + 50;
             sp.setPrefSize(width, height);
             sp.setMinSize(width, height);
             sp.setMaxSize(width, height);
             sp.autosize();
             sp.requestLayout();
             sp.getChildren().add(btn);
-            //System.out.println("Brightness of button: " + c.getBrightness() + "   number: " + i);
-            //btn.setStyle("-fx-text-fill: " + ((c.getBrightness() > 0.5) ? "Black":"White"));
             btn.setFont(f);
             children.add(sp);
         }
@@ -1136,7 +1062,6 @@ public class NewGUI {
     }
 
     private volatile int blocksFoundInt = 0;
-
     private BigInteger latestBlock = BigInteger.ZERO;
     private XodusStringMap guiMap = new XodusStringMap("gui.data");
 
@@ -1157,5 +1082,61 @@ public class NewGUI {
                 sb.enqueue(new JFXSnackbar.SnackbarEvent(text));
             }
         });
+    }
+
+    @FXML
+    public void passwordEnter(ActionEvent event) {
+        handlePassword();
+    }
+
+    private void handlePassword() {
+        submitPassword.setDisable(true);
+        passwordWaiter.setVisible(true);
+        new Thread() {
+            public void run() {
+                if (pmap.get("fr") == null) {
+                    String hash = "";
+                    hash = superAutism(passwordField.getText() + hash, 64);
+                    pmap.put(hash, "p");
+                    pmap.put("fr", "fr");
+                    Platform.runLater(new Thread() {
+                        public void run() {
+                            lockAnimation.play();
+                            submitPassword.setDisable(false);
+                            passwordWaiter.setVisible(false);
+                        }
+                    });
+                } else
+
+                {
+                    String hash = "";
+                    hash = superAutism(passwordField.getText() + hash, 64);
+                    String hash2 = hash;
+                    Platform.runLater(new Thread() {
+                        public void run() {
+                            if (pmap.get(hash2) != null) {
+                                lockAnimation.play();
+                            } else {
+                                Label l = new Label("Incorrect");
+                                l.setStyle("-fx-text-fill:RED");
+                                l.setLayoutX(passwordField.getLayoutX());
+                                l.setLayoutY(passwordField.getLayoutY() + 60);
+                                lockPane.getChildren().add(l);
+                            }
+
+                            submitPassword.setDisable(false);
+
+                            passwordWaiter.setVisible(false);
+                        }
+                    });
+                }
+            }
+        }.start();
+    }
+
+    private BigInteger startHeight;
+
+    public void setStart(BigInteger startHeight) {
+        this.startHeight = startHeight;
     }
 }

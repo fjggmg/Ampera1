@@ -62,7 +62,8 @@
                             <children>
                                 <Pane fx:id="settingsPane" prefHeight="200.0" prefWidth="200.0" visible="false">
                                     <children>
-                                        <JFXColorPicker fx:id="colorPicker" layoutX="215.0" layoutY="14.0"/>
+                                        <JFXColorPicker fx:id="colorPicker" layoutX="215.0" layoutY="14.0"
+                                                        stylesheets="@cpstyle.css"/>
                                         <JFXComboBox fx:id="colorCombos" layoutX="14.0" layoutY="14.0" prefHeight="25.0"
                                                      prefWidth="165.0" styleClass="custom-color-picker"
                                                      stylesheets="@text-style.css"/>
@@ -115,9 +116,9 @@
                                                 <Font size="14.0"/>
                                             </font>
                                         </JFXButton>
-                                        <JFXTreeTableView fx:id="transactionTable" layoutX="16.0" layoutY="118.0"
+                                        <JFXTreeTableView fx:id="transactionTable" layoutX="14.0" layoutY="118.0"
                                                           prefHeight="247.0" prefWidth="457.0"/>
-                                        <Label fx:id="addressLabel" layoutX="16.0" layoutY="64.0" text="Address-"/>
+                                        <Label fx:id="addressLabel" layoutX="14.0" layoutY="66.0" text="Address-"/>
                                         <Label fx:id="heightLabel" layoutX="14.0" layoutY="44.0" text="Chain Height -"/>
                                         <JFXButton fx:id="copyAddress" layoutX="16.0" layoutY="89.0"
                                                    text="Copy Address"/>
@@ -125,8 +126,8 @@
                                 </Pane>
                                 <Pane fx:id="miningTab" prefHeight="370.0" prefWidth="510.0" visible="false">
                                     <children>
-                                        <JFXButton fx:id="startMining" layoutX="197.0" layoutY="53.0" prefHeight="47.0"
-                                                   prefWidth="121.0" text="Start Mining"/>
+                                        <JFXButton fx:id="startMining" layoutX="196.0" layoutY="61.0" prefHeight="30.0"
+                                                   prefWidth="120.0" text="Start Mining"/>
                                         <JFXSlider fx:id="miningIntesity" blockIncrement="25.0" layoutX="8.0"
                                                    layoutY="7.0" max="200.0" minorTickCount="0" prefHeight="37.0"
                                                    prefWidth="498.0" showTickLabels="true" showTickMarks="true"
@@ -136,14 +137,6 @@
                                             </tooltip>
                                         </JFXSlider>
                                         <Label fx:id="miLabel" layoutX="214.0" layoutY="36.0" text="Mining Intensity"/>
-                                        <Label fx:id="currentHashrate" layoutX="7.0" layoutY="108.0"
-                                               text="Current Hashrate - 1,200 Mh/s"/>
-                                        <Label fx:id="averageHashrate" layoutX="174.0" layoutY="108.0"
-                                               text="Average - 1,200 Mh/s"/>
-                                        <Label fx:id="minHashrate" layoutX="300.0" layoutY="108.0"
-                                               text="Min - 1,200 Mh/s"/>
-                                        <Label fx:id="maxHashrate" layoutX="398.0" layoutY="108.0"
-                                               text="Max - 1,200 Mh/s"/>
                                         <LineChart fx:id="hashrateChart" layoutY="125.0" prefHeight="237.0"
                                                    prefWidth="513.0" title="Hashrate">
                                             <xAxis>
@@ -158,8 +151,16 @@
                                                 </NumberAxis>
                                             </yAxis>
                                         </LineChart>
-                                        <Label fx:id="blocksFoundLabel" layoutX="498.0" layoutY="108.0"
-                                               text="Blocks Found - 400,300"/>
+                                        <HBox fx:id="miningDataHbox" alignment="CENTER" layoutY="100.0"
+                                              prefHeight="25.0" prefWidth="631.0">
+                                            <children>
+                                                <Label fx:id="currentHashrate" text="Current Hashrate - 0 Mh/s"/>
+                                                <Label fx:id="averageHashrate" text="Average - 0 Mh/s"/>
+                                                <Label fx:id="minHashrate" text="Min - 0 Mh/s"/>
+                                                <Label fx:id="maxHashrate" text="Max - 0 Mh/s"/>
+                                                <Label fx:id="blocksFoundLabel" text="Blocks Found - 400,300"/>
+                                            </children>
+                                        </HBox>
                                     </children>
                                 </Pane>
                                 <Pane fx:id="helpPane" prefHeight="200.0" prefWidth="200.0" visible="false">
@@ -170,9 +171,16 @@
                                                text="Please report any issues in the discord server or in the bitbucket issues page."/>
                                     </children>
                                 </Pane>
-                                <Pane fx:id="blockExplorerPane" visible="false">
+                                <Pane fx:id="blockExplorerPane" prefWidth="630.0">
                                     <children>
-                                        <ScrollPane fx:id="beScroll" prefHeight="428.0" prefWidth="631.0"/>
+                                        <ScrollPane fx:id="beScroll" layoutY="55.0" prefHeight="370.0"
+                                                    prefWidth="630.0"/>
+                                        <JFXTextField fx:id="fromBlock" labelFloat="true" layoutX="14.0" layoutY="14.0"
+                                                      promptText="From Block"/>
+                                        <JFXTextField fx:id="toBlock" labelFloat="true" layoutX="159.0" layoutY="14.0"
+                                                      promptText="To Block"/>
+                                        <JFXButton fx:id="goBE" layoutX="300.0" layoutY="14.0" prefHeight="25.0"
+                                                   prefWidth="118.0" text="Go"/>
                                     </children>
                                 </Pane>
                                 <Pane fx:id="addressPane" prefHeight="200.0" prefWidth="200.0" visible="false">
@@ -207,6 +215,17 @@
                                                text="Number of Transactions -"/>
                                     </children>
                                 </Pane>
+                                <Pane fx:id="poolPane" prefHeight="200.0" prefWidth="200.0" visible="false">
+                                    <children>
+                                        <JFXTextField fx:id="ipField" labelFloat="true" layoutX="14.0" layoutY="14.0"
+                                                      promptText="Pool IP"/>
+                                        <JFXButton fx:id="poolConnect" layoutX="154.0" layoutY="14.0" prefHeight="25.0"
+                                                   prefWidth="91.0" text="Connect"/>
+                                        <Label fx:id="shares" layoutX="14.0" layoutY="60.0" text="Shares - "/>
+                                        <Label fx:id="nextPayment" layoutX="14.0" layoutY="77.0"
+                                               text="Next Payment - "/>
+                                    </children>
+                                </Pane>
                             </children>
                         </StackPane>
                     </center>
@@ -221,7 +240,8 @@
                         <Image url="@Lock.png"/>
                     </image>
                 </ImageView>
-                <JFXPasswordField fx:id="passwordField" layoutX="293.0" layoutY="249.0" promptText="Password"/>
+                <JFXPasswordField fx:id="passwordField" layoutX="293.0" layoutY="249.0" onAction="#passwordEnter"
+                                  promptText="Password"/>
                 <JFXButton fx:id="submitPassword" layoutX="293.0" layoutY="280.0" prefHeight="25.0" prefWidth="135.0"
                            text="Submit"/>
                 <JFXSpinner fx:id="passwordWaiter" layoutX="335.0" layoutY="318.0" visible="false"/>

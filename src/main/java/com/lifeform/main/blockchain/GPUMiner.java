@@ -67,29 +67,12 @@ public class GPUMiner extends Thread implements IMiner {
         };
         t.start();
         while (!autotuneDone) {
-            //ki.debug("Autotune not done");
             try {
                 sleep(1000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         }
-        /*ki.debug("Autotune done");
-        if (stopAutotune && !triedNoCPU) {
-            ki.debug("Autotune was stopped");
-            if (!triedNoCPU) {
-                triedNoCPU = true;
-                JOCLDevices.setDeviceFilter(CL_DEVICE_TYPE_GPU);
-                return init(ki);
-            }
-        } else */
-        /*
-        if (stopAutotune) {
-            throw new MiningIncompatibleException("Autotune took more than 5 minutes, your device may be compatible, but is running so slowly that it would not be profitable to mine on.");
-        }
-        */
-
-
 
         byte[] difficulty = new byte[64];
         int p = 63;
@@ -103,7 +86,6 @@ public class GPUMiner extends Thread implements IMiner {
             SHA3Miner miner = new SHA3Miner(jcaq, difficulty, null, threadCount, Autotune.getAtSettingsMap().get(jcaq.getDInfo().getDeviceName()).kernelType);
             gpuMiners.add(miner);
             i++;
-
         }
 
         jcacqs_ = jcacqs;
@@ -122,7 +104,7 @@ public class GPUMiner extends Thread implements IMiner {
     private long lastPrint = System.currentTimeMillis();
     private DecimalFormat format = new DecimalFormat("###,###,###,###");
     private int threadCount;
-
+    public static double miningIntensity = 100;
     @Override
     public void run() {
         boolean hasPrinted = false;
@@ -142,6 +124,8 @@ public class GPUMiner extends Thread implements IMiner {
 
                 //Six preceding zeroes on the difficulty is hard enough that the miner is likely to be able to time its hashrate.
                 threadCount = Autotune.getAtSettingsMap().get(jcacq.getDInfo().getDeviceName()).threadFactor;
+                threadCount = (int) (threadCount * (miningIntensity / 100));
+                miner.setThreads(threadCount);
                 byte[] difficulty = new byte[64];
                 int p = 63;
                 for (int i = ki.getChainMan().getCurrentDifficulty().toByteArray().length - 1; i >= 0; i--) {
