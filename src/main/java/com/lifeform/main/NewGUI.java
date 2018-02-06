@@ -57,10 +57,6 @@ import static javafx.animation.Interpolator.EASE_BOTH;
 
 public class NewGUI {
 
-    private static final String FX_TEXT_FILL_WHITE = "-fx-text-fill:WHITE";
-    private static final String ANIMATED_OPTION_BUTTON = "animated-option-button";
-    private static final String ANIMATED_OPTION_SUB_BUTTON = "animated-option-sub-button";
-    private static final String ANIMATED_OPTION_SUB_BUTTON2 = "animated-option-sub-button2";
     public JFXTextField entropyField;
     public Label blocksFoundLabel;
     public Pane blockPane;
@@ -80,6 +76,8 @@ public class NewGUI {
     public JFXTextField fromBlock;
     public JFXTextField toBlock;
     public JFXButton goBE;
+    public JFXTextField paytoAddress;
+    public Pane poolRelay;
     private IKi ki;
     private ObservableMap<Token, BigInteger> tokenValueMap = FXCollections.observableMap(new HashMap<Token, BigInteger>());
     private volatile boolean isFinal = false;
@@ -93,40 +91,42 @@ public class NewGUI {
         ki.setGUIHook(this);
         if (guiMap.get("blocksFound") != null)
             blocksFoundInt = Integer.parseInt(guiMap.get("blocksFound"));
-        Thread t = new Thread() {
-            public void run() {
-                while (run) {
-                    isFinal = false;
-                    for (Token t : Token.values()) {
-                        tokenValueMap.put(t, BigInteger.ZERO);
-                    }
-                    List<Output> utxos = ki.getTransMan().getUTXOs(ki.getAddMan().getMainAdd());
-                    if (utxos != null) {
-                        Set<Output> sUtxos = new HashSet<>();
-                        sUtxos.addAll(utxos);
-                        for (Output o : sUtxos) {
-                            if (tokenValueMap.get(o.getToken()) == null) {
-                                tokenValueMap.put(o.getToken(), o.getAmount());
-                            } else {
-                                tokenValueMap.put(o.getToken(), tokenValueMap.get(o.getToken()).add(o.getAmount()));
+        if (!ki.getOptions().pool) {
+            Thread t = new Thread() {
+                public void run() {
+                    while (run) {
+                        isFinal = false;
+                        for (Token t : Token.values()) {
+                            tokenValueMap.put(t, BigInteger.ZERO);
+                        }
+                        List<Output> utxos = ki.getTransMan().getUTXOs(ki.getAddMan().getMainAdd(), false);
+                        if (utxos != null) {
+                            Set<Output> sUtxos = new HashSet<>();
+                            sUtxos.addAll(utxos);
+                            for (Output o : sUtxos) {
+                                if (tokenValueMap.get(o.getToken()) == null) {
+                                    tokenValueMap.put(o.getToken(), o.getAmount());
+                                } else {
+                                    tokenValueMap.put(o.getToken(), tokenValueMap.get(o.getToken()).add(o.getAmount()));
+                                }
                             }
                         }
-                    }
-                    isFinal = true;
-                    try {
-                        //System.out.println("sleeping");
-                        //TODO cheap and stupid fix
-                        System.gc();
-                        sleep(1200);
-                        //System.out.println("done sleeping");
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
+                        isFinal = true;
+                        try {
+                            //System.out.println("sleeping");
+                            //TODO cheap and stupid fix
+                            System.gc();
+                            sleep(1200);
+                            //System.out.println("done sleeping");
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
                     }
                 }
-            }
-        };
-        t.setName("GUI-Backend");
-        t.start();
+            };
+            t.setName("GUI-Backend");
+            t.start();
+        }
     }
 
     @FXML
@@ -415,6 +415,7 @@ public class NewGUI {
         content.add(addressPane);
         content.add(blockPane);
         content.add(poolPane);
+        content.add(poolRelay);
         Label pc = new Label("Primary Color");
         Label sc = new Label("Secondary Color");
         Label pt = new Label("Primary Text Color");
@@ -491,11 +492,16 @@ public class NewGUI {
         if (!ki.getOptions().pool) {
             vb.getChildren().add(buildMainButton("Wallet", "/Wallet.png", 0, 0, content, walletPane));
             vb.getChildren().add(buildMainButton("Address", "/home.png", 100, 0, content, addressPane));
-        } else {
-            vb.getChildren().add(buildMainButton("Pool", "/home.png", 100, 0, content, addressPane));
+        } else if (ki.getOptions().pool && !ki.getOptions().poolRelay) {
+            vb.getChildren().add(buildMainButton("Pool", "/pool.png", 100, 3, content, poolPane));
+        }
+        if (ki.getOptions().poolRelay) {
+            vb.getChildren().add(buildMainButton("Pool", "/pool.png", 100, 3, content, poolRelay));
         }
         //vb.getChildren().add(buildButton("Transactions","/Transactions.png",100));
-        vb.getChildren().add(buildMainButton("Mining", "/gpu.png", 200, 1, content, miningTab));
+        if (!ki.getOptions().poolRelay)
+            vb.getChildren().add(buildMainButton("Mining", "/gpu.png", 200, 1, content, miningTab));
+
         if (!ki.getOptions().lite && !ki.getOptions().pool)
             vb.getChildren().add(buildMainButton("Blocks", "/Block.png", 300, 0, content, blockExplorerPane));
         vb.getChildren().add(buildMainButton("Settings", "/Settings.png", 400, 0, content, settingsPane));
@@ -508,10 +514,13 @@ public class NewGUI {
         //chainHeight2.setPrefHeight(80);
         ch2dec.setMinWidth(90);
         ch2dec.setTextAlignment(TextAlignment.CENTER);
-        vb.getChildren().add(ch2dec);
-        chainHeight2.setMinWidth(90);
-        chainHeight2.setTextAlignment(TextAlignment.CENTER);
-        vb.getChildren().add(chainHeight2);
+        if (!ki.getOptions().pool) {
+            vb.getChildren().add(ch2dec);
+
+            chainHeight2.setMinWidth(90);
+            chainHeight2.setTextAlignment(TextAlignment.CENTER);
+            vb.getChildren().add(chainHeight2);
+        }
         latency.setFont(Font.loadFont(getClass().getResourceAsStream("/ADAM.CG PRO.otf"), 10));
         vb.getChildren().add(latency);
         vb.setStyle("-fx-background-color:" + "#18BC9C");
@@ -618,6 +627,7 @@ public class NewGUI {
                 nextBlock.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
                 previousBlock.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
                 goBE.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
+                poolConnect.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
                 //miningIntesity.getClip().setStyle("-fx-background-color:"+color);
 
             } else if (colorCombos.getSelectionModel().getSelectedItem().getText().contains("Secondary Color")) {
@@ -645,7 +655,14 @@ public class NewGUI {
             }
         });
 
-
+        poolConnect.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                if (paytoAddress.getText().isEmpty()) return;
+                ki.getPoolData().payTo = paytoAddress.getText();
+                ki.getNetMan().attemptConnect(ipField.getText());
+            }
+        });
         for (String dev : ki.getMinerMan().getDevNames()) {
             XYChart.Series<String, Number> series = new XYChart.Series<>();
             hashrateChart.getData().add(series);
@@ -691,8 +708,8 @@ public class NewGUI {
 
                     BigInteger totalInput = BigInteger.ZERO;
                     for (Address a : ki.getAddMan().getActive()) {
-                        if (ki.getTransMan().getUTXOs(a) == null) return;
-                        for (Output o : ki.getTransMan().getUTXOs(a)) {
+                        if (ki.getTransMan().getUTXOs(a, true) == null) return;
+                        for (Output o : ki.getTransMan().getUTXOs(a, true)) {
                             if (o.getToken().equals(token)) {
                                 if (inputs.contains(Input.fromOutput(o))) continue;
                                 inputs.add(Input.fromOutput(o));
@@ -713,7 +730,7 @@ public class NewGUI {
                     for (Address a : ki.getAddMan().getActive()) {
                         //get inputs
                         if (feeInput.compareTo(fee) >= 0) break;
-                        for (Output o : ki.getTransMan().getUTXOs(a)) {
+                        for (Output o : ki.getTransMan().getUTXOs(a, true)) {
                             if (o.getToken().equals(Token.ORIGIN)) {
                                 inputs.add(Input.fromOutput(o));
                                 feeInput = feeInput.add(o.getAmount());
@@ -830,7 +847,8 @@ public class NewGUI {
                             beScroll.setPrefHeight(blockExplorerPane.getHeight() - 60);
                             lockPane.setMinHeight(borderPane.getHeight());
                             heightLabel.setText("Chain Height - " + ki.getChainMan().currentHeight());
-                            chainHeight2.setText(" " + ki.getChainMan().currentHeight().toString());
+                            if (!ki.getOptions().pool)
+                                chainHeight2.setText(" " + ki.getChainMan().currentHeight().toString());
                             miningDataHbox.setMinWidth(miningTab.getWidth());
 
                             if (startHeight != null && startHeight.compareTo(loadHeight) != 0) {

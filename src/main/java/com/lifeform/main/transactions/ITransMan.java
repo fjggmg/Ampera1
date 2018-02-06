@@ -12,7 +12,8 @@ public interface ITransMan {
     boolean addTransaction(ITrans transaction);
 
     boolean addTransactionNoVerify(ITrans transaction);
-    List<Output> getUTXOs(Address address);
+
+    List<Output> getUTXOs(Address address, boolean safe);
     boolean verifyCoinbase(ITrans transaction,BigInteger blockHeight, BigInteger fees);
     boolean addCoinbase(ITrans transaction,BigInteger blockHeight,BigInteger fees);
     List<ITrans> getPending();

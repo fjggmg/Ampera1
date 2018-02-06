@@ -128,7 +128,7 @@ public class FXMLController {
                         //if (!ki.getTransMan().utxosChanged(a)) continue;
                         checked.add(a.encodeForChain());
                         //ki.getMainLog().info("Getting info from Address: " + a.encodeForChain());
-                        List<Output> utxos = ki.getTransMan().getUTXOs(a);
+                        List<Output> utxos = ki.getTransMan().getUTXOs(a, true);
 
                         if (utxos != null) {
                             Set<Output> sUtxos = new HashSet<>();
@@ -843,8 +843,8 @@ public class FXMLController {
 
             BigInteger totalInput = BigInteger.ZERO;
             for (Address a : ki.getAddMan().getActive()) {
-                if (ki.getTransMan().getUTXOs(a) == null) return;
-                for (Output o : ki.getTransMan().getUTXOs(a)) {
+                if (ki.getTransMan().getUTXOs(a, false) == null) return;
+                for (Output o : ki.getTransMan().getUTXOs(a, false)) {
                     if (o.getToken().equals(token)) {
                         if(inputs.contains(Input.fromOutput(o))) continue;
                         inputs.add(Input.fromOutput(o));
@@ -865,7 +865,7 @@ public class FXMLController {
             for (Address a : ki.getAddMan().getActive()) {
                 //get inputs
                 if (feeInput.compareTo(fee) >= 0) break;
-                for (Output o : ki.getTransMan().getUTXOs(a)) {
+                for (Output o : ki.getTransMan().getUTXOs(a, false)) {
                     if (o.getToken().equals(Token.ORIGIN)) {
                         inputs.add(Input.fromOutput(o));
                         feeInput = feeInput.add(o.getAmount());

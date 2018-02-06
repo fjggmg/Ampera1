@@ -19,8 +19,8 @@ public class UTXOStartAck implements Packet,Serializable {
 
             List<Output> utxos = new ArrayList<>();
             Address a = Address.decodeFromChain(address);
-            if (ki.getTransMan().getUTXOs(a) != null)
-                utxos.addAll(ki.getTransMan().getUTXOs(a));
+            if (ki.getTransMan().getUTXOs(a, true) != null)
+                utxos.addAll(ki.getTransMan().getUTXOs(a, true));
             UTXOData ud = new UTXOData();
             List<String> sUtxos = new ArrayList<>();
             for (Output o : utxos) {

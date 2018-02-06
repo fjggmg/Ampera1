@@ -150,8 +150,8 @@ public class InputHandler extends Thread {
 
                             BigInteger totalInput = BigInteger.ZERO;
                             for (Address a : ki.getAddMan().getActive()) {
-                                if (ki.getTransMan().getUTXOs(a) == null) return;
-                                for (Output o : ki.getTransMan().getUTXOs(a)) {
+                                if (ki.getTransMan().getUTXOs(a, true) == null) return;
+                                for (Output o : ki.getTransMan().getUTXOs(a, true)) {
                                     if (o.getToken().equals(token)) {
                                         if (inputs.contains(Input.fromOutput(o))) continue;
                                         inputs.add(Input.fromOutput(o));
@@ -172,7 +172,7 @@ public class InputHandler extends Thread {
                             for (Address a : ki.getAddMan().getActive()) {
                                 //get inputs
                                 if (feeInput.compareTo(fee) >= 0) break;
-                                for (Output o : ki.getTransMan().getUTXOs(a)) {
+                                for (Output o : ki.getTransMan().getUTXOs(a, true)) {
                                     if (o.getToken().equals(Token.ORIGIN)) {
                                         inputs.add(Input.fromOutput(o));
                                         feeInput = feeInput.add(o.getAmount());
@@ -302,8 +302,8 @@ public class InputHandler extends Thread {
                         ki.debug("Not enough args");
                         continue;
                     }
-                    if (ki.getTransMan().getUTXOs(Address.decodeFromChain(line.split(" ")[1])) != null)
-                        for (Output out : ki.getTransMan().getUTXOs(Address.decodeFromChain(line.split(" ")[1]))) {
+                    if (ki.getTransMan().getUTXOs(Address.decodeFromChain(line.split(" ")[1]), true) != null)
+                        for (Output out : ki.getTransMan().getUTXOs(Address.decodeFromChain(line.split(" ")[1]), true)) {
                             ki.debug("Output data : " + out.getID() + " Address: " + out.getAddress().encodeForChain() + " Amount: " + out.getAmount());
                         }
                     ki.debug("Done getting UTXOs");

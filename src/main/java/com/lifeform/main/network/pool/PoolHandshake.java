@@ -13,7 +13,11 @@ public class PoolHandshake implements Serializable, PoolPacket {
     @Override
     public void process(IKi ki, IConnectionManager connMan) {
         if (Address.decodeFromChain(address).isValid()) {
+            ki.debug("Received pool handshake: ");
+            ki.debug("ID: " + ID);
+            ki.debug("Address: " + address);
             connMan.setID(ID);
+            connMan.sendPacket(ki.getPoolData().currentWork);
         }
     }
 }

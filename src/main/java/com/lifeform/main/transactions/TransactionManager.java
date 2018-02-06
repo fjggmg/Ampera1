@@ -109,7 +109,7 @@ public class TransactionManager implements ITransMan {
                     ki.debug("Input is null, malformed transaction.");
                 return false;
             } else {
-                ki.debug("Found in spend database");
+                //ki.debug("Found in spend database");
             }
             if ((utxoSpent.get(i.getID()) == null)) {
                 if (ki.getOptions().tDebug)
@@ -251,7 +251,7 @@ public class TransactionManager implements ITransMan {
     Set<String> hs = new HashSet<>();
     private static volatile boolean lock = false;
     @Override
-    public List<Output> getUTXOs(Address address) {
+    public List<Output> getUTXOs(Address address, boolean safe) {
         while (lock) {
         }
         lock = true;
@@ -261,7 +261,10 @@ public class TransactionManager implements ITransMan {
         }
         sUtxos = JSONManager.parseJSONToList(utxoMap.get(address.encodeForChain()));
         if (sUtxos != null && !sUtxos.isEmpty()) {
-            utxos.clear();
+            if (!safe)
+                utxos.clear();
+            else
+                utxos = new ArrayList<>();
             toRemove.clear();
             if (sUtxos != null && !sUtxos.isEmpty()) {
                 hs.clear();

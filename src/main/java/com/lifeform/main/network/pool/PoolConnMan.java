@@ -52,7 +52,12 @@ public class PoolConnMan extends IConnectionManager {
 
     @Override
     public void connected() {
-
+        ki.debug("Pool connection established");
+        if (ki.getOptions().poolRelay) return;
+        PoolHandshake ph = new PoolHandshake();
+        ph.ID = "test";
+        ph.address = ki.getPoolData().payTo;
+        sendPacket(ph);
     }
 
     @Override

@@ -4,6 +4,8 @@ import com.lifeform.main.blockchain.*;
 import com.lifeform.main.data.*;
 import com.lifeform.main.network.*;
 import com.lifeform.main.network.pool.KiEventHandler;
+import com.lifeform.main.network.pool.PoolBlockHeader;
+import com.lifeform.main.network.pool.PoolData;
 import com.lifeform.main.network.pool.PoolNetMan;
 import com.lifeform.main.transactions.*;
 import gpuminer.JOCL.context.JOCLContextAndCommandQueue;
@@ -46,10 +48,11 @@ public class Ki extends Thread implements IKi {
     private ITransMan transMan;
     private EncryptionManager encMan;
     private IAddMan addMan;
+    private INetworkManager poolNet;
     private IKi ki = this;
     private boolean run = true;
     //TODO: need to start saving version number to file for future conversion of files
-    public static final String VERSION = "0.17.0-TEST4-BETA";
+    public static final String VERSION = "0.17.0-TEST5-BETA";
     private boolean relay = false;
     private NewGUI guiHook;
     public static boolean debug = true;
@@ -58,6 +61,7 @@ public class Ki extends Thread implements IKi {
     private IStateManager stateMan;
     private Pool miningPool;
     public static volatile boolean canClose = true;
+    private PoolData pd;
     private XodusStringBooleanMap settings = new XodusStringBooleanMap("settings");
     public Ki(Options o) {
         if (settings.get(VERSION) == null || !settings.get(VERSION)) {
@@ -96,7 +100,7 @@ public class Ki extends Thread implements IKi {
         }
         encMan = new EncryptionManager(this);
         EncryptionManager.initStatic();
-
+        debug("EncryptMan done");
 
         try {
             ki.getEncryptMan().loadKeys();
@@ -106,9 +110,14 @@ public class Ki extends Thread implements IKi {
         }
         addMan = new AddressManager(this);
         addMan.load();
+
         if (addMan.getMainAdd() == null) {
             addMan.setMainAdd(addMan.getNewAdd());
         }
+        if (o.pool || o.poolRelay) {
+            pd = new PoolData();
+        }
+        debug("Addman done");
         if (o.rebuild) {
             List<Block> blocksToRebuild = new ArrayList<>();
             BigInteger b = BigInteger.ONE;
@@ -122,12 +131,35 @@ public class Ki extends Thread implements IKi {
                 chainMan.addBlock(block);
             }
         }
-        if (o.lite) {
-            stateMan = new StateManagerLite(this);
-        } else {
-            stateMan = new StateManager(this);
+        if (o.poolRelay) {
+            try {
+                miningPool = new Pool(null, new BigInteger("00000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF", 16), 0, EncryptionManager.sha512(getAddMan().getMainAdd().encodeForChain()), new KiEventHandler(this));
+            } catch (Exception e) {
+                ki.debug("Mining pool failed to start");
+            }
+            miningPool.updateCurrentHeight(ki.getChainMan().currentHeight());
+            Block b = getChainMan().formEmptyBlock(GPUMiner.minFee);
+            PoolBlockHeader pbh = new PoolBlockHeader();
+            pbh.coinbase = b.getCoinbase().toJSON();
+            pbh.height = b.height;
+            pbh.ID = b.ID;
+            pbh.merkleRoot = b.merkleRoot;
+            pbh.prevID = b.prevID;
+            pbh.solver = b.solver;
+            pbh.timestamp = b.timestamp;
+            getPoolData().workMap.put(b.merkleRoot, b);
+            getPoolData().currentWork = pbh;
+            poolNet = new PoolNetMan(this);
+            poolNet.start();
+
         }
-        stateMan.start();
+        if (!o.pool)
+            if (o.lite) {
+                stateMan = new StateManagerLite(this);
+            } else {
+                stateMan = new StateManager(this);
+            }
+        if (stateMan != null) stateMan.start();
 
         if (o.pool) {
             netMan = new PoolNetMan(this);
@@ -135,11 +167,9 @@ public class Ki extends Thread implements IKi {
             netMan = new NetMan(this, o.relay);
             netMan.start();
         }
-        if (o.poolRelay) {
-            miningPool = new Pool(null, new BigInteger("00000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF", 16), 0, EncryptionManager.sha512(getAddMan().getMainAdd().encodeForChain()), new KiEventHandler(this));
-        }
 
-        if (o.lite) {
+        debug("Stateman done");
+        if (o.lite && !o.pool) {
             while(netMan.getConnections().size() < 1){}
             netMan.broadcast(new DifficultyRequest());
             try {
@@ -151,6 +181,7 @@ public class Ki extends Thread implements IKi {
         if (!o.relay || !o.poolRelay)
         minerMan = new MinerManager(this, o.mDebug);
         //gui = MainGUI.guiFactory(this);
+        debug("Starting GUI");
         Thread t = new Thread() {
 
             @Override
@@ -175,7 +206,7 @@ public class Ki extends Thread implements IKi {
                 e.printStackTrace();
             }
             if (!setupDone && !o.relay) {
-                if (getOptions().lite && !NetMan.DIFF_SET)
+                if (getOptions().lite && !NetMan.DIFF_SET && !getOptions().pool)
                     continue;
                 minerMan.setup();
                 setupDone = true;
@@ -203,7 +234,8 @@ public class Ki extends Thread implements IKi {
         while (!canClose) {
         }
         chainMan.close();
-        transMan.close();
+        if (!getOptions().pool)
+            transMan.close();
         addMan.save();
         netMan.close();
         settings.close();
@@ -266,6 +298,27 @@ public class Ki extends Thread implements IKi {
     public void setSetting(Settings setting, boolean set) {
         ki.debug("Setting setting: " + setting + " to " + set);
         settings.put(setting.getKey(), set);
+    }
+
+    @Override
+    public PoolData getPoolData() {
+        return pd;
+    }
+
+    @Override
+    public void newTransPool() {
+        Block b = getChainMan().formEmptyBlock(GPUMiner.minFee);
+        PoolBlockHeader pbh = new PoolBlockHeader();
+        pbh.coinbase = b.getCoinbase().toJSON();
+        pbh.height = b.height;
+        pbh.ID = b.ID;
+        pbh.merkleRoot = b.merkleRoot;
+        pbh.prevID = b.prevID;
+        pbh.solver = b.solver;
+        pbh.timestamp = b.timestamp;
+        getPoolData().workMap.put(b.merkleRoot, b);
+        getPoolData().currentWork = pbh;
+        poolNet.broadcast(pbh);
     }
 
     private void rn() {
@@ -332,12 +385,23 @@ public class Ki extends Thread implements IKi {
     @Override
     public void blockTick(Block block)
     {
-        /* old miner
-        CPUMiner.height = block.height.add(BigInteger.ONE);
-        CPUMiner.prevID = block.ID;
-        */
-
+        if (getOptions().poolRelay) {
+            miningPool.updateCurrentHeight(ki.getChainMan().currentHeight());
+            Block b = getChainMan().formEmptyBlock(GPUMiner.minFee);
+            PoolBlockHeader pbh = new PoolBlockHeader();
+            pbh.coinbase = b.getCoinbase().toJSON();
+            pbh.height = b.height;
+            pbh.ID = b.ID;
+            pbh.merkleRoot = b.merkleRoot;
+            pbh.prevID = b.prevID;
+            pbh.solver = b.solver;
+            pbh.timestamp = b.timestamp;
+            getPoolData().workMap.put(b.merkleRoot, b);
+            getPoolData().currentWork = pbh;
+            poolNet.broadcast(pbh);
+        }
     }
+
 
     @Override
     public IMinerMan getMinerMan()

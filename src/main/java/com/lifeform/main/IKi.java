@@ -7,7 +7,9 @@ import com.lifeform.main.blockchain.IStateManager;
 import com.lifeform.main.data.IEncryptMan;
 import com.lifeform.main.data.Options;
 import com.lifeform.main.network.INetworkManager;
+import com.lifeform.main.network.pool.PoolData;
 import com.lifeform.main.transactions.IAddMan;
+import com.lifeform.main.transactions.ITrans;
 import com.lifeform.main.transactions.ITransMan;
 import mining_pool.Pool;
 import org.apache.logging.log4j.Logger;
@@ -65,4 +67,8 @@ public interface IKi {
     boolean getSetting(Settings setting);
 
     void setSetting(Settings setting, boolean set);
+
+    PoolData getPoolData();
+
+    void newTransPool();
 }

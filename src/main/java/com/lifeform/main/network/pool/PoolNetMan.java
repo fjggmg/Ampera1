@@ -5,6 +5,7 @@ import com.lifeform.main.network.ConnMan;
 import com.lifeform.main.network.IConnectionManager;
 import com.lifeform.main.network.INetworkManager;
 import com.lifeform.main.network.logic.Client;
+import com.lifeform.main.network.logic.Server;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -67,6 +68,7 @@ public class PoolNetMan extends Thread implements INetworkManager {
 
     @Override
     public void attemptConnect(String IP) {
+        if (connections.size() > 0) return; //only one pool connection for the client
         Thread t = new Thread() {
 
             public void run() {
@@ -86,6 +88,28 @@ public class PoolNetMan extends Thread implements INetworkManager {
         };
         threads.add(t);
         t.start();
+    }
+
+    public void run() {
+        if (ki.getOptions().poolRelay) {
+            ki.debug("Starting pool server");
+            Thread t = new Thread() {
+
+                public void run() {
+                    setName("server:" + PORT);
+                    Server server = new Server(ki, PORT);
+                    try {
+                        server.start();
+                    } catch (Exception e) {
+                        ki.debug("Server stopped, error follows: ");
+                        e.printStackTrace();
+                    }
+                }
+            };
+            threads.add(t);
+            t.start();
+
+        }
     }
 
     private boolean live = false;

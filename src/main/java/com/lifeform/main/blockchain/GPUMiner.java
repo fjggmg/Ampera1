@@ -6,6 +6,7 @@ import com.lifeform.main.data.Utils;
 import com.lifeform.main.network.BlockEnd;
 import com.lifeform.main.network.BlockHeader;
 import com.lifeform.main.network.TransactionPacket;
+import com.lifeform.main.network.pool.PoolBlockHeader;
 import gpuminer.JOCL.constants.JOCLConstants;
 import gpuminer.JOCL.context.JOCLContextAndCommandQueue;
 import gpuminer.JOCL.context.JOCLDevices;
@@ -14,6 +15,7 @@ import gpuminer.miner.autotune.Autotune;
 import gpuminer.miner.context.ContextMaster;
 import gpuminer.miner.context.DeviceContext;
 import gpuminer.miner.databuckets.BlockAndSharePayloads;
+import gpuminer.miner.databuckets.Payload;
 import gpuminer.miner.synchron.Synchron;
 
 import java.io.UnsupportedEncodingException;
@@ -40,6 +42,7 @@ public class GPUMiner extends Thread implements IMiner {
     private static volatile boolean triedNoCPU = false;
     public static ContextMaster platforms;// = new ContextMaster();
     public volatile static boolean initDone = false;
+    public static BigInteger shareDiff = new BigInteger("00000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF", 16);
     public static BigInteger minFee = BigInteger.TEN;
 
     public static int init(IKi ki, ContextMaster cm) throws MiningIncompatibleException {
@@ -76,14 +79,22 @@ public class GPUMiner extends Thread implements IMiner {
 
         byte[] difficulty = new byte[64];
         int p = 63;
-        for (int i = ki.getChainMan().getCurrentDifficulty().toByteArray().length - 1; i >= 0; i--) {
-            difficulty[p] = ki.getChainMan().getCurrentDifficulty().toByteArray()[i];
-            p--;
+        if (!ki.getOptions().pool)
+            for (int i = ki.getChainMan().getCurrentDifficulty().toByteArray().length - 1; i >= 0; i--) {
+                difficulty[p] = ki.getChainMan().getCurrentDifficulty().toByteArray()[i];
+                p--;
+            }
+
+        byte[] share = new byte[64];
+        int p2 = 63;
+        for (int i = shareDiff.toByteArray().length - 1; i >= 0; i--) {
+            difficulty[p] = shareDiff.toByteArray()[i];
+            p2--;
         }
         int i = 0;
         for (DeviceContext jcaq : jcacqs) {
             int threadCount = Autotune.getAtSettingsMap().get(jcaq.getDInfo().getDeviceName()).threadFactor;
-            SHA3Miner miner = new SHA3Miner(jcaq, difficulty, null, threadCount, Autotune.getAtSettingsMap().get(jcaq.getDInfo().getDeviceName()).kernelType);
+            SHA3Miner miner = new SHA3Miner(jcaq, difficulty, (ki.getOptions().pool) ? share : null, threadCount, Autotune.getAtSettingsMap().get(jcaq.getDInfo().getDeviceName()).kernelType);
             gpuMiners.add(miner);
             i++;
         }
@@ -98,7 +109,6 @@ public class GPUMiner extends Thread implements IMiner {
     public GPUMiner(IKi ki, int index) {
         this.ki = ki;
         this.devName = devName + " #" + index;
-
     }
 
     private long lastPrint = System.currentTimeMillis();
@@ -112,15 +122,26 @@ public class GPUMiner extends Thread implements IMiner {
         ki.debug("Attempting to start mining on OpenCL device: " + jcacq.getDInfo().getDeviceName());
         while (mining) {
             if (mining) {
-                Block b = ki.getChainMan().formEmptyBlock(minFee);
+                Block b;
+                if (!ki.getOptions().pool) {
+                    b = ki.getChainMan().formEmptyBlock(minFee);
+                } else {
+                    b = new Block();
+                    b.payload = ki.getPoolData().currentWork.payload;
+                    b.prevID = ki.getPoolData().currentWork.prevID;
+                    b.timestamp = System.currentTimeMillis();
+                    b.height = ki.getPoolData().currentWork.height;
+                    b.merkleRoot = ki.getPoolData().currentWork.merkleRoot;
+                    b.solver = ki.getPoolData().currentWork.solver;
+                }
                 //In theory the message can be nearly as large as Java can make an array and the miner will barely suffer any slowdown.
                 //The slowdown from dealing with the message size happens every two terahashes, and it's unlikely to be longer than a second, though I have not timed it, so it is negligible.
                 //There is a practical limit on the size of the message because if it's too large then the miner won't have space to postpend guess data.
                 //But a message would need to be ginormous, or a difficulty would need to be obscenely hard, for that to be an issue.
                 //If that ever is an issue, the miner is already built to gracefully handle the problem.
-                byte[] message = b.gpuHeader();
+                byte[] message;
 
-
+                message = b.gpuHeader();
 
                 //Six preceding zeroes on the difficulty is hard enough that the miner is likely to be able to time its hashrate.
                 threadCount = Autotune.getAtSettingsMap().get(jcacq.getDInfo().getDeviceName()).threadFactor;
@@ -166,44 +187,52 @@ public class GPUMiner extends Thread implements IMiner {
                         if (miner.getHashesPerSecond() != -1) {
                             ki.debug("Current hash rate on OpenCL device: " + jcacq.getDInfo().getDeviceName() + " is: " + format.format(miner.getHashesPerSecond()) + " H/s");
                         }
-
                         BlockAndSharePayloads[] basp = miner.getPayloads();
-                        byte[] winningPayload = basp[0].getBlockPayload().getBytes();
+                        if (!ki.getOptions().pool) {
 
-                        try {
-                            ki.debug("Payload is: " + new String(winningPayload, "UTF-8"));
-                        } catch (UnsupportedEncodingException e) {
-                            e.printStackTrace();
-                        }
+                            byte[] winningPayload = basp[0].getBlockPayload().getBytes();
 
-                        b.payload = winningPayload;
-                        b.ID = EncryptionManager.sha512(b.header());
-
-                        ki.debug("HASH is: " + Utils.toHexArray(Utils.fromBase64(b.ID)));
-                        ki.debug("DIFF is: " + Utils.toHexArray(difficulty));
-                    /* old diagnostics
-                    try {
-                        ki.debug("Diag message is: " + new String(miner.queryDiagnosticMessageWithFrontPayload(), "UTF-8"));
-                    } catch (UnsupportedEncodingException e) {
-                        e.printStackTrace();
-                    }
-                     */
-                        if (ki.getChainMan().softVerifyBlock(b).success()) {
-                            ki.getChainMan().setTemp(b);
-                            sendBlock(b);
-                            ki.debug("YOU FOUND A BLOCK! If it verifies you will receive it back shortly from the network.");
-                            mining = false;
-                            for (String t : b.getTransactionKeys()) {
-                                ki.getTransMan().getPending().remove(b.getTransaction(t));
+                            try {
+                                ki.debug("Payload is: " + new String(winningPayload, "UTF-8"));
+                            } catch (UnsupportedEncodingException e) {
+                                e.printStackTrace();
                             }
-                        } else if (ki.getChainMan().getCurrentDifficulty().compareTo(new BigInteger(Utils.fromBase64(b.ID))) < 0) {
-                            ki.debug("FOUND AN ERROR ON OPENCL DEVICE: " + jcacq.getDInfo().getDeviceName());
 
-                            run();
+                            b.payload = winningPayload;
+                            b.ID = EncryptionManager.sha512(b.header());
+
+                            ki.debug("HASH is: " + Utils.toHexArray(Utils.fromBase64(b.ID)));
+                            ki.debug("DIFF is: " + Utils.toHexArray(difficulty));
+
+                            if (ki.getChainMan().softVerifyBlock(b).success()) {
+                                ki.getChainMan().setTemp(b);
+                                sendBlock(b);
+                                ki.debug("YOU FOUND A BLOCK! If it verifies you will receive it back shortly from the network.");
+                                mining = false;
+                                for (String t : b.getTransactionKeys()) {
+                                    ki.getTransMan().getPending().remove(b.getTransaction(t));
+                                }
+                            } else if (ki.getChainMan().getCurrentDifficulty().compareTo(new BigInteger(Utils.fromBase64(b.ID))) < 0) {
+                                ki.debug("FOUND AN ERROR ON OPENCL DEVICE: " + jcacq.getDInfo().getDeviceName());
+
+                                run();
+                            } else {
+                                ki.debug("An error was found with the block verification. Block will not be sent to the network");
+
+                                run();
+                            }
                         } else {
-                            ki.debug("An error was found with the block verification. Block will not be sent to the network");
 
-                            run();
+                            int i = 0;
+                            for (BlockAndSharePayloads bp : miner.getPayloads()) {
+                                PoolBlockHeader pbh = ki.getPoolData().currentWork;
+                                for (Payload pay : bp.getSharePayloads()) {
+                                    i++;
+                                    pbh.payload = pay.getBytes();
+                                    ki.getNetMan().broadcast(pbh);
+                                }
+                            }
+                            ki.debug("Found: " + i + " shares and sent to network");
                         }
                     }
 

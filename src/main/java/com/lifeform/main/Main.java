@@ -58,7 +58,10 @@ public class Main {
             if (s.equals("-tgui")) {
                 o.tGUI = true;
             }
-            if (s.equals("-pr")) o.poolRelay = true;
+            if (s.equals("-pr")) {
+                o.poolRelay = true;
+                o.lite = false;
+            }
             if (s.equals("-pool")) o.pool = true;
 
 

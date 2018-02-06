@@ -171,7 +171,7 @@
                                                text="Please report any issues in the discord server or in the bitbucket issues page."/>
                                     </children>
                                 </Pane>
-                                <Pane fx:id="blockExplorerPane" prefWidth="630.0">
+                                <Pane fx:id="blockExplorerPane" prefWidth="630.0" visible="false">
                                     <children>
                                         <ScrollPane fx:id="beScroll" layoutY="55.0" prefHeight="370.0"
                                                     prefWidth="630.0"/>
@@ -217,15 +217,18 @@
                                 </Pane>
                                 <Pane fx:id="poolPane" prefHeight="200.0" prefWidth="200.0" visible="false">
                                     <children>
-                                        <JFXTextField fx:id="ipField" labelFloat="true" layoutX="14.0" layoutY="14.0"
-                                                      promptText="Pool IP"/>
-                                        <JFXButton fx:id="poolConnect" layoutX="154.0" layoutY="14.0" prefHeight="25.0"
+                                        <JFXTextField fx:id="ipField" labelFloat="true" layoutX="14.0" layoutY="60.0"
+                                                      promptText="Pool IP*"/>
+                                        <JFXButton fx:id="poolConnect" layoutX="155.0" layoutY="60.0" prefHeight="25.0"
                                                    prefWidth="91.0" text="Connect"/>
-                                        <Label fx:id="shares" layoutX="14.0" layoutY="60.0" text="Shares - "/>
-                                        <Label fx:id="nextPayment" layoutX="14.0" layoutY="77.0"
+                                        <Label fx:id="shares" layoutX="14.0" layoutY="93.0" text="Shares - "/>
+                                        <Label fx:id="nextPayment" layoutX="14.0" layoutY="110.0"
                                                text="Next Payment - "/>
+                                        <JFXTextField fx:id="paytoAddress" labelFloat="true" layoutX="14.0"
+                                                      layoutY="14.0" promptText="Payto Address*"/>
                                     </children>
                                 </Pane>
+                                <Pane fx:id="poolRelay" prefHeight="200.0" prefWidth="200.0" visible="false"/>
                             </children>
                         </StackPane>
                     </center>

@@ -62,6 +62,9 @@ public class TransactionPacket implements Serializable, Packet {
                 {
                     ki.debug("====TRANSACTION IS VERIFIED AND ADDED====");
                 }
+                if (ki.getOptions().poolRelay) {
+                    ki.newTransPool();
+                }
             }
         } else {
 

@@ -79,7 +79,7 @@ public class TransactionManagerLite implements ITransMan {
     }
 
     @Override
-    public List<Output> getUTXOs(Address address) {
+    public List<Output> getUTXOs(Address address, boolean safe) {
         List<Output> utxos = new ArrayList<>();
         for (String ID : utxoMap.keySet()) {
             if (!usedUTXO.contains(ID))

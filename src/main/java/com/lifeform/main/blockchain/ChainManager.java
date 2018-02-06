@@ -123,7 +123,7 @@ public class ChainManager implements IChainMan {
             return state;
         }
 
-        ki.blockTick(block);
+
         current = block;
         currentHeight = block.height;
         blockchainMap.put(block.ID,block);
@@ -160,6 +160,7 @@ public class ChainManager implements IChainMan {
             ki.getPoolManager().updateCurrentHeight(ki.getChainMan().currentHeight());
             ki.getPoolManager().updateCurrentPayPerShare((long) ((Math.pow(16, 8) / Math.pow(16, i) * blockRewardForHeight(currentHeight()).longValueExact()) * 0.99));
         }
+        ki.blockTick(block);
         return BlockState.SUCCESS;
     }
 

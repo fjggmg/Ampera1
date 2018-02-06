@@ -42,6 +42,12 @@ public class Server {
         EventLoopGroup workerGroup = new NioEventLoopGroup();
         try {
             ServerBootstrap b = new ServerBootstrap();
+            ChannelInboundHandlerAdapter serverHandler;
+            if (ki.getOptions().poolRelay) {
+                serverHandler = new PoolServerHandler(ki);
+            } else {
+                serverHandler = new ServerHandler(ki);
+            }
             b.group(bossGroup, workerGroup)
                     .channel(NioServerSocketChannel.class)
                     .handler(new LoggingHandler(LogLevel.INFO))
@@ -56,7 +62,7 @@ public class Server {
                             p.addLast(
                                     new ObjectEncoder(),
                                     new ObjectDecoder(150000000, ClassResolvers.cacheDisabled(null)),
-                                    new ServerHandler(ki));
+                                    serverHandler);
 
                         }
                     }).childOption(ChannelOption.SO_KEEPALIVE,true);
