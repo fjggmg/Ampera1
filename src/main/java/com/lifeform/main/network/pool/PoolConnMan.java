@@ -59,6 +59,7 @@ public class PoolConnMan extends IConnectionManager {
         ki.getPoolData().ID = EncryptionManager.sha224(ki.getPoolData().payTo + System.currentTimeMillis());
         ph.ID = ki.getPoolData().ID;
         ph.address = ki.getPoolData().payTo;
+        ph.version = PoolNetMan.POOL_NET_VERSION;
         sendPacket(ph);
     }
 

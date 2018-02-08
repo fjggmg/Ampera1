@@ -155,7 +155,7 @@ public class ChainManager implements IChainMan {
             ki.getMinerMan().restartMiners();
         }
         if (ki.getOptions().poolRelay) {
-            int i = 128 - currentDifficulty.toString().length();
+            int i = 128 - currentDifficulty.toString(16).length();
 
             ki.getPoolManager().updateCurrentHeight(ki.getChainMan().currentHeight());
             ki.getPoolManager().updateCurrentPayPerShare((long) ((Math.pow(16, 8) / Math.pow(16, i) * blockRewardForHeight(currentHeight()).longValueExact()) * 0.99));

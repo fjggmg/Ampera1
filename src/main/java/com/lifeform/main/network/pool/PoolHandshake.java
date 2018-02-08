@@ -9,10 +9,17 @@ import java.io.Serializable;
 public class PoolHandshake implements Serializable, PoolPacket {
     public String address;
     public String ID;
+    public String version;
 
     @Override
     public void process(IKi ki, IConnectionManager connMan) {
+
         ki.debug("Received pool handshake: ");
+        if (!version.equals(PoolNetMan.POOL_NET_VERSION)) {
+            ki.debug("Wrong pool net version");
+            connMan.disconnect();
+            return;
+        }
         if (ki.getOptions().pool) {
             ki.getNetMan().connectionInit(ID, connMan);
             return;

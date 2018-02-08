@@ -62,7 +62,10 @@ public class Main {
                 o.poolRelay = true;
                 o.lite = false;
             }
-            if (s.equals("-pool")) o.pool = true;
+            if (s.equals("-pool")) {
+                o.pool = true;
+                o.lite = true;
+            }
 
 
         }

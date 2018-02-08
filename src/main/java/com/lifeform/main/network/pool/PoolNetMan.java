@@ -1,11 +1,12 @@
 package com.lifeform.main.network.pool;
 
 import com.lifeform.main.IKi;
-import com.lifeform.main.network.ConnMan;
+import com.lifeform.main.blockchain.ChainManager;
 import com.lifeform.main.network.IConnectionManager;
 import com.lifeform.main.network.INetworkManager;
 import com.lifeform.main.network.logic.Client;
 import com.lifeform.main.network.logic.Server;
+import com.lifeform.main.transactions.Address;
 
 import java.util.*;
 
@@ -15,6 +16,7 @@ public class PoolNetMan extends Thread implements INetworkManager {
     private static final int PORT = 29999;
     private Set<IConnectionManager> connections = new HashSet<>();
     private Map<String, IConnectionManager> connMap = new HashMap<>();
+    public static final String POOL_NET_VERSION = "1.0.0";
     public PoolNetMan(IKi ki) {
         this.ki = ki;
     }
@@ -109,6 +111,28 @@ public class PoolNetMan extends Thread implements INetworkManager {
             threads.add(t);
             t.start();
 
+            Thread t2 = new Thread() {
+
+                public void run() {
+                    setName("StatUpdate");
+                    while (true) {
+                        for (IConnectionManager conn : connections) {
+                            StatUpdate su = new StatUpdate();
+                            su.shares = ki.getPoolManager().getTotalSharesOfMiner(Address.decodeFromChain(ki.getPoolData().addMap.get(conn.getID())));
+                            int i = 128 - ki.getChainMan().getCurrentDifficulty().toString().length();
+                            su.currentPPS = (long) ((Math.pow(16, 8) / Math.pow(16, i) * ChainManager.blockRewardForHeight(ki.getChainMan().currentHeight()).longValueExact()) * 0.99);
+                            conn.sendPacket(su);
+                        }
+                        try {
+                            sleep(30000);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            };
+            threads.add(t2);
+            t2.start();
         }
     }
 

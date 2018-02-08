@@ -314,13 +314,13 @@ public class NewGUI {
                 }
             }
         }
-        double amount = allout.longValueExact() / 100_000_000;
+        double amount = allout.longValueExact() / 100_000_000D;
         String direction;
         if (allout.compareTo(allin) > 0) {
             direction = "Received";
         } else {
             direction = "Sent";
-            amount += trans.getFee().longValueExact() / 100_000_000;
+            amount += trans.getFee().longValueExact() / 100_000_000D;
         }
         String h = height.toString();
 
@@ -648,7 +648,7 @@ public class NewGUI {
         vb.getChildren().add(buildMainButton("Settings", "/Settings.png", 400, 0, content, settingsPane));
         vb.getChildren().add(buildMainButton("Help", "/Help.png", 500, 7, content, helpPane));
         vb.getChildren().add(new Separator());
-        if (!ki.getOptions().lite)
+        if (!ki.getOptions().lite && !ki.getOptions().pool)
             fillMasonry(ki.getChainMan().currentHeight().subtract(BigInteger.valueOf(100)), ki.getChainMan().currentHeight());
         chainHeight2.setFont(Font.loadFont(getClass().getResourceAsStream("/ADAM.CG PRO.otf"), 10));
         ch2dec.setFont(Font.loadFont(getClass().getResourceAsStream("/ADAM.CG PRO.otf"), 10));
@@ -1005,6 +1005,10 @@ public class NewGUI {
                                 latency.setText(" Latency - " + c.currentLatency());
 
                             }
+                            if (ki.getOptions().pool) {
+                                shares.setText("Shares - " + currentShares);
+                                nextPayment.setText("Next Payment - " + ((currentShares * currentPPS) / 100_000_000));
+                            }
 
 
                         }
@@ -1310,8 +1314,14 @@ public class NewGUI {
     }
 
     private BigInteger startHeight;
-
+    private long currentShares = 0;
+    private long currentPPS = 0;
     public void setStart(BigInteger startHeight) {
         this.startHeight = startHeight;
+    }
+
+    public void updatePoolStats(long currentShares, long currentPPS) {
+        this.currentShares = currentShares;
+        this.currentPPS = currentPPS;
     }
 }
