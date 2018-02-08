@@ -58,6 +58,7 @@ import java.util.*;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import static javafx.animation.Interpolator.EASE_BOTH;
 
@@ -92,7 +93,7 @@ public class NewGUI {
     private volatile boolean isFinal = false;
     private volatile boolean run = true;
     private Map<String, String> heightMap = new HashMap<>();
-    private List<String> sTrans = new ArrayList<>();
+    private List<String> sTrans = new CopyOnWriteArrayList<>();
     public NewGUI() {
         ki = Ki.getInstance();
         transactions = FXCollections.observableArrayList();
