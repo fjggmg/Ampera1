@@ -2,12 +2,15 @@ package com.lifeform.main.network.pool;
 
 import com.lifeform.main.IKi;
 import com.lifeform.main.blockchain.ChainManager;
+import com.lifeform.main.blockchain.GPUMiner;
 import com.lifeform.main.network.IConnectionManager;
 import com.lifeform.main.network.INetworkManager;
 import com.lifeform.main.network.logic.Client;
 import com.lifeform.main.network.logic.Server;
 import com.lifeform.main.transactions.Address;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.*;
 
 public class PoolNetMan extends Thread implements INetworkManager {
@@ -28,9 +31,14 @@ public class PoolNetMan extends Thread implements INetworkManager {
 
     @Override
     public void broadcast(Object o) {
+        List<IConnectionManager> toRemove = new ArrayList<>();
         for (IConnectionManager c : connections) {
-            c.sendPacket(o);
+            if (c.isConnected())
+                c.sendPacket(o);
+            else
+                toRemove.add(c);
         }
+        connections.removeAll(toRemove);
     }
 
     @Override
@@ -119,8 +127,9 @@ public class PoolNetMan extends Thread implements INetworkManager {
                         for (IConnectionManager conn : connections) {
                             StatUpdate su = new StatUpdate();
                             su.shares = ki.getPoolManager().getTotalSharesOfMiner(Address.decodeFromChain(ki.getPoolData().addMap.get(conn.getID())));
-                            int i = 128 - ki.getChainMan().getCurrentDifficulty().toString().length();
-                            su.currentPPS = (double) ((Math.pow(16, 8) / Math.pow(16, i) * ChainManager.blockRewardForHeight(ki.getChainMan().currentHeight()).longValueExact()) * 0.99);
+                            BigDecimal sd = new BigDecimal(GPUMiner.shareDiff);
+                            BigDecimal cd = new BigDecimal(ki.getChainMan().getCurrentDifficulty());
+                            su.currentPPS = (double) ((((cd.divide(sd, 9, RoundingMode.HALF_DOWN).doubleValue() * ChainManager.blockRewardForHeight(ki.getChainMan().currentHeight()).longValueExact()) * 0.99)));
 
                             conn.sendPacket(su);
                         }

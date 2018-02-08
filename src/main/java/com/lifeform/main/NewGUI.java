@@ -88,6 +88,7 @@ public class NewGUI {
     public JFXTextField searchBox;
     public Label amountOfTransactions;
     public Label blockTimestamp;
+    public Label poolConnected;
     private IKi ki;
     private ObservableMap<Token, BigInteger> tokenValueMap = FXCollections.observableMap(new HashMap<Token, BigInteger>());
     private volatile boolean isFinal = false;
@@ -1007,7 +1008,15 @@ public class NewGUI {
                             }
                             if (ki.getOptions().pool) {
                                 shares.setText("Shares - " + currentShares);
-                                nextPayment.setText("Next Payment - " + ((currentShares * currentPPS)));
+                                //ki.debug("Current PPS: " + currentPPS);
+                                nextPayment.setText("Next Payment - " + format2.format(((currentShares * currentPPS)) / 100_000_000));
+                                if (ki.getNetMan().getConnections().size() > 0) {
+                                    poolConnected.setText("Connected");
+                                    poolConnect.setDisable(true);
+                                } else {
+                                    poolConnected.setText("Not Connected");
+                                    poolConnect.setDisable(false);
+                                }
                             }
 
 

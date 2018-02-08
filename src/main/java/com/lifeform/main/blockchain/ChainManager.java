@@ -11,7 +11,9 @@ import com.lifeform.main.transactions.*;
 import org.json.simple.JSONObject;
 
 import java.io.File;
+import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -155,10 +157,10 @@ public class ChainManager implements IChainMan {
             ki.getMinerMan().restartMiners();
         }
         if (ki.getOptions().poolRelay) {
-            int i = 128 - currentDifficulty.toString(16).length();
-
+            BigDecimal sd = new BigDecimal(GPUMiner.shareDiff);
+            BigDecimal cd = new BigDecimal(ki.getChainMan().getCurrentDifficulty());
             ki.getPoolManager().updateCurrentHeight(ki.getChainMan().currentHeight());
-            ki.getPoolManager().updateCurrentPayPerShare((long) ((Math.pow(16, 8) / Math.pow(16, i) * blockRewardForHeight(currentHeight()).longValueExact()) * 0.99) * 100_000_000);
+            ki.getPoolManager().updateCurrentPayPerShare((long) ((((cd.divide(sd, 9, RoundingMode.HALF_DOWN).doubleValue() * ChainManager.blockRewardForHeight(ki.getChainMan().currentHeight()).longValueExact()) * 0.99))));
         }
         ki.blockTick(block);
         return BlockState.SUCCESS;

@@ -241,6 +241,8 @@
                                                text="Next Payment - "/>
                                         <JFXTextField fx:id="paytoAddress" labelFloat="true" layoutX="14.0"
                                                       layoutY="14.0" promptText="Payto Address*"/>
+                                        <Label fx:id="poolConnected" layoutX="301.0" layoutY="64.0"
+                                               text="Not Connected"/>
                                     </children>
                                 </Pane>
                                 <Pane fx:id="poolRelay" prefHeight="200.0" prefWidth="200.0" visible="false">
