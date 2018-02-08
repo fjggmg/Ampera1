@@ -1,18 +1,24 @@
 package com.lifeform.main;
 
 import com.jfoenix.controls.*;
+import com.jfoenix.controls.cells.editors.TextFieldEditorBuilder;
+import com.jfoenix.controls.cells.editors.base.GenericEditableTreeTableCell;
+import com.jfoenix.controls.datamodels.treetable.RecursiveTreeObject;
 import com.jfoenix.transitions.hamburger.HamburgerSlideCloseTransition;
 import com.jfoenix.validation.RequiredFieldValidator;
 import com.lifeform.main.blockchain.Block;
 import com.lifeform.main.blockchain.GPUMiner;
 import com.lifeform.main.data.EncryptionManager;
+import com.lifeform.main.data.JSONManager;
 import com.lifeform.main.data.XodusStringMap;
+import com.lifeform.main.network.IConnectionManager;
 import com.lifeform.main.network.TransactionPacket;
 import com.lifeform.main.transactions.*;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
 import javafx.application.Platform;
+import javafx.beans.binding.Bindings;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.*;
@@ -36,6 +42,7 @@ import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 import javafx.util.Duration;
+import jetbrains.exodus.env.Store;
 
 import java.awt.*;
 import java.awt.datatransfer.Clipboard;
@@ -52,7 +59,6 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import static java.lang.Thread.sleep;
 import static javafx.animation.Interpolator.EASE_BOTH;
 
 public class NewGUI {
@@ -78,19 +84,39 @@ public class NewGUI {
     public JFXButton goBE;
     public JFXTextField paytoAddress;
     public Pane poolRelay;
+    public JFXTextField searchBox;
+    public Label amountOfTransactions;
+    public Label blockTimestamp;
     private IKi ki;
     private ObservableMap<Token, BigInteger> tokenValueMap = FXCollections.observableMap(new HashMap<Token, BigInteger>());
     private volatile boolean isFinal = false;
     private volatile boolean run = true;
-
+    private Map<String, String> heightMap = new HashMap<>();
+    private List<String> sTrans = new ArrayList<>();
     public NewGUI() {
         ki = Ki.getInstance();
+        transactions = FXCollections.observableArrayList();
         for (Token t : Token.values()) {
             tokenValueMap.put(t, BigInteger.ZERO);
         }
         ki.setGUIHook(this);
         if (guiMap.get("blocksFound") != null)
             blocksFoundInt = Integer.parseInt(guiMap.get("blocksFound"));
+        if (guiMap.get("nGUI") == null) {
+            guiMap.put("newGUI", "firstRun");
+            if (guiMap.get("heightMap") != null) {
+                heightMap = JSONManager.parseJSONtoMap(guiMap.get("heightMap"));
+            }
+            if (guiMap.get("transactions") != null) {
+                List<String> sTrans = JSONManager.parseJSONToList(guiMap.get("transactions"));
+                this.sTrans = sTrans;
+                for (String s : sTrans) {
+                    ITrans t = Transaction.fromJSON(s);
+                    addTransaction(t, new BigInteger(heightMap.get(t.getID())));
+
+                }
+            }
+        }
         if (!ki.getOptions().pool) {
             Thread t = new Thread() {
                 public void run() {
@@ -151,7 +177,7 @@ public class NewGUI {
     public JFXTextField feeText;
     public JFXTextField messageText;
     public JFXButton sendButton;
-    public JFXTreeTableView transactionTable;
+    public JFXTreeTableView<StoredTrans> transactionTable;
     public Label addressLabel;
     public Label heightLabel;
     public JFXButton copyAddress;
@@ -264,6 +290,49 @@ public class NewGUI {
     }
 
     public void addTransaction(ITrans trans, BigInteger height) {
+        BigInteger allout = BigInteger.ZERO;
+        List<String> involved = new ArrayList<>();
+        for (Output o : trans.getOutputs()) {
+            for (Address a : ki.getAddMan().getAll()) {
+                if (o.getAddress().encodeForChain().equals(a.encodeForChain())) {
+                    if (!involved.contains(a.encodeForChain())) {
+                        involved.add(a.encodeForChain());
+                    }
+                    allout = allout.add(o.getAmount());
+                }
+            }
+        }
+        BigInteger allin = BigInteger.ZERO;
+        for (Input o : trans.getInputs()) {
+            for (Address a : ki.getAddMan().getAll()) {
+                if (o.getAddress().encodeForChain().equals(a.encodeForChain())) {
+                    if (!involved.contains(a.encodeForChain())) {
+                        involved.add(a.encodeForChain());
+                    }
+                    allin = allin.add(o.getAmount());
+                }
+            }
+        }
+        double amount = allout.longValueExact() / 100_000_000;
+        String direction;
+        if (allout.compareTo(allin) > 0) {
+            direction = "Received";
+        } else {
+            direction = "Sent";
+            amount += trans.getFee().longValueExact() / 100_000_000;
+        }
+        String h = height.toString();
+
+
+        String timestamp = sdf2.format(new Date(trans.getOutputs().get(0).getTimestamp()));
+
+        for (String add : involved) {
+            StoredTrans st = new StoredTrans(add, "" + amount, direction, trans.getMessage(), trans.getInputs().get(0).getAddress().encodeForChain(), timestamp, height.toString());
+            transactions.add(st);
+        }
+        sTrans.add(trans.toJSON());
+        guiMap.put("transactions", JSONManager.parseListToJSON(sTrans).toJSONString());
+
 
 
     }
@@ -273,7 +342,8 @@ public class NewGUI {
     private DecimalFormat format2 = new DecimalFormat("###,###,###,###,###,###,###,###,##0.#########");
     private boolean mining = false;
     private BigInteger loadHeight;
-
+    private SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
+    private ObservableList<StoredTrans> transactions;
     @FXML
     void initialize() {
         if (!ki.getOptions().pool)
@@ -323,6 +393,7 @@ public class NewGUI {
             @Override
             public void handle(MouseEvent event) {
                 if (ki.getOptions().mining) {
+                    if (ki.getNetMan().getConnections().size() == 0) return;
                     if (!mining) {
                         ki.getMinerMan().startMiners();
                         startMining.setText("Stop Mining");
@@ -342,6 +413,73 @@ public class NewGUI {
                 }
             }
         });
+        JFXTreeTableColumn<StoredTrans, String> oaColumn = new JFXTreeTableColumn<>("Sender");
+        oaColumn.setPrefWidth(150);
+        oaColumn.setCellValueFactory((TreeTableColumn.CellDataFeatures<StoredTrans, String> param) -> {
+            if (oaColumn.validateValue(param)) return param.getValue().getValue().otherAddress;
+            else return oaColumn.getComputedValue(param);
+        });
+
+        JFXTreeTableColumn<StoredTrans, String> amtColumn = new JFXTreeTableColumn<>("Amount");
+        amtColumn.setPrefWidth(150);
+        amtColumn.setCellValueFactory((TreeTableColumn.CellDataFeatures<StoredTrans, String> param) -> {
+            if (amtColumn.validateValue(param)) return param.getValue().getValue().amount;
+            else return amtColumn.getComputedValue(param);
+        });
+        JFXTreeTableColumn<StoredTrans, String> sentColumn = new JFXTreeTableColumn<>("Direction");
+        sentColumn.setPrefWidth(100);
+        sentColumn.setCellValueFactory((TreeTableColumn.CellDataFeatures<StoredTrans, String> param) -> {
+            if (sentColumn.validateValue(param)) return param.getValue().getValue().sent;
+            else return sentColumn.getComputedValue(param);
+        });
+        JFXTreeTableColumn<StoredTrans, String> msgColumn = new JFXTreeTableColumn<>("Message");
+        msgColumn.setPrefWidth(150);
+        msgColumn.setCellValueFactory((TreeTableColumn.CellDataFeatures<StoredTrans, String> param) -> {
+            if (msgColumn.validateValue(param)) return param.getValue().getValue().message;
+            else return msgColumn.getComputedValue(param);
+        });
+
+        JFXTreeTableColumn<StoredTrans, String> tsColumn = new JFXTreeTableColumn<>("Timestamp");
+        tsColumn.setPrefWidth(150);
+        tsColumn.setCellValueFactory((TreeTableColumn.CellDataFeatures<StoredTrans, String> param) -> {
+            if (tsColumn.validateValue(param)) return param.getValue().getValue().timestamp;
+            else return tsColumn.getComputedValue(param);
+        });
+
+        JFXTreeTableColumn<StoredTrans, String> addColumn = new JFXTreeTableColumn<>("Address");
+        addColumn.setPrefWidth(150);
+        addColumn.setCellValueFactory((TreeTableColumn.CellDataFeatures<StoredTrans, String> param) -> {
+            if (addColumn.validateValue(param)) return param.getValue().getValue().address;
+            else return addColumn.getComputedValue(param);
+        });
+
+        JFXTreeTableColumn<StoredTrans, String> hColumn = new JFXTreeTableColumn<>("Height");
+        hColumn.setPrefWidth(150);
+        hColumn.setCellValueFactory((TreeTableColumn.CellDataFeatures<StoredTrans, String> param) -> {
+            if (hColumn.validateValue(param)) return param.getValue().getValue().height;
+            else return hColumn.getComputedValue(param);
+        });
+
+
+        final TreeItem<StoredTrans> root = new RecursiveTreeItem<StoredTrans>(transactions, RecursiveTreeObject::getChildren);
+
+        transactionTable.setRoot(root);
+        transactionTable.setShowRoot(false);
+        transactionTable.setEditable(false);
+        transactionTable.getColumns().setAll(addColumn, oaColumn, amtColumn, sentColumn, msgColumn, tsColumn);
+        transactionTable.group(addColumn);
+
+
+        searchBox.textProperty().addListener((o, oldVal, newVal) -> {
+            transactionTable.setPredicate(transFilter -> transFilter.getValue().address.get().contains(newVal)
+                    || transFilter.getValue().timestamp.get().contains(newVal)
+                    || transFilter.getValue().sent.get().contains(newVal)
+                    || transFilter.getValue().amount.get().contains(newVal)
+                    || transFilter.getValue().otherAddress.get().contains(newVal)
+                    || transFilter.getValue().message.get().contains(newVal));
+        });
+        amountOfTransactions.textProperty().bind(Bindings.createStringBinding(() -> transactionTable.getCurrentItemsCount() + "",
+                transactionTable.currentItemsCountProperty()));
         miningIntesity.valueProperty().addListener(new ChangeListener<Number>() {
             @Override
             public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
@@ -540,6 +678,7 @@ public class NewGUI {
             walletAmount.setLayoutX(walletPane.getWidth() - ((walletAmount.getWidth() + 15)));
             tokenLabel.setLayoutX(walletAmount.getLayoutX() + 10);
             transactionTable.setMinWidth(walletPane.getWidth() - (sendButton.getWidth() + 45));
+            transactionTable.setMinHeight(walletPane.getHeight() - 170);
             versionLabel.setLayoutX(helpPane.getWidth() / 2 - (versionLabel.getWidth() / 2));
             helpText.setLayoutX(helpPane.getWidth() / 2 - (helpText.getWidth() / 2));
             topPane2.setMinWidth(walletPane.getWidth());
@@ -778,7 +917,7 @@ public class NewGUI {
         });
 
         List<Long> average = new ArrayList<>();
-        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
+
         new Thread() {
             public void run() {
                 int i = 0;
@@ -839,6 +978,7 @@ public class NewGUI {
                             walletAmount.setLayoutX(walletPane.getWidth() - (walletAmount.getWidth() + 15));
                             tokenLabel.setLayoutX(walletAmount.getLayoutX() + 10);
                             transactionTable.setMinWidth(walletPane.getWidth() - (sendButton.getWidth() + 45));
+                            transactionTable.setMinHeight(walletPane.getHeight() - 170);
                             versionLabel.setLayoutX(helpPane.getWidth() / 2 - (versionLabel.getWidth() / 2));
                             helpText.setLayoutX(helpPane.getWidth() / 2 - (helpText.getWidth() / 2));
                             topPane2.setMinWidth(walletPane.getWidth());
@@ -856,6 +996,13 @@ public class NewGUI {
                                 syncProgress.setProgress(1 - (startHeight.subtract(ki.getChainMan().currentHeight()).multiply(BigInteger.valueOf(100)).divide(startHeight.subtract(loadHeight)).doubleValue() / 100));
                             } else if (startHeight != null && startHeight.compareTo(loadHeight) == 0)
                                 syncProgress.setProgress(1);
+                            for (IConnectionManager c : ki.getNetMan().getConnections()) {
+
+                                //ki.debug("Latency - " + c.currentLatency());
+                                latency.setText(" Latency - " + c.currentLatency());
+
+                            }
+
 
                         }
                     });
@@ -1020,12 +1167,14 @@ public class NewGUI {
                 beScroll.requestLayout());
     }
 
+    private SimpleDateFormat sdf2 = new SimpleDateFormat("yyyy MMM dd hh:mm:ss a zzz");
     private void setupBlockPane(BigInteger height) {
         Block b = ki.getChainMan().getByHeight(height);
         blockHeight.setText("Height - " + b.height);
         blockID.setText("ID - " + b.ID);
         solver.setText("Solver - " + b.solver);
         numberOfTransactions.setText("Number of Transactions - " + b.getTransactionKeys().size());
+        blockTimestamp.setText(sdf2.format(new Date(b.timestamp)));
         currentBlock = b.height;
         blockExplorerPane.setVisible(false);
         blockPane.setVisible(true);
@@ -1112,41 +1261,46 @@ public class NewGUI {
         passwordWaiter.setVisible(true);
         new Thread() {
             public void run() {
-                if (pmap.get("fr") == null) {
-                    String hash = "";
-                    hash = superAutism(passwordField.getText() + hash, 64);
-                    pmap.put(hash, "p");
-                    pmap.put("fr", "fr");
-                    Platform.runLater(new Thread() {
-                        public void run() {
-                            lockAnimation.play();
-                            submitPassword.setDisable(false);
-                            passwordWaiter.setVisible(false);
-                        }
-                    });
-                } else
-
-                {
-                    String hash = "";
-                    hash = superAutism(passwordField.getText() + hash, 64);
-                    String hash2 = hash;
-                    Platform.runLater(new Thread() {
-                        public void run() {
-                            if (pmap.get(hash2) != null) {
+                if (!passwordField.getText().isEmpty()) {
+                    if (pmap.get("fr") == null) {
+                        String hash = "";
+                        hash = superAutism(passwordField.getText() + hash, 64);
+                        pmap.put(hash, "p");
+                        pmap.put("fr", "fr");
+                        Platform.runLater(new Thread() {
+                            public void run() {
                                 lockAnimation.play();
-                            } else {
-                                Label l = new Label("Incorrect");
-                                l.setStyle("-fx-text-fill:RED");
-                                l.setLayoutX(passwordField.getLayoutX());
-                                l.setLayoutY(passwordField.getLayoutY() + 60);
-                                lockPane.getChildren().add(l);
+                                submitPassword.setDisable(false);
+                                passwordWaiter.setVisible(false);
                             }
+                        });
+                    } else {
+                        String hash = "";
+                        hash = superAutism(passwordField.getText() + hash, 64);
+                        String hash2 = hash;
+                        Platform.runLater(new Thread() {
+                            public void run() {
+                                if (pmap.get(hash2) != null) {
+                                    lockAnimation.play();
+                                } else {
+                                    Label l = new Label("Incorrect");
+                                    l.setStyle("-fx-text-fill:RED");
+                                    l.setLayoutX(passwordField.getLayoutX());
+                                    l.setLayoutY(passwordField.getLayoutY() + 60);
+                                    lockPane.getChildren().add(l);
+                                }
 
-                            submitPassword.setDisable(false);
+                                submitPassword.setDisable(false);
 
-                            passwordWaiter.setVisible(false);
-                        }
-                    });
+                                passwordWaiter.setVisible(false);
+                            }
+                        });
+                    }
+                } else {
+                    Label l = new Label("Incorrect");
+                    l.setStyle("-fx-text-fill:RED");
+                    l.setLayoutX(passwordField.getLayoutX());
+                    l.setLayoutY(passwordField.getLayoutY() + 60);
                 }
             }
         }.start();

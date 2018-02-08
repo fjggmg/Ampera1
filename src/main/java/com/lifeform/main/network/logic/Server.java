@@ -42,19 +42,20 @@ public class Server {
         EventLoopGroup workerGroup = new NioEventLoopGroup();
         try {
             ServerBootstrap b = new ServerBootstrap();
-            ChannelInboundHandlerAdapter serverHandler;
-            if (ki.getOptions().poolRelay) {
-                serverHandler = new PoolServerHandler(ki);
-            } else {
-                serverHandler = new ServerHandler(ki);
-            }
+
+
             b.group(bossGroup, workerGroup)
                     .channel(NioServerSocketChannel.class)
                     .handler(new LoggingHandler(LogLevel.INFO))
                     .childHandler(new ChannelInitializer<SocketChannel>() {
                         @Override
                         public void initChannel(SocketChannel ch) throws Exception {
-
+                            ChannelInboundHandlerAdapter serverHandler;
+                            if (ki.getOptions().poolRelay) {
+                                serverHandler = new PoolServerHandler(ki);
+                            } else {
+                                serverHandler = new ServerHandler(ki);
+                            }
                             ChannelPipeline p = ch.pipeline();
                             if (sslCtx != null) {
                                 p.addLast(sslCtx.newHandler(ch.alloc()));

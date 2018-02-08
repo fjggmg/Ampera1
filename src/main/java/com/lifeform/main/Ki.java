@@ -52,7 +52,7 @@ public class Ki extends Thread implements IKi {
     private IKi ki = this;
     private boolean run = true;
     //TODO: need to start saving version number to file for future conversion of files
-    public static final String VERSION = "0.17.0-TEST5-BETA";
+    public static final String VERSION = "0.17.0-RC1-BETA";
     private boolean relay = false;
     private NewGUI guiHook;
     public static boolean debug = true;
@@ -133,7 +133,8 @@ public class Ki extends Thread implements IKi {
         }
         if (o.poolRelay) {
             try {
-                miningPool = new Pool(null, new BigInteger("00000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF", 16), 0, EncryptionManager.sha512(getAddMan().getMainAdd().encodeForChain()), new KiEventHandler(this));
+                miningPool = new Pool(null, new BigInteger("00000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF", 16), 0, getEncryptMan().getPublicKeyString(), new KiEventHandler(this));
+                miningPool.start();
             } catch (Exception e) {
                 ki.debug("Mining pool failed to start");
             }
@@ -141,13 +142,15 @@ public class Ki extends Thread implements IKi {
             Block b = getChainMan().formEmptyBlock(GPUMiner.minFee);
             PoolBlockHeader pbh = new PoolBlockHeader();
             pbh.coinbase = b.getCoinbase().toJSON();
+            ki.debug("=================================CURRENT WORK HEIGHT: " + b.height);
             pbh.height = b.height;
             pbh.ID = b.ID;
-            pbh.merkleRoot = b.merkleRoot;
+            pbh.merkleRoot = b.merkleRoot();
+            ki.debug("================================================Current merkle root: " + b.merkleRoot());
             pbh.prevID = b.prevID;
             pbh.solver = b.solver;
             pbh.timestamp = b.timestamp;
-            getPoolData().workMap.put(b.merkleRoot, b);
+            getPoolData().workMap.put(b.merkleRoot(), b);
             getPoolData().currentWork = pbh;
             poolNet = new PoolNetMan(this);
             poolNet.start();
@@ -312,13 +315,18 @@ public class Ki extends Thread implements IKi {
         pbh.coinbase = b.getCoinbase().toJSON();
         pbh.height = b.height;
         pbh.ID = b.ID;
-        pbh.merkleRoot = b.merkleRoot;
+        pbh.merkleRoot = b.merkleRoot();
         pbh.prevID = b.prevID;
         pbh.solver = b.solver;
         pbh.timestamp = b.timestamp;
-        getPoolData().workMap.put(b.merkleRoot, b);
+        getPoolData().workMap.put(b.merkleRoot(), b);
         getPoolData().currentWork = pbh;
         poolNet.broadcast(pbh);
+    }
+
+    @Override
+    public INetworkManager getPoolNet() {
+        return poolNet;
     }
 
     private void rn() {
@@ -392,11 +400,11 @@ public class Ki extends Thread implements IKi {
             pbh.coinbase = b.getCoinbase().toJSON();
             pbh.height = b.height;
             pbh.ID = b.ID;
-            pbh.merkleRoot = b.merkleRoot;
+            pbh.merkleRoot = b.merkleRoot();
             pbh.prevID = b.prevID;
             pbh.solver = b.solver;
             pbh.timestamp = b.timestamp;
-            getPoolData().workMap.put(b.merkleRoot, b);
+            getPoolData().workMap.put(b.merkleRoot(), b);
             getPoolData().currentWork = pbh;
             poolNet.broadcast(pbh);
         }

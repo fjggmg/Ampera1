@@ -71,4 +71,6 @@ public interface IKi {
     PoolData getPoolData();
 
     void newTransPool();
+
+    INetworkManager getPoolNet();
 }

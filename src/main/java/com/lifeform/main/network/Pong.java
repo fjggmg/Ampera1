@@ -6,10 +6,11 @@ import java.io.Serializable;
 
 public class Pong implements Serializable, Packet {
     long latency;
+
     @Override
     public void process(IKi ki, IConnectionManager connMan, PacketGlobal pg) {
 
-        connMan.setCurrentLatency(latency);
+        connMan.setCurrentLatency(System.currentTimeMillis() - latency);
         ki.getNetMan().setLive(true);
 
     }

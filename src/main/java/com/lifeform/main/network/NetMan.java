@@ -157,6 +157,26 @@ public class NetMan extends Thread implements INetworkManager {
     public void run()
     {
         setName("Networking-Main");
+        if (!isRelay) {
+            Thread t = new Thread() {
+
+                public void run() {
+                    setName("Ping Thread");
+                    while (true) {
+                        Ping ping = new Ping();
+                        ping.currentTime = System.currentTimeMillis();
+                        broadcast(ping);
+                        try {
+                            sleep(60000);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            };
+            threads.add(t);
+            t.start();
+        }
         if (isRelay) {
             Thread t = new Thread() {
 

@@ -11,4 +11,5 @@ public class PoolData {
     public String ID;
     public PoolBlockHeader currentWork;
     public Map<String, Block> workMap = new HashMap<>();
+    public Map<String, String> addMap = new HashMap<>();
 }

@@ -9,7 +9,7 @@ public class Ping implements Serializable, Packet {
     @Override
     public void process(IKi ki, IConnectionManager connMan, PacketGlobal pg) {
         Pong pong = new Pong();
-        pong.latency = System.currentTimeMillis() - currentTime;
+        pong.latency = currentTime;
         connMan.sendPacket(pong);
     }
 

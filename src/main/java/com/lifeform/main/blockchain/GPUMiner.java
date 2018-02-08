@@ -7,6 +7,7 @@ import com.lifeform.main.network.BlockEnd;
 import com.lifeform.main.network.BlockHeader;
 import com.lifeform.main.network.TransactionPacket;
 import com.lifeform.main.network.pool.PoolBlockHeader;
+import com.lifeform.main.transactions.Transaction;
 import gpuminer.JOCL.constants.JOCLConstants;
 import gpuminer.JOCL.context.JOCLContextAndCommandQueue;
 import gpuminer.JOCL.context.JOCLDevices;
@@ -88,7 +89,7 @@ public class GPUMiner extends Thread implements IMiner {
         byte[] share = new byte[64];
         int p2 = 63;
         for (int i = shareDiff.toByteArray().length - 1; i >= 0; i--) {
-            difficulty[p] = shareDiff.toByteArray()[i];
+            share[p2] = shareDiff.toByteArray()[i];
             p2--;
         }
         int i = 0;
@@ -133,7 +134,10 @@ public class GPUMiner extends Thread implements IMiner {
                     b.height = ki.getPoolData().currentWork.height;
                     b.merkleRoot = ki.getPoolData().currentWork.merkleRoot;
                     b.solver = ki.getPoolData().currentWork.solver;
+                    b.setCoinbase(Transaction.fromJSON(ki.getPoolData().currentWork.coinbase));
+
                 }
+
                 //In theory the message can be nearly as large as Java can make an array and the miner will barely suffer any slowdown.
                 //The slowdown from dealing with the message size happens every two terahashes, and it's unlikely to be longer than a second, though I have not timed it, so it is negligible.
                 //There is a practical limit on the size of the message because if it's too large then the miner won't have space to postpend guess data.
@@ -149,17 +153,37 @@ public class GPUMiner extends Thread implements IMiner {
                 miner.setThreads(threadCount);
                 byte[] difficulty = new byte[64];
                 int p = 63;
-                for (int i = ki.getChainMan().getCurrentDifficulty().toByteArray().length - 1; i >= 0; i--) {
-                    difficulty[p] = ki.getChainMan().getCurrentDifficulty().toByteArray()[i];
-                    p--;
-                }
+                if (!ki.getOptions().pool)
+                    for (int i = ki.getChainMan().getCurrentDifficulty().toByteArray().length - 1; i >= 0; i--) {
+                        difficulty[p] = ki.getChainMan().getCurrentDifficulty().toByteArray()[i];
+                        p--;
+                    }
                 if (!hasPrinted) {
                     ki.debug("Successfully started mining on device: " + devName);
                     hasPrinted = true;
                 }
                 ki.debug("Current difficulty is: " + Utils.toHexArray(difficulty));
 
-                miner.resumeMining(message);
+                if (ki.getOptions().pool) {
+
+                    try {
+                        int addLength = ki.getPoolData().payTo.getBytes("UTF-8").length;
+                        byte[] extra = new byte[addLength + 20];
+                        byte[] add = ki.getPoolData().payTo.getBytes("UTF-8");
+
+                        byte[] carry = ki.getPoolData().ID.getBytes("UTF-8");
+                        for (int i = 0; i < addLength; i++) {
+                            extra[i] = add[i];
+                        }
+                        for (int i = 0; i < 20; i++) {
+                            extra[addLength + i] = carry[i];
+                        }
+                        miner.resumeMining(message, extra);
+                    } catch (UnsupportedEncodingException e) {
+                        e.printStackTrace();
+                    }
+                } else
+                    miner.resumeMining(message);
 
                     //It will take a while to mine, so whatever thread is using the miner object will need to wait for it to finish.
                 while (miner.isMining() && mining)
@@ -176,18 +200,19 @@ public class GPUMiner extends Thread implements IMiner {
                         }
                         Synchron.idle();
                     }
-
+                //System.out.println("Made it out");
                     //The miner outputs the winning seeded message, not the hash itself, so if you need the hash you'll need to use bouncycastle for it.
                     //If the miner hasn't found a winning seeded message this will return null, so you need to check for that.
                     if (miner.getPayloads() != null) {
 
                         ki.debug("Mining on OpenCL device: " + jcacq.getDInfo().getDeviceName() + " has stopped.");
-                        ki.debug("Found a block, sending to network");
+                        //ki.debug("Found a block, sending to network");
 
                         if (miner.getHashesPerSecond() != -1) {
                             ki.debug("Current hash rate on OpenCL device: " + jcacq.getDInfo().getDeviceName() + " is: " + format.format(miner.getHashesPerSecond()) + " H/s");
                         }
                         BlockAndSharePayloads[] basp = miner.getPayloads();
+                        ki.debug("size of basp: " + basp.length);
                         if (!ki.getOptions().pool) {
 
                             byte[] winningPayload = basp[0].getBlockPayload().getBytes();
@@ -226,9 +251,29 @@ public class GPUMiner extends Thread implements IMiner {
                             int i = 0;
                             for (BlockAndSharePayloads bp : miner.getPayloads()) {
                                 PoolBlockHeader pbh = ki.getPoolData().currentWork;
+
+
+                                //ki.debug("Merkle root: " + pbh.merkleRoot);
+
+                                if (!(bp.getBlockPayload() == null)) {
+                                    ki.debug("Block Paylod was not null");
+                                }
+                                if (bp.getSharePayloads() == null) {
+                                    ki.debug("Share payload was null");
+                                    continue;
+                                }
                                 for (Payload pay : bp.getSharePayloads()) {
                                     i++;
                                     pbh.payload = pay.getBytes();
+                                    pbh.timestamp = b.timestamp;
+                                    b.payload = pay.getBytes();
+                                    pbh.ID = EncryptionManager.sha512(b.header());
+
+                                    try {
+                                        ki.debug("Payload: " + new String(pay.getBytes(), "UTF-8"));
+                                    } catch (UnsupportedEncodingException e) {
+                                        e.printStackTrace();
+                                    }
                                     ki.getNetMan().broadcast(pbh);
                                 }
                             }

@@ -1,6 +1,7 @@
 package com.lifeform.main.network.pool;
 
 import com.lifeform.main.IKi;
+import com.lifeform.main.data.EncryptionManager;
 import com.lifeform.main.network.IConnectionManager;
 import com.lifeform.main.network.IPacketProcessor;
 import com.lifeform.main.network.logic.INetworkEndpoint;
@@ -53,9 +54,10 @@ public class PoolConnMan extends IConnectionManager {
     @Override
     public void connected() {
         ki.debug("Pool connection established");
-        if (ki.getOptions().poolRelay) return;
+
         PoolHandshake ph = new PoolHandshake();
-        ph.ID = "test";
+        ki.getPoolData().ID = EncryptionManager.sha224(ki.getPoolData().payTo + System.currentTimeMillis());
+        ph.ID = ki.getPoolData().ID;
         ph.address = ki.getPoolData().payTo;
         sendPacket(ph);
     }

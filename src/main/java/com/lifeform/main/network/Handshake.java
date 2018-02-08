@@ -79,6 +79,7 @@ public class Handshake implements Serializable, Packet {
             if (pg.relays == null) pg.relays = new ArrayList<>();
             pg.relays.add(connMan.getAddress().split(":")[0].replace("/", ""));
             ki.getNetMan().addRelays(pg.relays);
+
         }
 
             RelayList rl = new RelayList();

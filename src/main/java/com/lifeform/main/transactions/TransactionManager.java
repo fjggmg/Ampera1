@@ -249,6 +249,7 @@ public class TransactionManager implements ITransMan {
     List<String> sUtxos;
     List<String> toRemove = new ArrayList<>();
     Set<String> hs = new HashSet<>();
+    List<Output> safeUTXOs = new ArrayList<>();
     private static volatile boolean lock = false;
     @Override
     public List<Output> getUTXOs(Address address, boolean safe) {
@@ -264,7 +265,7 @@ public class TransactionManager implements ITransMan {
             if (!safe)
                 utxos.clear();
             else
-                utxos = new ArrayList<>();
+                safeUTXOs = new ArrayList<>();
             toRemove.clear();
             if (sUtxos != null && !sUtxos.isEmpty()) {
                 hs.clear();
@@ -279,8 +280,12 @@ public class TransactionManager implements ITransMan {
                         continue;
                     }
                     if (!utxoSpent.get(o.getID())) {
-                        if (!usedUTXOs.contains(Input.fromOutput(o).getID()))
-                            utxos.add(o);
+                        if (!usedUTXOs.contains(Input.fromOutput(o).getID())) {
+                            if (safe)
+                                safeUTXOs.add(o);
+                            else
+                                utxos.add(o);
+                        }
                     } else
                         toRemove.add(s);
                 }
@@ -290,7 +295,10 @@ public class TransactionManager implements ITransMan {
                 }
             }
             lock = false;
-            return utxos;
+            if (safe)
+                return safeUTXOs;
+            else
+                return utxos;
         }
         lock = false;
         return null;

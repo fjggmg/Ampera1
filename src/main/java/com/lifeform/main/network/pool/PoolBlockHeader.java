@@ -6,6 +6,7 @@ import com.lifeform.main.network.BlockEnd;
 import com.lifeform.main.network.BlockHeader;
 import com.lifeform.main.network.IConnectionManager;
 import com.lifeform.main.network.TransactionPacket;
+import com.lifeform.main.transactions.Address;
 import com.lifeform.main.transactions.ITrans;
 import com.lifeform.main.transactions.Transaction;
 
@@ -28,26 +29,41 @@ public class PoolBlockHeader implements Serializable, PoolPacket {
         ki.debug("Received pool block header");
         Block b = new Block();
         if (!ki.getOptions().poolRelay) {
+
             b.solver = solver;
             b.merkleRoot = merkleRoot;
+            ki.debug("merkle root: " + merkleRoot);
             b.ID = ID;
             b.height = height;
+            ki.debug("height: " + height);
             b.timestamp = timestamp;
+            ki.debug("timestamp: " + timestamp);
             b.prevID = prevID;
+
             try {
+                payload = (ki.getPoolData().payTo + ki.getPoolData().ID).getBytes("UTF-8");
                 b.payload = (ki.getPoolData().payTo + ki.getPoolData().ID).getBytes("UTF-8");
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
             }
             b.setCoinbase(Transaction.fromJSON(coinbase));
             ki.getPoolData().blockData = b.gpuHeader();
+            ki.debug("Setting as current work");
             ki.getPoolData().currentWork = this;
         } else {
-            if (ki.getPoolData().workMap.keySet().contains(b.merkleRoot)) {
-                byte[] payload = b.payload;
-                b = ki.getPoolData().workMap.get(b.merkleRoot);
+            ki.debug("Merkle root is: " + merkleRoot);
+
+            if (ki.getPoolData().workMap.keySet().contains(merkleRoot)) {
+                ki.debug("Adding share to share list");
+                ki.debug("height: " + height);
+                ki.debug("timestamp: " + timestamp);
+                ki.debug("ID: " + ID);
+                b = ki.getPoolData().workMap.get(merkleRoot);
                 b.payload = payload;
+                b.timestamp = timestamp;
+                b.ID = ID;
                 if (ki.getChainMan().softVerifyBlock(b).success()) {
+                    ki.debug("Share is a solve");
                     BlockHeader bh2 = formHeader(b);
                     ki.getNetMan().broadcast(bh2);
                     for (String key : b.getTransactionKeys()) {
@@ -62,6 +78,7 @@ public class PoolBlockHeader implements Serializable, PoolPacket {
                 }
 
                 ki.getPoolManager().addShare(b);
+                ki.debug("Shares for address:  " + ki.getPoolManager().getTotalSharesOfMiner(Address.decodeFromChain(ki.getPoolData().addMap.get(connMan.getID()))));
             }
         }
 

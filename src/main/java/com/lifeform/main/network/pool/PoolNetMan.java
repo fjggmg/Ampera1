@@ -7,17 +7,14 @@ import com.lifeform.main.network.INetworkManager;
 import com.lifeform.main.network.logic.Client;
 import com.lifeform.main.network.logic.Server;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public class PoolNetMan extends Thread implements INetworkManager {
 
     private IKi ki;
     private static final int PORT = 29999;
     private Set<IConnectionManager> connections = new HashSet<>();
-
+    private Map<String, IConnectionManager> connMap = new HashMap<>();
     public PoolNetMan(IKi ki) {
         this.ki = ki;
     }
@@ -51,6 +48,9 @@ public class PoolNetMan extends Thread implements INetworkManager {
 
     @Override
     public boolean connectionInit(String ID, IConnectionManager connMan) {
+        ki.debug("Registering connection");
+        connections.add(connMan);
+        connMap.put(ID, connMan);
         return true;
     }
 
