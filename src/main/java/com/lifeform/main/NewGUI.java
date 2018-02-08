@@ -331,8 +331,10 @@ public class NewGUI {
             StoredTrans st = new StoredTrans(add, "" + amount, direction, trans.getMessage(), trans.getInputs().get(0).getAddress().encodeForChain(), timestamp, height.toString());
             transactions.add(st);
         }
-        sTrans.add(trans.toJSON());
-        guiMap.put("transactions", JSONManager.parseListToJSON(sTrans).toJSONString());
+        if (!sTrans.contains(trans.toJSON())) {
+            sTrans.add(trans.toJSON());
+            guiMap.put("transactions", JSONManager.parseListToJSON(sTrans).toJSONString());
+        }
 
 
 
