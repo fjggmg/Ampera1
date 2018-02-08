@@ -12,6 +12,6 @@ public class StatUpdate implements Serializable, PoolPacket {
 
     @Override
     public void process(IKi ki, IConnectionManager connMan) {
-
+        ki.getGUIHook().updatePoolStats(shares, currentPPS);
     }
 }
