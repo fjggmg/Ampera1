@@ -158,7 +158,7 @@ public class ChainManager implements IChainMan {
             int i = 128 - currentDifficulty.toString(16).length();
 
             ki.getPoolManager().updateCurrentHeight(ki.getChainMan().currentHeight());
-            ki.getPoolManager().updateCurrentPayPerShare((long) ((Math.pow(16, 8) / Math.pow(16, i) * blockRewardForHeight(currentHeight()).longValueExact()) * 0.99));
+            ki.getPoolManager().updateCurrentPayPerShare((long) ((Math.pow(16, 8) / Math.pow(16, i) * blockRewardForHeight(currentHeight()).longValueExact()) * 0.99) * 100_000_000);
         }
         ki.blockTick(block);
         return BlockState.SUCCESS;

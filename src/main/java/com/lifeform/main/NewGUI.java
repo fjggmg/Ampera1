@@ -1007,7 +1007,7 @@ public class NewGUI {
                             }
                             if (ki.getOptions().pool) {
                                 shares.setText("Shares - " + currentShares);
-                                nextPayment.setText("Next Payment - " + ((currentShares * currentPPS) / 100_000_000));
+                                nextPayment.setText("Next Payment - " + ((currentShares * currentPPS)));
                             }
 
 
@@ -1315,12 +1315,12 @@ public class NewGUI {
 
     private BigInteger startHeight;
     private long currentShares = 0;
-    private long currentPPS = 0;
+    private double currentPPS = 0;
     public void setStart(BigInteger startHeight) {
         this.startHeight = startHeight;
     }
 
-    public void updatePoolStats(long currentShares, long currentPPS) {
+    public void updatePoolStats(long currentShares, double currentPPS) {
         this.currentShares = currentShares;
         this.currentPPS = currentPPS;
     }

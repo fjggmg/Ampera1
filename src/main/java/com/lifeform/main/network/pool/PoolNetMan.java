@@ -120,7 +120,8 @@ public class PoolNetMan extends Thread implements INetworkManager {
                             StatUpdate su = new StatUpdate();
                             su.shares = ki.getPoolManager().getTotalSharesOfMiner(Address.decodeFromChain(ki.getPoolData().addMap.get(conn.getID())));
                             int i = 128 - ki.getChainMan().getCurrentDifficulty().toString().length();
-                            su.currentPPS = (long) ((Math.pow(16, 8) / Math.pow(16, i) * ChainManager.blockRewardForHeight(ki.getChainMan().currentHeight()).longValueExact()) * 0.99);
+                            su.currentPPS = (double) ((Math.pow(16, 8) / Math.pow(16, i) * ChainManager.blockRewardForHeight(ki.getChainMan().currentHeight()).longValueExact()) * 0.99);
+
                             conn.sendPacket(su);
                         }
                         try {

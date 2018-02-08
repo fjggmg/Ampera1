@@ -29,7 +29,7 @@
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane prefHeight="480.0" prefWidth="720.0" xmlns="http://javafx.com/javafx/8.0.121"
+<AnchorPane prefHeight="480.0" prefWidth="720.0" xmlns="http://javafx.com/javafx/8.0.141"
             xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.lifeform.main.NewGUI">
     <children>
         <StackPane layoutX="-130.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
@@ -86,7 +86,7 @@
                                                    prefHeight="32.0" prefWidth="112.0" text="Change Password"/>
                                     </children>
                                 </Pane>
-                                <Pane fx:id="walletPane" prefHeight="200.0" prefWidth="200.0">
+                                <Pane fx:id="walletPane" prefHeight="200.0" prefWidth="200.0" visible="false">
                                     <children>
                                         <JFXComboBox fx:id="tokenBox" layoutX="14.0" layoutY="14.0" prefHeight="25.0"
                                                      prefWidth="125.0"/>
