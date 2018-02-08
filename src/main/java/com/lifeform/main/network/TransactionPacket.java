@@ -51,6 +51,7 @@ public class TransactionPacket implements Serializable, Packet {
                     if (ki.getOptions().pDebug) {
                         ki.debug("Zero output, discarding");
                     }
+                    return;
                 }
                 ki.getTransMan().getPending().add(trans);
                 if (ki.getNetMan().isRelay()) {

@@ -272,12 +272,20 @@ public class TransactionManager implements ITransMan {
                 hs.addAll(sUtxos);
                 sUtxos.clear();
                 sUtxos.addAll(hs);
+                FL:
                 for (String s : sUtxos) {
                     Output o;
                     try {
                         o = Output.fromJSON(s);
                     } catch (Exception e) {
                         continue;
+                    }
+                    for (ITrans t : pending) {
+                        for (Input i : t.getInputs()) {
+                            if (i.getID().equals(o.getID()))
+                                if (i.getIndex() == o.getIndex())
+                                    continue FL;
+                        }
                     }
                     if (!utxoSpent.get(o.getID())) {
                         if (!usedUTXOs.contains(Input.fromOutput(o).getID())) {

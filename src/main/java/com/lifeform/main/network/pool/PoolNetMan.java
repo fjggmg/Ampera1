@@ -126,7 +126,13 @@ public class PoolNetMan extends Thread implements INetworkManager {
                     while (true) {
                         for (IConnectionManager conn : connections) {
                             StatUpdate su = new StatUpdate();
-                            su.shares = ki.getPoolManager().getTotalSharesOfMiner(Address.decodeFromChain(ki.getPoolData().addMap.get(conn.getID())));
+                            if (conn == null) continue;
+                            if (ki.getPoolData().addMap.get(conn.getID()) == null) continue;
+                            try {
+                                su.shares = ki.getPoolManager().getTotalSharesOfMiner(Address.decodeFromChain(ki.getPoolData().addMap.get(conn.getID())));
+                            } catch (Exception e) {
+                                continue;
+                            }
                             BigDecimal sd = new BigDecimal(GPUMiner.shareDiff);
                             BigDecimal cd = new BigDecimal(ki.getChainMan().getCurrentDifficulty());
                             su.currentPPS = (double) ((((cd.divide(sd, 9, RoundingMode.HALF_DOWN).doubleValue() * ChainManager.blockRewardForHeight(ki.getChainMan().currentHeight()).longValueExact()) * 0.99)));

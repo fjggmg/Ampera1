@@ -212,6 +212,7 @@ public class Transaction implements ITrans{
 
     @Override
     public boolean verifyInputToOutput() {
+        if (inputs.size() < 1 || outputs.size() < 1) return false;
         for(Token t:Token.values()) {
             BigInteger allInput = BigInteger.ZERO;
             for (Input i : inputs) {
@@ -320,6 +321,7 @@ public class Transaction implements ITrans{
 
     @Override
     public boolean verifySigs() {
+        if (sigsRequired < 1) return false;
         int vCount = 0;
         for(String key:keySigMap.keySet())
         {

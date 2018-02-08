@@ -30,9 +30,14 @@ public class KiEventHandler implements IPoolEventHandler {
                 ki.debug("Paying miners in pool");
                 SafeTransactionGenerator stg = new SafeTransactionGenerator(ki.getPoolManager(), ki.getAddMan().getMainAdd(), ki);
                 ITrans t = stg.generatePayPeriodTransaction("Payment for pool mining");
-                TransactionPacket tp = new TransactionPacket();
-                tp.trans = t.toJSON();
-                ki.getNetMan().broadcast(tp);
+                if (ki.getTransMan().verifyTransaction(t)) {
+                    ki.getTransMan().getPending().add(t);
+                    TransactionPacket tp = new TransactionPacket();
+                    tp.trans = t.toJSON();
+                    ki.getNetMan().broadcast(tp);
+                } else {
+                    ki.debug("Transaction failed to verify");
+                }
                 break;
         }
     }

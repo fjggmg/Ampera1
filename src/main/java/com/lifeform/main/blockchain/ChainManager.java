@@ -386,14 +386,14 @@ public class ChainManager implements IChainMan {
                 boolean add = false;
                 ITrans transaction = block.getTransaction(trans);
                 for (Output o : transaction.getOutputs()) {
-                    for (Address a : ki.getAddMan().getActive()) {
+                    for (Address a : ki.getAddMan().getAll()) {
                         if (o.getAddress().encodeForChain().equals(a.encodeForChain())) {
                             add = true;
                         }
                     }
                 }
                 for (Input i : transaction.getInputs()) {
-                    for (Address a : ki.getAddMan().getActive()) {
+                    for (Address a : ki.getAddMan().getAll()) {
                         if (i.getAddress().encodeForChain().equals(a.encodeForChain())) {
                             add = true;
                         }
