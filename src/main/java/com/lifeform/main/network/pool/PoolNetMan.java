@@ -133,9 +133,7 @@ public class PoolNetMan extends Thread implements INetworkManager {
                             } catch (Exception e) {
                                 continue;
                             }
-                            BigDecimal sd = new BigDecimal(GPUMiner.shareDiff);
-                            BigDecimal cd = new BigDecimal(ki.getChainMan().getCurrentDifficulty());
-                            su.currentPPS = (double) ((((cd.divide(sd, 9, RoundingMode.HALF_DOWN).doubleValue() * ChainManager.blockRewardForHeight(ki.getChainMan().currentHeight()).longValueExact()) * 0.99)));
+                            su.currentPPS = ki.getPoolManager().getCurrentPayPerShare();
 
                             conn.sendPacket(su);
                         }

@@ -2,6 +2,8 @@ package com.lifeform.main.blockchain;
 
 import com.lifeform.main.IKi;
 import com.lifeform.main.Ki;
+import com.lifeform.main.Settings;
+import com.lifeform.main.StringSettings;
 import com.lifeform.main.data.EncryptionManager;
 import com.lifeform.main.data.JSONManager;
 import com.lifeform.main.data.Utils;
@@ -160,7 +162,23 @@ public class ChainManager implements IChainMan {
             BigDecimal sd = new BigDecimal(GPUMiner.shareDiff);
             BigDecimal cd = new BigDecimal(ki.getChainMan().getCurrentDifficulty());
             ki.getPoolManager().updateCurrentHeight(ki.getChainMan().currentHeight());
-            ki.getPoolManager().updateCurrentPayPerShare((long) ((((cd.divide(sd, 9, RoundingMode.HALF_DOWN).doubleValue() * ChainManager.blockRewardForHeight(ki.getChainMan().currentHeight()).longValueExact()) * 0.99))));
+            if (ki.getSetting(Settings.DYNAMIC_FEE)) {
+                double fee;
+                try {
+                    fee = Double.parseDouble(ki.getStringSetting(StringSettings.POOL_FEE));
+                } catch (Exception e) {
+                    fee = 1;
+                }
+                ki.getPoolManager().updateCurrentPayPerShare((long) ((((cd.divide(sd, 9, RoundingMode.HALF_DOWN).doubleValue() * ChainManager.blockRewardForHeight(ki.getChainMan().currentHeight()).longValueExact()) * 1 - (fee / 100)))));
+            } else {
+                long pps;
+                try {
+                    pps = Long.parseLong(ki.getStringSetting(StringSettings.POOL_STATIC_PPS));
+                } catch (Exception e) {
+                    pps = 100;
+                }
+                ki.getPoolManager().updateCurrentPayPerShare(pps);
+            }
         }
         ki.blockTick(block);
         return BlockState.SUCCESS;

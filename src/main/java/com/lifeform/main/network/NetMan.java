@@ -261,10 +261,10 @@ public class NetMan extends Thread implements INetworkManager {
         int i = 0;
         for(IConnectionManager connMan:connections)
         {
-            ki.debug("Attempting broadcast...");
+            //ki.debug("Attempting broadcast...");
             if (connMan != null) {
-                if (ki.getOptions().pDebug)
-                    ki.debug("Connection Manager not null");
+                //if (ki.getOptions().pDebug)
+                //ki.debug("Connection Manager not null");
                 if (connMan.getPacketProcessor().getPacketGlobal().doneDownloading) {
                     connMan.sendPacket(o);
                     if (ki.getOptions().pDebug)

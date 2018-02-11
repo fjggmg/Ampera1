@@ -54,7 +54,7 @@ public class Ki extends Thread implements IKi {
     private IKi ki = this;
     private boolean run = true;
     //TODO: need to start saving version number to file for future conversion of files
-    public static final String VERSION = "0.17.0-RC8-BETA";
+    public static final String VERSION = "0.17.0-BETA";
     private boolean relay = false;
     private NewGUI guiHook;
     public static boolean debug = true;
@@ -65,12 +65,16 @@ public class Ki extends Thread implements IKi {
     public static volatile boolean canClose = true;
     private PoolData pd;
     private XodusStringBooleanMap settings = new XodusStringBooleanMap("settings");
+    private XodusStringMap stringSettings = new XodusStringMap("etc");
     public Ki(Options o) {
         if (settings.get(VERSION) == null || !settings.get(VERSION)) {
             settings.put(VERSION, true);
             settings.put(Settings.DEBUG_MODE.getKey(), false);
             settings.put(Settings.HIGH_SECURITY.getKey(), false);
             settings.put(Settings.REQUIRE_PASSWORD.getKey(), true);
+            settings.put(Settings.DYNAMIC_FEE.getKey(), true);
+            stringSettings.put(StringSettings.POOL_FEE.getKey(), "1");
+            stringSettings.put(StringSettings.POOL_STATIC_PPS.getKey(), "100");
         }
         JOCLContextAndCommandQueue.setWorkaround(true);
         JOCLContextAndCommandQueue.noIntel = true;
@@ -338,6 +342,16 @@ public class Ki extends Thread implements IKi {
     @Override
     public INetworkManager getPoolNet() {
         return poolNet;
+    }
+
+    @Override
+    public String getStringSetting(StringSettings setting) {
+        return stringSettings.get(setting.getKey());
+    }
+
+    @Override
+    public void setStringSetting(StringSettings setting, String value) {
+        stringSettings.put(setting.getKey(), value);
     }
 
     private void rn() {

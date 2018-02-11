@@ -117,7 +117,7 @@
                                             </font>
                                         </JFXButton>
                                         <JFXTreeTableView fx:id="transactionTable" layoutX="14.0" layoutY="164.0"
-                                                          prefHeight="201.0" prefWidth="457.0"
+                                                          prefHeight="201.0" prefWidth="410.0"
                                                           stylesheets="@tablestyle.css"/>
                                         <Label fx:id="addressLabel" layoutX="14.0" layoutY="66.0" text="Address-"/>
                                         <Label fx:id="heightLabel" layoutX="14.0" layoutY="44.0" text="Chain Height -"/>
@@ -224,16 +224,16 @@
                                         <Label fx:id="blockID" layoutX="14.0" layoutY="80.0" text="ID -"/>
                                         <Label fx:id="solver" layoutX="13.0" layoutY="97.0" maxWidth="600.0"
                                                text="Solver -" wrapText="true"/>
-                                        <Label fx:id="numberOfTransactions" layoutX="10.0" layoutY="166.0"
+                                        <Label fx:id="numberOfTransactions" layoutX="14.0" layoutY="196.0"
                                                text="Number of Transactions -"/>
-                                        <Label fx:id="blockTimestamp" layoutX="10.0" layoutY="183.0"
+                                        <Label fx:id="blockTimestamp" layoutX="14.0" layoutY="213.0"
                                                text="Timestamp -"/>
                                     </children>
                                 </Pane>
                                 <Pane fx:id="poolPane" prefHeight="200.0" prefWidth="200.0" visible="false">
                                     <children>
                                         <JFXTextField fx:id="ipField" labelFloat="true" layoutX="14.0" layoutY="60.0"
-                                                      promptText="Pool IP*"/>
+                                                      promptText="Pool IP*" text="ampextech.ddns.net"/>
                                         <JFXButton fx:id="poolConnect" layoutX="155.0" layoutY="60.0" prefHeight="25.0"
                                                    prefWidth="91.0" text="Connect"/>
                                         <Label fx:id="shares" layoutX="14.0" layoutY="93.0" text="Shares - "/>

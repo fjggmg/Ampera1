@@ -3,6 +3,7 @@ package com.lifeform.main.network.pool;
 import com.lifeform.main.IKi;
 import com.lifeform.main.network.TransactionPacket;
 import com.lifeform.main.transactions.ITrans;
+import com.lifeform.main.transactions.Output;
 import mining_pool.Pool;
 import mining_pool.SafeTransactionGenerator;
 import mining_pool.events.IPoolEventHandler;
@@ -30,8 +31,16 @@ public class KiEventHandler implements IPoolEventHandler {
                 ki.debug("Paying miners in pool");
                 SafeTransactionGenerator stg = new SafeTransactionGenerator(ki.getPoolManager(), ki.getAddMan().getMainAdd(), ki);
                 ITrans t = stg.generatePayPeriodTransaction("Payment for pool mining");
+                if (t == null) return;
                 if (ki.getTransMan().verifyTransaction(t)) {
                     ki.getTransMan().getPending().add(t);
+                    ki.debug("Transaction info: ");
+                    ki.debug("Outputs: " + t.getOutputs().size());
+                    for (Output o : t.getOutputs()) {
+                        ki.debug(o.getAddress().encodeForChain() + ":" + o.getAmount());
+                    }
+                    ki.debug("Inputs: " + t.getInputs().size());
+
                     TransactionPacket tp = new TransactionPacket();
                     tp.trans = t.toJSON();
                     ki.getNetMan().broadcast(tp);

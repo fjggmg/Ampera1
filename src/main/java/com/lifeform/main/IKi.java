@@ -73,4 +73,8 @@ public interface IKi {
     void newTransPool();
 
     INetworkManager getPoolNet();
+
+    String getStringSetting(StringSettings setting);
+
+    void setStringSetting(StringSettings setting, String value);
 }

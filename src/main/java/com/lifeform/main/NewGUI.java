@@ -461,6 +461,23 @@ public class NewGUI {
                 }
             }
         });
+        changePassword.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                if (cpNew.getText().equals(cpConfirm.getText())) {
+                    if (verifyPassword(cpCurrent.getText())) {
+                        deleteOldPassword(cpCurrent.getText());
+
+                        createNewPassword(cpNew.getText());
+                        notification("Password Changed");
+                    } else {
+                        notification("Wrong password");
+                    }
+                } else {
+                    notification("Passwords don't match");
+                }
+            }
+        });
         JFXTreeTableColumn<StoredTrans, String> oaColumn = new JFXTreeTableColumn<>("Sender");
         oaColumn.setPrefWidth(150);
         oaColumn.setCellValueFactory((TreeTableColumn.CellDataFeatures<StoredTrans, String> param) -> {
@@ -668,6 +685,7 @@ public class NewGUI {
                 } else {
                     poolDynamicFeeSlider.setDisable(true);
                 }
+                ki.setSetting(Settings.DYNAMIC_FEE, poolDynamicFee.isSelected());
             }
         });
         poolDynamicFeeSlider.valueProperty().addListener(new ChangeListener<Number>() {
@@ -677,6 +695,7 @@ public class NewGUI {
                 BigDecimal cd = new BigDecimal(ki.getChainMan().getCurrentDifficulty());
                 long pps = (long) (((cd.divide(sd, 9, RoundingMode.HALF_DOWN).doubleValue() * ChainManager.blockRewardForHeight(ki.getChainMan().currentHeight()).longValueExact()) * (1 - (poolDynamicFeeSlider.getValue() / 100))));
                 ki.getPoolManager().updateCurrentPayPerShare(pps);
+                ki.setStringSetting(StringSettings.POOL_FEE, poolDynamicFeeSlider.getValue() + "");
             }
         });
         poolStaticFee.textProperty().addListener(new ChangeListener<String>() {
@@ -684,6 +703,7 @@ public class NewGUI {
             public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
                 try {
                     double fee = Double.parseDouble(newValue);
+                    ki.setStringSetting(StringSettings.POOL_STATIC_PPS, "" + fee);
                     long pps = (long) (fee * 100_000_000);
                     ki.getPoolManager().updateCurrentPayPerShare(pps);
                 } catch (Exception e) {
@@ -785,7 +805,7 @@ public class NewGUI {
             sendButton.setLayoutX(walletPane.getWidth() - (sendButton.getWidth() + 5));
             walletAmount.setLayoutX(walletPane.getWidth() - ((walletAmount.getWidth() + 15)));
             tokenLabel.setLayoutX(walletAmount.getLayoutX() + 10);
-            transactionTable.setMinWidth(walletPane.getWidth() - (sendButton.getWidth() + 45));
+            transactionTable.setMinWidth(walletPane.getWidth() - (sendButton.getWidth() + 65));
             transactionTable.setMinHeight(walletPane.getHeight() - 170);
             versionLabel.setLayoutX(helpPane.getWidth() / 2 - (versionLabel.getWidth() / 2));
             helpText.setLayoutX(helpPane.getWidth() / 2 - (helpText.getWidth() / 2));
@@ -1085,7 +1105,7 @@ public class NewGUI {
                             sendButton.setLayoutX(walletPane.getWidth() - (sendButton.getWidth() + 5));
                             walletAmount.setLayoutX(walletPane.getWidth() - (walletAmount.getWidth() + 15));
                             tokenLabel.setLayoutX(walletAmount.getLayoutX() + 10);
-                            transactionTable.setMinWidth(walletPane.getWidth() - (sendButton.getWidth() + 45));
+                            transactionTable.setMinWidth(walletPane.getWidth() - (sendButton.getWidth() + 65));
                             transactionTable.setMinHeight(walletPane.getHeight() - 170);
                             versionLabel.setLayoutX(helpPane.getWidth() / 2 - (versionLabel.getWidth() / 2));
                             helpText.setLayoutX(helpPane.getWidth() / 2 - (helpText.getWidth() / 2));
@@ -1120,6 +1140,7 @@ public class NewGUI {
                                 } else {
                                     poolConnected.setText("Not Connected");
                                     poolConnect.setDisable(false);
+                                    ki.getMinerMan().stopMiners();
                                 }
                             }
                             if (ki.getOptions().poolRelay) {
@@ -1379,6 +1400,23 @@ public class NewGUI {
         handlePassword();
     }
 
+    private void createNewPassword(String password) {
+        String hash = "";
+        hash = superAutism(password + hash, 64);
+        pmap.put(hash, "p");
+    }
+
+    private void deleteOldPassword(String password) {
+        String hash = "";
+        hash = superAutism(password + hash, 64);
+        pmap.remove(hash);
+    }
+
+    private boolean verifyPassword(String password) {
+        String hash = "";
+        hash = superAutism(password + hash, 64);
+        return pmap.get(hash) != null;
+    }
     private void handlePassword() {
         submitPassword.setDisable(true);
         passwordWaiter.setVisible(true);
