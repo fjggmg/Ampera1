@@ -54,7 +54,7 @@ public class Ki extends Thread implements IKi {
     private IKi ki = this;
     private boolean run = true;
     //TODO: need to start saving version number to file for future conversion of files
-    public static final String VERSION = "0.17.0-RC7-BETA";
+    public static final String VERSION = "0.17.0-RC8-BETA";
     private boolean relay = false;
     private NewGUI guiHook;
     public static boolean debug = true;

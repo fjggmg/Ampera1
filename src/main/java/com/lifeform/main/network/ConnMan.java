@@ -156,6 +156,6 @@ public class ConnMan extends IConnectionManager {
 
     @Override
     public void received(Object o) {
-       pp.enqueue(o);
+        pp.process(o);
     }
 }

@@ -73,6 +73,7 @@ public class NetMan extends Thread implements INetworkManager {
 
         if (!isRelay)
             new Thread(() -> {
+                setName("BlockSync");
                 while (true) {
                     try {
                         sleep(300000);

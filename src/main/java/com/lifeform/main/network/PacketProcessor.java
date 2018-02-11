@@ -8,12 +8,14 @@ import java.util.List;
 public class PacketProcessor implements IPacketProcessor{
 
     private IKi ki;
-    private int ncTimes = 0;
-    private Thread heartbeat;
+
+    //private int ncTimes = 0;
+    //private Thread heartbeat;
     public PacketProcessor(IKi ki,IConnectionManager connMan)
     {
         this.connMan = connMan;
         this.ki = ki;
+        /*
         heartbeat = new Thread() {
             public void run() {
                 setName("PacketProcessor");
@@ -23,12 +25,11 @@ public class PacketProcessor implements IPacketProcessor{
 
         };
         heartbeat.start();
+        */
         pg = new PacketGlobal(ki, connMan);
     }
-    public Thread getThread()
-    {
-        return heartbeat;
-    }
+    //public Thread getThread() return heartbeat;
+    /*
     private void heartbeat()
     {
         while(run)
@@ -78,13 +79,14 @@ public class PacketProcessor implements IPacketProcessor{
                     } catch (InterruptedException e) {
                         /*if(ki.getOptions().pDebug)
                         ki.debug("PacketProccessor: " + connMan.getID() + " has been killed");
-                        */
+
                         return;
                     }
                 }
             }
         }
-    }
+    }*/
+
     private volatile List<Object> packets = new ArrayList<>();
     private boolean run = true;
     private IConnectionManager connMan;

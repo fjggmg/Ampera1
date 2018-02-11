@@ -456,10 +456,22 @@ public class InputHandler extends Thread {
                     ki.debug("Amount: " + amt);
                 } else if (line.contains("getThreads")) {
                     int t = 0;
+                    Map<String, Integer> threads = new HashMap<>();
                     for (Thread thread : Thread.getAllStackTraces().keySet()) {
-                        if (thread.isAlive()) t++;
+                        if (thread.isAlive()) {
+                            t++;
+                            if (threads.get(thread.getName()) != null) {
+                                threads.put(thread.getName(), threads.get(thread.getName()) + 1);
+                            } else {
+                                threads.put(thread.getName(), 1);
+                            }
+                        }
                     }
                     ki.debug("Number of active threads: " + t);
+                    ki.debug("Names and amounts:");
+                    for (String name : threads.keySet()) {
+                        ki.debug(name + ":" + threads.get(name));
+                    }
 
                 } else {
                     System.out.println("unrecognized input");

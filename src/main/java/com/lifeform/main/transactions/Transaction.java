@@ -212,7 +212,7 @@ public class Transaction implements ITrans{
 
     @Override
     public boolean verifyInputToOutput() {
-        if (inputs.size() < 1 || outputs.size() < 1) return false;
+        if (inputs.size() < 1 && outputs.size() < 1) return false;
         for(Token t:Token.values()) {
             BigInteger allInput = BigInteger.ZERO;
             for (Input i : inputs) {

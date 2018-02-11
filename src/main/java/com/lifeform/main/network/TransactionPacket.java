@@ -22,19 +22,24 @@ public class TransactionPacket implements Serializable, Packet {
         if(ki.getOptions().pDebug)
         ki.debug("Received transaction packet");
         if (done.contains(trans) && (block == null || block.isEmpty())) {
+            if (ki.getOptions().pDebug)
+                ki.debug("Discarding because we already have this transaction for a block");
             return;
         }
         if (block == null || block.isEmpty()) {
             if (ki.getTransMan().verifyTransaction(Transaction.fromJSON(trans))) {
                 ITrans trans = Transaction.fromJSON(this.trans);
                 if (trans == null || trans.getInputs() == null) {
+                    if (ki.getOptions().pDebug)
+                        ki.debug("Null trans or null inputs, discarding");
                     return;
                 }
                 for (ITrans t : ki.getTransMan().getPending()) {
                     for (Input i : t.getInputs()) {
                         for (Input i2 : trans.getInputs()) {
                             if (i.getID().equals(i2.getID())) {
-                                ki.debug("Got bad transaction from network, double spend.");
+                                if (ki.getOptions().pDebug)
+                                    ki.debug("Got bad transaction from network, double spend.");
                                 return;
                             }
                         }

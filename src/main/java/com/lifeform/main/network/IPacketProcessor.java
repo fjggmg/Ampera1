@@ -9,5 +9,5 @@ public interface IPacketProcessor {
     void process(Object packet);
     void enqueue(Object packet);
     PacketGlobal getPacketGlobal();
-    Thread getThread();
+    //Thread getThread();
 }
