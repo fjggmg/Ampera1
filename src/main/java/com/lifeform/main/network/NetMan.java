@@ -46,7 +46,7 @@ public class NetMan extends Thread implements INetworkManager {
                         toRemove.add(connMan);
                         if (connMan != null) {
                             connMan.getPacketProcessor().getPacketGlobal().cancelAllResends();
-                            connMan.getPacketProcessor().getThread().interrupt();
+                            //connMan.getPacketProcessor().getThread().interrupt();
                             ki.debug("Cleaning up PacketProcessor: " + connMan.getID());
                         }
                     }
