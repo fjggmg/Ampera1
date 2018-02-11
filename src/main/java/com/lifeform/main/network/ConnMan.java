@@ -61,11 +61,11 @@ public class ConnMan extends IConnectionManager {
     private boolean process = true;
     @Override
     public void disconnect() {
-        pp.getThread().interrupt();
+        //pp.getThread().interrupt();
         process = false;
         endpoint.disconnect();
         ki.getNetMan().getConnections().remove(this);
-        pp.getThread().interrupt();
+        //pp.getThread().interrupt();
 
     }
 
