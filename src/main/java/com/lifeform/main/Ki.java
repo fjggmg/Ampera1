@@ -15,6 +15,7 @@ import org.apache.logging.log4j.core.Logger;
 import org.bitbucket.backspace119.generallib.Logging.ConsoleLogger;
 import org.bitbucket.backspace119.generallib.Logging.LogMan;
 
+import java.lang.management.ManagementFactory;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
@@ -54,7 +55,7 @@ public class Ki extends Thread implements IKi {
     private IKi ki = this;
     private boolean run = true;
     //TODO: need to start saving version number to file for future conversion of files
-    public static final String VERSION = "0.17.0-BETA";
+    public static final String VERSION = "0.17.1-BETA";
     private boolean relay = false;
     private NewGUI guiHook;
     public static boolean debug = true;
@@ -75,6 +76,13 @@ public class Ki extends Thread implements IKi {
             settings.put(Settings.DYNAMIC_FEE.getKey(), true);
             stringSettings.put(StringSettings.POOL_FEE.getKey(), "1");
             stringSettings.put(StringSettings.POOL_STATIC_PPS.getKey(), "100");
+            stringSettings.put(StringSettings.PRIMARY_COLOR.getKey(), "#18BC9C");
+            stringSettings.put(StringSettings.SECONDARY_COLOR.getKey(), "#252830");
+            stringSettings.put(StringSettings.POOL_PAYTO.getKey(), "");
+            stringSettings.put(StringSettings.POOL_SERVER.getKey(), "ampextech.ddns.net");
+        }
+        if (o.relay) {
+            ManagementFactory.getThreadMXBean().setThreadContentionMonitoringEnabled(true);
         }
         JOCLContextAndCommandQueue.setWorkaround(true);
         JOCLContextAndCommandQueue.noIntel = true;
@@ -181,6 +189,7 @@ public class Ki extends Thread implements IKi {
 
         if (o.pool) {
             netMan = new PoolNetMan(this);
+            poolNet = netMan;
         } else {
             netMan = new NetMan(this, o.relay);
             netMan.start();

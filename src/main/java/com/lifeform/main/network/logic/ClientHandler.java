@@ -49,6 +49,7 @@ public class ClientHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         ki.debug("Error caught on client connection: " + cause.getMessage());
+        cause.printStackTrace();
         ctx.close();
     }
 }

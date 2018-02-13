@@ -29,29 +29,25 @@
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane prefHeight="480.0" prefWidth="720.0" xmlns="http://javafx.com/javafx/8.0.141"
-            xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.lifeform.main.NewGUI">
+<AnchorPane prefHeight="480.0" prefWidth="720.0" xmlns="http://javafx.com/javafx/8.0.141" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.lifeform.main.NewGUI">
     <children>
-        <StackPane layoutX="-130.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
-                   AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+        <StackPane layoutX="-130.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
             <children>
                 <BorderPane fx:id="borderPane" prefHeight="200.0" prefWidth="200.0" style="-fx-background-color: Gray;">
                     <left>
-                        <JFXDrawer fx:id="menuDrawer" prefHeight="310.0" prefWidth="90.0"
-                                   BorderPane.alignment="CENTER"/>
+                        <JFXDrawer fx:id="menuDrawer" prefHeight="310.0" prefWidth="90.0" BorderPane.alignment="CENTER" />
                     </left>
                     <top>
                         <Pane fx:id="topPane" prefHeight="55.0" prefWidth="600.0" BorderPane.alignment="CENTER">
                             <children>
                                 <HBox prefHeight="55.0" prefWidth="720.0">
                                     <children>
-                                        <JFXHamburger fx:id="menuHamburger" minWidth="90.0" prefHeight="55.0"
-                                                      prefWidth="90.0">
+                                        <JFXHamburger fx:id="menuHamburger" minWidth="90.0" prefHeight="55.0" prefWidth="90.0">
                                             <cursor>
-                                                <Cursor fx:constant="HAND"/>
+                                                <Cursor fx:constant="HAND" />
                                             </cursor>
                                         </JFXHamburger>
-                                        <StackPane fx:id="topPane2" prefHeight="150.0" prefWidth="9999.0"/>
+                                        <StackPane fx:id="topPane2" prefHeight="150.0" prefWidth="9999.0" />
                                     </children>
                                 </HBox>
                             </children>
@@ -62,201 +58,149 @@
                             <children>
                                 <Pane fx:id="settingsPane" prefHeight="200.0" prefWidth="200.0" visible="false">
                                     <children>
-                                        <JFXColorPicker fx:id="colorPicker" layoutX="215.0" layoutY="14.0"
-                                                        stylesheets="@cpstyle.css"/>
-                                        <JFXComboBox fx:id="colorCombos" layoutX="14.0" layoutY="14.0" prefHeight="25.0"
-                                                     prefWidth="165.0" styleClass="custom-color-picker"
-                                                     stylesheets="@text-style.css"/>
-                                        <JFXToggleButton fx:id="debugMode" layoutX="439.0" layoutY="-2.0"
-                                                         text="Debug Mode"/>
-                                        <JFXToggleButton fx:id="highSecurity" layoutX="439.0" layoutY="58.0"
-                                                         text="High Security Mode"/>
-                                        <JFXProgressBar fx:id="syncProgress" layoutX="14.0" layoutY="87.0"
-                                                        prefHeight="12.0" prefWidth="388.0"/>
-                                        <Label layoutX="14.0" layoutY="60.0" text="Network Sync Progress:"/>
-                                        <JFXToggleButton fx:id="requirePassword" layoutX="439.0" layoutY="116.0"
-                                                         selected="true" text="Require Password"/>
-                                        <JFXPasswordField fx:id="cpCurrent" labelFloat="true" layoutX="14.0"
-                                                          layoutY="120.0" promptText="CurrentPassword"/>
-                                        <JFXPasswordField fx:id="cpNew" labelFloat="true" layoutX="14.0" layoutY="162.0"
-                                                          promptText="New Password"/>
-                                        <JFXPasswordField fx:id="cpConfirm" labelFloat="true" layoutX="14.0"
-                                                          layoutY="200.0" promptText="Confirm Password"/>
-                                        <JFXButton fx:id="changePassword" layoutX="159.0" layoutY="197.0"
-                                                   prefHeight="32.0" prefWidth="112.0" text="Change Password"/>
+                                        <JFXColorPicker fx:id="colorPicker" layoutX="215.0" layoutY="14.0" stylesheets="@cpstyle.css" />
+                                        <JFXComboBox fx:id="colorCombos" layoutX="14.0" layoutY="14.0" prefHeight="25.0" prefWidth="165.0" styleClass="custom-color-picker" stylesheets="@text-style.css" />
+                                        <JFXToggleButton fx:id="debugMode" layoutX="439.0" layoutY="-2.0" text="Debug Mode" />
+                                        <JFXToggleButton fx:id="highSecurity" layoutX="439.0" layoutY="58.0" text="High Security Mode" />
+                                        <JFXProgressBar fx:id="syncProgress" layoutX="14.0" layoutY="87.0" prefHeight="12.0" prefWidth="388.0" />
+                                        <Label layoutX="14.0" layoutY="60.0" text="Network Sync Progress:" />
+                                        <JFXToggleButton fx:id="requirePassword" layoutX="439.0" layoutY="116.0" selected="true" text="Require Password" />
+                                        <JFXPasswordField fx:id="cpCurrent" labelFloat="true" layoutX="14.0" layoutY="120.0" promptText="CurrentPassword" />
+                                        <JFXPasswordField fx:id="cpNew" labelFloat="true" layoutX="14.0" layoutY="162.0" promptText="New Password" />
+                                        <JFXPasswordField fx:id="cpConfirm" labelFloat="true" layoutX="14.0" layoutY="200.0" promptText="Confirm Password" />
+                                        <JFXButton fx:id="changePassword" layoutX="159.0" layoutY="197.0" prefHeight="32.0" prefWidth="112.0" text="Change Password" />
+                              <JFXButton fx:id="resetColors" layoutX="204.0" layoutY="48.0" prefHeight="25.0" prefWidth="123.0" text="Reset Colors" />
                                     </children>
                                 </Pane>
                                 <Pane fx:id="walletPane" prefHeight="200.0" prefWidth="200.0" visible="false">
                                     <children>
-                                        <JFXComboBox fx:id="tokenBox" layoutX="14.0" layoutY="14.0" prefHeight="25.0"
-                                                     prefWidth="125.0"/>
-                                        <Label fx:id="walletAmount" alignment="CENTER" contentDisplay="CENTER"
-                                               layoutX="320.0" layoutY="9.0" prefHeight="35.0" prefWidth="292.0"
-                                               text="1,000,000,000.999999999">
+                                        <JFXComboBox fx:id="tokenBox" layoutX="14.0" layoutY="14.0" prefHeight="25.0" prefWidth="125.0" />
+                                        <Label fx:id="walletAmount" alignment="CENTER" contentDisplay="CENTER" layoutX="320.0" layoutY="9.0" prefHeight="35.0" prefWidth="292.0" text="1,000,000,000.999999999">
                                             <font>
-                                                <Font size="24.0"/>
+                                                <Font size="24.0" />
                                             </font>
                                         </Label>
-                                        <Label fx:id="tokenLabel" alignment="CENTER" layoutX="328.0" layoutY="39.0"
-                                               prefHeight="27.0" prefWidth="276.0" text="Origin" textAlignment="CENTER">
+                                        <Label fx:id="tokenLabel" alignment="CENTER" layoutX="328.0" layoutY="39.0" prefHeight="27.0" prefWidth="276.0" text="Origin" textAlignment="CENTER">
                                             <font>
-                                                <Font size="18.0"/>
+                                                <Font size="18.0" />
                                             </font>
                                         </Label>
-                                        <JFXTextField fx:id="addressText" layoutX="480.0" layoutY="101.0"
-                                                      promptText="Address*"/>
-                                        <JFXTextField fx:id="amountText" layoutX="480.0" layoutY="126.0"
-                                                      promptText="Amount*"/>
-                                        <JFXTextField fx:id="feeText" layoutX="480.0" layoutY="151.0" promptText="Fee"/>
-                                        <JFXTextField fx:id="messageText" layoutX="480.0" layoutY="176.0"
-                                                      promptText="Message"/>
-                                        <JFXButton fx:id="sendButton" layoutX="481.0" layoutY="211.0" prefHeight="25.0"
-                                                   prefWidth="135.0" text="Send">
+                                        <JFXTextField fx:id="addressText" layoutX="480.0" layoutY="101.0" promptText="Address*" />
+                                        <JFXTextField fx:id="amountText" layoutX="480.0" layoutY="126.0" promptText="Amount*" />
+                                        <JFXTextField fx:id="feeText" layoutX="480.0" layoutY="151.0" promptText="Fee" />
+                                        <JFXTextField fx:id="messageText" layoutX="480.0" layoutY="176.0" promptText="Message" />
+                                        <JFXButton fx:id="sendButton" layoutX="481.0" layoutY="211.0" prefHeight="25.0" prefWidth="135.0" text="Send">
                                             <font>
-                                                <Font size="14.0"/>
+                                                <Font size="14.0" />
                                             </font>
                                         </JFXButton>
-                                        <JFXTreeTableView fx:id="transactionTable" layoutX="14.0" layoutY="164.0"
-                                                          prefHeight="201.0" prefWidth="410.0"
-                                                          stylesheets="@tablestyle.css"/>
-                                        <Label fx:id="addressLabel" layoutX="14.0" layoutY="66.0" text="Address-"/>
-                                        <Label fx:id="heightLabel" layoutX="14.0" layoutY="44.0" text="Chain Height -"/>
-                                        <JFXButton fx:id="copyAddress" layoutX="16.0" layoutY="89.0"
-                                                   text="Copy Address"/>
+                                        <JFXTreeTableView fx:id="transactionTable" layoutX="14.0" layoutY="164.0" prefHeight="201.0" prefWidth="410.0" stylesheets="@tablestyle.css" />
+                                        <Label fx:id="addressLabel" layoutX="14.0" layoutY="66.0" text="Address-" />
+                                        <Label fx:id="heightLabel" layoutX="14.0" layoutY="44.0" text="Chain Height -" />
+                                        <JFXButton fx:id="copyAddress" layoutX="16.0" layoutY="89.0" text="Copy Address" />
                                         <Label layoutX="16.0" layoutY="130.0" text="Transactions">
                                             <font>
-                                                <Font size="18.0"/>
+                                                <Font size="18.0" />
                                             </font>
                                         </Label>
-                                        <JFXTextField fx:id="searchBox" layoutX="277.0" layoutY="131.0"
-                                                      promptText="Search..."/>
+                                        <JFXTextField fx:id="searchBox" layoutX="277.0" layoutY="131.0" promptText="Search..." />
                                         <Label fx:id="amountOfTransactions" layoutX="168.0" layoutY="130.0" text="(5)">
                                             <font>
-                                                <Font size="18.0"/>
+                                                <Font size="18.0" />
                                             </font>
                                         </Label>
                                     </children>
                                 </Pane>
                                 <Pane fx:id="miningTab" prefHeight="370.0" prefWidth="510.0" visible="false">
                                     <children>
-                                        <JFXButton fx:id="startMining" layoutX="196.0" layoutY="61.0" prefHeight="30.0"
-                                                   prefWidth="120.0" text="Start Mining"/>
-                                        <JFXSlider fx:id="miningIntesity" blockIncrement="25.0" layoutX="8.0"
-                                                   layoutY="7.0" max="200.0" minorTickCount="0" prefHeight="37.0"
-                                                   prefWidth="498.0" showTickLabels="true" showTickMarks="true"
-                                                   value="100.0">
+                                        <JFXButton fx:id="startMining" layoutX="196.0" layoutY="61.0" prefHeight="30.0" prefWidth="120.0" text="Start Mining" />
+                                        <JFXSlider fx:id="miningIntesity" blockIncrement="25.0" layoutX="8.0" layoutY="7.0" max="200.0" minorTickCount="0" prefHeight="37.0" prefWidth="498.0" showTickLabels="true" showTickMarks="true" value="100.0">
                                             <tooltip>
-                                                <Tooltip text="WARNING- VALUES OVER 100 MAY CAUSE MINER INSTABILITY"/>
+                                                <Tooltip text="WARNING- VALUES OVER 100 MAY CAUSE MINER INSTABILITY" />
                                             </tooltip>
                                         </JFXSlider>
-                                        <Label fx:id="miLabel" layoutX="214.0" layoutY="36.0" text="Mining Intensity"/>
-                                        <LineChart fx:id="hashrateChart" layoutY="125.0" prefHeight="237.0"
-                                                   prefWidth="513.0" title="Hashrate">
+                                        <Label fx:id="miLabel" layoutX="214.0" layoutY="36.0" text="Mining Intensity" />
+                                        <LineChart fx:id="hashrateChart" layoutY="125.0" prefHeight="237.0" prefWidth="513.0" title="Hashrate">
                                             <xAxis>
-                                                <CategoryAxis label="Time (s)" prefHeight="38.0" prefWidth="442.0"
-                                                              side="BOTTOM"/>
+                                                <CategoryAxis label="Time (s)" prefHeight="38.0" prefWidth="442.0" side="BOTTOM" />
                                             </xAxis>
                                             <yAxis>
                                                 <NumberAxis label="Mh/s" side="LEFT">
                                                     <tickLabelFont>
-                                                        <Font size="14.0"/>
+                                                        <Font size="14.0" />
                                                     </tickLabelFont>
                                                 </NumberAxis>
                                             </yAxis>
                                         </LineChart>
-                                        <HBox fx:id="miningDataHbox" alignment="CENTER" layoutY="100.0"
-                                              prefHeight="25.0" prefWidth="631.0">
+                                        <HBox fx:id="miningDataHbox" alignment="CENTER" layoutY="100.0" prefHeight="25.0" prefWidth="631.0">
                                             <children>
-                                                <Label fx:id="currentHashrate" text="Current Hashrate - 0 Mh/s"/>
-                                                <Label fx:id="averageHashrate" text="Average - 0 Mh/s"/>
-                                                <Label fx:id="minHashrate" text="Min - 0 Mh/s"/>
-                                                <Label fx:id="maxHashrate" text="Max - 0 Mh/s"/>
-                                                <Label fx:id="blocksFoundLabel" text="Blocks Found - 400,300"/>
+                                                <Label fx:id="currentHashrate" text="Current Hashrate - 0 Mh/s" />
+                                                <Label fx:id="averageHashrate" text="Average - 0 Mh/s" />
+                                                <Label fx:id="minHashrate" text="Min - 0 Mh/s" />
+                                                <Label fx:id="maxHashrate" text="Max - 0 Mh/s" />
+                                                <Label fx:id="blocksFoundLabel" text="Blocks Found - 400,300" />
                                             </children>
                                         </HBox>
                                     </children>
                                 </Pane>
                                 <Pane fx:id="helpPane" prefHeight="200.0" prefWidth="200.0" visible="false">
                                     <children>
-                                        <Label fx:id="versionLabel" alignment="CENTER" layoutX="241.0" layoutY="30.0"
-                                               text="Version -"/>
-                                        <Label fx:id="helpText" layoutX="62.0" layoutY="61.0"
-                                               text="Please report any issues in the discord server or in the bitbucket issues page."/>
+                                        <Label fx:id="versionLabel" alignment="CENTER" layoutX="241.0" layoutY="30.0" text="Version -" />
+                                        <Label fx:id="helpText" layoutX="62.0" layoutY="61.0" text="Please report any issues in the discord server or in the bitbucket issues page." />
                                     </children>
                                 </Pane>
                                 <Pane fx:id="blockExplorerPane" prefWidth="630.0" visible="false">
                                     <children>
-                                        <ScrollPane fx:id="beScroll" layoutY="55.0" prefHeight="370.0"
-                                                    prefWidth="630.0"/>
-                                        <JFXTextField fx:id="fromBlock" labelFloat="true" layoutX="14.0" layoutY="14.0"
-                                                      promptText="From Block"/>
-                                        <JFXTextField fx:id="toBlock" labelFloat="true" layoutX="159.0" layoutY="14.0"
-                                                      promptText="To Block"/>
-                                        <JFXButton fx:id="goBE" layoutX="300.0" layoutY="14.0" prefHeight="25.0"
-                                                   prefWidth="118.0" text="Go"/>
+                                        <ScrollPane fx:id="beScroll" layoutY="55.0" prefHeight="370.0" prefWidth="630.0" />
+                                        <JFXTextField fx:id="fromBlock" labelFloat="true" layoutX="14.0" layoutY="14.0" promptText="From Block" />
+                                        <JFXTextField fx:id="toBlock" labelFloat="true" layoutX="159.0" layoutY="14.0" promptText="To Block" />
+                                        <JFXButton fx:id="goBE" layoutX="300.0" layoutY="14.0" prefHeight="25.0" prefWidth="118.0" text="Go" />
                                     </children>
                                 </Pane>
                                 <Pane fx:id="addressPane" prefHeight="200.0" prefWidth="200.0" visible="false">
                                     <children>
-                                        <JFXListView fx:id="addressList" layoutX="14.0" layoutY="13.0"
-                                                     prefHeight="349.0" prefWidth="354.0"/>
-                                        <JFXButton fx:id="createAddress" layoutX="480.0" layoutY="47.0"
-                                                   prefHeight="25.0" prefWidth="136.0" text="Create"/>
-                                        <JFXTextField fx:id="entropyField" labelFloat="true" layoutX="481.0"
-                                                      layoutY="14.0" promptText="Entropy"/>
-                                        <JFXButton fx:id="deleteAddress" layoutX="480.0" layoutY="77.0"
-                                                   prefHeight="25.0" prefWidth="136.0" text="Delete"/>
-                                        <JFXButton fx:id="setSpendAddress" layoutX="480.0" layoutY="107.0"
-                                                   prefHeight="25.0" prefWidth="136.0" text="Set Spend Address"/>
-                                        <Label fx:id="entropyLabel" layoutX="371.0" layoutY="145.0"
-                                               text="Entropy of Selection:"/>
+                                        <JFXListView fx:id="addressList" layoutX="14.0" layoutY="13.0" prefHeight="349.0" prefWidth="354.0" />
+                                        <JFXButton fx:id="createAddress" layoutX="480.0" layoutY="47.0" prefHeight="25.0" prefWidth="136.0" text="Create" />
+                                        <JFXTextField fx:id="entropyField" labelFloat="true" layoutX="481.0" layoutY="14.0" promptText="Entropy" />
+                                        <JFXButton fx:id="deleteAddress" layoutX="480.0" layoutY="77.0" prefHeight="25.0" prefWidth="136.0" text="Delete" />
+                                        <JFXButton fx:id="setSpendAddress" layoutX="480.0" layoutY="107.0" prefHeight="25.0" prefWidth="136.0" text="Set Spend Address" />
+                                        <Label fx:id="entropyLabel" layoutX="371.0" layoutY="145.0" text="Entropy of Selection:" />
                                     </children>
                                 </Pane>
                                 <Pane fx:id="blockPane" prefHeight="200.0" prefWidth="200.0" visible="false">
                                     <children>
-                                        <JFXButton fx:id="backToBE" layoutX="14.0" layoutY="14.0" prefHeight="33.0"
-                                                   prefWidth="135.0" text="Back"/>
-                                        <JFXButton fx:id="previousBlock" layoutX="248.0" layoutY="21.0"
-                                                   prefHeight="33.0" prefWidth="135.0" text="Previous Block"/>
-                                        <JFXButton fx:id="nextBlock" layoutX="481.0" layoutY="21.0" prefHeight="33.0"
-                                                   prefWidth="135.0" text="Next Block"/>
-                                        <Label fx:id="blockHeight" layoutX="14.0" layoutY="63.0" text="Height -"/>
-                                        <Label fx:id="blockID" layoutX="14.0" layoutY="80.0" text="ID -"/>
-                                        <Label fx:id="solver" layoutX="13.0" layoutY="97.0" maxWidth="600.0"
-                                               text="Solver -" wrapText="true"/>
-                                        <Label fx:id="numberOfTransactions" layoutX="14.0" layoutY="196.0"
-                                               text="Number of Transactions -"/>
-                                        <Label fx:id="blockTimestamp" layoutX="14.0" layoutY="213.0"
-                                               text="Timestamp -"/>
+                                        <JFXButton fx:id="backToBE" layoutX="14.0" layoutY="14.0" prefHeight="33.0" prefWidth="135.0" text="Back" />
+                                        <JFXButton fx:id="previousBlock" layoutX="248.0" layoutY="21.0" prefHeight="33.0" prefWidth="135.0" text="Previous Block" />
+                                        <JFXButton fx:id="nextBlock" layoutX="481.0" layoutY="21.0" prefHeight="33.0" prefWidth="135.0" text="Next Block" />
+                                        <Label fx:id="blockHeight" layoutX="14.0" layoutY="63.0" text="Height -" />
+                                        <Label fx:id="blockID" layoutX="14.0" layoutY="80.0" text="ID -" />
+                                        <Label fx:id="solver" layoutX="13.0" layoutY="97.0" maxWidth="600.0" text="Solver -" wrapText="true" />
+                                        <Label fx:id="numberOfTransactions" layoutX="14.0" layoutY="196.0" text="Number of Transactions -" />
+                                        <Label fx:id="blockTimestamp" layoutX="14.0" layoutY="213.0" text="Timestamp -" />
                                     </children>
                                 </Pane>
                                 <Pane fx:id="poolPane" prefHeight="200.0" prefWidth="200.0" visible="false">
                                     <children>
-                                        <JFXTextField fx:id="ipField" labelFloat="true" layoutX="14.0" layoutY="60.0"
-                                                      promptText="Pool IP*" text="ampextech.ddns.net"/>
-                                        <JFXButton fx:id="poolConnect" layoutX="155.0" layoutY="60.0" prefHeight="25.0"
-                                                   prefWidth="91.0" text="Connect"/>
-                                        <Label fx:id="shares" layoutX="14.0" layoutY="93.0" text="Shares - "/>
-                                        <Label fx:id="nextPayment" layoutX="14.0" layoutY="110.0"
-                                               text="Next Payment - "/>
-                                        <JFXTextField fx:id="paytoAddress" labelFloat="true" layoutX="14.0"
-                                                      layoutY="14.0" promptText="Payto Address*"/>
-                                        <Label fx:id="poolConnected" layoutX="301.0" layoutY="64.0"
-                                               text="Not Connected"/>
+                                        <JFXTextField fx:id="ipField" labelFloat="true" layoutX="14.0" layoutY="60.0" promptText="Pool IP*" text="ampextech.ddns.net" />
+                                        <JFXButton fx:id="poolConnect" layoutX="175.0" layoutY="60.0" prefHeight="25.0" prefWidth="91.0" text="Connect" />
+                                        <Label fx:id="shares" layoutX="14.0" layoutY="114.0" text="Accepted Shares - " />
+                                        <Label fx:id="nextPayment" layoutX="14.0" layoutY="131.0" text="Next Payment - " />
+                                        <JFXTextField fx:id="paytoAddress" labelFloat="true" layoutX="14.0" layoutY="14.0" promptText="Payto Address*" />
+                                        <Label fx:id="poolConnected" layoutX="301.0" layoutY="64.0" text="Not Connected" />
+                              <JFXButton fx:id="poolDisconnect" layoutX="175.0" layoutY="85.0" prefHeight="25.0" prefWidth="91.0" text="Disconnect" />
+                              <Label fx:id="localShares" layoutX="14.0" layoutY="148.0" text="Local Shares -" />
                                     </children>
                                 </Pane>
                                 <Pane fx:id="poolRelay" prefHeight="200.0" prefWidth="200.0" visible="false">
                                     <children>
-                                        <Label fx:id="poolNOC" layoutX="14.0" layoutY="14.0"
-                                               text="Number of Connections -"/>
-                                        <JFXSlider fx:id="poolDynamicFeeSlider" blockIncrement="1.0" layoutX="11.0"
-                                                   layoutY="54.0" majorTickUnit="10.0" max="50.0" showTickLabels="true"
-                                                   showTickMarks="true" value="1.0"/>
-                                        <Label layoutX="72.0" layoutY="83.0" text="Fee"/>
-                                        <JFXToggleButton fx:id="poolDynamicFee" layoutX="177.0" layoutY="44.0"
-                                                         selected="true" text="Dynamic Fee"/>
-                                        <JFXTextField fx:id="poolStaticFee" disable="true" layoutX="14.0"
-                                                      layoutY="113.0" promptText="Static PPS"/>
+                                        <Label fx:id="poolNOC" layoutX="14.0" layoutY="14.0" text="Number of Connections -" />
+                                        <JFXSlider fx:id="poolDynamicFeeSlider" blockIncrement="0.25" layoutX="11.0" layoutY="54.0" majorTickUnit="1.0" max="15.0" prefHeight="37.0" prefWidth="601.0" showTickLabels="true" showTickMarks="true" value="0.25" />
+                                        <Label layoutX="306.0" layoutY="89.0" text="Fee" />
+                                        <JFXToggleButton fx:id="poolDynamicFee" layoutX="177.0" layoutY="97.0" selected="true" text="Dynamic Fee" />
+                                        <JFXTextField fx:id="poolStaticFee" disable="true" layoutX="14.0" layoutY="113.0" promptText="Static PPS" />
+                              <JFXSlider fx:id="payoutSlider" layoutX="11.0" layoutY="155.0" majorTickUnit="10.0" max="120.0" minorTickCount="5" prefHeight="14.0" prefWidth="601.0" showTickLabels="true" showTickMarks="true" snapToTicks="true" value="60.0" />
+                              <Label layoutX="246.0" layoutY="192.0" text="Payout Interval (minutes)" />
+                              <Label fx:id="poolHashrate" layoutX="315.0" layoutY="14.0" text="Current Pool Hashrate (MH/s) - " />
                                     </children>
                                 </Pane>
                             </children>
@@ -265,19 +209,16 @@
                 </BorderPane>
             </children>
         </StackPane>
-        <Pane fx:id="lockPane" prefHeight="480.0" prefWidth="720.0" style="-fx-background-color: DimGray;"
-              visible="false" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
+        <Pane fx:id="lockPane" prefHeight="480.0" prefWidth="720.0" style="-fx-background-color: DimGray;" visible="false" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
             <children>
                 <ImageView fitHeight="159.0" fitWidth="162.0" layoutX="279.0" layoutY="90.0">
                     <image>
-                        <Image url="@Lock.png"/>
+                        <Image url="@Lock.png" />
                     </image>
                 </ImageView>
-                <JFXPasswordField fx:id="passwordField" layoutX="293.0" layoutY="249.0" onAction="#passwordEnter"
-                                  promptText="Password"/>
-                <JFXButton fx:id="submitPassword" layoutX="293.0" layoutY="280.0" prefHeight="25.0" prefWidth="135.0"
-                           text="Submit"/>
-                <JFXSpinner fx:id="passwordWaiter" layoutX="335.0" layoutY="318.0" visible="false"/>
+                <JFXPasswordField fx:id="passwordField" layoutX="293.0" layoutY="249.0" onAction="#passwordEnter" promptText="Password" />
+                <JFXButton fx:id="submitPassword" layoutX="293.0" layoutY="280.0" prefHeight="25.0" prefWidth="135.0" text="Submit" />
+                <JFXSpinner fx:id="passwordWaiter" layoutX="335.0" layoutY="318.0" visible="false" />
             </children>
         </Pane>
     </children>

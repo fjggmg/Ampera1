@@ -33,5 +33,7 @@ public interface INetworkManager {
 
     void close();
 
+    GlobalPacketQueuer getGPQ();
+
 
 }

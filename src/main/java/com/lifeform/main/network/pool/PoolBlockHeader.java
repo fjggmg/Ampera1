@@ -23,6 +23,7 @@ public class PoolBlockHeader implements Serializable, PoolPacket {
     public String prevID;
     public byte[] payload;
     public String coinbase;
+    public long currentHR;
 
     @Override
     public void process(IKi ki, IConnectionManager connMan) {
@@ -58,10 +59,11 @@ public class PoolBlockHeader implements Serializable, PoolPacket {
                 ki.debug("height: " + height);
                 ki.debug("timestamp: " + timestamp);
                 ki.debug("ID: " + ID);
-                b = ki.getPoolData().workMap.get(merkleRoot);
+                b = Block.fromJSON(ki.getPoolData().workMap.get(merkleRoot).toJSON());
                 b.payload = payload;
                 b.timestamp = timestamp;
                 b.ID = ID;
+                ki.getPoolData().hrMap.put(connMan.getID(), currentHR);
                 if (ki.getChainMan().softVerifyBlock(b).success()) {
                     ki.debug("Share is a solve");
                     BlockHeader bh2 = formHeader(b);

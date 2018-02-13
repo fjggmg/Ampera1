@@ -96,6 +96,11 @@ public class NewGUI {
     public JFXSlider poolDynamicFeeSlider;
     public JFXToggleButton poolDynamicFee;
     public JFXTextField poolStaticFee;
+    public JFXButton poolDisconnect;
+    public JFXButton resetColors;
+    public JFXSlider payoutSlider;
+    public Label poolHashrate;
+    public Label localShares;
     private IKi ki;
     private ObservableMap<Token, BigInteger> tokenValueMap = FXCollections.observableMap(new HashMap<Token, BigInteger>());
     private volatile boolean isFinal = false;
@@ -302,6 +307,7 @@ public class NewGUI {
     }
 
     public void addTransaction(ITrans trans, BigInteger height) {
+        if (ki.getOptions().pool) return;
         BigInteger allout = BigInteger.ZERO;
         List<String> involved = new ArrayList<>();
 
@@ -364,6 +370,13 @@ public class NewGUI {
 
             StoredTrans st = new StoredTrans(add, format2.format(amount), direction, trans.getMessage(), trans.getInputs().get(0).getAddress().encodeForChain(), timestamp, height.toString(), obsOutputs, obsInputs, format2.format(trans.getFee().longValueExact() / 100_000_000D));
             transactions.add(st);
+            if (transactionTable != null && transactionTable.getRoot() != null) {
+                transactionTable.getRoot().getChildren().add(new TreeItem<>(st));
+                transactionTable.sort();
+            }
+            //final TreeItem<StoredTrans> root = new RecursiveTreeItem<StoredTrans>(transactions, RecursiveTreeObject::getChildren);
+            //if(transactionTable != null)
+            //transactionTable.setRoot(root);
         }
         if (!sTrans.contains(trans.toJSON())) {
             sTrans.add(trans.toJSON());
@@ -596,10 +609,11 @@ public class NewGUI {
                     setupBlockPane(currentBlock.add(BigInteger.ONE));
             }
         });
+
         miningDataHbox.setSpacing(10);
         addressLabel.setText("Address - " + ki.getAddMan().getMainAdd().encodeForChain());
         syncProgress.setProgress(0);
-        submitPassword.setBackground(new Background(new BackgroundFill(Color.valueOf("#18BC9C"), CornerRadii.EMPTY, Insets.EMPTY)));
+        submitPassword.setBackground(new Background(new BackgroundFill(Color.valueOf(ki.getStringSetting(StringSettings.PRIMARY_COLOR)), CornerRadii.EMPTY, Insets.EMPTY)));
         passwordField.setLabelFloat(true);
         RequiredFieldValidator validator = new RequiredFieldValidator();
         validator.setMessage("Input Required");
@@ -631,7 +645,10 @@ public class NewGUI {
                 addressList.getItems().remove(addressList.getSelectionModel().getSelectedIndex());
             }
         });
-
+        if (ki.getStringSetting(StringSettings.POOL_PAYTO) != null && !ki.getStringSetting(StringSettings.POOL_PAYTO).isEmpty())
+            paytoAddress.setText(ki.getStringSetting(StringSettings.POOL_PAYTO));
+        if (ki.getStringSetting(StringSettings.POOL_SERVER) != null && !ki.getStringSetting(StringSettings.POOL_SERVER).isEmpty())
+            ipField.setText(ki.getStringSetting(StringSettings.POOL_SERVER));
         addressList.setBackground(new Background(new BackgroundFill(Color.GRAY, CornerRadii.EMPTY, Insets.EMPTY)));
         List<Pane> content = new ArrayList<>();
         content.add(settingsPane);
@@ -678,12 +695,14 @@ public class NewGUI {
             public void handle(MouseEvent event) {
                 if (poolDynamicFee.isSelected()) {
                     poolDynamicFeeSlider.setDisable(false);
+                    poolStaticFee.setDisable(true);
                     BigDecimal sd = new BigDecimal(GPUMiner.shareDiff);
                     BigDecimal cd = new BigDecimal(ki.getChainMan().getCurrentDifficulty());
                     long pps = (long) (((cd.divide(sd, 9, RoundingMode.HALF_DOWN).doubleValue() * ChainManager.blockRewardForHeight(ki.getChainMan().currentHeight()).longValueExact()) * (1 - (poolDynamicFeeSlider.getValue() / 100))));
                     ki.getPoolManager().updateCurrentPayPerShare(pps);
                 } else {
                     poolDynamicFeeSlider.setDisable(true);
+                    poolStaticFee.setDisable(false);
                 }
                 ki.setSetting(Settings.DYNAMIC_FEE, poolDynamicFee.isSelected());
             }
@@ -703,8 +722,9 @@ public class NewGUI {
             public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
                 try {
                     double fee = Double.parseDouble(newValue);
-                    ki.setStringSetting(StringSettings.POOL_STATIC_PPS, "" + fee);
-                    long pps = (long) (fee * 100_000_000);
+
+                    long pps = (long) (fee * 100_000_000L);
+                    ki.setStringSetting(StringSettings.POOL_STATIC_PPS, "" + pps);
                     ki.getPoolManager().updateCurrentPayPerShare(pps);
                 } catch (Exception e) {
 
@@ -712,11 +732,11 @@ public class NewGUI {
             }
         });
         menuDrawer.close();
-        borderPane.setStyle("-fx-background-color:" + "#252830");
+        borderPane.setStyle("-fx-background-color:" + ki.getStringSetting(StringSettings.SECONDARY_COLOR));
         VBox vb = new VBox();
         vb.setMaxWidth(Double.MAX_VALUE);
-        Image img = new Image(getClass().getResourceAsStream("/origin.png"));
-        vb.setBackground(new Background(new BackgroundImage(img, BackgroundRepeat.NO_REPEAT, BackgroundRepeat.NO_REPEAT, BackgroundPosition.CENTER, BackgroundSize.DEFAULT)));
+        //Image img = new Image(getClass().getResourceAsStream("/origin.png"));
+        //vb.setBackground(new Background(new BackgroundImage(img, BackgroundRepeat.NO_REPEAT, BackgroundRepeat.NO_REPEAT, BackgroundPosition.CENTER, BackgroundSize.DEFAULT)));
         vb.setFillWidth(true);
         List<String> adds = new ArrayList<>();
         for (Address add : ki.getAddMan().getAll()) {
@@ -725,6 +745,12 @@ public class NewGUI {
                 adds.add(add.encodeForChain());
             }
         }
+        payoutSlider.valueProperty().addListener(new ChangeListener<Number>() {
+            @Override
+            public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
+                ki.getPoolManager().updateCurrentPayInterval(newValue.longValue() * 3_600_000L);
+            }
+        });
 
         entropyLabel.setWrapText(true);
         entropyLabel.setMaxWidth(256);
@@ -787,10 +813,23 @@ public class NewGUI {
             chainHeight2.setTextAlignment(TextAlignment.CENTER);
             vb.getChildren().add(chainHeight2);
         }
+        resetColors.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                colorCombos.getSelectionModel().select(1);
+                colorPicker.setValue(Color.valueOf("#252830"));
+                colorCombos.getSelectionModel().select(0);
+                colorPicker.setValue(Color.valueOf("#18BC9C"));
+
+            }
+        });
+
+
         latency.setFont(Font.loadFont(getClass().getResourceAsStream("/ADAM.CG PRO.otf"), 10));
-        vb.getChildren().add(latency);
-        vb.setStyle("-fx-background-color:" + "#18BC9C");
-        vb.setBackground(new Background(new BackgroundImage(img, BackgroundRepeat.NO_REPEAT, BackgroundRepeat.NO_REPEAT, BackgroundPosition.CENTER, BackgroundSize.DEFAULT)));
+        if (!ki.getOptions().pool)
+            vb.getChildren().add(latency);
+        //vb.setStyle("-fx-background-color:" + ki.getStringSetting(StringSettings.PRIMARY_COLOR));
+        //vb.setBackground(new Background(new BackgroundImage(img, BackgroundRepeat.NO_REPEAT, BackgroundRepeat.NO_REPEAT, BackgroundPosition.CENTER, BackgroundSize.DEFAULT)));
         menuDrawer.getSidePane().add(vb);
         ChangeListener<Number> stageSizeListener = (observable, oldValue, newValue) -> {
             //System.out.println("Height: " + stage.getHeight() + " Width: " + stage.getWidth());
@@ -895,11 +934,21 @@ public class NewGUI {
                 previousBlock.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
                 goBE.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
                 poolConnect.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
+                poolDisconnect.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
+                resetColors.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
+                poolDynamicFeeSlider.setStyle("-jfx-default-thumb:" + color);
+                payoutSlider.setStyle("-jfx-default-thumb:" + color);
+
+                ki.setStringSetting(StringSettings.PRIMARY_COLOR, color);
+
                 //miningIntesity.getClip().setStyle("-fx-background-color:"+color);
 
             } else if (colorCombos.getSelectionModel().getSelectedItem().getText().contains("Secondary Color")) {
+                String color = colorPicker.getValue().toString().replace("0x", "");
+                color = "#" + color;
                 topPane.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
                 borderPane.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
+                ki.setStringSetting(StringSettings.SECONDARY_COLOR, color);
             } else if (colorCombos.getSelectionModel().getSelectedItem().getText().contains("Text Primary")) {
                 for (Node n : vb.getChildren()) {
                     ((JFXButton) n).setTextFill(colorPicker.getValue());
@@ -928,6 +977,18 @@ public class NewGUI {
                 if (paytoAddress.getText().isEmpty()) return;
                 ki.getPoolData().payTo = paytoAddress.getText();
                 ki.getNetMan().attemptConnect(ipField.getText());
+                ki.getPoolData().poolConn = ipField.getText();
+                ki.setStringSetting(StringSettings.POOL_PAYTO, paytoAddress.getText());
+                ki.setStringSetting(StringSettings.POOL_SERVER, ipField.getText());
+            }
+        });
+        poolDisconnect.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                for (IConnectionManager connMan : ki.getNetMan().getConnections()) {
+                    connMan.disconnect();
+                    ki.getNetMan().getConnections().clear();
+                }
             }
         });
         for (String dev : ki.getMinerMan().getDevNames()) {
@@ -1131,7 +1192,8 @@ public class NewGUI {
 
                             }
                             if (ki.getOptions().pool) {
-                                shares.setText("Shares - " + currentShares);
+                                shares.setText("Accepted Shares - " + currentShares);
+                                localShares.setText("Local Shares - " + localShare);
                                 //ki.debug("Current PPS: " + currentPPS);
                                 nextPayment.setText("Next Payment - " + format2.format(((currentShares * currentPPS)) / 100_000_000));
                                 if (ki.getNetMan().getConnections().size() > 0) {
@@ -1144,6 +1206,11 @@ public class NewGUI {
                                 }
                             }
                             if (ki.getOptions().poolRelay) {
+                                long totalHR = 0;
+                                for (String ID : ki.getPoolData().hrMap.keySet()) {
+                                    totalHR += (ki.getPoolData().hrMap.get(ID) / 1000000);
+                                }
+                                poolHashrate.setText("Current Pool Hashrate (MH/s) - " + totalHR);
                                 poolNOC.setText("Number of Connections - " + ki.getPoolNet().getConnections().size());
                             }
 
@@ -1324,6 +1391,12 @@ public class NewGUI {
         blockPane.setVisible(true);
     }
 
+    private int localShare = 0;
+
+    public void addShare() {
+        localShare++;
+    }
+
     private String getDefaultColor(int i) {
         String color = "#FFFFFF";
         switch (i) {
@@ -1426,13 +1499,13 @@ public class NewGUI {
                     if (pmap.get("fr") == null) {
                         String hash = "";
                         hash = superAutism(passwordField.getText() + hash, 64);
-                        pmap.put(hash, "p");
                         pmap.put("fr", "fr");
+                        pmap.put(hash, "p");
                         Platform.runLater(new Thread() {
                             public void run() {
-                                lockAnimation.play();
                                 submitPassword.setDisable(false);
                                 passwordWaiter.setVisible(false);
+                                lockAnimation.play();
                             }
                         });
                     } else {

@@ -26,6 +26,7 @@ public class NetMan extends Thread implements INetworkManager {
     private volatile List<String> relays = new ArrayList<>();
     private XodusStringMap rList;
     public static boolean DIFF_SET = false;
+    private GlobalPacketQueuer gpq = new GlobalPacketQueuer();
     public NetMan(IKi ki,boolean isRelay)
     {
         this.ki = ki;
@@ -35,6 +36,7 @@ public class NetMan extends Thread implements INetworkManager {
         if (rList.get("relays") != null) {
             relays = JSONManager.parseJSONToList(rList.get("relays"));
         }
+        gpq.start();
         //Log.set(Log.LEVEL_TRACE);
         //TODO USE ARRAY BLOCKING QUEUE
         new Thread(() -> {
@@ -116,6 +118,11 @@ public class NetMan extends Thread implements INetworkManager {
     @Override
     public void close() {
         rList.close();
+    }
+
+    @Override
+    public GlobalPacketQueuer getGPQ() {
+        return gpq;
     }
 
     @Override

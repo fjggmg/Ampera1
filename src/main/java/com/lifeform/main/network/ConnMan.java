@@ -156,6 +156,9 @@ public class ConnMan extends IConnectionManager {
 
     @Override
     public void received(Object o) {
-        pp.process(o);
+        ConnManPacketPair cmpp = new ConnManPacketPair();
+        cmpp.connMan = this;
+        cmpp.packet = o;
+        ki.getNetMan().getGPQ().enqueue(cmpp);
     }
 }

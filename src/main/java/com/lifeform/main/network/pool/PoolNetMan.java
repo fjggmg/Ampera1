@@ -3,6 +3,7 @@ package com.lifeform.main.network.pool;
 import com.lifeform.main.IKi;
 import com.lifeform.main.blockchain.ChainManager;
 import com.lifeform.main.blockchain.GPUMiner;
+import com.lifeform.main.network.GlobalPacketQueuer;
 import com.lifeform.main.network.IConnectionManager;
 import com.lifeform.main.network.INetworkManager;
 import com.lifeform.main.network.logic.Client;
@@ -15,13 +16,17 @@ import java.util.*;
 
 public class PoolNetMan extends Thread implements INetworkManager {
 
+
     private IKi ki;
     private static final int PORT = 29999;
     private Set<IConnectionManager> connections = new HashSet<>();
     private Map<String, IConnectionManager> connMap = new HashMap<>();
-    public static final String POOL_NET_VERSION = "1.0.0";
+    public static final String POOL_NET_VERSION = "1.0.1";
+    GlobalPacketQueuer gpq = new GlobalPacketQueuer();
     public PoolNetMan(IKi ki) {
+
         this.ki = ki;
+        gpq.start();
     }
 
     @Override
@@ -38,7 +43,12 @@ public class PoolNetMan extends Thread implements INetworkManager {
             else
                 toRemove.add(c);
         }
+        for (IConnectionManager connMan : toRemove) {
+            ki.getPoolData().addMap.remove(connMan.getID());
+            ki.getPoolData().hrMap.remove(connMan.getID());
+        }
         connections.removeAll(toRemove);
+
     }
 
     @Override
@@ -175,5 +185,10 @@ public class PoolNetMan extends Thread implements INetworkManager {
     @Override
     public void close() {
 
+    }
+
+    @Override
+    public GlobalPacketQueuer getGPQ() {
+        return gpq;
     }
 }

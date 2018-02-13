@@ -12,7 +12,11 @@ import com.lifeform.main.transactions.*;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.lang.management.ManagementFactory;
+import java.lang.management.ThreadInfo;
 import java.math.BigInteger;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.*;
 
 public class InputHandler extends Thread {
@@ -23,6 +27,7 @@ public class InputHandler extends Thread {
         this.ki = ki;
     }
 
+    DecimalFormat format = new DecimalFormat("###,###,###,###,###,###,###");
     @Override
     public void run() {
         setName("CommandLine Input");
@@ -472,6 +477,26 @@ public class InputHandler extends Thread {
                     for (String name : threads.keySet()) {
                         ki.debug(name + ":" + threads.get(name));
                     }
+                    if (ManagementFactory.getThreadMXBean().isThreadCpuTimeSupported()) {
+                        ki.debug("CPU Times");
+                        for (long id : ManagementFactory.getThreadMXBean().getAllThreadIds()) {
+                            long time = ManagementFactory.getThreadMXBean().getThreadCpuTime(id);
+                            ki.debug(ManagementFactory.getThreadMXBean().getThreadInfo(id).getThreadName() + ":" + format.format(time / 1000) + "s");
+                        }
+                    }
+                    if (ManagementFactory.getThreadMXBean().isThreadContentionMonitoringEnabled()) {
+                        ki.debug("Contention monitoring:");
+                        for (long id : ManagementFactory.getThreadMXBean().getAllThreadIds()) {
+                            ThreadInfo ti = ManagementFactory.getThreadMXBean().getThreadInfo(id);
+                            ki.debug(ti.getThreadName() + ":" + ti.getBlockedTime());
+                            ki.debug("\tLocked by: " + ti.getLockName());
+                        }
+                    }
+                    ki.debug("Deadlocked Threads:");
+                    if (ManagementFactory.getThreadMXBean().findDeadlockedThreads() != null)
+                        for (long id : ManagementFactory.getThreadMXBean().findDeadlockedThreads()) {
+                            ki.debug(ManagementFactory.getThreadMXBean().getThreadInfo(id).getThreadName() + " is deadlocked");
+                        }
 
                 } else {
                     System.out.println("unrecognized input");

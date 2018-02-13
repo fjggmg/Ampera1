@@ -2,6 +2,7 @@ package com.lifeform.main.network.pool;
 
 import com.lifeform.main.IKi;
 import com.lifeform.main.data.EncryptionManager;
+import com.lifeform.main.network.ConnManPacketPair;
 import com.lifeform.main.network.IConnectionManager;
 import com.lifeform.main.network.IPacketProcessor;
 import com.lifeform.main.network.logic.INetworkEndpoint;
@@ -13,7 +14,7 @@ public class PoolConnMan extends IConnectionManager {
     public PoolConnMan(IKi ki, INetworkEndpoint endpoint) {
         this.ki = ki;
         this.endpoint = endpoint;
-        ppp = new PoolPacketProcessor(ki);
+        ppp = new PoolPacketProcessor(ki, this);
     }
 
     private IKi ki;
@@ -43,7 +44,11 @@ public class PoolConnMan extends IConnectionManager {
 
     @Override
     public void received(Object o) {
-        ppp.process(o, this);
+
+        ConnManPacketPair cmpp = new ConnManPacketPair();
+        cmpp.connMan = this;
+        cmpp.packet = o;
+        ki.getPoolNet().getGPQ().enqueue(cmpp);
     }
 
     @Override
@@ -65,7 +70,7 @@ public class PoolConnMan extends IConnectionManager {
 
     @Override
     public IPacketProcessor getPacketProcessor() {
-        return null;
+        return ppp;
     }
 
     @Override

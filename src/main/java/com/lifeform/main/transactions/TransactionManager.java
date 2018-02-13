@@ -36,6 +36,7 @@ public class TransactionManager implements ITransMan {
                 List<ITrans> toRemove = new ArrayList<>();
                 setName("Transaction Cleanup");
                 while (true) {
+                    ki.debug("Running transaction cleanup");
                     for (ITrans t : pending) {
                         if (t.getOutputs().get(0).getTimestamp() < System.currentTimeMillis() - 3_600_000) {
                             toRemove.add(t);

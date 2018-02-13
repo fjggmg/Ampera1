@@ -9,7 +9,7 @@ import com.lifeform.main.transactions.Transaction;
 import java.math.BigInteger;
 import java.util.*;
 
-class PacketGlobal {
+public class PacketGlobal {
 
 
     PacketGlobal(IKi ki, IConnectionManager connMan) {

@@ -40,9 +40,11 @@ public class FXGUI extends Application {
             @Override
             public void run() {
                 System.out.println("Close requested");
+                Ki.getInstance().close();
                 System.exit(0);
             }
         });
+
         decorator.setStyle("-fx-border-width:0");
         Scene scene = new Scene(decorator, 720, 480);
         scene.getStylesheets().add(css);

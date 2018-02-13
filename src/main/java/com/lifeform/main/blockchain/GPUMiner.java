@@ -250,7 +250,7 @@ public class GPUMiner extends Thread implements IMiner {
 
                             int i = 0;
                             for (BlockAndSharePayloads bp : miner.getPayloads()) {
-                                PoolBlockHeader pbh = ki.getPoolData().currentWork;
+
 
 
                                 //ki.debug("Merkle root: " + pbh.merkleRoot);
@@ -263,11 +263,18 @@ public class GPUMiner extends Thread implements IMiner {
                                     continue;
                                 }
                                 for (Payload pay : bp.getSharePayloads()) {
+                                    PoolBlockHeader pbh = new PoolBlockHeader();
+                                    pbh.height = ki.getPoolData().currentWork.height;
+                                    pbh.merkleRoot = ki.getPoolData().currentWork.merkleRoot;
+                                    pbh.solver = ki.getPoolData().currentWork.solver;
+                                    pbh.prevID = ki.getPoolData().currentWork.prevID;
+                                    pbh.coinbase = ki.getPoolData().currentWork.coinbase;
                                     i++;
                                     pbh.payload = pay.getBytes();
                                     pbh.timestamp = b.timestamp;
                                     b.payload = pay.getBytes();
                                     pbh.ID = EncryptionManager.sha512(b.header());
+                                    pbh.currentHR = miner.getHashesPerSecond();
 
                                     try {
                                         ki.debug("Payload: " + new String(pay.getBytes(), "UTF-8"));
@@ -276,6 +283,9 @@ public class GPUMiner extends Thread implements IMiner {
                                     }
                                     ki.getNetMan().broadcast(pbh);
                                 }
+                            }
+                            for (int q = 0; q < i; q++) {
+                                ki.getGUIHook().addShare();
                             }
                             ki.debug("Found: " + i + " shares and sent to network");
                         }
