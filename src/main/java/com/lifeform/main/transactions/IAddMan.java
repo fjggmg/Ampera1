@@ -22,4 +22,6 @@ public interface IAddMan {
     Address createNew(String entropy);
     List<Address> getAll();
 
+    void deleteAddress(Address address);
+
 }

@@ -194,7 +194,10 @@
                                 <Pane fx:id="poolRelay" prefHeight="200.0" prefWidth="200.0" visible="false">
                                     <children>
                                         <Label fx:id="poolNOC" layoutX="14.0" layoutY="14.0" text="Number of Connections -" />
-                                        <JFXSlider fx:id="poolDynamicFeeSlider" blockIncrement="0.25" layoutX="11.0" layoutY="54.0" majorTickUnit="1.0" max="15.0" prefHeight="37.0" prefWidth="601.0" showTickLabels="true" showTickMarks="true" value="0.25" />
+                                        <JFXSlider fx:id="poolDynamicFeeSlider" blockIncrement="0.25" layoutX="11.0"
+                                                   layoutY="54.0" majorTickUnit="0.25" max="10.0" minorTickCount="0"
+                                                   prefHeight="37.0" prefWidth="601.0" showTickLabels="true"
+                                                   showTickMarks="true" snapToTicks="true" value="0.25"/>
                                         <Label layoutX="306.0" layoutY="89.0" text="Fee" />
                                         <JFXToggleButton fx:id="poolDynamicFee" layoutX="177.0" layoutY="97.0" selected="true" text="Dynamic Fee" />
                                         <JFXTextField fx:id="poolStaticFee" disable="true" layoutX="14.0" layoutY="113.0" promptText="Static PPS" />

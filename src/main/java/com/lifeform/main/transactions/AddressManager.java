@@ -207,4 +207,12 @@ public class AddressManager implements IAddMan {
         return all;
 
     }
+
+    @Override
+    public void deleteAddress(Address address) {
+        inactive.remove(address);
+        addresses.remove(address);
+        save();
+
+    }
 }

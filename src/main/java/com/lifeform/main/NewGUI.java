@@ -296,11 +296,11 @@ public class NewGUI {
 
                 if (!doneMap.get(key)) {
                     allDone = false;
-                    break;
+                    //break;
                 }
             }
         }
-        for (Integer i : tmap.keySet()) {
+        for (int i = 0; i < tmap.keySet().size(); i++) {
             superHash = superHash + hmap.get(i);
         }
         return superHash;
@@ -642,6 +642,11 @@ public class NewGUI {
         deleteAddress.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
+                if (ki.getAddMan().getMainAdd().encodeForChain().equals(addressList.getSelectionModel().getSelectedItem())) {
+                    notification("Cannot delete main address");
+                    return;
+                }
+                ki.getAddMan().deleteAddress(Address.decodeFromChain(addressList.getSelectionModel().getSelectedItem()));
                 addressList.getItems().remove(addressList.getSelectionModel().getSelectedIndex());
             }
         });
@@ -771,6 +776,7 @@ public class NewGUI {
             @Override
             public void handle(MouseEvent event) {
                 ki.getAddMan().setMainAdd(Address.decodeFromChain(addressList.getSelectionModel().getSelectedItem()));
+                addressLabel.setText("Address - " + ki.getAddMan().getMainAdd().encodeForChain());
             }
         });
         blockExplorerPane.visibleProperty().addListener(new ChangeListener<Boolean>() {
