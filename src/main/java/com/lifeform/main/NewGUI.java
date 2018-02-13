@@ -372,7 +372,9 @@ public class NewGUI {
             transactions.add(st);
             if (transactionTable != null && transactionTable.getRoot() != null) {
                 transactionTable.getRoot().getChildren().add(new TreeItem<>(st));
-                transactionTable.sort();
+                String sText = searchBox.getText();
+                searchBox.setText("refresh");
+                searchBox.setText(sText);
             }
             //final TreeItem<StoredTrans> root = new RecursiveTreeItem<StoredTrans>(transactions, RecursiveTreeObject::getChildren);
             //if(transactionTable != null)
@@ -915,9 +917,9 @@ public class NewGUI {
         });
 
         ChangeListener<Color> cpListener = (observable, oldValue, newValue) -> {
-            System.out.println("Color changed");
+            //System.out.println("Color changed");
             if (colorCombos.getSelectionModel().getSelectedItem().getText().contains("Primary Color")) {
-                System.out.println("Changing primary");
+                //System.out.println("Changing primary");
                 menuHamburger.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
 
                 vb.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));

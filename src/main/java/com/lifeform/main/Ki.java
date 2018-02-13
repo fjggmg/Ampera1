@@ -9,6 +9,7 @@ import com.lifeform.main.network.pool.PoolData;
 import com.lifeform.main.network.pool.PoolNetMan;
 import com.lifeform.main.transactions.*;
 import gpuminer.JOCL.context.JOCLContextAndCommandQueue;
+import gpuminer.miner.context.ContextMaster;
 import mining_pool.Pool;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.Logger;
@@ -55,7 +56,7 @@ public class Ki extends Thread implements IKi {
     private IKi ki = this;
     private boolean run = true;
     //TODO: need to start saving version number to file for future conversion of files
-    public static final String VERSION = "0.17.2-BETA";
+    public static final String VERSION = "0.17.3-BETA";
     private boolean relay = false;
     private NewGUI guiHook;
     public static boolean debug = true;
@@ -86,6 +87,7 @@ public class Ki extends Thread implements IKi {
         }
         JOCLContextAndCommandQueue.setWorkaround(true);
         JOCLContextAndCommandQueue.noIntel = true;
+        ContextMaster.disableCUDA();
         ih = new InputHandler(this);
         ih.start();
         this.o = o;
@@ -270,7 +272,7 @@ public class Ki extends Thread implements IKi {
     }
 
     /**
-     * Singleton for use with un-initializable objects, like the FXMLController, instance should be taken and stored to
+     * Singleton for use with un-initializable objects, like the NewGUI, instance should be taken and stored to
      * help prevent thread issues.
      * @return instance of Ki
      */

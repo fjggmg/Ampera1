@@ -35,6 +35,7 @@ public class MinerManager implements IMinerMan{
         try {
 
             ContextMaster platforms = new ContextMaster();
+
             cm = platforms;
             int i = 0;
             for (DeviceContext jcacq : platforms.getContexts()) {

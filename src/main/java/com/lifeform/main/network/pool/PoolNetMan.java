@@ -36,18 +36,25 @@ public class PoolNetMan extends Thread implements INetworkManager {
 
     @Override
     public void broadcast(Object o) {
-        List<IConnectionManager> toRemove = new ArrayList<>();
+
+        if (ki.getOptions().pool) {
+            for (IConnectionManager cm : connections) {
+                if (!cm.isConnected()) {
+                    attemptConnect(ki.getPoolData().poolConn);
+                    try {
+                        sleep(500);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
         for (IConnectionManager c : connections) {
-            if (c.isConnected())
-                c.sendPacket(o);
-            else
-                toRemove.add(c);
+
+            c.sendPacket(o);
+
         }
-        for (IConnectionManager connMan : toRemove) {
-            ki.getPoolData().addMap.remove(connMan.getID());
-            ki.getPoolData().hrMap.remove(connMan.getID());
-        }
-        connections.removeAll(toRemove);
+
 
     }
 

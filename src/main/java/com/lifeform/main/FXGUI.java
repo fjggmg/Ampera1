@@ -44,6 +44,7 @@ public class FXGUI extends Application {
                 System.exit(0);
             }
         });
+        decorator.setCustomMaximize(true);
 
         decorator.setStyle("-fx-border-width:0");
         Scene scene = new Scene(decorator, 720, 480);
@@ -55,8 +56,6 @@ public class FXGUI extends Application {
         pStage.getIcons().add(new Image(getClass().getResourceAsStream("/origin.png")));
         pStage.setScene(scene);
         pStage.show();
-        FXMLController.primaryStage = pStage;
-        FXMLController.app = this;
 
 
     }
