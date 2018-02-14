@@ -18,9 +18,14 @@ public class GlobalPacketQueuer extends Thread {
         synchronized (cmppList) {
             setName("GlobalPacketQueuer");
             while (true) {
+
                 while (!cmppList.isEmpty()) {
                     if (cmppList.get(0).connMan != null && cmppList.get(0).packet != null) {
-                        cmppList.get(0).connMan.getPacketProcessor().process(cmppList.get(0).packet);
+                        try {
+                            cmppList.get(0).connMan.getPacketProcessor().process(cmppList.get(0).packet);
+                        } catch (Exception e) {
+                            //get ki in here for debug
+                        }
                     }
                     cmppList.remove(0);
                 }

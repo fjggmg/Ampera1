@@ -1,6 +1,7 @@
 package com.lifeform.main.network.pool;
 
 import com.lifeform.main.IKi;
+import com.lifeform.main.Settings;
 import com.lifeform.main.network.IConnectionManager;
 import com.lifeform.main.transactions.Address;
 
@@ -22,6 +23,11 @@ public class PoolHandshake implements Serializable, PoolPacket {
         }
         if (ki.getOptions().pool) {
             ki.getNetMan().connectionInit(ID, connMan);
+            if (ki.getSetting(Settings.AUTO_MINE)) {
+                if (ki.getPoolData().currentWork != null) {
+                    ki.getMinerMan().restartMiners();
+                }
+            }
             return;
         }
         if (Address.decodeFromChain(address).isValid()) {

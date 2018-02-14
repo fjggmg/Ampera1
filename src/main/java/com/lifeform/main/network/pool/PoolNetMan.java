@@ -9,6 +9,7 @@ import com.lifeform.main.network.INetworkManager;
 import com.lifeform.main.network.logic.Client;
 import com.lifeform.main.network.logic.Server;
 import com.lifeform.main.transactions.Address;
+import com.sun.org.apache.bcel.internal.generic.ICONST;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -27,6 +28,23 @@ public class PoolNetMan extends Thread implements INetworkManager {
 
         this.ki = ki;
         gpq.start();
+        if (ki.getOptions().pool) {
+            new Thread() {
+                public void run() {
+                    while (true) {
+                        setName("ReconnectThread");
+                        if (connections.size() < 1 && ki.getPoolData().poolConn != null && !ki.getPoolData().poolConn.isEmpty()) {
+                            attemptConnect(ki.getPoolData().poolConn);
+                        }
+                        try {
+                            sleep(10000);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            }.start();
+        }
     }
 
     @Override
@@ -49,11 +67,23 @@ public class PoolNetMan extends Thread implements INetworkManager {
                 }
             }
         }
+        List<IConnectionManager> toRemove = new ArrayList<>();
         for (IConnectionManager c : connections) {
-
+            if (c.isConnected())
             c.sendPacket(o);
+            else
+                toRemove.add(c);
 
         }
+        for (IConnectionManager c : toRemove) {
+            if (ki.getOptions().poolRelay) {
+                ki.getPoolData().hrMap.remove(c.getID());
+                ki.getPoolData().addMap.remove(c.getID());
+
+            }
+            c.disconnect();
+        }
+        connections.removeAll(toRemove);
 
 
     }
@@ -191,7 +221,10 @@ public class PoolNetMan extends Thread implements INetworkManager {
 
     @Override
     public void close() {
-
+        for (IConnectionManager conn : connections) {
+            if (conn != null && conn.isConnected())
+                conn.disconnect();
+        }
     }
 
     @Override

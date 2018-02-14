@@ -117,7 +117,12 @@ public class NetMan extends Thread implements INetworkManager {
 
     @Override
     public void close() {
+
         rList.close();
+        for (IConnectionManager conn : connections) {
+            if (conn != null && conn.isConnected())
+                conn.disconnect();
+        }
     }
 
     @Override

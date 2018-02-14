@@ -192,6 +192,8 @@
                                                    prefHeight="25.0" prefWidth="91.0" text="Disconnect"/>
                                         <Label fx:id="localShares" layoutX="14.0" layoutY="157.0"
                                                text="Local Shares -"/>
+                                        <JFXToggleButton fx:id="autoMine" layoutX="415.0" layoutY="44.0"
+                                                         text="Auto-Mine on reconnect"/>
                                     </children>
                                 </Pane>
                                 <Pane fx:id="poolRelay" prefHeight="200.0" prefWidth="200.0" visible="false">
@@ -207,6 +209,10 @@
                               <JFXSlider fx:id="payoutSlider" layoutX="11.0" layoutY="155.0" majorTickUnit="10.0" max="120.0" minorTickCount="5" prefHeight="14.0" prefWidth="601.0" showTickLabels="true" showTickMarks="true" snapToTicks="true" value="60.0" />
                               <Label layoutX="246.0" layoutY="192.0" text="Payout Interval (minutes)" />
                               <Label fx:id="poolHashrate" layoutX="315.0" layoutY="14.0" text="Current Pool Hashrate (MH/s) - " />
+                                        <Label fx:id="currentPoolShares" layoutX="14.0" layoutY="222.0"
+                                               text="Current Pool Shares -"/>
+                                        <Label fx:id="estimatedNextPayout" layoutX="14.0" layoutY="252.0"
+                                               text="Estimated Next Payout -"/>
                                     </children>
                                 </Pane>
                             </children>

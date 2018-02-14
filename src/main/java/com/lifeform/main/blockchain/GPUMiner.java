@@ -13,6 +13,7 @@ import gpuminer.JOCL.context.JOCLContextAndCommandQueue;
 import gpuminer.JOCL.context.JOCLDevices;
 import gpuminer.miner.SHA3.SHA3Miner;
 import gpuminer.miner.autotune.Autotune;
+import gpuminer.miner.autotune.TimedAutotune;
 import gpuminer.miner.context.ContextMaster;
 import gpuminer.miner.context.DeviceContext;
 import gpuminer.miner.databuckets.BlockAndSharePayloads;
@@ -59,24 +60,10 @@ public class GPUMiner extends Thread implements IMiner {
             platforms.shutdown();
         }
         platforms = cm;
-        List<DeviceContext> jcacqs = platforms.getContexts();
-        final Thread t = new Thread() {
+        ArrayList<DeviceContext> jcacqs = platforms.getContexts();
 
-            public void run() {
-                ki.debug("Starting autotune");
-                Autotune.setup(jcacqs, false);
-                autotuneDone = true;
-
-            }
-        };
-        t.start();
-        while (!autotuneDone) {
-            try {
-                sleep(1000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
+        ki.debug("Starting autotune");
+        TimedAutotune.setup(jcacqs, false);
 
         byte[] difficulty = new byte[64];
         int p = 63;
@@ -94,8 +81,8 @@ public class GPUMiner extends Thread implements IMiner {
         }
         int i = 0;
         for (DeviceContext jcaq : jcacqs) {
-            int threadCount = Autotune.getAtSettingsMap().get(jcaq.getDInfo().getDeviceName()).threadFactor;
-            SHA3Miner miner = new SHA3Miner(jcaq, difficulty, (ki.getOptions().pool) ? share : null, threadCount, Autotune.getAtSettingsMap().get(jcaq.getDInfo().getDeviceName()).kernelType);
+            int threadCount = TimedAutotune.getAutotuneSettingsMap().get(jcaq.getDInfo().getDeviceName()).threadFactor;
+            SHA3Miner miner = new SHA3Miner(jcaq, difficulty, (ki.getOptions().pool) ? share : null, threadCount, TimedAutotune.getAutotuneSettingsMap().get(jcaq.getDInfo().getDeviceName()).kernelType);
             gpuMiners.add(miner);
             i++;
         }
@@ -148,9 +135,10 @@ public class GPUMiner extends Thread implements IMiner {
                 message = b.gpuHeader();
 
                 //Six preceding zeroes on the difficulty is hard enough that the miner is likely to be able to time its hashrate.
-                threadCount = Autotune.getAtSettingsMap().get(jcacq.getDInfo().getDeviceName()).threadFactor;
-                threadCount = (int) (threadCount * (miningIntensity / 100));
-                miner.setThreads(threadCount);
+                threadCount = TimedAutotune.getAutotuneSettingsMap().get(jcacq.getDInfo().getDeviceName()).threadFactor;
+
+                if (miningIntensity == 0) miningIntensity = 1;
+                miner.setIntensity(miningIntensity / 100);
                 byte[] difficulty = new byte[64];
                 int p = 63;
                 if (!ki.getOptions().pool)

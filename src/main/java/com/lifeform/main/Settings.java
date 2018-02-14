@@ -4,7 +4,8 @@ public enum Settings {
     HIGH_SECURITY("highSecurity"),
     DEBUG_MODE("debugMode"),
     REQUIRE_PASSWORD("requirePassword"),
-    DYNAMIC_FEE("dynamicFee");
+    DYNAMIC_FEE("dynamicFee"),
+    AUTO_MINE("autoMine");
     private final String key;
 
     Settings(String key) {

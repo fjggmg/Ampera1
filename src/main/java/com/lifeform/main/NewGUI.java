@@ -101,6 +101,9 @@ public class NewGUI {
     public JFXSlider payoutSlider;
     public Label poolHashrate;
     public Label localShares;
+    public JFXToggleButton autoMine;
+    public Label currentPoolShares;
+    public Label estimatedNextPayout;
     private IKi ki;
     private ObservableMap<Token, BigInteger> tokenValueMap = FXCollections.observableMap(new HashMap<Token, BigInteger>());
     private volatile boolean isFinal = false;
@@ -237,6 +240,7 @@ public class NewGUI {
     private Label chainHeight2 = new Label(" 26554");
     private Label latency = new Label(" Latency - 125ms");
     private XodusStringMap pmap = new XodusStringMap("security");
+    private boolean frg = true;
 
     private String metaHash(String data) throws UnsupportedEncodingException {
         StringBuilder totalhash = new StringBuilder();
@@ -457,6 +461,7 @@ public class NewGUI {
             public void handle(MouseEvent event) {
                 if (ki.getOptions().mining) {
                     if (ki.getNetMan().getConnections().size() == 0) return;
+                    if (ki.getOptions().pool && ki.getPoolData().currentWork == null) return;
                     if (!mining) {
                         ki.getMinerMan().startMiners();
                         startMining.setText("Stop Mining");
@@ -697,6 +702,13 @@ public class NewGUI {
         requirePassword.setTextFill(Color.WHITE);
         highSecurity.setTextFill(Color.WHITE);
         poolDynamicFee.setTextFill(Color.WHITE);
+        autoMine.setTextFill(Color.WHITE);
+        autoMine.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                ki.setSetting(Settings.AUTO_MINE, autoMine.isSelected());
+            }
+        });
         poolDynamicFee.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
@@ -755,9 +767,10 @@ public class NewGUI {
         payoutSlider.valueProperty().addListener(new ChangeListener<Number>() {
             @Override
             public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
-                ki.getPoolManager().updateCurrentPayInterval(newValue.longValue() * 3_600_000L);
+                ki.getPoolManager().updateCurrentPayInterval(newValue.longValue() * 60_000L);
             }
         });
+
 
         entropyLabel.setWrapText(true);
         entropyLabel.setMaxWidth(256);
@@ -996,6 +1009,7 @@ public class NewGUI {
                 for (IConnectionManager connMan : ki.getNetMan().getConnections()) {
                     connMan.disconnect();
                     ki.getNetMan().getConnections().clear();
+                    ki.getPoolData().poolConn = "";
                 }
             }
         });
@@ -1112,7 +1126,7 @@ public class NewGUI {
                 }
             }
         });
-
+        addressList.getSelectionModel().select(0);
         List<Long> average = new ArrayList<>();
 
         new Thread() {
@@ -1120,7 +1134,23 @@ public class NewGUI {
                 int i = 0;
                 while (true) {
                     i++;
-                    if ((i % 10 == 0) && mining)
+                    if (ki.getMinerMan().isMining()) {
+                        mining = true;
+                        Platform.runLater(new Thread() {
+                            public void run() {
+                                startMining.setText("Stop Mining");
+                            }
+                        });
+                    }
+                    if ((i % 10 == 0) && mining) {
+                        if (!ki.getMinerMan().isMining()) {
+                            mining = false;
+                            Platform.runLater(new Thread() {
+                                public void run() {
+                                    startMining.setText("Start Mining");
+                                }
+                            });
+                        }
                         Platform.runLater(new Thread() {
                             public void run() {
 
@@ -1160,6 +1190,7 @@ public class NewGUI {
                                 }
                             }
                         });
+                    }
 
                     Platform.runLater(new Thread() {
                         public void run() {
@@ -1199,6 +1230,13 @@ public class NewGUI {
                                 latency.setText(" Latency - " + c.currentLatency());
 
                             }
+                            startMining.setDisable(!GPUMiner.initDone);
+                            if (!GPUMiner.initDone) {
+                                startMining.setText("Autotuning...");
+                            } else if (frg) {
+                                frg = false;
+                                startMining.setText("Start Mining");
+                            }
                             if (ki.getOptions().pool) {
                                 shares.setText("Accepted Shares - " + currentShares);
                                 localShares.setText("Local Shares - " + localShare);
@@ -1220,6 +1258,8 @@ public class NewGUI {
                                 }
                                 poolHashrate.setText("Current Pool Hashrate (MH/s) - " + totalHR);
                                 poolNOC.setText("Number of Connections - " + ki.getPoolNet().getConnections().size());
+                                currentPoolShares.setText("Current Pool Shares - " + ki.getPoolManager().getTotalSharesOfCurrentPayPeriod());
+                                estimatedNextPayout.setText("Estimated Next Payout - " + ki.getPoolManager().getTotalSharesOfCurrentPayPeriod() * (ki.getPoolManager().getCurrentPayPerShare() / 100_000_000));
                             }
 
 

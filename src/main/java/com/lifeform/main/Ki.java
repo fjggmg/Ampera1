@@ -56,7 +56,7 @@ public class Ki extends Thread implements IKi {
     private IKi ki = this;
     private boolean run = true;
     //TODO: need to start saving version number to file for future conversion of files
-    public static final String VERSION = "0.17.3-BETA";
+    public static final String VERSION = "0.17.4-BETA";
     private boolean relay = false;
     private NewGUI guiHook;
     public static boolean debug = true;
@@ -71,16 +71,48 @@ public class Ki extends Thread implements IKi {
     public Ki(Options o) {
         if (settings.get(VERSION) == null || !settings.get(VERSION)) {
             settings.put(VERSION, true);
-            settings.put(Settings.DEBUG_MODE.getKey(), false);
-            settings.put(Settings.HIGH_SECURITY.getKey(), false);
-            settings.put(Settings.REQUIRE_PASSWORD.getKey(), true);
-            settings.put(Settings.DYNAMIC_FEE.getKey(), true);
+            try {
+                getSetting(Settings.DEBUG_MODE);
+            } catch (Exception e) {
+
+                settings.put(Settings.DEBUG_MODE.getKey(), false);
+            }
+            try {
+                getSetting(Settings.HIGH_SECURITY);
+            } catch (Exception e) {
+
+                settings.put(Settings.HIGH_SECURITY.getKey(), false);
+            }
+            try {
+                getSetting(Settings.REQUIRE_PASSWORD);
+            } catch (Exception e) {
+
+                settings.put(Settings.REQUIRE_PASSWORD.getKey(), true);
+            }
+            try {
+                getSetting(Settings.DYNAMIC_FEE);
+            } catch (Exception e) {
+
+                settings.put(Settings.DYNAMIC_FEE.getKey(), true);
+            }
+            try {
+                getSetting(Settings.AUTO_MINE);
+            } catch (Exception e) {
+
+                settings.put(Settings.AUTO_MINE.getKey(), false);
+            }
+            if (getStringSetting(StringSettings.POOL_FEE) == null)
             stringSettings.put(StringSettings.POOL_FEE.getKey(), "1");
-            stringSettings.put(StringSettings.POOL_STATIC_PPS.getKey(), "100");
-            stringSettings.put(StringSettings.PRIMARY_COLOR.getKey(), "#18BC9C");
-            stringSettings.put(StringSettings.SECONDARY_COLOR.getKey(), "#252830");
-            stringSettings.put(StringSettings.POOL_PAYTO.getKey(), "");
-            stringSettings.put(StringSettings.POOL_SERVER.getKey(), "ampextech.ddns.net");
+            if (getStringSetting(StringSettings.POOL_STATIC_PPS) == null)
+                stringSettings.put(StringSettings.POOL_STATIC_PPS.getKey(), "100");
+            if (getStringSetting(StringSettings.PRIMARY_COLOR) == null)
+                stringSettings.put(StringSettings.PRIMARY_COLOR.getKey(), "#18BC9C");
+            if (getStringSetting(StringSettings.SECONDARY_COLOR) == null)
+                stringSettings.put(StringSettings.SECONDARY_COLOR.getKey(), "#252830");
+            if (getStringSetting(StringSettings.POOL_PAYTO) == null)
+                stringSettings.put(StringSettings.POOL_PAYTO.getKey(), "");
+            if (getStringSetting(StringSettings.POOL_SERVER) == null)
+                stringSettings.put(StringSettings.POOL_SERVER.getKey(), "ampextech.ddns.net");
         }
         if (o.relay) {
             ManagementFactory.getThreadMXBean().setThreadContentionMonitoringEnabled(true);
@@ -230,7 +262,7 @@ public class Ki extends Thread implements IKi {
         while (true) {
             if (o.relay || o.poolRelay) return;
             try {
-                Thread.sleep(500);
+                Thread.sleep(250);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -242,7 +274,7 @@ public class Ki extends Thread implements IKi {
                 break;
             }
             try {
-                Thread.sleep(4500);
+                Thread.sleep(250);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -267,6 +299,7 @@ public class Ki extends Thread implements IKi {
             transMan.close();
         addMan.save();
         netMan.close();
+        poolNet.close();
         settings.close();
         System.exit(0);
     }
