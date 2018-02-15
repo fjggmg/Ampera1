@@ -328,9 +328,14 @@ public class ChainManager implements IChainMan {
         for (int i = 0; i < mostSignificant0Digits; i++) {
             precedingZeroes = (precedingZeroes | byteHash[i]) & 0x00ff;
         }
-
-        if (!(precedingZeroes == 0 && byteHash[mostSignificant0Digits] <= mostSignificantByte)) {
-            return BlockState.NO_SOLVE;
+        if (block.height.compareTo(BigInteger.valueOf(37000L)) < 0) {
+            if (!(precedingZeroes == 0 && byteHash[mostSignificant0Digits] <= mostSignificantByte)) {
+                return BlockState.NO_SOLVE;
+            }
+        } else {
+            if (!(precedingZeroes == 0 && (byteHash[mostSignificant0Digits] & 0x00ff) <= mostSignificantByte)) {
+                return BlockState.NO_SOLVE;
+            }
         }
         if (bDebug)
             ki.debug("Solves for difficulty");

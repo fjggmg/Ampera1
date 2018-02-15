@@ -1259,7 +1259,8 @@ public class NewGUI {
                                 poolHashrate.setText("Current Pool Hashrate (MH/s) - " + totalHR);
                                 poolNOC.setText("Number of Connections - " + ki.getPoolNet().getConnections().size());
                                 currentPoolShares.setText("Current Pool Shares - " + ki.getPoolManager().getTotalSharesOfCurrentPayPeriod());
-                                estimatedNextPayout.setText("Estimated Next Payout - " + ki.getPoolManager().getTotalSharesOfCurrentPayPeriod() * (ki.getPoolManager().getCurrentPayPerShare() / 100_000_000));
+                                //ki.debug("Current PPS: " + ki.getPoolManager().getCurrentPayPerShare());
+                                estimatedNextPayout.setText("Estimated Next Payout - " + format2.format((double) (ki.getPoolManager().getTotalSharesOfCurrentPayPeriod() * (double) ((double) ki.getPoolManager().getCurrentPayPerShare() / 100_000_000D))));
                             }
 
 

@@ -13,6 +13,8 @@ import com.lifeform.main.transactions.Transaction;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.List;
 
 public class PoolBlockHeader implements Serializable, PoolPacket {
     public String solver;
@@ -24,9 +26,9 @@ public class PoolBlockHeader implements Serializable, PoolPacket {
     public byte[] payload;
     public String coinbase;
     public long currentHR;
-
     @Override
     public void process(IKi ki, IConnectionManager connMan) {
+
         ki.debug("Received pool block header");
         Block b = new Block();
         if (!ki.getOptions().poolRelay) {
