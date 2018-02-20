@@ -1,6 +1,8 @@
 package com.lifeform.main.network.pool;
 
 import com.lifeform.main.IKi;
+import com.lifeform.main.Settings;
+import com.lifeform.main.StringSettings;
 import com.lifeform.main.blockchain.Block;
 import com.lifeform.main.network.BlockEnd;
 import com.lifeform.main.network.BlockHeader;
@@ -26,6 +28,7 @@ public class PoolBlockHeader implements Serializable, PoolPacket {
     public byte[] payload;
     public String coinbase;
     public long currentHR;
+    public boolean pplns = false;
     @Override
     public void process(IKi ki, IConnectionManager connMan) {
 
@@ -79,9 +82,18 @@ public class PoolBlockHeader implements Serializable, PoolPacket {
                     BlockEnd be = new BlockEnd();
                     be.ID = b.ID;
                     ki.getNetMan().broadcast(be);
+                    if (pplns && ki.getSetting(Settings.PPLNS_SERVER)) {
+                        List<Block> bs = new ArrayList<>();
+                        bs.add(b);
+                        ki.getPoolManager().endPPLNSRound(bs, Double.parseDouble(ki.getStringSetting(StringSettings.POOL_FEE)) / 100, ki);
+                    }
                 }
-
-                ki.getPoolManager().addShare(b);
+                if (pplns) {
+                    if (ki.getSetting(Settings.PPLNS_SERVER))
+                        ki.getPoolManager().addPPLNSShare(b);
+                } else {
+                    ki.getPoolManager().addShare(b);
+                }
                 ki.debug("Shares for address:  " + ki.getPoolManager().getTotalSharesOfMiner(Address.decodeFromChain(ki.getPoolData().addMap.get(connMan.getID()))));
             }
         }

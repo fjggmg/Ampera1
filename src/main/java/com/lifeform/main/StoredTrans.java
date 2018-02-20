@@ -10,19 +10,19 @@ import java.util.List;
 public class StoredTrans extends RecursiveTreeObject<StoredTrans> {
 
     StringProperty address;
-    StringProperty amount;
+    DoubleProperty amount;
     StringProperty sent;
     StringProperty message;
     StringProperty otherAddress;
     StringProperty timestamp;
     StringProperty height;
     ListProperty<String> outputs;
-    StringProperty fee;
+    DoubleProperty fee;
     ListProperty<String> inputs;
 
-    public StoredTrans(String address, String amount, String sent, String message, String otherAdd, String timestamp, String height, ObservableList<String> outputs, ObservableList<String> inputs, String fee) {
+    public StoredTrans(String address, Double amount, String sent, String message, String otherAdd, String timestamp, String height, ObservableList<String> outputs, ObservableList<String> inputs, Double fee) {
         this.address = new SimpleStringProperty(address);
-        this.amount = new SimpleStringProperty(amount);
+        this.amount = new SimpleDoubleProperty(amount);
         this.sent = new SimpleStringProperty(sent);
         this.message = new SimpleStringProperty(message);
         this.otherAddress = new SimpleStringProperty(otherAdd);
@@ -30,6 +30,8 @@ public class StoredTrans extends RecursiveTreeObject<StoredTrans> {
         this.height = new SimpleStringProperty(height);
         this.outputs = new SimpleListProperty<>(outputs);
         this.inputs = new SimpleListProperty<>(inputs);
-        this.fee = new SimpleStringProperty(fee);
+        this.fee = new SimpleDoubleProperty(fee);
+
+
     }
 }

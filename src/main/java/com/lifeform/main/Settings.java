@@ -5,7 +5,9 @@ public enum Settings {
     DEBUG_MODE("debugMode"),
     REQUIRE_PASSWORD("requirePassword"),
     DYNAMIC_FEE("dynamicFee"),
-    AUTO_MINE("autoMine");
+    AUTO_MINE("autoMine"),
+    PPLNS_SERVER("pplnsServer"),
+    PPLNS_CLIENT("pplnsClient");
     private final String key;
 
     Settings(String key) {

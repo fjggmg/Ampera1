@@ -11,6 +11,7 @@ import com.lifeform.main.blockchain.ChainManager;
 import com.lifeform.main.blockchain.GPUMiner;
 import com.lifeform.main.data.EncryptionManager;
 import com.lifeform.main.data.JSONManager;
+import com.lifeform.main.data.Utils;
 import com.lifeform.main.data.XodusStringMap;
 import com.lifeform.main.network.IConnectionManager;
 import com.lifeform.main.network.TransactionPacket;
@@ -42,6 +43,7 @@ import javafx.scene.text.Font;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
+import javafx.util.Callback;
 import javafx.util.Duration;
 import jetbrains.exodus.env.Store;
 
@@ -104,6 +106,9 @@ public class NewGUI {
     public JFXToggleButton autoMine;
     public Label currentPoolShares;
     public Label estimatedNextPayout;
+    public JFXToggleButton pplnsClient;
+    public JFXToggleButton pplnsServer;
+    public HBox devicesBox;
     private IKi ki;
     private ObservableMap<Token, BigInteger> tokenValueMap = FXCollections.observableMap(new HashMap<Token, BigInteger>());
     private volatile boolean isFinal = false;
@@ -372,7 +377,7 @@ public class NewGUI {
         ObservableList<String> obsInputs = FXCollections.observableArrayList(inputs);
         for (String add : involved) {
 
-            StoredTrans st = new StoredTrans(add, format2.format(amount), direction, trans.getMessage(), trans.getInputs().get(0).getAddress().encodeForChain(), timestamp, height.toString(), obsOutputs, obsInputs, format2.format(trans.getFee().longValueExact() / 100_000_000D));
+            StoredTrans st = new StoredTrans(add, amount, direction, trans.getMessage(), trans.getInputs().get(0).getAddress().encodeForChain(), timestamp, height.toString(), obsOutputs, obsInputs, trans.getFee().longValueExact() / 100_000_000D);
             transactions.add(st);
             if (transactionTable != null && transactionTable.getRoot() != null) {
                 transactionTable.getRoot().getChildren().add(new TreeItem<>(st));
@@ -505,10 +510,13 @@ public class NewGUI {
             else return oaColumn.getComputedValue(param);
         });
 
-        JFXTreeTableColumn<StoredTrans, String> amtColumn = new JFXTreeTableColumn<>("Amount");
+        JFXTreeTableColumn<StoredTrans, Double> amtColumn = new JFXTreeTableColumn<>("Amount");
         amtColumn.setPrefWidth(150);
-        amtColumn.setCellValueFactory((TreeTableColumn.CellDataFeatures<StoredTrans, String> param) -> {
-            if (amtColumn.validateValue(param)) return param.getValue().getValue().amount;
+
+        amtColumn.setCellValueFactory((TreeTableColumn.CellDataFeatures<StoredTrans, Double> param) -> {
+            if (amtColumn.validateValue(param)) {
+                return param.getValue().getValue().amount.asObject();
+            }
             else return amtColumn.getComputedValue(param);
         });
         JFXTreeTableColumn<StoredTrans, String> sentColumn = new JFXTreeTableColumn<>("Direction");
@@ -557,10 +565,10 @@ public class NewGUI {
             else return inColumn.getComputedValue(param);
         });
 
-        JFXTreeTableColumn<StoredTrans, String> feeColumn = new JFXTreeTableColumn<>("Fee");
+        JFXTreeTableColumn<StoredTrans, Double> feeColumn = new JFXTreeTableColumn<>("Fee");
         feeColumn.setPrefWidth(150);
-        feeColumn.setCellValueFactory((TreeTableColumn.CellDataFeatures<StoredTrans, String> param) -> {
-            if (feeColumn.validateValue(param)) return param.getValue().getValue().fee;
+        feeColumn.setCellValueFactory((TreeTableColumn.CellDataFeatures<StoredTrans, Double> param) -> {
+            if (feeColumn.validateValue(param)) return param.getValue().getValue().fee.asObject();
             else return feeColumn.getComputedValue(param);
         });
         final TreeItem<StoredTrans> root = new RecursiveTreeItem<StoredTrans>(transactions, RecursiveTreeObject::getChildren);
@@ -576,7 +584,7 @@ public class NewGUI {
             transactionTable.setPredicate(transFilter -> transFilter.getValue().address.get().contains(newVal)
                     || transFilter.getValue().timestamp.get().contains(newVal)
                     || transFilter.getValue().sent.get().contains(newVal)
-                    || transFilter.getValue().amount.get().contains(newVal)
+                    || transFilter.getValue().amount.toString().contains(newVal)
                     || transFilter.getValue().otherAddress.get().contains(newVal)
                     || transFilter.getValue().message.get().contains(newVal));
 
@@ -707,6 +715,20 @@ public class NewGUI {
             @Override
             public void handle(MouseEvent event) {
                 ki.setSetting(Settings.AUTO_MINE, autoMine.isSelected());
+            }
+        });
+        pplnsClient.setSelected(ki.getSetting(Settings.PPLNS_CLIENT));
+        pplnsServer.setSelected(ki.getSetting(Settings.PPLNS_SERVER));
+        pplnsClient.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                ki.setSetting(Settings.PPLNS_CLIENT, pplnsClient.isSelected());
+            }
+        });
+        pplnsServer.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                ki.setSetting(Settings.PPLNS_SERVER, pplnsServer.isSelected());
             }
         });
         poolDynamicFee.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
@@ -1037,7 +1059,13 @@ public class NewGUI {
 
                     BigInteger amount = amt.multiply(new BigDecimal("100000000.0")).toBigInteger();
                     int index = 0;
-                    Address receiver = Address.decodeFromChain(addressText.getText());
+                    Address receiver;
+                    try {
+                        receiver = Address.decodeFromChain(addressText.getText());
+                    } catch (Exception e) {
+                        notification("Send To Address Incorrect");
+                        return;
+                    }
                     Output output = new Output(amount, receiver, token, index, System.currentTimeMillis());
                     java.util.List<Output> outputs = new ArrayList<>();
                     outputs.add(output);
@@ -1131,6 +1159,7 @@ public class NewGUI {
 
         new Thread() {
             public void run() {
+                setName("GUI-Updater");
                 int i = 0;
                 while (true) {
                     i++;
@@ -1235,6 +1264,23 @@ public class NewGUI {
                                 startMining.setText("Autotuning...");
                             } else if (frg) {
                                 frg = false;
+                                for (String name : ki.getMinerMan().getDevNames()) {
+                                    JFXToggleButton tb = new JFXToggleButton();
+                                    tb.setText(name);
+                                    tb.setTextFill(Color.WHITE);
+                                    tb.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+                                        @Override
+                                        public void handle(MouseEvent event) {
+                                            if (!tb.isSelected())
+                                                ki.getMinerMan().disableDev(tb.getText());
+                                            else
+                                                ki.getMinerMan().enableDev(tb.getText());
+                                        }
+                                    });
+                                    tb.setSelected(true);
+
+                                    devicesBox.getChildren().add(tb);
+                                }
                                 startMining.setText("Start Mining");
                             }
                             if (ki.getOptions().pool) {
@@ -1431,7 +1477,7 @@ public class NewGUI {
     private void setupBlockPane(BigInteger height) {
         Block b = ki.getChainMan().getByHeight(height);
         blockHeight.setText("Height - " + b.height);
-        blockID.setText("ID - " + b.ID);
+        blockID.setText("ID - " + Utils.toHexArray(Utils.fromBase64(b.ID)));
         solver.setText("Solver - " + b.solver);
         numberOfTransactions.setText("Number of Transactions - " + b.getTransactionKeys().size());
         blockTimestamp.setText(sdf2.format(new Date(b.timestamp)));

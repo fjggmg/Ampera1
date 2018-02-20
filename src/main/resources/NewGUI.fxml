@@ -141,6 +141,8 @@
                                                 <Label fx:id="blocksFoundLabel" text="Blocks Found - 400,300" />
                                             </children>
                                         </HBox>
+                                        <HBox fx:id="devicesBox" layoutX="45.0" layoutY="337.0" prefHeight="50.0"
+                                              prefWidth="468.0"/>
                                     </children>
                                 </Pane>
                                 <Pane fx:id="helpPane" prefHeight="200.0" prefWidth="200.0" visible="false">
@@ -194,6 +196,8 @@
                                                text="Local Shares -"/>
                                         <JFXToggleButton fx:id="autoMine" layoutX="415.0" layoutY="44.0"
                                                          text="Auto-Mine on reconnect"/>
+                                        <JFXToggleButton fx:id="pplnsClient" layoutX="415.0" layoutY="94.0" text="PPLNS"
+                                                         textFill="WHITE"/>
                                     </children>
                                 </Pane>
                                 <Pane fx:id="poolRelay" prefHeight="200.0" prefWidth="200.0" visible="false">
@@ -213,6 +217,8 @@
                                                text="Current Pool Shares -"/>
                                         <Label fx:id="estimatedNextPayout" layoutX="14.0" layoutY="252.0"
                                                text="Estimated Next Payout -"/>
+                                        <JFXToggleButton fx:id="pplnsServer" layoutX="328.0" layoutY="97.0" text="PPLNS"
+                                                         textFill="WHITE"/>
                                     </children>
                                 </Pane>
                             </children>

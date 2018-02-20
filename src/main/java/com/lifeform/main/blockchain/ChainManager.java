@@ -320,7 +320,7 @@ public class ChainManager implements IChainMan {
                 break;
             }
         }
-        int mostSignificantByte = byteDiff[mostSignificant0Digits] & 0x0ff;
+        int mostSignificantByte = byteDiff[mostSignificant0Digits] & 0x0000ff;
 
         byte[] byteHash = Utils.fromBase64(hash);
 
@@ -328,12 +328,12 @@ public class ChainManager implements IChainMan {
         for (int i = 0; i < mostSignificant0Digits; i++) {
             precedingZeroes = (precedingZeroes | byteHash[i]) & 0x00ff;
         }
-        if (block.height.compareTo(BigInteger.valueOf(37000L)) < 0) {
+        if (block.height.compareTo(BigInteger.valueOf(32910L)) < 0) {
             if (!(precedingZeroes == 0 && byteHash[mostSignificant0Digits] <= mostSignificantByte)) {
                 return BlockState.NO_SOLVE;
             }
         } else {
-            if (!(precedingZeroes == 0 && (byteHash[mostSignificant0Digits] & 0x00ff) <= mostSignificantByte)) {
+            if (!(precedingZeroes == 0 && ((byteHash[mostSignificant0Digits] & 0x00ff) <= mostSignificantByte))) {
                 return BlockState.NO_SOLVE;
             }
         }

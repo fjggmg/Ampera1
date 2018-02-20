@@ -56,7 +56,7 @@ public class Ki extends Thread implements IKi {
     private IKi ki = this;
     private boolean run = true;
     //TODO: need to start saving version number to file for future conversion of files
-    public static final String VERSION = "0.17.5-BETA";
+    public static final String VERSION = "0.17.6-BETA";
     private boolean relay = false;
     private NewGUI guiHook;
     public static boolean debug = true;
@@ -100,6 +100,18 @@ public class Ki extends Thread implements IKi {
             } catch (Exception e) {
 
                 settings.put(Settings.AUTO_MINE.getKey(), false);
+            }
+            try {
+                getSetting(Settings.PPLNS_CLIENT);
+            } catch (Exception e) {
+
+                settings.put(Settings.PPLNS_CLIENT.getKey(), false);
+            }
+            try {
+                getSetting(Settings.PPLNS_SERVER);
+            } catch (Exception e) {
+
+                settings.put(Settings.PPLNS_SERVER.getKey(), false);
             }
             if (getStringSetting(StringSettings.POOL_FEE) == null)
             stringSettings.put(StringSettings.POOL_FEE.getKey(), "1");
@@ -186,6 +198,7 @@ public class Ki extends Thread implements IKi {
             } catch (Exception e) {
                 ki.debug("Mining pool failed to start");
             }
+            miningPool.setN(5000);
             miningPool.updateCurrentHeight(ki.getChainMan().currentHeight());
             BigDecimal sd = new BigDecimal(GPUMiner.shareDiff);
             ki.debug("Share diff: " + sd.toString());

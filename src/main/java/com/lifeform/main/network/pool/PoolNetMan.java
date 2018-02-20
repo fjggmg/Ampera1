@@ -22,7 +22,7 @@ public class PoolNetMan extends Thread implements INetworkManager {
     private static final int PORT = 29999;
     private Set<IConnectionManager> connections = new HashSet<>();
     private Map<String, IConnectionManager> connMap = new HashMap<>();
-    public static final String POOL_NET_VERSION = "1.0.1";
+    public static final String POOL_NET_VERSION = "1.0.2";
     GlobalPacketQueuer gpq = new GlobalPacketQueuer();
     public PoolNetMan(IKi ki) {
 

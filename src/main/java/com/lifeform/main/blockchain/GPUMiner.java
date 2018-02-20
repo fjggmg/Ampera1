@@ -1,6 +1,7 @@
 package com.lifeform.main.blockchain;
 
 import com.lifeform.main.IKi;
+import com.lifeform.main.Settings;
 import com.lifeform.main.data.EncryptionManager;
 import com.lifeform.main.data.Utils;
 import com.lifeform.main.network.BlockEnd;
@@ -262,8 +263,8 @@ public class GPUMiner extends Thread implements IMiner {
                                     pbh.timestamp = b.timestamp;
                                     b.payload = pay.getBytes();
                                     pbh.ID = EncryptionManager.sha512(b.header());
-                                    pbh.currentHR = miner.getHashesPerSecond();
-
+                                    pbh.currentHR = ki.getMinerMan().cumulativeHashrate();
+                                    pbh.pplns = ki.getSetting(Settings.PPLNS_CLIENT);
                                     try {
                                         ki.debug("Payload: " + new String(pay.getBytes(), "UTF-8"));
                                     } catch (UnsupportedEncodingException e) {
