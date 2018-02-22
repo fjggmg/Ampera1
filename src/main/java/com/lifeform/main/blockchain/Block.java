@@ -1,7 +1,10 @@
 package com.lifeform.main.blockchain;
 
 
-import com.lifeform.main.Ki;
+import amp.Amplet;
+import amp.classification.classes.AC_SingleElement;
+import amp.serialization.IAmpAmpletSerializable;
+import com.lifeform.main.data.AmpIDs;
 import com.lifeform.main.data.EncryptionManager;
 import com.lifeform.main.data.JSONManager;
 import com.lifeform.main.data.Utils;
@@ -19,7 +22,7 @@ import java.util.*;
  *
  * Data bucket with some simple methods to grab shit and concat it
  */
-public class Block {
+public class Block implements IAmpAmpletSerializable {
 
     public BigInteger height;
     public String prevID;
@@ -204,4 +207,15 @@ public class Block {
         return b;
     }
 
+    @Override
+    public Amplet serializeToAmplet() {
+        AC_SingleElement ID = AC_SingleElement.create(AmpIDs.BLOCK_ID_GID, this.ID);
+        AC_SingleElement prevID = AC_SingleElement.create(AmpIDs.PREV_ID_GID, this.prevID);
+        AC_SingleElement height = AC_SingleElement.create(AmpIDs.HEIGHT_GID, this.height.toByteArray());
+        AC_SingleElement solver = AC_SingleElement.create(AmpIDs.SOLVER_GID, this.solver);
+        AC_SingleElement timestamp = AC_SingleElement.create(AmpIDs.TIMESTAMP_GID, this.timestamp);
+        AC_SingleElement payload = AC_SingleElement.create(AmpIDs.PAYLOAD_GID, this.payload);
+        AC_SingleElement coinbase = AC_SingleElement.create(AmpIDs.COINBASE_ID_GID, this.coinbaseID);
+        return null;
+    }
 }

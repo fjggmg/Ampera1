@@ -1,5 +1,7 @@
 package com.lifeform.main.transactions;
 
+import amp.Amplet;
+import amp.serialization.IAmpAmpletSerializable;
 import com.lifeform.main.Ki;
 import com.lifeform.main.data.EncryptionManager;
 import com.lifeform.main.data.JSONManager;
@@ -14,7 +16,7 @@ import java.util.*;
 /**
  * Created by Bryan on 8/8/2017.
  */
-public class Transaction implements ITrans{
+public class Transaction implements ITrans, IAmpAmpletSerializable {
 
     /**
      *
@@ -337,5 +339,10 @@ public class Transaction implements ITrans{
     @Override
     public String getMessage() {
         return message;
+    }
+
+    @Override
+    public Amplet serializeToAmplet() {
+        return null;
     }
 }
