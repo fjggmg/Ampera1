@@ -34,9 +34,6 @@ public interface IChainMan {
 
     BigInteger getCurrentDifficulty();
 
-    Block getByID(String ID);
-
-    void undoToBlock(String ID);
 
     boolean canMine();
 

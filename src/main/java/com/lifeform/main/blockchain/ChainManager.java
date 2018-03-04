@@ -1,5 +1,6 @@
 package com.lifeform.main.blockchain;
 
+import amp.database.XodusAmpMap;
 import com.lifeform.main.IKi;
 import com.lifeform.main.Ki;
 import com.lifeform.main.Settings;
@@ -41,6 +42,7 @@ public class ChainManager implements IChainMan {
     //DB cmDB;
     private XodusStringMap blockHeightMap;
     private XodusStringMap blockIDMap;
+    private XodusAmpMap blockHeightAmp;
     private Block tempBlock = null;
     //===============CHAIN IDS========================\\
     public static final short POW_CHAIN = 0x0001;
@@ -108,15 +110,48 @@ public class ChainManager implements IChainMan {
         new File("chain" + chainID + "/").mkdirs();
 
         csMap = new XodusStringMap("chain" + chainID + "/" + csFile + "xodus");
-
+        blockHeightAmp = new XodusAmpMap(folderName + chainID + "ampHeight");
         blockHeightMap = new XodusStringMap(folderName + chainID + "heights");
         blockIDMap = new XodusStringMap(folderName + chainID + "IDs");
+        if (csMap.get("amp") == null && csMap.get("height") != null) {
+            BigInteger height = BigInteger.ZERO;
+            BigInteger chainHeight = new BigInteger(csMap.get("height"));
+            while (height.compareTo(chainHeight) <= 0) {
+                ki.debug("Deserializing block: " + height);
+                Block b = Block.fromJSON(blockHeightMap.get(height.toString()));
+                ki.debug("Serializing block: " + height);
+                ki.debug("Size on map should be: " + b.serializeToAmplet().serializeToBytes().length);
+                if (!blockHeightAmp.put(b.height.toByteArray(), b)) {
+                    ki.debug("Not valid amplet byte array size: " + b.serializeToAmplet().serializeToBytes().length);
+                } else {
+                    try {
+
+                        ki.debug("Size on map: " + blockHeightAmp.getBytes(b.height.toByteArray()).length);
+                        ki.debug("Number of transactions: " + b.getTransactionKeys().size());
+                        ki.debug("Value on map: " + Block.fromAmplet(blockHeightAmp.get(b.height.toByteArray())).ID);
+                    } catch (Exception e) {
+                        ki.debug("Last block size: " + blockHeightAmp.getBytes(b.height.subtract(BigInteger.ONE).toByteArray()).length);
+
+                        e.printStackTrace();
+                    }
+                }
+
+                //csMap.put("height",height.toString());
+                height = height.add(BigInteger.ONE);
+            }
+            blockHeightMap.clear();
+            blockIDMap.clear();
+        }
+        csMap.put("amp", "amp");
 
     }
 
     public void close()
     {
         csMap.close();
+        blockHeightMap.close();
+        blockIDMap.close();
+        blockHeightAmp.close();
     }
 
     public synchronized BlockState addBlock(Block block) {
@@ -220,6 +255,7 @@ public class ChainManager implements IChainMan {
 
     }
 
+
     @Override
     public void saveChain() {
         //will probably delete soon
@@ -242,8 +278,9 @@ public class ChainManager implements IChainMan {
     public void saveBlock(Block b) {
 
 
-        blockHeightMap.put(b.height.toString(), b.toJSON());
-        blockIDMap.put(b.ID, b.toJSON());
+        //blockHeightMap.put(b.height.toString(), b.toJSON());
+        //blockIDMap.put(b.ID, b.toJSON());
+        blockHeightAmp.put(b.height.toByteArray(), b);
         /*
         StringFileHandler fh = new StringFileHandler(ki,folderName + b.height.divide(BigInteger.valueOf(16L)) + fileName);
         if(fh.getLines() == null || fh.getLines().isEmpty())
@@ -444,9 +481,19 @@ public class ChainManager implements IChainMan {
                 return cache.get(height);
             }
         }
-        if (blockHeightMap.get(height.toString()) == null) return null;
+        try {
+            if (blockHeightAmp.get(height.toByteArray()) == null) return null;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
 
-        return Block.fromJSON(blockHeightMap.get(height.toString()));
+        try {
+            return Block.fromAmplet(blockHeightAmp.get(height.toByteArray()));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
 
         /*
        StringFileHandler fh = new StringFileHandler(ki,folderName + height.divide(BigInteger.valueOf(16L)) + fileName);
@@ -544,29 +591,6 @@ public class ChainManager implements IChainMan {
     public BigInteger getCurrentDifficulty()
     {
         return currentDifficulty;
-    }
-
-    @Override
-    public synchronized Block getByID(String ID) {
-
-        if (blockIDMap.get(ID) == null) return null;
-        return Block.fromJSON(blockIDMap.get(ID));
-        /*
-        if(cmMap.get(ID) == null) return null;
-        return getByHeight(new BigInteger(cmMap.get(ID)));
-        */
-    }
-
-    @Override
-    public synchronized void undoToBlock(String ID) {
-        canMine = false;
-
-        Block block = getByID(ID);
-
-        currentHeight = block.height;
-        csMap.put("current",block.toJSON());
-        csMap.put("height",block.height.toString());
-        canMine = true;
     }
 
     @Override

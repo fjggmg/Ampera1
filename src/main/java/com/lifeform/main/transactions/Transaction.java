@@ -1,22 +1,31 @@
 package com.lifeform.main.transactions;
 
 import amp.Amplet;
-import amp.serialization.IAmpAmpletSerializable;
+import amp.classification.AmpClassCollection;
+import amp.classification.classes.AC_ClassInstanceIDIsIndex;
+import amp.classification.classes.AC_SingleElement;
+import amp.group_primitives.UnpackedGroup;
 import com.lifeform.main.Ki;
+import com.lifeform.main.data.AmpIDs;
 import com.lifeform.main.data.EncryptionManager;
 import com.lifeform.main.data.JSONManager;
+import com.lifeform.main.data.Utils;
 import com.lifeform.main.network.Packet;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutput;
+import java.io.ObjectOutputStream;
 import java.math.BigInteger;
 import java.util.*;
 
 /**
  * Created by Bryan on 8/8/2017.
  */
-public class Transaction implements ITrans, IAmpAmpletSerializable {
+public class Transaction implements ITrans {
 
     /**
      *
@@ -343,6 +352,102 @@ public class Transaction implements ITrans, IAmpAmpletSerializable {
 
     @Override
     public Amplet serializeToAmplet() {
-        return null;
+        AC_SingleElement message = null;
+        if (this.message != null && !this.message.isEmpty())
+            message = AC_SingleElement.create(AmpIDs.MESSAGE_ID_GID, this.message);
+        AC_SingleElement sigsRequiredGID = AC_SingleElement.create(AmpIDs.SIGS_REQUIRED_GID, this.sigsRequired);
+        AC_ClassInstanceIDIsIndex inputs = AC_ClassInstanceIDIsIndex.create(AmpIDs.INPUTS_CID, "Inputs");
+        for (Input i : getInputs()) {
+            inputs.addElement(i);
+        }
+        AC_ClassInstanceIDIsIndex outputs = AC_ClassInstanceIDIsIndex.create(AmpIDs.OUTPUTS_CID, "Outputs");
+        for (Output o : getOutputs()) {
+            outputs.addElement(o);
+        }
+
+        AC_ClassInstanceIDIsIndex keys = AC_ClassInstanceIDIsIndex.create(AmpIDs.KEYS_CID, "Keys");
+        for (String key : this.keys) {
+            keys.addElement(key);
+        }
+
+        AC_SingleElement type = AC_SingleElement.create(AmpIDs.TYPE_GID, this.type.toString());
+        AC_SingleElement keySigMap;
+        try {
+            keySigMap = AC_SingleElement.create(AmpIDs.KEY_SIG_MAP_GID, Utils.mapToByteArray(this.keySigMap));
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+        AC_SingleElement entropyMap;
+        try {
+            entropyMap = AC_SingleElement.create(AmpIDs.ENTROPY_MAP_GID, Utils.mapToByteArray(this.entropyMap));
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+        AmpClassCollection amp = new AmpClassCollection();
+        amp.addClass(entropyMap);
+        amp.addClass(keySigMap);
+        if (message != null)
+            amp.addClass(message);
+        amp.addClass(sigsRequiredGID);
+        if (this.inputs != null && !this.inputs.isEmpty())
+            amp.addClass(inputs);
+        if (this.outputs != null && !this.outputs.isEmpty())
+            amp.addClass(outputs);
+        if (this.keys != null && !this.keys.isEmpty())
+            amp.addClass(keys);
+        amp.addClass(type);
+        return amp.serializeToAmplet();
+    }
+
+    public static ITrans fromAmplet(Amplet amp) {
+        UnpackedGroup eMap = amp.unpackGroup(AmpIDs.ENTROPY_MAP_GID);
+        Map<String, String> entropyMap;
+        try {
+            entropyMap = Utils.toObject(eMap.getElement(0));
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+            return null;
+        }
+        UnpackedGroup kMap = amp.unpackGroup(AmpIDs.KEY_SIG_MAP_GID);
+        Map<String, String> keyMap;
+        try {
+            keyMap = Utils.toObject(kMap.getElement(0));
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+            return null;
+        }
+        UnpackedGroup msg = amp.unpackGroup(AmpIDs.MESSAGE_ID_GID);
+        String message = "";
+        if (msg != null)
+            message = msg.getElementAsString(0);
+        UnpackedGroup sigsRqd = amp.unpackGroup(AmpIDs.SIGS_REQUIRED_GID);
+        int sigsRequired = sigsRqd.getElementAsInt(0);
+        List<UnpackedGroup> inputsAmp = amp.unpackClass(AmpIDs.INPUTS_CID);
+        List<Input> inputs = new ArrayList<>();
+        if (inputsAmp != null)
+            for (UnpackedGroup p : inputsAmp) {
+                inputs.add(Input.fromAmp(p.getElementAsAmplet(0)));
+
+            }
+        List<UnpackedGroup> outputsAmp = amp.unpackClass(AmpIDs.OUTPUTS_CID);
+        List<Output> outputs = new ArrayList<>();
+        if (outputsAmp != null)
+            for (UnpackedGroup p : outputsAmp) {
+                outputs.add(Output.fromAmp(p.getElementAsAmplet(0)));
+
+            }
+        List<UnpackedGroup> keysAmp = amp.unpackClass(AmpIDs.KEYS_CID);
+        List<String> keys = new ArrayList<>();
+        if (keysAmp != null)
+            for (UnpackedGroup p : keysAmp) {
+                keys.add(p.getElementAsString(0));
+
+            }
+        UnpackedGroup t = amp.unpackGroup(AmpIDs.TYPE_GID);
+        TransactionType type = TransactionType.valueOf(t.getElementAsString(0));
+
+        return new Transaction(message, sigsRequired, keyMap, outputs, inputs, entropyMap, keys, type);
     }
 }

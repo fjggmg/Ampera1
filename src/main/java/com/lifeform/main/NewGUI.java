@@ -129,18 +129,7 @@ public class NewGUI {
             if (guiMap.get("heightMap") != null) {
                 heightMap = JSONManager.parseJSONtoMap(guiMap.get("heightMap"));
             }
-            if (guiMap.get("transactions") != null) {
-                List<String> sTrans = JSONManager.parseJSONToList(guiMap.get("transactions"));
-                this.sTrans = sTrans;
-                for (String s : sTrans) {
-                    ITrans t = Transaction.fromJSON(s);
-                    if (heightMap.get(t.getID()) == null) {
-                        addTransaction(t, ki.getChainMan().currentHeight());
-                    } else
-                        addTransaction(t, new BigInteger(heightMap.get(t.getID())));
 
-                }
-            }
         }
         if (!ki.getOptions().pool) {
             Thread t = new Thread() {
@@ -150,7 +139,13 @@ public class NewGUI {
                         for (Token t : Token.values()) {
                             tokenValueMap.put(t, BigInteger.ZERO);
                         }
-                        List<Output> utxos = ki.getTransMan().getUTXOs(ki.getAddMan().getMainAdd(), false);
+                        List<Output> utxos = null;
+                        try {
+                            utxos = ki.getTransMan().getUTXOs(ki.getAddMan().getMainAdd(), false);
+                        } catch (Exception e) {
+                            //environment inoperative or other issue, ignore for now
+
+                        }
                         if (utxos != null) {
                             Set<Output> sUtxos = new HashSet<>();
                             sUtxos.addAll(utxos);
@@ -170,16 +165,24 @@ public class NewGUI {
                             sleep(1200);
                             //System.out.println("done sleeping");
                         } catch (InterruptedException e) {
-                            e.printStackTrace();
+                            //do nothing as close was called
                         }
                     }
                 }
             };
             t.setName("GUI-Backend");
+            threads.add(t);
             t.start();
         }
     }
 
+    List<Thread> threads = new ArrayList<>();
+
+    public void close() {
+        for (Thread t : threads) {
+            t.interrupt();
+        }
+    }
     @FXML
     public JFXHamburger menuHamburger;
     @FXML
@@ -269,7 +272,7 @@ public class NewGUI {
         return hash;
     }
 
-    Timeline lockAnimation;
+    private Timeline lockAnimation;
 
     private String superAutism(String hash, int numberOfHashes) {
         String superHash = "";
@@ -315,7 +318,7 @@ public class NewGUI {
         return superHash;
     }
 
-    public void addTransaction(ITrans trans, BigInteger height) {
+    public synchronized void addTransaction(ITrans trans, BigInteger height) {
         if (ki.getOptions().pool) return;
         BigInteger allout = BigInteger.ZERO;
         List<String> involved = new ArrayList<>();
@@ -624,7 +627,26 @@ public class NewGUI {
                     setupBlockPane(currentBlock.add(BigInteger.ONE));
             }
         });
+        if (guiMap.get("transactions") != null) {
+            List<String> sTrans = JSONManager.parseJSONToList(guiMap.get("transactions"));
+            this.sTrans.addAll(sTrans);
+            new Thread() {
 
+                public void run() {
+
+
+                    for (String s : sTrans) {
+                        ITrans t = Transaction.fromJSON(s);
+                        if (heightMap.get(t.getID()) == null) {
+                            addTransaction(t, ki.getChainMan().currentHeight());
+                        } else
+                            addTransaction(t, new BigInteger(heightMap.get(t.getID())));
+
+                    }
+                }
+            }.start();
+
+        }
         miningDataHbox.setSpacing(10);
         addressLabel.setText("Address - " + ki.getAddMan().getMainAdd().encodeForChain());
         syncProgress.setProgress(0);

@@ -1,8 +1,10 @@
 package com.lifeform.main.data;
 
+import java.io.*;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.Base64;
+import java.util.Map;
 
 /**
  * Created by Bryan on 5/30/2017.
@@ -23,6 +25,45 @@ public class Utils {
         return sb.toString();
     }
 
+    public static byte[] mapToByteArray(Map obj) throws IOException {
+        byte[] bytes = null;
+        ByteArrayOutputStream bos = null;
+        ObjectOutputStream oos = null;
+        try {
+            bos = new ByteArrayOutputStream();
+            oos = new ObjectOutputStream(bos);
+            oos.writeObject(obj);
+            oos.flush();
+            bytes = bos.toByteArray();
+        } finally {
+            if (oos != null) {
+                oos.close();
+            }
+            if (bos != null) {
+                bos.close();
+            }
+        }
+        return bytes;
+    }
+
+    public static Map toObject(byte[] bytes) throws IOException, ClassNotFoundException {
+        Map obj = null;
+        ByteArrayInputStream bis = null;
+        ObjectInputStream ois = null;
+        try {
+            bis = new ByteArrayInputStream(bytes);
+            ois = new ObjectInputStream(bis);
+            obj = (Map) ois.readObject();
+        } finally {
+            if (bis != null) {
+                bis.close();
+            }
+            if (ois != null) {
+                ois.close();
+            }
+        }
+        return obj;
+    }
 
 
     public static String toBase64(byte[] array)

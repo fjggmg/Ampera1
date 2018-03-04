@@ -201,15 +201,6 @@ public class ChainManagerLite implements IChainMan {
         return currentDifficulty;
     }
 
-    @Override
-    public Block getByID(String ID) {
-        return null;
-    }
-
-    @Override
-    public void undoToBlock(String ID) {
-
-    }
 
     @Override
     public boolean canMine() {

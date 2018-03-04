@@ -73,16 +73,6 @@ public class PoolChainMan implements IChainMan {
     }
 
     @Override
-    public Block getByID(String ID) {
-        return null;
-    }
-
-    @Override
-    public void undoToBlock(String ID) {
-
-    }
-
-    @Override
     public boolean canMine() {
         return true;
     }

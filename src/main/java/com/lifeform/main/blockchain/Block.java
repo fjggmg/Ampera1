@@ -2,7 +2,10 @@ package com.lifeform.main.blockchain;
 
 
 import amp.Amplet;
+import amp.classification.AmpClassCollection;
+import amp.classification.classes.AC_ClassInstanceIDIsIndex;
 import amp.classification.classes.AC_SingleElement;
+import amp.group_primitives.UnpackedGroup;
 import amp.serialization.IAmpAmpletSerializable;
 import com.lifeform.main.data.AmpIDs;
 import com.lifeform.main.data.EncryptionManager;
@@ -209,13 +212,70 @@ public class Block implements IAmpAmpletSerializable {
 
     @Override
     public Amplet serializeToAmplet() {
-        AC_SingleElement ID = AC_SingleElement.create(AmpIDs.BLOCK_ID_GID, this.ID);
-        AC_SingleElement prevID = AC_SingleElement.create(AmpIDs.PREV_ID_GID, this.prevID);
+        AC_SingleElement ID = AC_SingleElement.create(AmpIDs.BLOCK_ID_GID, Utils.fromBase64(this.ID));
+
+        AC_SingleElement prevID;
+        if (height.compareTo(BigInteger.ZERO) == 0) {
+            prevID = AC_SingleElement.create(AmpIDs.PREV_ID_GID, this.prevID);
+        } else {
+            prevID = AC_SingleElement.create(AmpIDs.PREV_ID_GID, Utils.fromBase64(this.prevID));
+        }
         AC_SingleElement height = AC_SingleElement.create(AmpIDs.HEIGHT_GID, this.height.toByteArray());
-        AC_SingleElement solver = AC_SingleElement.create(AmpIDs.SOLVER_GID, this.solver);
+        AC_SingleElement solver = AC_SingleElement.create(AmpIDs.SOLVER_GID, Utils.fromBase64(this.solver));
         AC_SingleElement timestamp = AC_SingleElement.create(AmpIDs.TIMESTAMP_GID, this.timestamp);
         AC_SingleElement payload = AC_SingleElement.create(AmpIDs.PAYLOAD_GID, this.payload);
-        AC_SingleElement coinbase = AC_SingleElement.create(AmpIDs.COINBASE_ID_GID, this.coinbaseID);
-        return null;
+        AC_SingleElement coinbase = AC_SingleElement.create(AmpIDs.COINBASE_GID, this.coinbase);
+        AC_ClassInstanceIDIsIndex transactions = AC_ClassInstanceIDIsIndex.create(AmpIDs.TRANSACTIONS_CID, "Transactions");
+
+        for (String tid : this.transactions.keySet()) {
+            transactions.addElement(this.transactions.get(tid));
+        }
+        AmpClassCollection acc = new AmpClassCollection();
+        acc.addClass(ID);
+        acc.addClass(prevID);
+        acc.addClass(height);
+        acc.addClass(solver);
+        acc.addClass(timestamp);
+        acc.addClass(payload);
+        acc.addClass(coinbase);
+        acc.addClass(transactions);
+
+        return acc.serializeToAmplet();
+    }
+
+    public static Block fromAmplet(Amplet amp) {
+
+        String ID = Utils.toBase64(amp.unpackGroup(AmpIDs.BLOCK_ID_GID).getElement(0));
+        BigInteger height = new BigInteger(amp.unpackGroup(AmpIDs.HEIGHT_GID).getElement(0));
+        String prevID;
+        if (height.compareTo(BigInteger.ZERO) == 0) {
+            prevID = amp.unpackGroup(AmpIDs.PREV_ID_GID).getElementAsString(0);
+        } else {
+            prevID = Utils.toBase64(amp.unpackGroup(AmpIDs.PREV_ID_GID).getElement(0));
+        }
+        String solver = Utils.toBase64(amp.unpackGroup(AmpIDs.SOLVER_GID).getElement(0));
+        long timestamp = amp.unpackGroup(AmpIDs.TIMESTAMP_GID).getElementAsLong(0);
+        byte[] payload = amp.unpackGroup(AmpIDs.PAYLOAD_GID).getElement(0);
+        ITrans coinbase = Transaction.fromAmplet(amp.unpackGroup(AmpIDs.COINBASE_GID).getElementAsAmplet(0));
+
+        Map<String, ITrans> transactions = new HashMap<>();
+        if (amp.unpackClass(AmpIDs.TRANSACTIONS_CID) != null)
+            for (UnpackedGroup p : amp.unpackClass(AmpIDs.TRANSACTIONS_CID)) {
+                ITrans t = Transaction.fromAmplet(p.getElementAsAmplet(0));
+                if (t == null) return null;
+                transactions.put(t.getID(), t);
+            }
+        Block b = new Block();
+        b.ID = ID;
+        b.prevID = prevID;
+        b.height = height;
+        b.solver = solver;
+        b.timestamp = timestamp;
+        b.payload = payload;
+        b.setCoinbase(coinbase);
+        b.addAll(transactions);
+
+        return b;
+
     }
 }

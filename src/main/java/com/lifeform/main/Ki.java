@@ -1,5 +1,6 @@
 package com.lifeform.main;
 
+import amp.exceptions.AmpException;
 import com.lifeform.main.blockchain.*;
 import com.lifeform.main.data.*;
 import com.lifeform.main.network.*;
@@ -70,6 +71,7 @@ public class Ki extends Thread implements IKi {
     private XodusStringMap stringSettings = new XodusStringMap("etc");
 
     public Ki(Options o) {
+
         if (settings.get(VERSION) == null || !settings.get(VERSION)) {
             settings.put(VERSION, true);
             try {
@@ -309,6 +311,7 @@ public class Ki extends Thread implements IKi {
         while (!canClose) {
         }
         chainMan.close();
+        guiHook.close();
         if (!getOptions().pool)
             transMan.close();
         addMan.save();

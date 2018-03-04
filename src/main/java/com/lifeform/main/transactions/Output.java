@@ -1,5 +1,11 @@
 package com.lifeform.main.transactions;
 
+import amp.Amplet;
+import amp.classification.AmpClassCollection;
+import amp.classification.classes.AC_SingleElement;
+import amp.group_primitives.UnpackedGroup;
+import amp.serialization.IAmpAmpletSerializable;
+import com.lifeform.main.data.AmpIDs;
 import com.lifeform.main.data.EncryptionManager;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -11,7 +17,7 @@ import java.math.BigInteger;
 /**
  * Created by Bryan on 8/8/2017.
  */
-public class Output implements TXIO {
+public class Output implements TXIO, IAmpAmpletSerializable {
 
     public Output(BigInteger amount, Address receiver,Token token, int index,long timestamp)
     {
@@ -84,5 +90,37 @@ public class Output implements TXIO {
             e.printStackTrace();
         }
         return null;
+    }
+
+    @Override
+    public Amplet serializeToAmplet() {
+        AC_SingleElement amount = AC_SingleElement.create(AmpIDs.AMOUNT_GID, this.amount.toByteArray());
+        AC_SingleElement receiver = AC_SingleElement.create(AmpIDs.RECEIVER_GID, this.receiver.toByteArray());
+        AC_SingleElement token = AC_SingleElement.create(AmpIDs.TOKEN_GID, this.token.toString());
+        AC_SingleElement index = AC_SingleElement.create(AmpIDs.INDEX_GID, this.index);
+        AC_SingleElement timestamp = AC_SingleElement.create(AmpIDs.TXTIMESTAMP_GID, this.timestamp);
+        AmpClassCollection acc = new AmpClassCollection();
+        acc.addClass(amount);
+        acc.addClass(receiver);
+        acc.addClass(token);
+        acc.addClass(index);
+        acc.addClass(timestamp);
+        Amplet amp = acc.serializeToAmplet();
+        return amp;
+    }
+
+    public static Output fromAmp(Amplet amp) {
+        UnpackedGroup ag = amp.unpackGroup(AmpIDs.AMOUNT_GID);
+        UnpackedGroup rg = amp.unpackGroup(AmpIDs.RECEIVER_GID);
+        UnpackedGroup tg = amp.unpackGroup(AmpIDs.TOKEN_GID);
+        UnpackedGroup ig = amp.unpackGroup(AmpIDs.INDEX_GID);
+        UnpackedGroup tmg = amp.unpackGroup(AmpIDs.TXTIMESTAMP_GID);
+        BigInteger amount = new BigInteger(ag.getElement(0));
+        Address receiver = Address.fromByteArray(rg.getElement(0));
+        Token token = Token.valueOf(tg.getElementAsString(0));
+        int index = ig.getElementAsInt(0);
+        long timestamp = tmg.getElementAsLong(0);
+        return new Output(amount, receiver, token, index, timestamp);
+
     }
 }

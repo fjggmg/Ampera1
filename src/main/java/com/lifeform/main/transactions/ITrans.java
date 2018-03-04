@@ -1,12 +1,14 @@
 package com.lifeform.main.transactions;
 
+import amp.serialization.IAmpAmpletSerializable;
+
 import java.math.BigInteger;
 import java.util.List;
 
 /**
  * Created by Bryan on 8/11/2017.
  */
-public interface ITrans {
+public interface ITrans extends IAmpAmpletSerializable {
 
     String getID();
     //TODO: we have TXIO as the interface, we should not be using the implementation, but currently this is the best way to do this

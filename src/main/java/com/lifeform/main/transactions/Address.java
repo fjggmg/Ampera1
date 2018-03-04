@@ -5,6 +5,7 @@ import com.lifeform.main.data.Utils;
 import org.json.simple.JSONObject;
 
 import java.io.Serializable;
+import java.io.UnsupportedEncodingException;
 
 /**
  * Created by Bryan on 8/8/2017.
@@ -85,6 +86,15 @@ public class Address implements Serializable {
         return new Address(VERSION,hash,checksum);
     }
 
+    public String getChecksumGen() {
+        String fullChecksum = EncryptionManager.sha224Hex(ID);
+        char[] checkChar = fullChecksum.toCharArray();
+        char[] last4 = {checkChar[checkChar.length - 4], checkChar[checkChar.length - 3], checkChar[checkChar.length - 2], checkChar[checkChar.length - 1]};
+
+        String checksum = new String(last4);
+        return checksum;
+    }
+
     public static Address decodeFromChain(String encoded)
     {
         char[] eChar = encoded.toCharArray();
@@ -113,6 +123,90 @@ public class Address implements Serializable {
             return a.encodeForChain().equals(encodeForChain());
         }else{
             return false;
+        }
+    }
+
+    public byte[] toByteArrayStrict() {
+        byte[] payload = {};
+        try {
+            payload = Utils.fromBase64(ID);
+        } catch (Exception e) {
+            return null;
+        }
+        byte[] array;
+        array = new byte[payload.length + 3];
+        array[0] = version;
+        int i = 1;
+        for (byte b : payload) {
+            array[i] = b;
+            i++;
+        }
+        byte[] check = Utils.toByteArray(checksum);
+        array[array.length - 2] = check[0];
+        array[array.length - 1] = check[1];
+        return array;
+    }
+
+    public byte[] toByteArray() {
+        //System.out.println("Address is: " + encodeForChain());
+
+        //System.out.println("ID is: " + ID);
+        byte[] payload = {};
+        try {
+            payload = Utils.fromBase64(ID);
+        } catch (Exception e) {
+            try {
+                payload = ID.getBytes("UTF-8");
+            } catch (UnsupportedEncodingException e1) {
+                return null;
+            }
+        }
+        byte[] array;
+        if (payload.length > 28) {
+            array = new byte[payload.length + 3];
+        } else {
+            array = new byte[31];
+        }
+
+        array[0] = version;
+        int i = 1;
+        for (byte b : payload) {
+            array[i] = b;
+            i++;
+        }
+        byte[] check = Utils.toByteArray(checksum);
+        array[array.length - 2] = check[0];
+        array[array.length - 1] = check[1];
+        return array;
+    }
+
+    public static Address fromByteArray(byte[] array) {
+        if (array.length == 31) {
+            byte[] ID = new byte[28];
+            for (int i = 1; i < 29; i++) {
+                ID[i - 1] = array[i];
+            }
+            byte[] check = new byte[2];
+            check[0] = array[29];
+            check[1] = array[30];
+            Address a = new Address(array[0], Utils.toBase64(ID), Utils.toHexArray(check));
+            return a;
+        } else {
+            byte[] ID = new byte[array.length - 3];
+            for (int i = 1; i < ID.length + 1; i++) {
+                ID[i - 1] = array[i];
+            }
+
+            byte[] check = new byte[2];
+            check[0] = array[array.length - 2];
+            check[1] = array[array.length - 1];
+            Address a = null;
+            try {
+                a = new Address(array[0], new String(ID, "UTF-8"), Utils.toHexArray(check));
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+            return a;
         }
     }
 }
