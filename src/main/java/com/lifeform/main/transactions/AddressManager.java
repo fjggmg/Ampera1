@@ -21,11 +21,11 @@ public class AddressManager implements IAddMan {
     String addFolder = "addresses/";
     private IKi ki;
     private final int depth = 30;
-    private List<Address> addresses = new ArrayList<>();
-    private Map<Address,Integer> verifyCounter = new HashMap<>();
-    private Map<Address, String> entropyMap = new ConcurrentHashMap<>();
-    private Address main;
-    private List<Address> inactive = new ArrayList<>();
+    private List<IAddress> addresses = new ArrayList<>();
+    private Map<IAddress, Integer> verifyCounter = new HashMap<>();
+    private Map<IAddress, String> entropyMap = new ConcurrentHashMap<>();
+    private IAddress main;
+    private List<IAddress> inactive = new ArrayList<>();
     public AddressManager(IKi ki)
     {
         File f = new File(addFolder);
@@ -34,8 +34,14 @@ public class AddressManager implements IAddMan {
     }
 
     @Override
-    public Address getNewAdd() {
-        Address a = Address.createNew(ki.getEncryptMan().getPublicKeyString(),entropy);
+    public IAddress getNewAdd() {
+        IAddress a = null;
+        try {
+            a = NewAdd.createNew(ki.getEncryptMan().getPublicKeyString(), entropy, AddressLength.SHA256, false);
+        } catch (InvalidAddressException e) {
+            e.printStackTrace();
+            return null;
+        }
         entropyMap.put(a,entropy);
         inactive.add(a);
         save();
@@ -43,15 +49,15 @@ public class AddressManager implements IAddMan {
     }
 
     @Override
-    public List<Address> getActive() {
+    public List<IAddress> getActive() {
         return addresses;
     }
 
     @Override
-    public void receivedOn(Address address) {
+    public void receivedOn(IAddress address) {
         if(address.encodeForChain().equals(main.encodeForChain())) return;
-        Address toRemove = null;
-        for(Address a:inactive) {
+        IAddress toRemove = null;
+        for (IAddress a : inactive) {
             if (a.encodeForChain().equals(address.encodeForChain())) {
                 addresses.add(address);
                 toRemove = address;
@@ -61,19 +67,19 @@ public class AddressManager implements IAddMan {
     }
 
     @Override
-    public void usedEntirely(Address address) {
+    public void usedEntirely(IAddress address) {
             //possibly not needed
     }
 
     @Override
-    public void verified(Address address) {
+    public void verified(IAddress address) {
         verifyCounter.put(address,0);
     }
 
     @Override
     public void blockTick() {
-        List<Address> toRemove = new ArrayList<>();
-        for(Address key:verifyCounter.keySet())
+        List<IAddress> toRemove = new ArrayList<>();
+        for (IAddress key : verifyCounter.keySet())
         {
             verifyCounter.put(key,verifyCounter.get(key) + 1);
             if(verifyCounter.get(key) > depth)
@@ -81,7 +87,7 @@ public class AddressManager implements IAddMan {
                 toRemove.add(key);
             }
         }
-        for(Address a:toRemove)
+        for (IAddress a : toRemove)
         {
 
             verifyCounter.remove(a);
@@ -92,7 +98,7 @@ public class AddressManager implements IAddMan {
     }
 
     @Override
-    public Address getMainAdd() {
+    public IAddress getMainAdd() {
         return main;
     }
 
@@ -124,8 +130,8 @@ public class AddressManager implements IAddMan {
             }
         }
 
-        List<Address> toRemove = new ArrayList<>();
-        for(Address add:entropyMap.keySet())
+        List<IAddress> toRemove = new ArrayList<>();
+        for (IAddress add : entropyMap.keySet())
         {
             entropy = entropyMap.get(add);
             if(!add.encodeForChain().equals(getNewAdd().encodeForChain()))
@@ -134,7 +140,7 @@ public class AddressManager implements IAddMan {
                 toRemove.add(add);
             }
         }
-        for(Address add:toRemove)
+        for (IAddress add : toRemove)
         {
             if(main.encodeForChain().equals(add.encodeForChain()))
             {
@@ -154,13 +160,13 @@ public class AddressManager implements IAddMan {
         if(main != null)
         fh.addLine(main.encodeForChain());
         if(!getActive().isEmpty()) {
-            for (Address a : getActive()) {
+            for (IAddress a : getActive()) {
                 if (!main.encodeForChain().equals(a.encodeForChain()))
                     fh.addLine(a.encodeForChain());
             }
             fh.save();
             JSONObject jo = new JSONObject();
-            for (Address a : getActive()) {
+            for (IAddress a : getActive()) {
                 jo.put(a.encodeForChain(), getEntropyForAdd(a));
             }
 
@@ -172,9 +178,9 @@ public class AddressManager implements IAddMan {
     }
 
     @Override
-    public String getEntropyForAdd(Address a) {
+    public String getEntropyForAdd(IAddress a) {
 
-        for(Address add:entropyMap.keySet())
+        for (IAddress add : entropyMap.keySet())
         {
             if(add.encodeForChain().equals(a.encodeForChain())) return entropyMap.get(add);
         }
@@ -182,7 +188,7 @@ public class AddressManager implements IAddMan {
     }
 
     @Override
-    public void setMainAdd(Address a) {
+    public void setMainAdd(IAddress a) {
         main = a;
         inactive.remove(a);
         addresses.add(a);
@@ -190,8 +196,24 @@ public class AddressManager implements IAddMan {
     }
 
     @Override
-    public Address createNew(String entropy) {
-        Address a = Address.createNew(ki.getEncryptMan().getPublicKeyString(), entropy);
+    public IAddress createNew(String binOrKey, String entropy, String prefix, AddressLength l, boolean p2sh) {
+
+        IAddress a;
+        if (prefix != null && prefix.length() == 5)
+            try {
+                a = NewAdd.createNew(binOrKey, entropy, l, prefix, p2sh);
+            } catch (InvalidAddressException e) {
+                e.printStackTrace();
+                return null;
+            }
+        else
+            try {
+                a = NewAdd.createNew(binOrKey, entropy, l, p2sh);
+            } catch (InvalidAddressException e) {
+                e.printStackTrace();
+                return null;
+            }
+
         entropyMap.put(a, entropy);
         addresses.add(a);
         save();
@@ -199,8 +221,8 @@ public class AddressManager implements IAddMan {
     }
 
     @Override
-    public List<Address> getAll() {
-        List<Address> all = new ArrayList<>();
+    public List<IAddress> getAll() {
+        List<IAddress> all = new ArrayList<>();
         all.addAll(inactive);
         all.addAll(addresses);
         all.add(main);
@@ -209,7 +231,7 @@ public class AddressManager implements IAddMan {
     }
 
     @Override
-    public void deleteAddress(Address address) {
+    public void deleteAddress(IAddress address) {
         inactive.remove(address);
         addresses.remove(address);
         save();

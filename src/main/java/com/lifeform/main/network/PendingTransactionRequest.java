@@ -10,7 +10,7 @@ public class PendingTransactionRequest implements Serializable, Packet {
     public void process(IKi ki, IConnectionManager connMan, PacketGlobal pg) {
         for (ITrans trans : ki.getTransMan().getPending()) {
             TransactionPacket tp = new TransactionPacket();
-            tp.trans = trans.toJSON();
+            tp.trans = trans.serializeToAmplet().serializeToBytes();
             connMan.sendPacket(tp);
         }
     }

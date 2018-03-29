@@ -1,12 +1,16 @@
 package com.lifeform.main.transactions;
 
+import amp.HeadlessPrefixedAmplet;
+import amp.database.XodusAmpMap;
 import com.lifeform.main.IKi;
+import com.lifeform.main.blockchain.Block;
 import com.lifeform.main.blockchain.ChainManager;
-import com.lifeform.main.data.EncryptionManager;
-import com.lifeform.main.data.JSONManager;
-import com.lifeform.main.data.XodusStringBooleanMap;
-import com.lifeform.main.data.XodusStringMap;
+import com.lifeform.main.data.*;
+import com.lifeform.main.network.Packet;
+
 import java.io.File;
+import java.io.UnsupportedEncodingException;
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -17,20 +21,18 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public class TransactionManager implements ITransMan {
 
 
-    private XodusStringMap utxoMap;
-    private XodusStringBooleanMap utxoSpent;
-    private XodusStringMap utxoValueMap;
+    private XodusAmpMap utxoAmp;
+    private XodusAmpMap utxoVerMap;
     private IKi ki;
     private List<ITrans> pending = new CopyOnWriteArrayList<>();
     private List<String> usedUTXOs = new ArrayList<>();
-
+    private BigInteger currentHeight = BigInteger.valueOf(-1);
+    private final Object processLock = new Object();
     public TransactionManager(IKi ki, boolean dump) {
         this.ki = ki;
         new File("transactions" + ki.getChainMan().getChainVer() + "/").mkdirs();
-        utxoMap = new XodusStringMap("transactions" + ki.getChainMan().getChainVer() + "/utxo.dat");//utxoDB.hashMap("utxoDB", Serializer.STRING, Serializer.STRING).createOrOpen();
-        utxoSpent = new XodusStringBooleanMap("transactions" + ki.getChainMan().getChainVer() + "/utxoSpent.dat");//utxoDB.hashMap("utxoDBSpent", Serializer.STRING, Serializer.BOOLEAN).createOrOpen();
-        utxoValueMap = new XodusStringMap("transactions" + ki.getChainMan().getChainVer() + "/utxoValue.dat");//utxoValueDB.hashMap("utxoValueDB", Serializer.STRING, Serializer.STRING).createOrOpen();
-
+        utxoAmp = new XodusAmpMap("transactions" + ki.getChainMan().getChainVer() + "/utxoAmp.dat");//utxoDB.hashMap("utxoDB", Serializer.STRING, Serializer.STRING).createOrOpen();
+        utxoVerMap = new XodusAmpMap("transactions" + ki.getChainMan().getChainVer() + "/utxoVer.dat");
         new Thread() {
             public void run() {
                 List<ITrans> toRemove = new ArrayList<>();
@@ -46,12 +48,100 @@ public class TransactionManager implements ITransMan {
                         pending.removeAll(toRemove);
                         toRemove.clear();
                     }
-
                     try {
                         sleep(3_600_0000);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
+                }
+            }
+        }.start();
+        new Thread() {
+            public void run() {
+
+                setName("Post Block Processing");
+                while (true) {
+                    ki.debug("Post block processing on #" + currentHeight);
+                    Block b = processMap.remove(currentHeight);
+                    currentHeight = currentHeight.add(BigInteger.ONE);
+                    if (b != null) {
+                        ITrans coinbase = b.getCoinbase();
+                        for (Output o : coinbase.getOutputs()) {
+                            HeadlessPrefixedAmplet hpa;
+                            if (utxoAmp.getBytes(o.getAddress().toByteArray()) != null)
+                                hpa = HeadlessPrefixedAmplet.create(utxoAmp.getBytes(o.getAddress().toByteArray()));
+                            else
+                                hpa = HeadlessPrefixedAmplet.create();
+                            try {
+                                ki.debug("Putting output: " + o.getID() + " with address: " + o.getAddress().encodeForChain() + " of amount + " + o.getAmount());
+                                hpa.addElement(o.getID());
+                                hpa.addBytes(new TXIOData(o.getAddress(), o.getIndex(), o.getAmount(), o.getToken(), o.getTimestamp()).serializeToBytes());
+                                utxoAmp.putBytes(o.getAddress().toByteArray(), hpa.serializeToBytes());
+                            } catch (UnsupportedEncodingException | InvalidTXIOData e) {
+                                e.printStackTrace();
+                            }
+
+                        }
+                        for (String trans : b.getTransactionKeys()) {
+
+                            ITrans t = b.getTransaction(trans);
+                            for (Input i : t.getInputs()) {
+                                HeadlessPrefixedAmplet hpa;
+                                if (utxoAmp.getBytes(i.getAddress().toByteArray()) != null)
+                                    hpa = HeadlessPrefixedAmplet.create(utxoAmp.getBytes(i.getAddress().toByteArray()));
+                                else
+                                    hpa = HeadlessPrefixedAmplet.create();
+                                while (hpa.peekNextElement() != null) {
+                                    try {
+                                        String ID = new String(hpa.peekNextElement(), "UTF-8");
+                                        if (ID.equals(i.getID())) {
+                                            ki.debug("Removing output: " + i.getID() + " with address: " + i.getAddress().encodeForChain() + " of amount + " + i.getAmount());
+
+                                            hpa.deleteNextElement();
+                                            hpa.deleteNextElement();
+                                            utxoAmp.putBytes(i.getAddress().toByteArray(), hpa.serializeToBytes());
+                                            break;
+                                        } else {
+                                            hpa.getNextElement();
+                                            hpa.getNextElement();
+                                        }
+                                    } catch (UnsupportedEncodingException e) {
+                                        e.printStackTrace();
+                                        continue;
+                                    }
+                                }
+
+                            }
+                            for (Output o : t.getOutputs()) {
+                                HeadlessPrefixedAmplet hpa;
+                                if (utxoAmp.getBytes(o.getAddress().toByteArray()) != null)
+                                    hpa = HeadlessPrefixedAmplet.create(utxoAmp.getBytes(o.getAddress().toByteArray()));
+                                else
+                                    hpa = HeadlessPrefixedAmplet.create();
+                                try {
+                                    hpa.addElement(o.getID());
+                                    ki.debug("Putting output: " + o.getID() + " with address: " + o.getAddress().encodeForChain() + " of amount + " + o.getAmount());
+
+                                    hpa.addBytes(new TXIOData(o.getAddress(), o.getIndex(), o.getAmount(), o.getToken(), o.getTimestamp()).serializeToBytes());
+                                    utxoAmp.putBytes(o.getAddress().toByteArray(), hpa.serializeToBytes());
+                                } catch (UnsupportedEncodingException | InvalidTXIOData e) {
+                                    e.printStackTrace();
+                                }
+
+                            }
+
+                            ki.getExMan().transactionProccessed(trans);
+                        }
+                    }
+                    if (processMap.isEmpty())
+                        synchronized (processLock) {
+                            try {
+                                processLock.wait();
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                        }
+
                 }
             }
         }.start();
@@ -94,68 +184,87 @@ public class TransactionManager implements ITransMan {
 
     @Override
     public boolean verifyTransaction(ITrans transaction) {
+
         if (ki.getOptions().tDebug)
             ki.debug("Verifying transaction: " + transaction.getID());
+
 
         for (Input i : transaction.getInputs()) {
             if (ki.getOptions().tDebug)
                 ki.debug("Verifying input: " + i.getID());
-            if (utxoSpent == null) {
+            if (utxoVerMap == null) {
                 if (ki.getOptions().tDebug)
-                    ki.debug("UTXO file uninitialized, installation corrupted or fatal program error");
+                    ki.getMainLog().warn("UTXO file uninitialized, installation corrupted or fatal program error");
                 return false;
             }
             if (i == null) {
                 if (ki.getOptions().tDebug)
-                    ki.debug("Input is null, malformed transaction.");
-                return false;
-            } else {
-                //ki.debug("Found in spend database");
-            }
-            if ((utxoSpent.get(i.getID()) == null)) {
-                if (ki.getOptions().tDebug)
-                    ki.debug("Input is null in spend db");
-            }
-            if (utxoSpent.get(i.getID()) == null || utxoSpent.get(i.getID())) {
-                if (ki.getOptions().tDebug)
-                    ki.debug("Input already spent, bad transaction");
+                    ki.getMainLog().warn("Input is null, malformed transaction.");
                 return false;
             }
+
+            try {
+                if (utxoVerMap.getBytes(i.getID()) == null) {
+                    if (ki.getOptions().tDebug)
+                        ki.getMainLog().warn("Input already spent, bad transaction");
+                    return false;
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                return false;
+            }
+            TXIOData data = TXIOData.fromByteArray(utxoVerMap.getBytes(i.getID()));
+            if (data == null) return false;
             if (ki.getOptions().tDebug)
                 ki.debug("input not spent");
 
-            if (new BigInteger(utxoValueMap.get(i.getID())).compareTo(i.getAmount()) != 0) {
+            if (data.getAmount().compareTo(i.getAmount()) != 0) {
                 if (ki.getOptions().tDebug)
-                    ki.debug("input is incorrect amount");
+                    ki.getMainLog().warn("input is incorrect amount");
                 return false;
             }
             if (ki.getOptions().tDebug)
                 ki.debug("input correct amount");
+            if (!data.getAddress().encodeForChain().equals(i.getAddress().encodeForChain())) {
+                if (ki.getOptions().tDebug)
+                    ki.getMainLog().warn("Input not for this address");
+                return false;
+            }
+            if (data.getIndex() != i.getIndex()) {
+                if (ki.getOptions().tDebug)
+                    ki.getMainLog().warn("Wrong input index");
+                return false;
+            }
+            if (!data.getToken().equals(i.getToken())) {
+                if (ki.getOptions().tDebug)
+                    ki.getMainLog().warn("Wrong token");
+                return false;
+            }
         }
         if (ki.getOptions().tDebug)
             ki.debug("all inputs verified");
         if (!transaction.verifyInputToOutput()) {
             if (ki.getOptions().tDebug)
-                ki.debug("Input values are not equal to output values");
+                ki.getMainLog().warn("Input values are not equal to output values");
             return false;
         }
         if (ki.getOptions().tDebug)
             ki.debug("input to output verifies");
-        if (!transaction.verifyCanSpend()) {
+        if (!transaction.verifyCanSpend()) { //TODO investigate if we still need this as we're checking address congruence above
             if (ki.getOptions().tDebug)
-                ki.debug("this address cannot spend this input");
+                ki.getMainLog().warn("this address cannot spend this input");
             return false;
         }
         if (ki.getOptions().tDebug)
             ki.debug("verified can spend");
         if (!transaction.verifySigs()) {
             if (ki.getOptions().tDebug)
-                ki.debug("the signature on this transaction does not match");
+                ki.getMainLog().warn("the signature on this transaction does not match");
             return false;
         }
-        if (!transaction.verifySpecial()) {
+        if (!transaction.verifySpecial(ki)) {
             if (ki.getOptions().tDebug)
-                ki.debug("Special requirements for this transaction have not been met");
+                ki.getMainLog().warn("Contract requirements for this transaction have not been met");
             return false;
         }
         if (ki.getOptions().tDebug) {
@@ -168,7 +277,6 @@ public class TransactionManager implements ITransMan {
     @Override
     public boolean addTransaction(ITrans transaction) {
         return verifyTransaction(transaction) && addTransactionNoVerify(transaction);
-
     }
 
     /**
@@ -181,61 +289,24 @@ public class TransactionManager implements ITransMan {
     public boolean addTransactionNoVerify(ITrans transaction) {
         if (ki.getOptions().tDebug)
             ki.debug("Saving transaction to disk");
-        if (ki.getOptions().tDebug)
-            ki.debug("Transaction has: " + transaction.getInputs().size() + " inputs");
-        List<String> inputs = new ArrayList<>();
-        String carry = null;
-        String lastAdd = "";
-        boolean sameAdd = false;
+        //region verification saving
         for (Input i : transaction.getInputs()) {
-            if (ki.getOptions().tDebug)
-            ki.debug("Saving input: " + i.getID());
-            utxoSpent.put(i.getID(), true);
-            if(lastAdd.equals(i.getAddress().encodeForChain()))
-                sameAdd = true;
-            if(!sameAdd)
-            carry = utxoMap.get(i.getAddress().encodeForChain());
-            if (carry != null) {
-                if(!sameAdd)
-                inputs = JSONManager.parseJSONToList(carry);
-
-                inputs.remove(i.toJSON());
-                utxoMap.put(i.getAddress().encodeForChain(), JSONManager.parseListToJSON(inputs).toJSONString());
-
-            } else {
-                //TODO this should never activate.....investigate logic in other areas to find why we still have this here. It is used in the output saving, but should not in the input saving
-                inputs = new ArrayList<>();
-                utxoMap.put(i.getAddress().encodeForChain(), JSONManager.parseListToJSON(inputs).toJSONString());
-            }
-            lastAdd = i.getAddress().encodeForChain();
+            utxoVerMap.remove(i.getID());
         }
-        lastAdd = "";
-        sameAdd = false;
-        carry = "";
-        if (ki.getOptions().tDebug)
-            ki.debug("Transaction has: " + transaction.getOutputs().size() + " outputs");
+
         for (Output o : transaction.getOutputs()) {
-            if (ki.getOptions().tDebug)
-                ki.debug("Saving output: " + o.getID() + " Token: " + o.getToken() + " Amount: " + o.getAmount());
-            ki.getAddMan().receivedOn(o.getAddress());
-            utxoSpent.put(o.getID(), false);
-            utxoValueMap.put(o.getID(), o.getAmount().toString());
-            if(lastAdd.equals(o.getAddress().encodeForChain()))
-                sameAdd = true;
-            if(!sameAdd)
-            carry = utxoMap.get(o.getAddress().encodeForChain());
-            if (carry != null) {
-                if(!sameAdd)
-                inputs = JSONManager.parseJSONToList(carry);
-                inputs.add(o.toJSON());
-                utxoMap.put(o.getAddress().encodeForChain(), JSONManager.parseListToJSON(inputs).toJSONString());
-            } else {
-                inputs = new ArrayList<>();
-                inputs.add(o.toJSON());
-                utxoMap.put(o.getAddress().encodeForChain(), JSONManager.parseListToJSON(inputs).toJSONString());
+            TXIOData data;
+            try {
+                data = new TXIOData(o.getAddress(), o.getIndex(), o.getAmount(), o.getToken(), o.getTimestamp());
+            } catch (InvalidTXIOData invalidTXIOData) {
+                invalidTXIOData.printStackTrace();
+                return false;
             }
+            utxoVerMap.putBytes(o.getID(), data.serializeToBytes());
         }
+        //endregion
 
+        //TODO what the fuck is going on in the next few lines, we're looking for the same transaction multiple times? Isn't this already prevented from happening?
         List<ITrans> toRemove = new ArrayList<>();
         for (ITrans t : pending) {
             if (t.getID().equals(transaction.getID())) toRemove.add(t);
@@ -246,71 +317,46 @@ public class TransactionManager implements ITransMan {
         return true;
     }
 
-    List<Output> utxos = new ArrayList<>();
-    List<String> sUtxos;
-    List<String> toRemove = new ArrayList<>();
-    Set<String> hs = new HashSet<>();
-    List<Output> safeUTXOs = new ArrayList<>();
-    private static volatile boolean lock = false;
     @Override
-    public List<Output> getUTXOs(Address address, boolean safe) {
-        while (lock) {
-        }
-        lock = true;
-        if (utxoMap.get(address.encodeForChain()) == null) {
-            lock = false;
+    public List<Output> getUTXOs(IAddress address, boolean safe) {
+        if (utxoAmp.getBytes(address.toByteArray()) == null) {
             return null;
         }
-        sUtxos = JSONManager.parseJSONToList(utxoMap.get(address.encodeForChain()));
-        if (sUtxos != null && !sUtxos.isEmpty()) {
-            if (!safe)
-                utxos.clear();
-            else
-                safeUTXOs = new ArrayList<>();
-            toRemove.clear();
-            if (sUtxos != null && !sUtxos.isEmpty()) {
-                hs.clear();
-                hs.addAll(sUtxos);
-                sUtxos.clear();
-                sUtxos.addAll(hs);
-                FL:
-                for (String s : sUtxos) {
-                    Output o;
+
+        //ki.debug("Getting UTXOs for address: " + address.encodeForChain());
+        HeadlessPrefixedAmplet hpa = HeadlessPrefixedAmplet.create(utxoAmp.getBytes(address.toByteArray()));
+        //ki.debug("HPA has elements: " + hpa.hasNextElement());
+        String utxoID;
+        try {
+            utxoID = new String(hpa.getNextElement(), "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+            return null;
+        }
+        List<Output> utxos = new ArrayList<>();
+        if (!utxoID.isEmpty()) {
+
+            while (hpa.peekNextElement() != null) {
+                if (usedUTXOs.contains(utxoID)) {
                     try {
-                        o = Output.fromJSON(s);
+                        hpa.getNextElement();
                     } catch (Exception e) {
-                        continue;
+                        break;
                     }
-                    for (ITrans t : pending) {
-                        for (Input i : t.getInputs()) {
-                            if (i.getID().equals(o.getID()))
-                                if (i.getIndex() == o.getIndex())
-                                    continue FL;
-                        }
-                    }
-                    if (!utxoSpent.get(o.getID())) {
-                        if (!usedUTXOs.contains(Input.fromOutput(o).getID())) {
-                            if (safe)
-                                safeUTXOs.add(o);
-                            else
-                                utxos.add(o);
-                        }
-                    } else
-                        toRemove.add(s);
+                } else {
+                    TXIOData data = TXIOData.fromByteArray(hpa.getNextElement());
+                    //ki.debug("Adding data" + utxoID + " " + data.getAmount());
+                    if (data != null)
+                        utxos.add(new Output(data.getAmount(), data.getAddress(), data.getToken(), data.getIndex(), data.getTimestamp(), (byte) 2));
                 }
-                if (!toRemove.isEmpty()) {
-                    sUtxos.removeAll(toRemove);
-                    utxoMap.put(address.encodeForChain(), JSONManager.parseListToJSON(sUtxos).toJSONString());
+                try {
+                    utxoID = new String(hpa.getNextElement(), "UTF-8");
+                } catch (NullPointerException | UnsupportedEncodingException e) {
+                    //quietly fail, we're done here
                 }
             }
-            lock = false;
-            if (safe)
-                return safeUTXOs;
-            else
-                return utxos;
         }
-        lock = false;
-        return null;
+        return utxos;
     }
 
     @Override
@@ -343,23 +389,15 @@ public class TransactionManager implements ITransMan {
                 ki.debug("Token " + o.getToken());
                 ki.debug("Amount " + o.getAmount());
             }
-            utxoSpent.put(o.getID(), false);
-            utxoValueMap.put(o.getID(), o.getAmount().toString());
-            ki.getAddMan().receivedOn(o.getAddress());
-            if (utxoMap.get(o.getAddress().encodeForChain()) != null) {
-                List<String> inputs = JSONManager.parseJSONToList(utxoMap.get(o.getAddress().encodeForChain()));
-                if (inputs != null)
-                    inputs.add(o.toJSON());
-                else {
-                    ki.debug("Problem adding coinbase transaction, UTXO map has a value for the solver key but it is null.");
-                }
-                utxoMap.put(o.getAddress().encodeForChain(), JSONManager.parseListToJSON(inputs).toJSONString());
-
-            } else {
-                List<String> inputs = new ArrayList<>();
-                inputs.add(o.toJSON());
-                utxoMap.put(o.getAddress().encodeForChain(), JSONManager.parseListToJSON(inputs).toJSONString());
+            TXIOData data = null;
+            try {
+                data = new TXIOData(o.getAddress(), o.getIndex(), o.getAmount(), o.getToken(), o.getTimestamp());
+            } catch (InvalidTXIOData invalidTXIOData) {
+                invalidTXIOData.printStackTrace();
+                return false;
             }
+            utxoVerMap.putBytes(o.getID(), data.serializeToBytes());
+            ki.getAddMan().receivedOn(o.getAddress());
         }
 
 
@@ -378,103 +416,145 @@ public class TransactionManager implements ITransMan {
 
     @Override
     public void undoTransaction(ITrans transaction) {
-        if (ki.getOptions().tDebug)
-            ki.debug("Saving transaction to disk");
-        if (ki.getOptions().tDebug)
-            ki.debug("Transaction has: " + transaction.getInputs().size() + " inputs");
-        List<String> inputs = new ArrayList<>();
-        String carry = null;
-        String lastAdd = "";
-        boolean sameAdd = false;
-        for (Input i : transaction.getInputs()) {
-            if (ki.getOptions().tDebug)
-                ki.debug("Saving input: " + i.getID());
-            utxoSpent.put(i.getID(), false);
-            if (lastAdd.equals(i.getAddress().encodeForChain()))
-                sameAdd = true;
-            if (!sameAdd)
-                carry = utxoMap.get(i.getAddress().encodeForChain());
-            if (carry != null) {
-                if (!sameAdd)
-                    inputs = JSONManager.parseJSONToList(carry);
 
-                inputs.add(i.toJSON());
-                utxoMap.put(i.getAddress().encodeForChain(), JSONManager.parseListToJSON(inputs).toJSONString());
-
-            } else {
-                //TODO this should never activate.....investigate logic in other areas to find why we still have this here. It is used in the output saving, but should not in the input saving
-                inputs = new ArrayList<>();
-                utxoMap.put(i.getAddress().encodeForChain(), JSONManager.parseListToJSON(inputs).toJSONString());
-            }
-            lastAdd = i.getAddress().encodeForChain();
-        }
-        lastAdd = "";
-        sameAdd = false;
-        carry = "";
-        if (ki.getOptions().tDebug)
-            ki.debug("Transaction has: " + transaction.getOutputs().size() + " outputs");
-        for (Output o : transaction.getOutputs()) {
-            if (ki.getOptions().tDebug)
-                ki.debug("Saving output: " + o.getID() + " Token: " + o.getToken() + " Amount: " + o.getAmount());
-            ki.getAddMan().receivedOn(o.getAddress());
-            utxoSpent.remove(o.getID());
-            utxoValueMap.remove(o.getID());
-            if (lastAdd.equals(o.getAddress().encodeForChain()))
-                sameAdd = true;
-            if (!sameAdd)
-                carry = utxoMap.get(o.getAddress().encodeForChain());
-            if (carry != null) {
-                if (!sameAdd)
-                    inputs = JSONManager.parseJSONToList(carry);
-                inputs.remove(o.toJSON());
-                utxoMap.put(o.getAddress().encodeForChain(), JSONManager.parseListToJSON(inputs).toJSONString());
-            } else {
-                inputs = new ArrayList<>();
-                inputs.add(o.toJSON());
-                utxoMap.put(o.getAddress().encodeForChain(), JSONManager.parseListToJSON(inputs).toJSONString());
-            }
-        }
-
-        List<ITrans> toRemove = new ArrayList<>();
-        for (ITrans t : pending) {
-            if (t.getID().equals(transaction.getID())) toRemove.add(t);
-        }
-        pending.removeAll(toRemove);
-        if (ki.getOptions().tDebug)
-            ki.debug("Transaction removed from pending pool, done adding transaction");
     }
+
 
     private String lastHash = "";
     private String cHash;
     @Override
-    public boolean utxosChanged(Address address) {
-        cHash = "";
-        if (utxoMap.get(address.encodeForChain()) != null)
-            cHash = EncryptionManager.sha224(JSONManager.parseJSONToList(utxoMap.get(address.encodeForChain())).toString());
-        if (cHash != null && cHash.equals(lastHash)) {
-            return false;
-        }
-        lastHash = cHash;
+    public boolean utxosChanged(IAddress address) {
+
         return true;
     }
 
-    @Deprecated
-    @Override
-    public void commit() {
-
-    }
     @Override
     public void close() {
-        utxoMap.close();
-        utxoValueMap.close();
-        utxoSpent.close();
+        utxoAmp.close();
+        utxoVerMap.close();
     }
 
     @Override
     public void clear() {
-        utxoMap.clear();
-        utxoValueMap.clear();
-        utxoSpent.clear();
 
+        utxoAmp.clear();
+        utxoVerMap.clear();
+    }
+
+    @Override
+    public ITrans createSimple(IAddress receiver, BigInteger amount, BigInteger fee, Token token, String message) throws InvalidTransactionException {
+
+        if (ki.getEncryptMan().getPublicKey() != null) {
+            int index = 0;
+            Output output = new Output(amount, receiver, token, index, System.currentTimeMillis(), (byte) 2);
+            java.util.List<Output> outputs = new ArrayList<>();
+            outputs.add(output);
+            java.util.List<Input> inputs = new ArrayList<>();
+
+            //ki.getMainLog().info("Fee is: " + fee.toString());
+
+            BigInteger totalInput = BigInteger.ZERO;
+            for (IAddress a : ki.getAddMan().getActive()) {
+                if (ki.getTransMan().getUTXOs(a, true) == null)
+                    throw new InvalidTransactionException("No UTXOs on this address");
+                for (Output o : ki.getTransMan().getUTXOs(a, true)) {
+                    if (o.getToken().equals(token)) {
+                        if (inputs.contains(Input.fromOutput(o))) continue;
+                        inputs.add(Input.fromOutput(o));
+                        totalInput = totalInput.add(o.getAmount());
+                        if (totalInput.compareTo(amount) >= 0) break;
+
+                    }
+                }
+                if (totalInput.compareTo(amount) >= 0) break;
+
+            }
+            if (totalInput.compareTo(amount) < 0) {
+                throw new InvalidTransactionException("Not enough " + token.name() + " to do this transaction");
+            }
+
+            BigInteger feeInput = (token.equals(Token.ORIGIN)) ? totalInput : BigInteger.ZERO;
+            for (IAddress a : ki.getAddMan().getActive()) {
+                //get inputs
+                if (feeInput.compareTo(fee) >= 0) break;
+                for (Output o : ki.getTransMan().getUTXOs(a, true)) {
+                    if (o.getToken().equals(Token.ORIGIN)) {
+                        inputs.add(Input.fromOutput(o));
+                        feeInput = feeInput.add(o.getAmount());
+                        if (feeInput.compareTo(fee) >= 0) break;
+
+                    }
+                }
+            }
+
+            if (feeInput.compareTo(fee) < 0) {
+                throw new InvalidTransactionException("Not enough origin to pay for this fee");
+            }
+
+
+            List<String> sIns = new ArrayList<>();
+            for (Input i : inputs) {
+                sIns.add(i.getID());
+            }
+            Map<String, KeySigEntropyPair> keySigMap = new HashMap<>();
+            KeySigEntropyPair ksep = new KeySigEntropyPair(null, ki.getAddMan().getEntropyForAdd(ki.getAddMan().getMainAdd()), sIns, ki.getAddMan().getMainAdd().getPrefix(), false);
+            keySigMap.put(ki.getEncryptMan().getPublicKeyString(), ksep);
+            ITrans trans = new NewTrans(message, outputs, inputs, keySigMap, TransactionType.NEW_TRANS);
+            ki.debug("Transaction has: " + trans.getOutputs().size() + " Outputs before finalization");
+            trans.makeChange(fee, ki.getAddMan().getMainAdd()); // TODO this just sends change back to the main address......will need to give option later
+            trans.addSig(ki.getEncryptMan().getPublicKeyString(), Utils.toBase64(ki.getEncryptMan().sign(trans.toSignBytes())));
+            ki.debug("Transaction has: " + trans.getOutputs().size() + "Outputs after finalization");
+            usedUTXOs.addAll(sIns);
+            return trans;
+
+        }
+
+        throw new InvalidTransactionException("Public key null");
+    }
+
+    Map<BigInteger, Block> processMap = new HashMap<>();
+
+    @Override
+    public boolean postBlockProcessing(Block block) {
+
+        processMap.put(block.height, block);
+        synchronized (processLock) {
+            processLock.notify();
+        }
+        return true;
+    }
+
+    @Override
+    public List<Input> getInputsForAmountAndToken(IAddress address, BigInteger amount, Token token, boolean used) {
+        List<Input> inputs = new ArrayList<>();
+        List<Output> outs = getUTXOs(address, true);
+        BigInteger totalIn = BigInteger.ZERO;
+        if (outs == null) return null;
+        for (Output o : outs) {
+            if (o.getToken().equals(token)) {
+                inputs.add(Input.fromOutput(o));
+                totalIn = totalIn.add(o.getAmount());
+                if (totalIn.compareTo(amount) >= 0) {
+                    break;
+                }
+            }
+        }
+        if (totalIn.compareTo(amount) < 0)
+            return null;
+        if (used) {
+            List<String> usedOuts = new ArrayList<>();
+            for (Input i : inputs) {
+                usedOuts.add(i.getID());
+            }
+            usedUTXOs.addAll(usedOuts);
+        }
+        return inputs;
+    }
+
+    @Override
+    public void unUseUTXOs(List<Input> inputs) {
+        for (Input i : inputs) {
+            usedUTXOs.remove(i.getID());
+        }
     }
 }

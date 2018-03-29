@@ -1,7 +1,7 @@
 package com.lifeform.main.transactions;
 
 public enum TransactionType {
+    @Deprecated
     STANDARD,
-    MICRO_PAYMENT,
-    FUTURES_CONTRACT
+    NEW_TRANS
 }

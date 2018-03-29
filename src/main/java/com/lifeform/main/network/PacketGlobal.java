@@ -1,9 +1,11 @@
 package com.lifeform.main.network;
 
+import amp.Amplet;
 import com.lifeform.main.IKi;
 import com.lifeform.main.blockchain.Block;
 import com.lifeform.main.blockchain.ChainManager;
 import com.lifeform.main.transactions.ITrans;
+import com.lifeform.main.transactions.InvalidTransactionException;
 import com.lifeform.main.transactions.Transaction;
 
 import java.math.BigInteger;
@@ -62,7 +64,7 @@ public class PacketGlobal {
         for (String key : b.getTransactionKeys()) {
             TransactionPacket tp = new TransactionPacket();
             tp.block = b.ID;
-            tp.trans = b.getTransaction(key).toJSON();
+            tp.trans = b.getTransaction(key).serializeToAmplet().serializeToBytes();
             connMan.sendPacket(tp);
         }
         BlockEnd be = new BlockEnd();
@@ -175,7 +177,11 @@ public class PacketGlobal {
         block.prevID = bh.prevID;
         block.solver = bh.solver;
         block.timestamp = bh.timestamp;
-        block.setCoinbase(Transaction.fromJSON(bh.coinbase));
+        try {
+            block.setCoinbase(Transaction.fromAmplet(Amplet.create(bh.coinbase)));
+        } catch (InvalidTransactionException e) {
+            e.printStackTrace();
+        }
         return block;
     }
 
@@ -188,7 +194,7 @@ public class PacketGlobal {
         bh.merkleRoot = b.merkleRoot();
         bh.ID = b.ID;
         bh.height = b.height;
-        bh.coinbase = b.getCoinbase().toJSON();
+        bh.coinbase = b.getCoinbase().serializeToAmplet().serializeToBytes();
         return bh;
     }
 

@@ -1,6 +1,7 @@
 package com.lifeform.main.transactions;
 
 import com.lifeform.main.IKi;
+import com.lifeform.main.blockchain.Block;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -36,14 +37,14 @@ public class TransactionManagerLite implements ITransMan {
 
         pending.remove(transaction);
         for (Output output : transaction.getOutputs()) {
-            for (Address a : ki.getAddMan().getAll()) {
+            for (IAddress a : ki.getAddMan().getAll()) {
                 if (output.getAddress().encodeForChain().equals(a.encodeForChain())) {
                     utxoMap.put(output.getID(), output);
                 }
             }
         }
         for (Input input : transaction.getInputs()) {
-            for (Address a : ki.getAddMan().getAll()) {
+            for (IAddress a : ki.getAddMan().getAll()) {
                 if (input.getAddress().encodeForChain().equals(a.encodeForChain())) {
                     utxoMap.remove(input.getID());
                 }
@@ -56,14 +57,14 @@ public class TransactionManagerLite implements ITransMan {
     @Override
     public boolean addTransactionNoVerify(ITrans transaction) {
         for (Output output : transaction.getOutputs()) {
-            for (Address a : ki.getAddMan().getAll()) {
+            for (IAddress a : ki.getAddMan().getAll()) {
                 if (output.getAddress().encodeForChain().equals(a.encodeForChain())) {
                     utxoMap.put(output.getID(), output);
                 }
             }
         }
         for (Input input : transaction.getInputs()) {
-            for (Address a : ki.getAddMan().getAll()) {
+            for (IAddress a : ki.getAddMan().getAll()) {
                 if (input.getAddress().encodeForChain().equals(a.encodeForChain())) {
                     utxoMap.remove(input.getID());
                 }
@@ -79,7 +80,7 @@ public class TransactionManagerLite implements ITransMan {
     }
 
     @Override
-    public List<Output> getUTXOs(Address address, boolean safe) {
+    public List<Output> getUTXOs(IAddress address, boolean safe) {
         List<Output> utxos = new ArrayList<>();
         for (String ID : utxoMap.keySet()) {
             if (!usedUTXO.contains(ID))
@@ -114,14 +115,14 @@ public class TransactionManagerLite implements ITransMan {
     @Override
     public void undoTransaction(ITrans transaction) {
         for (Output output : transaction.getOutputs()) {
-            for (Address a : ki.getAddMan().getAll()) {
+            for (IAddress a : ki.getAddMan().getAll()) {
                 if (output.getAddress().encodeForChain().equals(a.encodeForChain())) {
                     utxoMap.remove(output.getID());
                 }
             }
         }
         for (Input input : transaction.getInputs()) {
-            for (Address a : ki.getAddMan().getAll()) {
+            for (IAddress a : ki.getAddMan().getAll()) {
                 if (input.getAddress().encodeForChain().equals(a.encodeForChain())) {
                     utxoMap.put(input.getID(), input);
                 }
@@ -130,14 +131,11 @@ public class TransactionManagerLite implements ITransMan {
     }
 
     @Override
-    public boolean utxosChanged(Address address) {
+    public boolean utxosChanged(IAddress address) {
         return true;
     }
 
-    @Override
-    public void commit() {
 
-    }
 
     @Override
     public void close() {
@@ -146,6 +144,26 @@ public class TransactionManagerLite implements ITransMan {
 
     @Override
     public void clear() {
+
+    }
+
+    @Override
+    public ITrans createSimple(IAddress receiver, BigInteger amount, BigInteger fee, Token token, String message) throws InvalidTransactionException {
+        return null;
+    }
+
+    @Override
+    public boolean postBlockProcessing(Block block) {
+        return false;
+    }
+
+    @Override
+    public List<Input> getInputsForAmountAndToken(IAddress address, BigInteger amount, Token token, boolean used) {
+        return null;
+    }
+
+    @Override
+    public void unUseUTXOs(List<Input> inputs) {
 
     }
 }

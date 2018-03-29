@@ -10,6 +10,7 @@ import com.lifeform.main.network.IConnectionManager;
 import com.lifeform.main.network.TransactionPacket;
 import com.lifeform.main.transactions.Address;
 import com.lifeform.main.transactions.ITrans;
+import com.lifeform.main.transactions.InvalidTransactionException;
 import com.lifeform.main.transactions.Transaction;
 
 import java.io.Serializable;
@@ -52,7 +53,11 @@ public class PoolBlockHeader implements Serializable, PoolPacket {
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
             }
-            b.setCoinbase(Transaction.fromJSON(coinbase));
+            try {
+                b.setCoinbase(Transaction.fromJSON(coinbase));
+            } catch (InvalidTransactionException e) {
+                e.printStackTrace();
+            }
             ki.getPoolData().blockData = b.gpuHeader();
             ki.debug("Setting as current work");
             ki.getPoolData().currentWork = this;
@@ -76,7 +81,7 @@ public class PoolBlockHeader implements Serializable, PoolPacket {
                     for (String key : b.getTransactionKeys()) {
                         TransactionPacket tp = new TransactionPacket();
                         tp.block = b.ID;
-                        tp.trans = b.getTransaction(key).toJSON();
+                        tp.trans = b.getTransaction(key).serializeToAmplet().serializeToBytes();
                         ki.getNetMan().broadcast(tp);
                     }
                     BlockEnd be = new BlockEnd();
@@ -94,7 +99,7 @@ public class PoolBlockHeader implements Serializable, PoolPacket {
                 } else {
                     ki.getPoolManager().addShare(b);
                 }
-                ki.debug("Shares for address:  " + ki.getPoolManager().getTotalSharesOfMiner(Address.decodeFromChain(ki.getPoolData().addMap.get(connMan.getID()))));
+                //ki.debug("Shares for address:  " + ki.getPoolManager().getTotalSharesOfMiner(Address.decodeFromChain(ki.getPoolData().addMap.get(connMan.getID()))));
             }
         }
 
@@ -109,7 +114,7 @@ public class PoolBlockHeader implements Serializable, PoolPacket {
         bh.merkleRoot = b.merkleRoot();
         bh.ID = b.ID;
         bh.height = b.height;
-        bh.coinbase = b.getCoinbase().toJSON();
+        bh.coinbase = b.getCoinbase().serializeToAmplet().serializeToBytes();
         return bh;
     }
 }

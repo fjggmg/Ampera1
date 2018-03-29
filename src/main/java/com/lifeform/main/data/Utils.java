@@ -25,6 +25,10 @@ public class Utils {
         return sb.toString();
     }
 
+    public static String byteToHex(byte b) {
+        return String.format("%02x", b);
+    }
+
     public static byte[] mapToByteArray(Map obj) throws IOException {
         byte[] bytes = null;
         ByteArrayOutputStream bos = null;
@@ -93,6 +97,11 @@ public class Utils {
                     + Character.digit(s.charAt(i+1), 16));
         }
         return data;
+    }
+
+    public static byte hexToByte(String s) {
+        if (s.length() > 2) return 0;
+        return toByteArray(s)[0];
     }
 
     public static double hexToDouble(String s)

@@ -1,6 +1,8 @@
 package com.lifeform.main;
 
+import amp.AmpLogging;
 import amp.exceptions.AmpException;
+import com.lifeform.main.adx.ExchangeManager;
 import com.lifeform.main.blockchain.*;
 import com.lifeform.main.data.*;
 import com.lifeform.main.network.*;
@@ -9,20 +11,22 @@ import com.lifeform.main.network.pool.PoolBlockHeader;
 import com.lifeform.main.network.pool.PoolData;
 import com.lifeform.main.network.pool.PoolNetMan;
 import com.lifeform.main.transactions.*;
+import com.lifeform.main.transactions.scripting.*;
+import engine.ByteCodeEngine;
 import gpuminer.JOCL.context.JOCLContextAndCommandQueue;
 import gpuminer.miner.context.ContextMaster;
 import mining_pool.Pool;
+import mining_pool.PoolLogging;
 import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.core.Logger;
-import org.bitbucket.backspace119.generallib.Logging.ConsoleLogger;
-import org.bitbucket.backspace119.generallib.Logging.LogMan;
-
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import java.lang.management.ManagementFactory;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 /**
  * Created by Bryan on 5/10/2017.
@@ -46,7 +50,6 @@ public class Ki extends Thread implements IKi {
 
     private IMinerMan minerMan;
     private Options o;
-    private LogMan logMan;
     private Logger main;
     private INetworkManager netMan;
     private IChainMan chainMan;
@@ -57,7 +60,7 @@ public class Ki extends Thread implements IKi {
     private IKi ki = this;
     private boolean run = true;
     //TODO: need to start saving version number to file for future conversion of files
-    public static final String VERSION = "0.17.7-BETA";
+    public static final String VERSION = "0.18.0-BETA";
     private boolean relay = false;
     private NewGUI guiHook;
     public static boolean debug = true;
@@ -69,7 +72,10 @@ public class Ki extends Thread implements IKi {
     private PoolData pd;
     private XodusStringBooleanMap settings = new XodusStringBooleanMap("settings");
     private XodusStringMap stringSettings = new XodusStringMap("etc");
-
+    private ByteCodeEngine bce8 = new ByteCodeEngine(1);
+    private ByteCodeEngine bce16 = new ByteCodeEngine(1);
+    private ScriptManager scriptMan;
+    private ExchangeManager exchangeMan;
     public Ki(Options o) {
 
         if (settings.get(VERSION) == null || !settings.get(VERSION)) {
@@ -78,7 +84,7 @@ public class Ki extends Thread implements IKi {
                 getSetting(Settings.DEBUG_MODE);
             } catch (Exception e) {
 
-                settings.put(Settings.DEBUG_MODE.getKey(), false);
+                settings.put(Settings.DEBUG_MODE.getKey(), true);
             }
             try {
                 getSetting(Settings.HIGH_SECURITY);
@@ -90,7 +96,7 @@ public class Ki extends Thread implements IKi {
                 getSetting(Settings.REQUIRE_PASSWORD);
             } catch (Exception e) {
 
-                settings.put(Settings.REQUIRE_PASSWORD.getKey(), true);
+                settings.put(Settings.REQUIRE_PASSWORD.getKey(), false);
             }
             try {
                 getSetting(Settings.DYNAMIC_FEE);
@@ -129,6 +135,8 @@ public class Ki extends Thread implements IKi {
             if (getStringSetting(StringSettings.POOL_SERVER) == null)
                 stringSettings.put(StringSettings.POOL_SERVER.getKey(), "ampextech.ddns.net");
         }
+        scriptMan = new ScriptManager(bce8, bce16, this);
+        exchangeMan = new ExchangeManager(this);
         if (o.relay) {
             ManagementFactory.getThreadMXBean().setThreadContentionMonitoringEnabled(true);
         }
@@ -140,9 +148,13 @@ public class Ki extends Thread implements IKi {
         this.o = o;
         instance = this;
         relay = o.relay;
-        logMan = new LogMan(new ConsoleLogger());
+        //logMan = new LogMan(new ConsoleLogger());
 
-        main = logMan.createLogger("Main", "console", Level.DEBUG);
+        //main = logMan.createLogger("Main", "console", Level.DEBUG);
+        System.setProperty("log4j.configurationFile", "log4j.xml");
+        AmpLogging.startLogging();
+        PoolLogging.startLogging();
+        main = LogManager.getLogger("Origin");
         main.info("Origin starting up");
         if (o.pool) {
             chainMan = new PoolChainMan();
@@ -320,6 +332,7 @@ public class Ki extends Thread implements IKi {
             poolNet.close();
         settings.close();
         stringSettings.close();
+        exchangeMan.close();
         System.exit(0);
     }
 
@@ -417,6 +430,11 @@ public class Ki extends Thread implements IKi {
         stringSettings.put(setting.getKey(), value);
     }
 
+    @Override
+    public ByteCodeEngine getBCE8() {
+        return bce8;
+    }
+
     private void rn() {
         rn = false;
         netMan.interrupt();
@@ -454,13 +472,6 @@ public class Ki extends Thread implements IKi {
     }
 
     @Override
-    public LogMan getLogMan()
-    {
-        return logMan;
-    }
-
-
-    @Override
     public Logger getMainLog() { return main; }
 
     @Override
@@ -468,6 +479,7 @@ public class Ki extends Thread implements IKi {
     {
         if (getSetting(Settings.DEBUG_MODE) || isRelay())
         {
+
             main.debug(debug);
         }
     }
@@ -508,5 +520,15 @@ public class Ki extends Thread implements IKi {
     public IAddMan getAddMan()
     {
         return addMan;
+    }
+
+    @Override
+    public ExchangeManager getExMan() {
+        return exchangeMan;
+    }
+
+    @Override
+    public ScriptManager getScriptMan() {
+        return scriptMan;
     }
 }

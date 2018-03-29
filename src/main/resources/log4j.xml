@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration>
+    <Appenders>
+        <Console name="STDOUT" target="SYSTEM_OUT">
+            <PatternLayout
+                    pattern="%highlight{%d [%t] %-5level: %msg%n%throwable}{FATAL=bright red, ERROR=bright red, WARN=bright yellow, INFO=white, DEBUG=bright green, TRACE=blue}"/>
+        </Console>
+    </Appenders>
+    <loggers>
+        <Logger name="org.apache.log4j.xml" level="all"/>
+        <root level="all">
+            <appender-ref ref="STDOUT"/>
+        </root>
+    </loggers>
+</Configuration>

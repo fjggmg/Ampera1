@@ -1,23 +1,27 @@
 package com.lifeform.main.transactions;
 
 import amp.Amplet;
+import amp.HeadlessAmplet;
+import amp.HeadlessPrefixedAmplet;
 import amp.classification.AmpClassCollection;
 import amp.classification.classes.AC_SingleElement;
 import amp.group_primitives.UnpackedGroup;
 import amp.serialization.IAmpAmpletSerializable;
+import amp.serialization.IAmpByteSerializable;
 import com.lifeform.main.data.AmpIDs;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
+import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 
 /**
  * Created by Bryan on 8/9/2017.
  */
-public class Input implements TXIO, IAmpAmpletSerializable {
+public class Input implements TXIO, IAmpByteSerializable {
 
-    public Input(String prevID,int prevOut,BigInteger amount,Address receiver,Token token,long timestamp)
+    public Input(String prevID, int prevOut, BigInteger amount, IAddress receiver, Token token, long timestamp)
     {
         this.prevID = prevID;
         this.prevOut = prevOut;
@@ -32,17 +36,21 @@ public class Input implements TXIO, IAmpAmpletSerializable {
     {
         return prevID;
     }
-    public boolean canSpend(String keys, String entropy)
+
+    public boolean canSpend(String keys, String entropy, String prefix, boolean p2sh)
     {
-        return getAddress().canSpend(keys,entropy);
+        if (prefix == null || prefix.length() != 5)
+            return getAddress().canSpend(keys, entropy, p2sh);
+        else
+            return getAddress().canSpendPrefixed(keys, entropy, prefix, p2sh);
     }
     private String prevID;
     private int prevOut;
     private BigInteger amount;
-    private Address receiver;
+    private IAddress receiver;
     private Token token;
     @Override
-    public Address getAddress() {
+    public IAddress getAddress() {
         return receiver;
     }
 
@@ -81,7 +89,7 @@ public class Input implements TXIO, IAmpAmpletSerializable {
             String prevID = (String)jo.get("prevID");
             int prevOut = Integer.parseInt((String)jo.get("prevOut"));
             BigInteger amount = new BigInteger((String)jo.get("amount"));
-            Address receiver = Address.decodeFromChain((String)jo.get("receiver"));
+            IAddress receiver = Address.decodeFromChain((String) jo.get("receiver"));
             Token token = Token.valueOf((String)jo.get("token"));
             long timestamp =(long) jo.get("timestamp");
             return new Input(prevID,prevOut,amount,receiver,token,timestamp);
@@ -103,13 +111,60 @@ public class Input implements TXIO, IAmpAmpletSerializable {
     }
 
     @Override
+    public byte[] serializeToBytes() {
+        HeadlessAmplet hamplet = HeadlessAmplet.create();
+        hamplet.addElement(prevOut);
+        hamplet.addElement(timestamp);
+        HeadlessPrefixedAmplet hpa = HeadlessPrefixedAmplet.create();
+        hpa.addElement(amount);
+        hpa.addBytes(receiver.toByteArray());
+
+        try {
+            hpa.addElement(token.getName());
+            hpa.addElement(prevID);
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        hpa.addElement(hamplet);
+        return hpa.serializeToBytes();
+    }
+
+    public static Input fromBytes(byte[] array) {
+        HeadlessPrefixedAmplet hpa = HeadlessPrefixedAmplet.create(array);
+        BigInteger amount = new BigInteger(hpa.getNextElement());
+        IAddress receiver = Address.fromByteArray(hpa.getNextElement());
+        Token token;
+        String prevID;
+        try {
+            token = Token.byName(new String(hpa.getNextElement(), "UTF-8"));
+            prevID = new String(hpa.getNextElement(), "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+            return null;
+        }
+        HeadlessAmplet hamplet = hpa.getNextElementAsHeadlessAmplet();
+        int index = hamplet.getNextInt();
+        long timestamp = hamplet.getNextLong();
+        return new Input(prevID, index, amount, receiver, token, timestamp);
+    }
+
     public Amplet serializeToAmplet() {
         AC_SingleElement amount = AC_SingleElement.create(AmpIDs.AMOUNT_GID, this.amount.toByteArray());
         AC_SingleElement receiver = AC_SingleElement.create(AmpIDs.RECEIVER_GID, this.receiver.toByteArray());
-        AC_SingleElement token = AC_SingleElement.create(AmpIDs.TOKEN_GID, this.token.toString());
+        AC_SingleElement token = null;
+        try {
+            token = AC_SingleElement.create(AmpIDs.TOKEN_GID, this.token.toString());
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
         AC_SingleElement index = AC_SingleElement.create(AmpIDs.INDEX_GID, this.prevOut);
         AC_SingleElement timestamp = AC_SingleElement.create(AmpIDs.TXTIMESTAMP_GID, this.timestamp);
-        AC_SingleElement ID = AC_SingleElement.create(AmpIDs.ID_GID, this.getID());
+        AC_SingleElement ID = null;
+        try {
+            ID = AC_SingleElement.create(AmpIDs.ID_GID, this.getID());
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
         AmpClassCollection acc = new AmpClassCollection();
         acc.addClass(amount);
         acc.addClass(receiver);
@@ -128,6 +183,11 @@ public class Input implements TXIO, IAmpAmpletSerializable {
         UnpackedGroup ig = amp.unpackGroup(AmpIDs.INDEX_GID);
         UnpackedGroup idg = amp.unpackGroup(AmpIDs.ID_GID);
         UnpackedGroup tmg = amp.unpackGroup(AmpIDs.TXTIMESTAMP_GID);
-        return new Input(idg.getElementAsString(0), ig.getElementAsInt(0), new BigInteger(ag.getElement(0)), Address.fromByteArray(rg.getElement(0)), Token.valueOf(tg.getElementAsString(0)), tmg.getElementAsLong(0));
+        try {
+            return new Input(idg.getElementAsString(0), ig.getElementAsInt(0), new BigInteger(ag.getElement(0)), Address.fromByteArray(rg.getElement(0)), Token.valueOf(tg.getElementAsString(0)), tmg.getElementAsLong(0));
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 }

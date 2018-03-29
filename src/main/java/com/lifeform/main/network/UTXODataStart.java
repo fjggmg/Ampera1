@@ -2,6 +2,7 @@ package com.lifeform.main.network;
 
 import com.lifeform.main.IKi;
 import com.lifeform.main.transactions.Address;
+import com.lifeform.main.transactions.IAddress;
 import com.lifeform.main.transactions.TransactionManagerLite;
 
 import java.io.Serializable;
@@ -21,7 +22,7 @@ public class UTXODataStart implements Packet,Serializable {
         ((TransactionManagerLite)ki.getTransMan()).resetLite();
         UTXOStartAck usa = new UTXOStartAck();
         usa.addresses = new ArrayList<>();
-        for(Address a:ki.getAddMan().getAll())
+        for (IAddress a : ki.getAddMan().getAll())
         {
             usa.addresses.add(a.encodeForChain());
         }

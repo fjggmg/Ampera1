@@ -1,0 +1,275 @@
+package com.lifeform.main.adx;
+
+import amp.HeadlessPrefixedAmplet;
+import amp.database.XodusAmpMap;
+import com.lifeform.main.IKi;
+import com.lifeform.main.Ki;
+import com.lifeform.main.transactions.IAddress;
+import javafx.application.Platform;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import org.fusesource.jansi.AnsiConsole;
+
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+
+public class OrderBook {
+
+    private volatile ObservableList<Order> buys = FXCollections.observableArrayList(new CopyOnWriteArrayList<>());
+    private volatile ObservableList<Order> sells = FXCollections.observableArrayList(new CopyOnWriteArrayList<>());
+    private volatile ObservableList<Order> matched = FXCollections.observableArrayList(new CopyOnWriteArrayList<>());
+    private XodusAmpMap obMap = new XodusAmpMap("ob");
+    private List<ExchangeData> data = new ArrayList<>();
+    private List<String> matchedOrders = new ArrayList<>();
+    private boolean firstRun = false;
+    private volatile ObservableList<Order> active = FXCollections.observableArrayList(new CopyOnWriteArrayList<>());
+    private IKi ki;
+
+    public OrderBook(IKi ki) {
+        this.ki = ki;
+    }
+
+    public void addOrder(Order order) {
+        Platform.runLater(new Thread() {
+            public void run() {
+                if (order.buy()) {
+                    buys.add(order);
+                } else {
+                    sells.add(order);
+                }
+                for (IAddress add : ki.getAddMan().getAll()) {
+                    if (add.encodeForChain().equals(order.address().encodeForChain())) {
+                        active.add(order);
+                        break;
+                    }
+                }
+            }
+        });
+    }
+
+    public void matchOrder(Order order) {
+        if (!matchedOrders.contains(order.getID())) {
+            Platform.runLater(new Thread() {
+                public void run() {
+                    order.match(System.currentTimeMillis());
+                    if (order.buy()) {
+                        buys.remove(order);
+
+                    } else {
+                        sells.remove(order);
+                    }
+                    matched.add(0, order);
+                    for (IAddress add : ki.getAddMan().getAll()) {
+                        if (add.encodeForChain().equals(order.address().encodeForChain())) {
+                            active.remove(order);
+                            break;
+                        }
+                    }
+                }
+            });
+            addData(order.amountOnOffer(), order.unitPrice());
+        }
+    }
+
+    public ObservableList<Order> buys() {
+        return buys;
+    }
+
+    public ObservableList<Order> sells() {
+        return sells;
+    }
+
+    public ObservableList<Order> matched() {
+        return matched;
+    }
+
+    public ExchangeData getRecentData() {
+        if (data.isEmpty()) return null;
+        return data.get(data.size() - 1);
+    }
+
+    public boolean hasNew() {
+        return hasNew;
+    }
+
+    private ExchangeData recent = null;
+
+    public void setRecent(ExchangeData data) {
+        recent = data;
+    }
+
+    public ExchangeData collectRecentData() {
+        hasNew = false;
+        if (recent != null) {
+            return recent;
+        }
+        return data.get(data.size() - 1);
+    }
+
+    private boolean hasNew = false;
+
+    public void addData(BigInteger amount, BigInteger price, long timestamp) {
+        if (data.isEmpty()) {
+            hasNew = true;
+            ExchangeData data = new ExchangeData(price, timestamp, 5);//TODO possibly create constructor with amount?
+            data.addData(price, amount);
+            this.data.add(data);
+        } else if (data.get(data.size() - 1).done(timestamp)) {
+            hasNew = true;
+            ExchangeData ed = data.get(data.size() - 1).createNew();
+            ed.addData(price, amount);
+            data.add(ed);
+        } else {
+            data.get(data.size() - 1).addData(price, amount);
+        }
+
+    }
+
+    public List<ExchangeData> getData() {
+        return data;
+    }
+
+    public void run() {
+        firstRun = true;
+    }
+
+    public boolean hasRun() {
+        return firstRun;
+    }
+
+    public void addData(BigInteger amount, BigInteger price) {
+        addData(amount, price, System.currentTimeMillis());
+    }
+
+    private BigInteger totalB;
+    private BigInteger totalS;
+
+    public void sort() {
+
+        buys.sort(new OrderComparator(true));
+        totalB = BigInteger.ZERO;
+        for (Order b : buys) {
+            totalB = totalB.add(b.amountOnOffer());
+            b.getOm().totalAtOrder = new BigInteger(totalB.toByteArray());
+        }
+        sells.sort(new OrderComparator(false));
+        totalS = BigInteger.ZERO;
+        for (Order s : sells) {
+            totalS = totalS.add(s.amountOnOffer());
+            s.getOm().totalAtOrder = new BigInteger(totalS.toByteArray());
+        }
+    }
+
+    public void close() {
+        obMap.clear();
+        HeadlessPrefixedAmplet hpa = HeadlessPrefixedAmplet.create();
+        for (Order o : buys) {
+            hpa.addBytes(o.serializeToBytes());
+        }
+        obMap.putBytes("buys", hpa.serializeToBytes());
+        hpa = HeadlessPrefixedAmplet.create();
+        for (Order o : sells) {
+            hpa.addBytes(o.serializeToBytes());
+        }
+        obMap.putBytes("sells", hpa.serializeToBytes());
+        hpa = HeadlessPrefixedAmplet.create();
+        for (Order o : matched) {
+            hpa.addBytes(o.serializeToBytes());
+        }
+        obMap.putBytes("matched", hpa.serializeToBytes());
+        hpa = HeadlessPrefixedAmplet.create();
+        for (Order o : active) {
+            hpa.addBytes(o.serializeToBytes());
+        }
+        obMap.putBytes("active", hpa.serializeToBytes());
+
+        try {
+            obMap.close();
+        } catch (Exception e) {
+            Ki.getInstance().getMainLog().error("Error saving order book, order book data may still be in tact", e);
+        }
+    }
+
+    public void load() {
+        if (obMap.getBytes("buys") != null) {
+            HeadlessPrefixedAmplet hpa = HeadlessPrefixedAmplet.create(obMap.getBytes("buys"));
+            if (hpa != null && hpa.hasNextElement()) {
+                while (hpa.hasNextElement()) {
+                    buys.add(Order.fromByteArray(hpa.getNextElement()));
+
+                }
+            }
+        }
+        if (obMap.getBytes("sells") != null) {
+            HeadlessPrefixedAmplet hpa = HeadlessPrefixedAmplet.create(obMap.getBytes("sells"));
+            if (hpa != null && hpa.hasNextElement()) {
+                while (hpa.hasNextElement()) {
+                    sells.add(Order.fromByteArray(hpa.getNextElement()));
+                }
+            }
+        }
+        if (obMap.getBytes("matched") != null) {
+            HeadlessPrefixedAmplet hpa = HeadlessPrefixedAmplet.create(obMap.getBytes("matched"));
+            if (hpa != null && hpa.hasNextElement()) {
+                while (hpa.hasNextElement()) {
+                    matched.add(Order.fromByteArray(hpa.getNextElement()));
+                }
+                for (int i = matched.size() - 1; i >= 0; i--) {
+                    Order o = matched.get(i);
+                    matchedOrders.add(o.getID());
+                    addData(o.amountOnOffer(), o.unitPrice(), o.timestamp().longValueExact());
+                }
+            }
+        }
+        if (obMap.getBytes("active") != null) {
+            HeadlessPrefixedAmplet hpa = HeadlessPrefixedAmplet.create(obMap.getBytes("active"));
+            if (hpa != null && hpa.hasNextElement()) {
+                while (hpa.hasNextElement()) {
+                    active.add(Order.fromByteArray(hpa.getNextElement()));
+                }
+            }
+        }
+    }
+
+    public ObservableList<Order> active() {
+        return active;
+    }
+
+    /**
+     * mainly used for adding an "order" that's not really an order but a inverse of the recuction of another so we
+     * can have it on recents
+     *
+     * @param order
+     */
+    public void addMatched(Order order) {
+        Platform.runLater(new Thread() {
+            public void run() {
+                matched.add(0, order);
+                addData(order.amountOnOffer(), order.unitPrice());
+            }
+        });
+    }
+
+    public void removeOrder(Order o) {
+        Platform.runLater(new Thread() {
+            public void run() {
+                if (o.buy()) {
+                    buys.remove(o);
+                } else {
+                    sells.remove(o);
+                }
+                for (IAddress add : ki.getAddMan().getAll()) {
+                    if (add.encodeForChain().equals(o.address().encodeForChain())) {
+                        active.remove(o);
+                        break;
+                    }
+                }
+            }
+        });
+
+    }
+}

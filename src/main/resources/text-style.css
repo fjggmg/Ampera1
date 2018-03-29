@@ -45,3 +45,19 @@
 .scroll-pane {
    -fx-background-color: transparent;
 }
+
+.list-view {
+    -fx-background-color: #2A2D36;
+}
+.list-view .list-cell:even {
+     -fx-background-color: #252830;
+     -fx-text-fill: white;
+}
+.list-view .list-cell:odd {
+    -fx-background-color: #2A2D36;
+    -fx-text-fill: white;
+}
+.list-view .scroll-bar:vertical {
+    -fx-scale-x: 0;
+    -fx-padding: 0px;
+}

@@ -28,6 +28,8 @@ public class AmpIDs {
     public static final long KEYS_CID = 14;
     public static final GroupID ENTROPY_MAP_GID = new GroupID(15, 15, "EntropyMap");
     public static final GroupID TYPE_GID = new GroupID(16, 16, "Type");
+    //public static final GroupID SIGS_GID = new GroupID(24,24,"Sigs");
+    //public static final GroupID ENTROPY_GID = new GroupID(25,25,"Entropy");
 
     //TXIOs
     public static final GroupID AMOUNT_GID = new GroupID(17, 17, "Amount");
@@ -36,5 +38,5 @@ public class AmpIDs {
     public static final GroupID INDEX_GID = new GroupID(20, 20, "Index");
     public static final GroupID TXTIMESTAMP_GID = new GroupID(21, 21, "Timestamp");
     public static final GroupID ID_GID = new GroupID(22, 22, "ID_GID");
-
+    public static final GroupID TXIO_VER_GID = new GroupID(23, 23, "TXIO Version");
 }

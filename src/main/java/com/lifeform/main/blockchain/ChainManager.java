@@ -216,6 +216,7 @@ public class ChainManager implements IChainMan {
             }
         }
         ki.blockTick(block);
+        ki.getTransMan().postBlockProcessing(block);
         return BlockState.SUCCESS;
     }
 
@@ -340,6 +341,12 @@ public class ChainManager implements IChainMan {
         if (!block.ID.equals(hash)) return BlockState.ID_MISMATCH;
         if (bDebug)
             ki.debug("ID is ok");
+        int txios = 0;
+        for (String trans : block.getTransactionKeys()) {
+            txios += block.getTransaction(trans).getOutputs().size();
+            txios += block.getTransaction(trans).getInputs().size();
+            if (txios > IChainMan.MAX_TXIOS) return BlockState.BAD_TRANSACTIONS;
+        }
         byte[] bigIntDiffByteArray = currentDifficulty.toByteArray();
         byte[] byteDiff = new byte[64];
         int p = 63;
@@ -433,7 +440,7 @@ public class ChainManager implements IChainMan {
             if (!ki.getTransMan().addTransactionNoVerify(block.getTransaction(key))) return BlockState.FAILED_ADD_TRANS;
         }
 
-        ki.getTransMan().commit();
+
         //setHeight(block.height);
 
         if (!ki.getOptions().nogui) {
@@ -446,14 +453,14 @@ public class ChainManager implements IChainMan {
                 boolean add = false;
                 ITrans transaction = block.getTransaction(trans);
                 for (Output o : transaction.getOutputs()) {
-                    for (Address a : ki.getAddMan().getAll()) {
+                    for (IAddress a : ki.getAddMan().getAll()) {
                         if (o.getAddress().encodeForChain().equals(a.encodeForChain())) {
                             add = true;
                         }
                     }
                 }
                 for (Input i : transaction.getInputs()) {
-                    for (Address a : ki.getAddMan().getAll()) {
+                    for (IAddress a : ki.getAddMan().getAll()) {
                         if (i.getAddress().encodeForChain().equals(a.encodeForChain())) {
                             add = true;
                         }
@@ -653,7 +660,7 @@ public class ChainManager implements IChainMan {
         {
             fees = fees.add(transactions.get(t).getFee());
         }
-        Output o = new Output(blockRewardForHeight(currentHeight().add(BigInteger.ONE)).add(fees),ki.getAddMan().getMainAdd(), Token.ORIGIN,0, System.currentTimeMillis());
+        Output o = new Output(blockRewardForHeight(currentHeight().add(BigInteger.ONE)).add(fees), ki.getAddMan().getMainAdd(), Token.ORIGIN, 0, System.currentTimeMillis(), (byte) 2);
         List<Output> outputs = new ArrayList<>();
         outputs.add(o);
         int i = 1;
@@ -662,12 +669,17 @@ public class ChainManager implements IChainMan {
             for(Token t:Token.values())
             {
                 if(!t.equals(Token.ORIGIN)) {
-                    outputs.add(new Output(BigInteger.valueOf(Long.MAX_VALUE), ki.getAddMan().getMainAdd(), t, i, System.currentTimeMillis()));
+                    outputs.add(new Output(BigInteger.valueOf(Long.MAX_VALUE), ki.getAddMan().getMainAdd(), t, i, System.currentTimeMillis(), (byte) 2));
                     i++;
                 }
             }
         }
-        ITrans coinbase = new Transaction("coinbase", 0, new HashMap<String, String>(), outputs, new ArrayList<Input>(), new HashMap<>(), new ArrayList<String>(), TransactionType.STANDARD);
+        ITrans coinbase = null;
+        try {
+            coinbase = new NewTrans("coinbase", outputs, new ArrayList<>(), new HashMap<String, KeySigEntropyPair>(), TransactionType.NEW_TRANS);
+        } catch (InvalidTransactionException e) {
+            e.printStackTrace();
+        }
 
         b.setCoinbase(coinbase);
         //b.addTransaction(coinbase);

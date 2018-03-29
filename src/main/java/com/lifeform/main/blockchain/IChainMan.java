@@ -7,7 +7,7 @@ import java.util.Map;
  * Created by Bryan on 7/14/2017.
  */
 public interface IChainMan {
-
+    int MAX_TXIOS = 100_000;
     Map<String,Block> getChain();
 
     BlockState softVerifyBlock(Block b);

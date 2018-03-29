@@ -1,7 +1,10 @@
 package com.lifeform.main.network;
 
 import com.lifeform.main.IKi;
+import com.lifeform.main.adx.Order;
 import com.lifeform.main.data.EncryptionManager;
+import com.lifeform.main.network.adx.OrderMatched;
+import com.lifeform.main.network.adx.OrderPacket;
 import com.lifeform.main.transactions.ITrans;
 
 import java.io.Serializable;
@@ -92,12 +95,31 @@ public class Handshake implements Serializable, Packet {
                 //connMan.sendPacket(dr);
             }
 
+        for (Order o : ki.getExMan().getOrderBook().buys()) {
+            OrderPacket op = new OrderPacket();
+            op.order = o.serializeToBytes();
+            op.transaction = ki.getExMan().txIDforOrderID(o.getID());
+            connMan.sendPacket(op);
+        }
+        for (Order o : ki.getExMan().getOrderBook().sells()) {
+            OrderPacket op = new OrderPacket();
+            op.order = o.serializeToBytes();
+            op.transaction = ki.getExMan().txIDforOrderID(o.getID());
+            connMan.sendPacket(op);
+        }
+
+        for (Order o : ki.getExMan().getOrderBook().matched()) {
+            OrderPacket op = new OrderPacket();
+            op.matched = true;
+            op.order = o.serializeToBytes();
+            connMan.sendPacket(op);
+        }
 
         if (ki.getChainMan().currentHeight().compareTo(BigInteger.valueOf(-1L)) != 0)
             if (currentHeight.compareTo(ki.getChainMan().currentHeight()) == 0) {
                 for (ITrans trans : ki.getTransMan().getPending()) {
                     TransactionPacket tp = new TransactionPacket();
-                    tp.trans = trans.toJSON();
+                    tp.trans = trans.serializeToAmplet().serializeToBytes();
                     connMan.sendPacket(tp);
                 }
                 pg.doneDownloading = true;

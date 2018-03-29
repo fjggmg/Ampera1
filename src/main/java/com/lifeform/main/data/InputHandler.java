@@ -101,7 +101,7 @@ public class InputHandler extends Thread {
                     if (lines.length < 4) {
                         ki.getMainLog().info("Not enough arguments");
                     } else {
-                        Address receiver = Address.decodeFromChain(lines[1]);
+                        IAddress receiver = Address.decodeFromChain(lines[1]);
                         if (receiver.isValid()) {
                             double amt;
                             try {
@@ -140,7 +140,7 @@ public class InputHandler extends Thread {
                             long lAmt = (long) (amt * 100000000D);
                             BigInteger amount = BigInteger.valueOf(lAmt);
                             int index = 0;
-                            Output output = new Output(amount, receiver, token, index, System.currentTimeMillis());
+                            Output output = new Output(amount, receiver, token, index, System.currentTimeMillis(), (byte) 2);
                             java.util.List<Output> outputs = new ArrayList<>();
                             outputs.add(output);
                             java.util.List<String> keys = new ArrayList<>();
@@ -154,7 +154,7 @@ public class InputHandler extends Thread {
                             ki.getMainLog().info("Fee is: " + fee.toString());
 
                             BigInteger totalInput = BigInteger.ZERO;
-                            for (Address a : ki.getAddMan().getActive()) {
+                            for (IAddress a : ki.getAddMan().getActive()) {
                                 if (ki.getTransMan().getUTXOs(a, true) == null) return;
                                 for (Output o : ki.getTransMan().getUTXOs(a, true)) {
                                     if (o.getToken().equals(token)) {
@@ -174,7 +174,7 @@ public class InputHandler extends Thread {
                             }
 
                             BigInteger feeInput = (token.equals(Token.ORIGIN)) ? totalInput : BigInteger.ZERO;
-                            for (Address a : ki.getAddMan().getActive()) {
+                            for (IAddress a : ki.getAddMan().getActive()) {
                                 //get inputs
                                 if (feeInput.compareTo(fee) >= 0) break;
                                 for (Output o : ki.getTransMan().getUTXOs(a, true)) {
@@ -214,7 +214,7 @@ public class InputHandler extends Thread {
                                     ki.getTransMan().getUsedUTXOs().add(i.getID());
                                 }
                                 TransactionPacket tp = new TransactionPacket();
-                                tp.trans = trans.toJSON();
+                                tp.trans = trans.serializeToAmplet().serializeToBytes();
                                 ki.getNetMan().broadcast(tp);
                             } else {
                                 ki.debug("Transaction did not verify, not sending and not adding to pending list");
@@ -233,7 +233,7 @@ public class InputHandler extends Thread {
                 } else if (line.startsWith("requestTransactions")) {
                     ki.getMainLog().info("Requesting transaction data for addresses:");
                     TransactionDataRequest tdr = new TransactionDataRequest();
-                    for (Address a : ki.getAddMan().getAll()) {
+                    for (IAddress a : ki.getAddMan().getAll()) {
                         ki.getMainLog().info(a.encodeForChain());
                     }
                     ki.getNetMan().broadcast(tdr);
@@ -298,7 +298,7 @@ public class InputHandler extends Thread {
 
 
                 } else if (line.startsWith("allAdds")) {
-                    for (Address a : ki.getAddMan().getAll()) {
+                    for (IAddress a : ki.getAddMan().getAll()) {
                         ki.debug("Address: " + a.encodeForChain());
                     }
 
@@ -501,7 +501,7 @@ public class InputHandler extends Thread {
                 } else {
                     System.out.println("unrecognized input");
                 }
-            } catch (IOException e) {
+            } catch (IOException | InvalidTransactionException e) {
                 e.printStackTrace();
             }
 

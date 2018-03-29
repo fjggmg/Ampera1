@@ -33,7 +33,9 @@ public class MinerManager implements IMinerMan{
     @Override
     public void setup() {
         try {
-
+            if (cm != null) {
+                cm.shutdown();
+            }
             ContextMaster platforms = new ContextMaster();
 
             cm = platforms;
@@ -140,11 +142,7 @@ public class MinerManager implements IMinerMan{
         isRestarting = true;
 
         stopMiners();
-        try {
-            sleep(5000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+
         startMiners();
         isRestarting = false;
 

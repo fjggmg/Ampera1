@@ -1,8 +1,10 @@
 package com.lifeform.main.network;
 
+import amp.Amplet;
 import com.lifeform.main.IKi;
 import com.lifeform.main.transactions.ITrans;
 import com.lifeform.main.transactions.Input;
+import com.lifeform.main.transactions.InvalidTransactionException;
 import com.lifeform.main.transactions.Transaction;
 import io.netty.util.internal.ConcurrentSet;
 
@@ -13,7 +15,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class TransactionPacket implements Serializable, Packet {
-    public String trans;
+    public byte[] trans;
     public String block;
 
     private static ConcurrentHashMap.KeySetView<Object, Boolean> done = ConcurrentHashMap.newKeySet();
@@ -26,14 +28,29 @@ public class TransactionPacket implements Serializable, Packet {
                 ki.debug("Discarding because we already have this transaction for a block");
             return;
         }
+        ITrans trans = null;
+        try {
+            ki.debug("Deserializing transaction...");
+            Amplet amp = Amplet.create(this.trans);
+            ki.debug("Created amplet");
+            trans = Transaction.fromAmplet(amp);
+            ki.debug("Deserialized");
+        } catch (InvalidTransactionException e) {
+            e.printStackTrace();
+            return;
+        }
         if (block == null || block.isEmpty()) {
-            if (ki.getTransMan().verifyTransaction(Transaction.fromJSON(trans))) {
-                ITrans trans = Transaction.fromJSON(this.trans);
-                if (trans == null || trans.getInputs() == null) {
-                    if (ki.getOptions().pDebug)
-                        ki.debug("Null trans or null inputs, discarding");
-                    return;
-                }
+            ki.debug("Non-block transaction, verifying...");
+            if (trans == null || trans.getInputs() == null) {
+                if (ki.getOptions().pDebug)
+                    ki.debug("Null trans or null inputs, discarding");
+                return;
+            }
+            ki.debug("Transaction not null, result of verify: ");
+            ki.debug("" + ki.getTransMan().verifyTransaction(trans));
+            if (ki.getTransMan().verifyTransaction(trans)) {
+                ki.debug("Verified");
+
                 for (ITrans t : ki.getTransMan().getPending()) {
                     for (Input i : t.getInputs()) {
                         for (Input i2 : trans.getInputs()) {
@@ -64,19 +81,23 @@ public class TransactionPacket implements Serializable, Packet {
                     ki.getNetMan().broadcastAllBut(connMan.getID(), this);
                 }
 
-                if(ki.getOptions().pDebug)
-                {
+                if (ki.getOptions().pDebug) {
                     ki.debug("====TRANSACTION IS VERIFIED AND ADDED====");
                 }
                 if (ki.getOptions().poolRelay) {
                     ki.newTransPool();
                 }
+            } else {
+                ki.debug("Transaction did not verify");
             }
+
         } else {
 
                 if (pg.bMap.get(pg.headerMap.get(block)) != null) {
                     ki.debug("Adding transaction to block list");
-                    pg.bMap.get(pg.headerMap.get(block)).add(Transaction.fromJSON(trans));
+
+                    pg.bMap.get(pg.headerMap.get(block)).add(trans);
+
                     done.add(trans);
                     /*
                     if (ki.getNetMan().isRelay()) {

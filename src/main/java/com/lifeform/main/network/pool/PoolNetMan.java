@@ -176,7 +176,8 @@ public class PoolNetMan extends Thread implements INetworkManager {
                             if (conn == null) continue;
                             if (ki.getPoolData().addMap.get(conn.getID()) == null) continue;
                             try {
-                                su.shares = ki.getPoolManager().getTotalSharesOfMiner(Address.decodeFromChain(ki.getPoolData().addMap.get(conn.getID())));
+                                //su.shares = ki.getPoolManager().getTotalSharesOfMiner(Address.decodeFromChain(ki.getPoolData().addMap.get(conn.getID())));
+                                //TODO update the above
                             } catch (Exception e) {
                                 continue;
                             }

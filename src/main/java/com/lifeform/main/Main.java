@@ -39,6 +39,7 @@ public class Main {
     public static Options decode(String[] args)
     {
         Options o = new Options();
+
         for (String s : args) {
 
             if (s.startsWith("-ur")) o.relayToUse = Integer.parseInt(s.replaceFirst("-ur", ""));

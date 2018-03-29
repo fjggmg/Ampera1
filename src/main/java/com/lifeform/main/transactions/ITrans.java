@@ -1,8 +1,11 @@
 package com.lifeform.main.transactions;
 
 import amp.serialization.IAmpAmpletSerializable;
+import com.lifeform.main.IKi;
 
 import java.math.BigInteger;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -10,6 +13,7 @@ import java.util.List;
  */
 public interface ITrans extends IAmpAmpletSerializable {
 
+    List<Integer> VALID_ID_SIZES = Collections.unmodifiableList(Arrays.asList(32));
     String getID();
     //TODO: we have TXIO as the interface, we should not be using the implementation, but currently this is the best way to do this
     List<Output> getOutputs();
@@ -23,7 +27,7 @@ public interface ITrans extends IAmpAmpletSerializable {
 
     boolean verifyInputToOutput();
 
-    boolean verifySpecial();
+    boolean verifySpecial(IKi ki);
     /**
      *
      * @return fee calculated by taking all unassigned inputs
@@ -35,8 +39,11 @@ public interface ITrans extends IAmpAmpletSerializable {
      * @param fee amount to leave unassigned
      * @param cAdd address to send change to
      */
-    void makeChange(BigInteger fee, Address cAdd);
+    void makeChange(BigInteger fee, IAddress cAdd);
 
+    byte[] toSignBytes();
+
+    @Deprecated
     String toJSON();
 
     String getMessage();

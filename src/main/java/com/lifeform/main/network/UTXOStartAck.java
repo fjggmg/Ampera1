@@ -2,6 +2,7 @@ package com.lifeform.main.network;
 
 import com.lifeform.main.IKi;
 import com.lifeform.main.transactions.Address;
+import com.lifeform.main.transactions.IAddress;
 import com.lifeform.main.transactions.Output;
 
 import java.io.Serializable;
@@ -18,7 +19,7 @@ public class UTXOStartAck implements Packet,Serializable {
             //ki.debug("RECEIVED REQUEST FOR UTXOS FOR " + address);
 
             List<Output> utxos = new ArrayList<>();
-            Address a = Address.decodeFromChain(address);
+            IAddress a = Address.decodeFromChain(address);
             if (ki.getTransMan().getUTXOs(a, true) != null)
                 utxos.addAll(ki.getTransMan().getUTXOs(a, true));
             UTXOData ud = new UTXOData();

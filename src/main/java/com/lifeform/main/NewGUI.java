@@ -1,16 +1,22 @@
 package com.lifeform.main;
 
+import amp.Amplet;
+import amp.ByteTools;
+import amp.HeadlessAmplet;
+import amp.HeadlessPrefixedAmplet;
+import amp.database.XodusAmpMap;
 import com.jfoenix.controls.*;
-import com.jfoenix.controls.cells.editors.TextFieldEditorBuilder;
-import com.jfoenix.controls.cells.editors.base.GenericEditableTreeTableCell;
 import com.jfoenix.controls.datamodels.treetable.RecursiveTreeObject;
 import com.jfoenix.transitions.hamburger.HamburgerSlideCloseTransition;
 import com.jfoenix.validation.RequiredFieldValidator;
+import com.lifeform.main.adx.ExchangeData;
+import com.lifeform.main.adx.Order;
+import com.lifeform.main.adx.OrderStatus;
+import com.lifeform.main.adx.Pairs;
 import com.lifeform.main.blockchain.Block;
 import com.lifeform.main.blockchain.ChainManager;
 import com.lifeform.main.blockchain.GPUMiner;
 import com.lifeform.main.data.EncryptionManager;
-import com.lifeform.main.data.JSONManager;
 import com.lifeform.main.data.Utils;
 import com.lifeform.main.data.XodusStringMap;
 import com.lifeform.main.network.IConnectionManager;
@@ -19,8 +25,11 @@ import com.lifeform.main.transactions.*;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
+import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
+import javafx.beans.property.ListProperty;
+import javafx.beans.property.SimpleListProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.*;
@@ -29,7 +38,9 @@ import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
+import javafx.scene.chart.CategoryAxis;
 import javafx.scene.chart.LineChart;
+import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
 import javafx.scene.control.Label;
@@ -43,9 +54,7 @@ import javafx.scene.text.Font;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
-import javafx.util.Callback;
 import javafx.util.Duration;
-import jetbrains.exodus.env.Store;
 
 import java.awt.*;
 import java.awt.datatransfer.Clipboard;
@@ -63,12 +72,12 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.function.Predicate;
 
 import static javafx.animation.Interpolator.EASE_BOTH;
 
 public class NewGUI {
 
+    protected static boolean close = false;
     public JFXTextField entropyField;
     public Label blocksFoundLabel;
     public Pane blockPane;
@@ -109,12 +118,63 @@ public class NewGUI {
     public JFXToggleButton pplnsClient;
     public JFXToggleButton pplnsServer;
     public HBox devicesBox;
+    public Hyperlink faqLink;
+    public Hyperlink issuesPageLink;
+    public Hyperlink discordServerLink;
+    public JFXButton exchangeBuy;
+    public JFXButton exchangeSell;
+    public Pane exchangePane;
+    public JFXTextField amtOnOffer;
+    public Label lastTradeAmount;
+    public JFXTextField exPrice;
+    public JFXComboBox<Label> pairs;
+    public JFXListView<Order> obBuyTotal;
+    public JFXListView<Order> obBuySize;
+    public JFXListView<Order> obBuyPrice;
+    public JFXListView<Order> obSellPrice;
+    public JFXListView<Order> obSellSize;
+    public JFXListView<Order> obSellTotal;
+    public Label buyLabel;
+    public Label sellLabel;
+    public Label bTotal;
+    public Label bSize;
+    public Label bPrice;
+    public Label sPrice;
+    public Label sSize;
+    public Label sTotal;
+    public JFXListView<Order> obRecentPrice;
+    public JFXListView<Order> obRecentAmount;
+    public JFXListView<Order> obRecentDirection;
+    public JFXListView<Order> activePrice;
+    public JFXListView<Order> activeAmount;
+    public JFXPasswordField confirmPassword;
+    public CandlestickGraph exchangeGraph;
+    public VBox passwordVbox;
+    public VBox exchangeGraphBox;
+    public Label currentOpen;
+    public Label currentHigh;
+    public Label currentLow;
+    public Label currentClose;
+    public JFXComboBox<Label> unitSelectorPrice;
+    public JFXComboBox<Label> unitSelectorAmount;
+    public Label tokenAmount;
+    public Label tokenPrice;
+    public JFXButton orderHistory;
+    public Pane ohPane;
+    public JFXListView ohPrice;
+    public JFXListView ohAmount;
+    public JFXListView ohDate;
+    public JFXListView ohDirection;
+    public JFXListView ohCancel;
+    public JFXButton backToEx;
+    private BigInteger unitMultiplierPrice = BigInteger.valueOf(100);
+    private BigInteger unitMultiplierAmount = BigInteger.valueOf(100);
     private IKi ki;
     private ObservableMap<Token, BigInteger> tokenValueMap = FXCollections.observableMap(new HashMap<Token, BigInteger>());
     private volatile boolean isFinal = false;
     private volatile boolean run = true;
-    private Map<String, String> heightMap = new HashMap<>();
-    private List<String> sTrans = new CopyOnWriteArrayList<>();
+    private Map<String, BigInteger> heightMap = new HashMap<>();
+    private List<ITrans> sTrans = new CopyOnWriteArrayList<>();
     public NewGUI() {
         ki = Ki.getInstance();
         transactions = FXCollections.observableArrayList();
@@ -122,14 +182,22 @@ public class NewGUI {
             tokenValueMap.put(t, BigInteger.ZERO);
         }
         ki.setGUIHook(this);
-        if (guiMap.get("blocksFound") != null)
-            blocksFoundInt = Integer.parseInt(guiMap.get("blocksFound"));
-        if (guiMap.get("nGUI") == null) {
-            guiMap.put("newGUI", "firstRun");
-            if (guiMap.get("heightMap") != null) {
-                heightMap = JSONManager.parseJSONtoMap(guiMap.get("heightMap"));
-            }
+        try {
+            if (guiXAM.getBytes("blocksFound") != null)
+                blocksFoundInt = HeadlessAmplet.create((guiXAM.getBytes("blocksFound"))).getNextInt();
 
+            if (guiXAM.getBytes("nGUI") == null) {
+                guiXAM.putBytes("newGUI", "firstRun".getBytes("UTF-8"));
+                if (guiXAM.getBytes("heightMap") != null) {
+                    HeadlessPrefixedAmplet hpa = HeadlessPrefixedAmplet.create(guiXAM.getBytes("heightMap"));
+                    while (hpa.hasNextElement()) {
+                        heightMap.put(new String(hpa.getNextElement(), "UTF-8"), new BigInteger(hpa.getNextElement()));
+                    }
+                }
+
+            }
+        } catch (Exception e) {
+            ki.getMainLog().error("Error in GUI data loading: ", e);
         }
         if (!ki.getOptions().pool) {
             Thread t = new Thread() {
@@ -142,14 +210,14 @@ public class NewGUI {
                         List<Output> utxos = null;
                         try {
                             utxos = ki.getTransMan().getUTXOs(ki.getAddMan().getMainAdd(), false);
+
                         } catch (Exception e) {
                             //environment inoperative or other issue, ignore for now
-
+                            ki.getMainLog().error("Error retrieving utxos for wallet", e);
                         }
+
                         if (utxos != null) {
-                            Set<Output> sUtxos = new HashSet<>();
-                            sUtxos.addAll(utxos);
-                            for (Output o : sUtxos) {
+                            for (Output o : utxos) {
                                 if (tokenValueMap.get(o.getToken()) == null) {
                                     tokenValueMap.put(o.getToken(), o.getAmount());
                                 } else {
@@ -158,6 +226,7 @@ public class NewGUI {
                             }
                         }
                         isFinal = true;
+
                         try {
                             //System.out.println("sleeping");
                             //TODO cheap and stupid fix
@@ -166,6 +235,14 @@ public class NewGUI {
                             //System.out.println("done sleeping");
                         } catch (InterruptedException e) {
                             //do nothing as close was called
+                        }
+                        if (close) {
+                            try {
+                                ki.close();
+                            } catch (Exception e) {
+                                ki.getMainLog().warn("Could not close correctly error message: " + e.getMessage());
+                            }
+
                         }
                     }
                 }
@@ -248,7 +325,9 @@ public class NewGUI {
     private Label chainHeight2 = new Label(" 26554");
     private Label latency = new Label(" Latency - 125ms");
     private XodusStringMap pmap = new XodusStringMap("security");
+    private List<Order> activeOrders = new ArrayList<>();
     private boolean frg = true;
+    static Application app;
 
     private String metaHash(String data) throws UnsupportedEncodingException {
         StringBuilder totalhash = new StringBuilder();
@@ -274,7 +353,7 @@ public class NewGUI {
 
     private Timeline lockAnimation;
 
-    private String superAutism(String hash, int numberOfHashes) {
+    private String superHash(String hash, int numberOfHashes) {
         String superHash = "";
         ConcurrentMap<Integer, Boolean> doneMap = new ConcurrentHashMap<>();
         ConcurrentMap<Integer, Thread> tmap = new ConcurrentHashMap<>();
@@ -325,7 +404,7 @@ public class NewGUI {
 
         for (Output o : trans.getOutputs()) {
             List<String> checked = new ArrayList<>();
-            for (Address a : ki.getAddMan().getAll()) {
+            for (IAddress a : ki.getAddMan().getAll()) {
                 if (o.getAddress().encodeForChain().equals(a.encodeForChain())) {
                     if (!involved.contains(a.encodeForChain())) {
                         involved.add(a.encodeForChain());
@@ -342,7 +421,7 @@ public class NewGUI {
         BigInteger allin = BigInteger.ZERO;
         for (Input o : trans.getInputs()) {
             List<String> checked = new ArrayList<>();
-            for (Address a : ki.getAddMan().getAll()) {
+            for (IAddress a : ki.getAddMan().getAll()) {
                 if (o.getAddress().encodeForChain().equals(a.encodeForChain())) {
                     if (!involved.contains(a.encodeForChain())) {
                         involved.add(a.encodeForChain());
@@ -369,13 +448,13 @@ public class NewGUI {
         List<String> outputs = new ArrayList<>();
 
         for (Output o : trans.getOutputs()) {
-            outputs.add(o.getAddress().encodeForChain() + ":" + format2.format(o.getAmount().longValueExact() / 100_000_000D));
+            outputs.add(o.getAddress().encodeForChain() + ":" + format2.format(o.getAmount().longValueExact() / 100_000_000D) + " " + o.getToken().getName());
         }
         ObservableList<String> obsOutputs = FXCollections.observableArrayList(outputs);
         List<String> inputs = new ArrayList<>();
 
         for (Input i : trans.getInputs()) {
-            inputs.add(i.getAddress().encodeForChain() + ":" + format2.format(i.getAmount().longValueExact() / 100_000_000D));
+            inputs.add(i.getAddress().encodeForChain() + ":" + format2.format(i.getAmount().longValueExact() / 100_000_000D) + " " + i.getToken().getName());
         }
         ObservableList<String> obsInputs = FXCollections.observableArrayList(inputs);
         for (String add : involved) {
@@ -392,11 +471,26 @@ public class NewGUI {
             //if(transactionTable != null)
             //transactionTable.setRoot(root);
         }
-        if (!sTrans.contains(trans.toJSON())) {
-            sTrans.add(trans.toJSON());
-            guiMap.put("transactions", JSONManager.parseListToJSON(sTrans).toJSONString());
-            heightMap.put(trans.getID(), height.toString());
-            guiMap.put("heightMap", JSONManager.parseMapToJSON(heightMap).toJSONString());
+        if (!sTrans.contains(trans)) {
+            sTrans.add(trans);
+            HeadlessPrefixedAmplet hpa = HeadlessPrefixedAmplet.create();
+            for (ITrans t : sTrans) {
+                hpa.addElement(t.serializeToAmplet());
+            }
+            guiXAM.putBytes("transactions", hpa.serializeToBytes());
+            heightMap.put(trans.getID(), height);
+            HeadlessPrefixedAmplet hpa2 = HeadlessPrefixedAmplet.create();
+            try {
+                for (String key : heightMap.keySet()) {
+
+                    hpa2.addElement(key);
+
+                    hpa2.addElement(heightMap.get(key));
+                }
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+            guiXAM.putBytes("heightMap", hpa2.serializeToBytes());
         }
 
 
@@ -475,7 +569,7 @@ public class NewGUI {
                         startMining.setText("Stop Mining");
                         mining = true;
                         hashrateChart.getData().clear();
-                        List<XYChart.Series<String, Number>> devs = new ArrayList<>();
+                        //List<XYChart.Series<String, Number>> devs = new ArrayList<>();
                         for (String dev : ki.getMinerMan().getDevNames()) {
                             XYChart.Series<String, Number> series = new XYChart.Series<>();
                             hashrateChart.getData().add(series);
@@ -489,6 +583,81 @@ public class NewGUI {
                 }
             }
         });
+
+        obSellSize.setSkin(new RefreshableListViewSkin(obSellSize));
+        obSellPrice.setSkin(new RefreshableListViewSkin(obSellPrice));
+        obSellTotal.setSkin(new RefreshableListViewSkin(obSellTotal));
+        obBuyPrice.setSkin(new RefreshableListViewSkin(obBuyPrice));
+        obBuySize.setSkin(new RefreshableListViewSkin(obBuySize));
+        obBuyTotal.setSkin(new RefreshableListViewSkin(obBuyTotal));
+        obRecentPrice.setSkin(new RefreshableListViewSkin(obRecentPrice));
+        obRecentAmount.setSkin(new RefreshableListViewSkin(obRecentAmount));
+        obRecentDirection.setSkin(new RefreshableListViewSkin(obRecentDirection));
+        activePrice.setSkin(new RefreshableListViewSkin(activePrice));
+        activeAmount.setSkin(new RefreshableListViewSkin(activeAmount));
+        unitSelectorPrice.getItems().add(new Label("BTC"));
+        unitSelectorPrice.getItems().add(new Label("mBTC"));
+        unitSelectorPrice.getItems().add(new Label("µBTC"));
+        unitSelectorPrice.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<Label>() {
+            @Override
+            public void changed(ObservableValue<? extends Label> observable, Label oldValue, Label newValue) {
+                if (newValue.getText().equals("µBTC")) {
+                    unitMultiplierPrice = BigInteger.valueOf(100);
+                } else if (newValue.getText().equals("mBTC")) {
+                    unitMultiplierPrice = BigInteger.valueOf(100_000);
+                } else if (newValue.getText().equals("BTC")) {
+                    unitMultiplierPrice = BigInteger.valueOf(100_000_000);
+                }
+                tokenPrice.setText(newValue.getText());
+                ((RefreshableListViewSkin) obSellSize.getSkin()).refresh();
+                ((RefreshableListViewSkin) obSellPrice.getSkin()).refresh();
+                ((RefreshableListViewSkin) obSellTotal.getSkin()).refresh();
+                ((RefreshableListViewSkin) obBuySize.getSkin()).refresh();
+                ((RefreshableListViewSkin) obBuyPrice.getSkin()).refresh();
+                ((RefreshableListViewSkin) obBuyTotal.getSkin()).refresh();
+                ((RefreshableListViewSkin) obRecentAmount.getSkin()).refresh();
+                ((RefreshableListViewSkin) obRecentDirection.getSkin()).refresh();
+                ((RefreshableListViewSkin) obRecentPrice.getSkin()).refresh();
+                ((RefreshableListViewSkin) activeAmount.getSkin()).refresh();
+                ((RefreshableListViewSkin) activePrice.getSkin()).refresh();
+
+            }
+        });
+        unitSelectorPrice.getSelectionModel().select(0);
+        unitSelectorAmount.getItems().add(new Label("ORA"));
+        unitSelectorAmount.getItems().add(new Label("mORA"));
+        unitSelectorAmount.getItems().add(new Label("µORA"));
+        unitSelectorAmount.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<Label>() {
+            @Override
+            public void changed(ObservableValue<? extends Label> observable, Label oldValue, Label newValue) {
+                if (newValue.getText().equals("µORA")) {
+                    unitMultiplierAmount = BigInteger.valueOf(100);
+                } else if (newValue.getText().equals("mORA")) {
+                    unitMultiplierAmount = BigInteger.valueOf(100_000);
+                } else if (newValue.getText().equals("ORA")) {
+                    unitMultiplierAmount = BigInteger.valueOf(100_000_000);
+                }
+                tokenAmount.setText(newValue.getText());
+                ((RefreshableListViewSkin) obSellSize.getSkin()).refresh();
+                ((RefreshableListViewSkin) obSellPrice.getSkin()).refresh();
+                ((RefreshableListViewSkin) obSellTotal.getSkin()).refresh();
+                ((RefreshableListViewSkin) obBuySize.getSkin()).refresh();
+                ((RefreshableListViewSkin) obBuyPrice.getSkin()).refresh();
+                ((RefreshableListViewSkin) obBuyTotal.getSkin()).refresh();
+                ((RefreshableListViewSkin) obRecentAmount.getSkin()).refresh();
+                ((RefreshableListViewSkin) obRecentDirection.getSkin()).refresh();
+                ((RefreshableListViewSkin) obRecentPrice.getSkin()).refresh();
+                ((RefreshableListViewSkin) activeAmount.getSkin()).refresh();
+                ((RefreshableListViewSkin) activePrice.getSkin()).refresh();
+
+            }
+        });
+        unitSelectorAmount.getSelectionModel().select(0);
+        NumberAxis priceAxis = new NumberAxis();
+        CategoryAxis timeAxis = new CategoryAxis();
+        exchangeGraph = new CandlestickGraph(timeAxis, priceAxis, ki);
+        exchangeGraphBox.getChildren().add(exchangeGraph);
+        exchangeGraph.setLegendVisible(false);
         changePassword.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
@@ -504,6 +673,93 @@ public class NewGUI {
                 } else {
                     notification("Passwords don't match");
                 }
+            }
+        });
+        pairs.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<Label>() {
+            @Override
+            public void changed(ObservableValue<? extends Label> observable, Label oldValue, Label newValue) {
+                Pairs pair = Pairs.byName(newValue.getText());
+                if (pair != null) {
+                    exchangeBuy.setText("Buy (" + pair.accepting().getName() + ")");
+                    exchangeSell.setText("Sell (" + pair.accepting().getName() + ")");
+                }
+            }
+        });
+        for (Pairs pair : Pairs.values()) {
+            Label label = new Label(pair.getName());
+            pairs.getItems().add(label);
+        }
+        pairs.getSelectionModel().select(0);
+        exchangeBuy.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                BigInteger amount;
+                try {
+                    amount = new BigDecimal(amtOnOffer.getText()).multiply(BigDecimal.valueOf(unitMultiplierAmount.doubleValue())).toBigInteger();
+                } catch (Exception e) {
+                    notification("Invalid Amount");
+                    return;
+                }
+                BigInteger stopPrice;
+                try {
+                    stopPrice = new BigDecimal(exPrice.getText()).multiply(BigDecimal.valueOf(unitMultiplierPrice.doubleValue())).toBigInteger();
+                    if (stopPrice.compareTo(BigInteger.valueOf(500)) < 0) throw new Exception();
+                } catch (Exception e) {
+                    notification("Invalid Price");
+                    return;
+                }
+                OrderStatus status = ki.getExMan().placeOrder(true, amount, stopPrice, Pairs.byName(pairs.getSelectionModel().getSelectedItem().getText()));
+                if (!status.succeeded()) {
+                    if (!status.partial()) notification("Order not completed");
+                    else notification("Order partially completed");
+                } else {
+                    notification("Order complete!");
+                }
+            }
+        });
+        exchangeSell.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                BigInteger amount;
+                try {
+                    amount = new BigDecimal(amtOnOffer.getText()).multiply(BigDecimal.valueOf(unitMultiplierAmount.doubleValue())).toBigInteger();
+                } catch (Exception e) {
+                    notification("Invalid Amount");
+                    return;
+                }
+                BigInteger stopPrice;
+                try {
+                    stopPrice = new BigDecimal(exPrice.getText()).multiply(BigDecimal.valueOf(unitMultiplierPrice.doubleValue())).toBigInteger();
+                    if (stopPrice.compareTo(BigInteger.valueOf(500)) < 0) throw new Exception();
+                } catch (Exception e) {
+                    notification("Invalid Price");
+                    return;
+                }
+                OrderStatus status = ki.getExMan().placeOrder(false, amount, stopPrice, Pairs.byName(pairs.getSelectionModel().getSelectedItem().getText()));
+                if (!status.succeeded()) {
+                    if (!status.partial()) notification("Order not completed");
+                    else notification("Order partially completed");
+                } else {
+                    notification("Order complete!");
+                }
+            }
+        });
+        faqLink.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                app.getHostServices().showDocument("https://bitbucket.org/backspace119/ki-project-origin/wiki/FAQ");
+            }
+        });
+        issuesPageLink.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                app.getHostServices().showDocument("https://bitbucket.org/backspace119/ki-project-origin/issues?status=new&status=open");
+            }
+        });
+        discordServerLink.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                app.getHostServices().showDocument("https://discord.gg/6PjeMzd");
             }
         });
         JFXTreeTableColumn<StoredTrans, String> oaColumn = new JFXTreeTableColumn<>("Sender");
@@ -627,36 +883,52 @@ public class NewGUI {
                     setupBlockPane(currentBlock.add(BigInteger.ONE));
             }
         });
-        if (guiMap.get("transactions") != null) {
-            List<String> sTrans = JSONManager.parseJSONToList(guiMap.get("transactions"));
-            this.sTrans.addAll(sTrans);
-            new Thread() {
+        try {
+            if (guiXAM.getBytes("transactions") != null) {
+                HeadlessPrefixedAmplet hpa = HeadlessPrefixedAmplet.create(guiXAM.getBytes("transactions"));
 
-                public void run() {
+                new Thread() {
+
+                    public void run() {
 
 
-                    for (String s : sTrans) {
-                        ITrans t = Transaction.fromJSON(s);
-                        if (heightMap.get(t.getID()) == null) {
-                            addTransaction(t, ki.getChainMan().currentHeight());
-                        } else
-                            addTransaction(t, new BigInteger(heightMap.get(t.getID())));
-
+                        while (hpa.hasNextElement()) {
+                            try {
+                                ITrans t = Transaction.fromAmplet(Amplet.create(hpa.getNextElement()));
+                                if (t == null) continue;
+                                sTrans.add(t);
+                                addTransaction(t, (heightMap.get(t.getID()) == null) ? ki.getChainMan().currentHeight() : heightMap.get(t.getID()));
+                            } catch (Exception e) {
+                                ki.getMainLog().error("Error loading saved transactions for GUI: ", e);
+                            }
+                        }
                     }
-                }
-            }.start();
+                }.start();
 
+            }
+        } catch (Exception e) {
+            ki.getMainLog().error("Error loading saved transactions for GUI: ", e);
         }
         miningDataHbox.setSpacing(10);
         addressLabel.setText("Address - " + ki.getAddMan().getMainAdd().encodeForChain());
         syncProgress.setProgress(0);
         submitPassword.setBackground(new Background(new BackgroundFill(Color.valueOf(ki.getStringSetting(StringSettings.PRIMARY_COLOR)), CornerRadii.EMPTY, Insets.EMPTY)));
         passwordField.setLabelFloat(true);
+
+        confirmPassword.setLabelFloat(true);
+        if (pmap.get("fr") != null) {
+            passwordVbox.getChildren().remove(confirmPassword);
+            confirmPassword.setDisable(true);
+        }
         RequiredFieldValidator validator = new RequiredFieldValidator();
-        validator.setMessage("Input Required");
+        //validator.setMessage("Input Required");
         passwordField.getValidators().add(validator);
+        confirmPassword.getValidators().add(validator);
         passwordField.focusedProperty().addListener((o, oldVal, newVal) -> {
             if (!newVal) passwordField.validate();
+        });
+        confirmPassword.focusedProperty().addListener((o, oldVal, newVal) -> {
+            if (!newVal) confirmPassword.validate();
         });
         tokenLabel.setMinWidth(walletAmount.getWidth());
         //tokenLabel.setPrefWidth(walletAmount.getWidth());
@@ -673,7 +945,7 @@ public class NewGUI {
             @Override
             public void handle(WindowEvent event) {
                 System.out.println("Close requested");
-                ki.close();
+                close = true;
             }
         });
         deleteAddress.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
@@ -702,6 +974,8 @@ public class NewGUI {
         content.add(blockPane);
         content.add(poolPane);
         content.add(poolRelay);
+        content.add(exchangePane);
+        content.add(ohPane);
         Label pc = new Label("Primary Color");
         Label sc = new Label("Secondary Color");
         Label pt = new Label("Primary Text Color");
@@ -802,7 +1076,7 @@ public class NewGUI {
         //vb.setBackground(new Background(new BackgroundImage(img, BackgroundRepeat.NO_REPEAT, BackgroundRepeat.NO_REPEAT, BackgroundPosition.CENTER, BackgroundSize.DEFAULT)));
         vb.setFillWidth(true);
         List<String> adds = new ArrayList<>();
-        for (Address add : ki.getAddMan().getAll()) {
+        for (IAddress add : ki.getAddMan().getAll()) {
             if (!adds.contains(add.encodeForChain())) {
                 addressList.getItems().add(add.encodeForChain());
                 adds.add(add.encodeForChain());
@@ -815,7 +1089,20 @@ public class NewGUI {
             }
         });
 
-
+        orderHistory.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                exchangePane.setVisible(false);
+                ohPane.setVisible(true);
+            }
+        });
+        backToEx.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                ohPane.setVisible(false);
+                exchangePane.setVisible(true);
+            }
+        });
         entropyLabel.setWrapText(true);
         entropyLabel.setMaxWidth(256);
         addressList.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<String>() {
@@ -827,7 +1114,7 @@ public class NewGUI {
         createAddress.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
-                Address a = ki.getAddMan().createNew(entropyField.getText());
+                IAddress a = ki.getAddMan().createNew(ki.getEncryptMan().getPublicKeyString(), entropyField.getText(), null, AddressLength.SHA256, false);
                 addressList.getItems().add(a.encodeForChain());
             }
         });
@@ -849,6 +1136,7 @@ public class NewGUI {
         if (!ki.getOptions().pool) {
             vb.getChildren().add(buildMainButton("Wallet", "/Wallet.png", 0, 0, content, walletPane));
             vb.getChildren().add(buildMainButton("Address", "/home.png", 100, 0, content, addressPane));
+            vb.getChildren().add(buildMainButton("ADX", "/exchange.png", 200, 5, content, exchangePane));
         } else if (ki.getOptions().pool && !ki.getOptions().poolRelay) {
             vb.getChildren().add(buildMainButton("Pool", "/pool.png", 100, 3, content, poolPane));
         }
@@ -857,12 +1145,12 @@ public class NewGUI {
         }
         //vb.getChildren().add(buildButton("Transactions","/Transactions.png",100));
         if (!ki.getOptions().poolRelay)
-            vb.getChildren().add(buildMainButton("Mining", "/gpu.png", 200, 1, content, miningTab));
+            vb.getChildren().add(buildMainButton("Mining", "/gpu.png", 300, 1, content, miningTab));
 
         if (!ki.getOptions().lite && !ki.getOptions().pool)
-            vb.getChildren().add(buildMainButton("Blocks", "/Block.png", 300, 0, content, blockExplorerPane));
-        vb.getChildren().add(buildMainButton("Settings", "/Settings.png", 400, 0, content, settingsPane));
-        vb.getChildren().add(buildMainButton("Help", "/Help.png", 500, 7, content, helpPane));
+            vb.getChildren().add(buildMainButton("Blocks", "/Block.png", 400, 0, content, blockExplorerPane));
+        vb.getChildren().add(buildMainButton("Settings", "/Settings.png", 500, 0, content, settingsPane));
+        vb.getChildren().add(buildMainButton("Help", "/Help.png", 600, 7, content, helpPane));
         vb.getChildren().add(new Separator());
         if (!ki.getOptions().lite && !ki.getOptions().pool)
             fillMasonry(ki.getChainMan().currentHeight().subtract(BigInteger.valueOf(100)), ki.getChainMan().currentHeight());
@@ -885,10 +1173,8 @@ public class NewGUI {
                 colorPicker.setValue(Color.valueOf("#252830"));
                 colorCombos.getSelectionModel().select(0);
                 colorPicker.setValue(Color.valueOf("#18BC9C"));
-
             }
         });
-
 
         latency.setFont(Font.loadFont(getClass().getResourceAsStream("/ADAM.CG PRO.otf"), 10));
         if (!ki.getOptions().pool)
@@ -911,15 +1197,14 @@ public class NewGUI {
             tokenLabel.setLayoutX(walletAmount.getLayoutX() + 10);
             transactionTable.setMinWidth(walletPane.getWidth() - (sendButton.getWidth() + 65));
             transactionTable.setMinHeight(walletPane.getHeight() - 170);
-            versionLabel.setLayoutX(helpPane.getWidth() / 2 - (versionLabel.getWidth() / 2));
-            helpText.setLayoutX(helpPane.getWidth() / 2 - (helpText.getWidth() / 2));
+            //versionLabel.setLayoutX(helpPane.getWidth() / 2 - (versionLabel.getWidth() / 2));
+            //helpText.setLayoutX(helpPane.getWidth() / 2 - (helpText.getWidth() / 2));
             topPane2.setMinWidth(walletPane.getWidth());
             beScroll.setMinWidth(blockExplorerPane.getWidth());
             beScroll.setMinHeight(blockExplorerPane.getHeight() - 60);
             beScroll.setPrefHeight(blockExplorerPane.getHeight() - 60);
             lockPane.setMinHeight(borderPane.getHeight());
             miningDataHbox.setMinWidth(miningTab.getWidth());
-
         };
         goBE.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
             @Override
@@ -947,7 +1232,6 @@ public class NewGUI {
                     return;
                 }
                 fillMasonry(BigInteger.valueOf(start), BigInteger.valueOf(end));
-
             }
         });
         stage.widthProperty().addListener(stageSizeListener);
@@ -1001,6 +1285,11 @@ public class NewGUI {
                 poolConnect.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
                 poolDisconnect.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
                 resetColors.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
+                exchangeBuy.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
+                orderHistory.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
+                exchangeSell.setBackground(new Background(new BackgroundFill(Color.valueOf("#c84128"), CornerRadii.EMPTY, Insets.EMPTY)));
+                sellLabel.setTextFill(Color.valueOf("#c84128"));
+                buyLabel.setTextFill(Color.valueOf("#18BC9C"));
                 poolDynamicFeeSlider.setStyle("-jfx-default-thumb:" + color);
                 payoutSlider.setStyle("-jfx-default-thumb:" + color);
 
@@ -1013,6 +1302,9 @@ public class NewGUI {
                 color = "#" + color;
                 topPane.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
                 borderPane.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
+                for (Pane p : content) {
+                    p.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
+                }
                 ki.setStringSetting(StringSettings.SECONDARY_COLOR, color);
             } else if (colorCombos.getSelectionModel().getSelectedItem().getText().contains("Text Primary")) {
                 for (Node n : vb.getChildren()) {
@@ -1081,14 +1373,14 @@ public class NewGUI {
 
                     BigInteger amount = amt.multiply(new BigDecimal("100000000.0")).toBigInteger();
                     int index = 0;
-                    Address receiver;
+                    IAddress receiver;
                     try {
                         receiver = Address.decodeFromChain(addressText.getText());
                     } catch (Exception e) {
                         notification("Send To Address Incorrect");
                         return;
                     }
-                    Output output = new Output(amount, receiver, token, index, System.currentTimeMillis());
+                    Output output = new Output(amount, receiver, token, index, System.currentTimeMillis(), (byte) 2);
                     java.util.List<Output> outputs = new ArrayList<>();
                     outputs.add(output);
                     java.util.List<String> keys = new ArrayList<>();
@@ -1107,7 +1399,7 @@ public class NewGUI {
                     ki.getMainLog().info("Fee is: " + fee.toString());
 
                     BigInteger totalInput = BigInteger.ZERO;
-                    for (Address a : ki.getAddMan().getActive()) {
+                    for (IAddress a : ki.getAddMan().getActive()) {
                         if (ki.getTransMan().getUTXOs(a, true) == null) return;
                         for (Output o : ki.getTransMan().getUTXOs(a, true)) {
                             if (o.getToken().equals(token)) {
@@ -1127,7 +1419,7 @@ public class NewGUI {
                     }
 
                     BigInteger feeInput = (token.equals(Token.ORIGIN)) ? totalInput : BigInteger.ZERO;
-                    for (Address a : ki.getAddMan().getActive()) {
+                    for (IAddress a : ki.getAddMan().getActive()) {
                         //get inputs
                         if (feeInput.compareTo(fee) >= 0) break;
                         for (Output o : ki.getTransMan().getUTXOs(a, true)) {
@@ -1145,27 +1437,21 @@ public class NewGUI {
                         return; //not enough origin to send this kind of fee
                     }
 
-                    Map<String, String> entropyMap = new HashMap<>();
+                    ITrans trans = null;
 
-                    for (Input i : inputs) {
-                        if (entropyMap.containsKey(i.getAddress().encodeForChain())) continue;
-                        entropyMap.put(i.getAddress().encodeForChain(), ki.getAddMan().getEntropyForAdd(i.getAddress()));
-                        ki.getMainLog().info("Matching: " + i.getAddress().encodeForChain() + " with " + ki.getAddMan().getEntropyForAdd(i.getAddress()));
+
+                    try {
+                        trans = ki.getTransMan().createSimple(receiver, amount, fee, token, messageText.getText());
+                    } catch (InvalidTransactionException e) {
+                        ki.getMainLog().error("Error creating transaction: ", e);
                     }
-
-
-                    ITrans trans = new Transaction(messageText.getText(), 1, null, outputs, inputs, entropyMap, keys, TransactionType.STANDARD);
-                    ki.debug("Transaction has: " + trans.getOutputs().size() + " Outputs before finalization");
-                    trans.makeChange(fee, ki.getAddMan().getMainAdd()); // TODO this just sends change back to the main address......will need to give option later
-                    trans.addSig(ki.getEncryptMan().getPublicKeyString(), ki.getEncryptMan().sign(trans.toSign()));
-                    ki.debug("Transaction has: " + trans.getOutputs().size() + "Outputs after finalization");
                     if (ki.getTransMan().verifyTransaction(trans)) {
                         ki.getTransMan().getPending().add(trans);
                         for (Input i : trans.getInputs()) {
                             ki.getTransMan().getUsedUTXOs().add(i.getID());
                         }
                         TransactionPacket tp = new TransactionPacket();
-                        tp.trans = trans.toJSON();
+                        tp.trans = trans.serializeToAmplet().serializeToBytes();
                         ki.getNetMan().broadcast(tp);
                         notification("Sent transaction");
 
@@ -1178,6 +1464,192 @@ public class NewGUI {
         });
         addressList.getSelectionModel().select(0);
         List<Long> average = new ArrayList<>();
+        XYChart.Series<String, Number> candleSeries = new XYChart.Series<>();
+        exchangeGraph.getData().add(candleSeries);
+        exchangeGraph.getXAxis().setAnimated(false);
+        exchangeGraph.getYAxis().setAnimated(false);
+        exchangeGraph.setAnimated(false);
+        exchangeGraph.setCreateSymbols(false);
+
+        bindScrolls(obSellPrice, obSellSize);
+        bindScrolls(obSellSize, obSellTotal);
+        bindScrolls(obBuyPrice, obBuySize);
+        bindScrolls(obBuySize, obBuyTotal);
+        bindScrolls(obRecentPrice, obRecentAmount);
+        bindScrolls(obRecentAmount, obRecentDirection);
+        bindScrolls(activeAmount, activePrice);
+        ListProperty<Order> sells = new SimpleListProperty<>();
+        sells.set(FXCollections.observableArrayList());
+        sells.bindContent(ki.getExMan().getOrderBook().sells());
+        //sells.set(ki.getExMan().getOrderBook().sells());
+        obSellPrice.itemsProperty().bind(sells);
+        obSellPrice.setCellFactory(param -> new ListCell<Order>() {
+            @Override
+            protected void updateItem(Order item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (empty || item == null || item.unitPrice() == null) {
+                    setText(null);
+                } else {
+                    setText(format2.format(item.unitPrice().doubleValue() / (unitMultiplierPrice.doubleValue())));
+                }
+            }
+        });
+        obSellSize.itemsProperty().bind(sells);
+        obSellSize.setCellFactory(param -> new ListCell<Order>() {
+            @Override
+            protected void updateItem(Order item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (empty || item == null || item.amountOnOffer() == null) {
+                    setText(null);
+                } else {
+                    setText(format2.format(item.amountOnOffer().doubleValue() / (unitMultiplierAmount.doubleValue())));
+                }
+            }
+        });
+        obSellTotal.itemsProperty().bind(sells);
+        obSellTotal.setCellFactory(param -> new ListCell<Order>() {
+            @Override
+            protected void updateItem(Order item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (empty || item == null || item.amountOnOffer() == null) {
+                    setText(null);
+                } else {
+                    setText(format2.format(item.getOm().totalAtOrder.doubleValue() / (unitMultiplierAmount.doubleValue())));
+                }
+            }
+        });
+
+        ListProperty<Order> active = new SimpleListProperty<>();
+        active.set(FXCollections.observableArrayList());
+        active.bindContent(ki.getExMan().getOrderBook().active());
+        activePrice.itemsProperty().bind(active);
+        activeAmount.itemsProperty().bind(active);
+        activePrice.setCellFactory(param -> new ListCell<Order>() {
+            @Override
+            protected void updateItem(Order item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (empty || item == null || item.unitPrice() == null) {
+                    setText(null);
+                } else {
+                    setText(format2.format(item.unitPrice().doubleValue() / (unitMultiplierPrice.doubleValue())));
+                    setStyle("-fx-text-fill:" + ((!item.buy()) ? ("#c84128") : ("#18BC9C")));
+                }
+            }
+        });
+        //obSellSize.itemsProperty().bind(sells);
+        activeAmount.setCellFactory(param -> new ListCell<Order>() {
+            @Override
+            protected void updateItem(Order item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (empty || item == null || item.amountOnOffer() == null) {
+                    setText(null);
+                } else {
+                    setText(format2.format(item.amountOnOffer().doubleValue() / (unitMultiplierAmount.doubleValue())));
+                    setStyle("-fx-text-fill:" + ((!item.buy()) ? ("#c84128") : ("#18BC9C")));
+                }
+
+            }
+        });
+        ListProperty<Order> buys = new SimpleListProperty<>();
+        //buys.set(ki.getExMan().getOrderBook().buys());
+        buys.set(FXCollections.observableArrayList());
+        buys.bindContent(ki.getExMan().getOrderBook().buys());
+        obBuyPrice.itemsProperty().bind(buys);
+        obBuySize.itemsProperty().bind(buys);
+        obBuyPrice.setCellFactory(param -> new ListCell<Order>() {
+            @Override
+            protected void updateItem(Order item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (empty || item == null || item.unitPrice() == null) {
+                    setText(null);
+                } else {
+                    setText(format2.format(item.unitPrice().doubleValue() / (unitMultiplierPrice.doubleValue())));
+                }
+            }
+        });
+        //obSellSize.itemsProperty().bind(sells);
+        obBuySize.setCellFactory(param -> new ListCell<Order>() {
+            @Override
+            protected void updateItem(Order item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (empty || item == null || item.amountOnOffer() == null) {
+                    setText(null);
+                } else {
+                    setText(format2.format(item.amountOnOffer().doubleValue() / (unitMultiplierAmount.doubleValue())));
+                }
+
+            }
+        });
+        obBuyTotal.itemsProperty().bind(buys);
+        obBuyTotal.setCellFactory(param -> new ListCell<Order>() {
+            @Override
+            protected void updateItem(Order item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (empty || item == null || item.getOm() == null) {
+                    setText(null);
+                } else {
+                    setText(format2.format(item.getOm().totalAtOrder.doubleValue() / (unitMultiplierAmount.doubleValue())));
+                }
+            }
+        });
+
+
+        ListProperty<Order> matched = new SimpleListProperty<>();
+        //matched.set(ki.getExMan().getOrderBook().matched());
+        matched.set(FXCollections.observableArrayList());
+        matched.bindContent(ki.getExMan().getOrderBook().matched());
+        obRecentPrice.itemsProperty().bind(matched);
+        obRecentAmount.itemsProperty().bind(matched);
+        obRecentDirection.itemsProperty().bind(matched);
+
+        obRecentPrice.setCellFactory(param -> new ListCell<Order>() {
+            @Override
+            protected void updateItem(Order item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (empty || item == null || item.unitPrice() == null) {
+                    setText(null);
+                } else {
+                    setText(format2.format(item.unitPrice().doubleValue() / (unitMultiplierPrice.doubleValue())));
+                    setStyle("-fx-text-fill:" + ((item.buy()) ? ("#c84128") : ("#18BC9C")));
+                }
+            }
+        });
+        //obSellSize.itemsProperty().bind(sells);
+        obRecentAmount.setCellFactory(param -> new ListCell<Order>() {
+            @Override
+            protected void updateItem(Order item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (empty || item == null || item.amountOnOffer() == null) {
+                    setText(null);
+                } else {
+                    setText(format2.format(item.amountOnOffer().doubleValue() / (unitMultiplierAmount.doubleValue())));
+                    setStyle("-fx-text-fill:" + ((item.buy()) ? ("#c84128") : ("#18BC9C")));
+                }
+            }
+        });
+        obRecentDirection.setCellFactory(param -> new ListCell<Order>() {
+            @Override
+            protected void updateItem(Order item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (empty || item == null) {
+                    setText(null);
+                } else {
+                    setText((item.buy()) ? "Sell" : "Buy");
+                    setStyle("-fx-text-fill:" + ((item.buy()) ? ("#c84128") : ("#18BC9C")));
+                }
+            }
+        });
 
         new Thread() {
             public void run() {
@@ -1193,7 +1665,59 @@ public class NewGUI {
                             }
                         });
                     }
+                    if (i % 10 == 0) {
+
+
+                        Platform.runLater(new Thread() {
+                            public void run() {
+                                setDaemon(true);
+                                ki.getExMan().getOrderBook().sort();
+
+
+                                if (!ki.getExMan().getOrderBook().hasRun()) {
+                                    for (int i = 0; i < ki.getExMan().getOrderBook().getData().size(); i++) {
+                                        ExchangeData data = ki.getExMan().getOrderBook().getData().get(i);
+                                        ki.getExMan().getOrderBook().setRecent(data);
+                                        exchangeGraph.getData().get(0).getData().add(new XYChart.Data<>(sdf.format(new Date(data.timestamp)), data.open));
+                                        ki.getExMan().getOrderBook().setRecent(null);
+                                    }
+                                    ki.getExMan().getOrderBook().run();
+                                } else if (ki.getExMan().getOrderBook().hasNew()) {
+                                    exchangeGraph.getData().get(0).getData().add(new XYChart.Data<>(sdf.format(new Date(ki.getExMan().getOrderBook().getRecentData().timestamp)), ki.getExMan().getOrderBook().getRecentData().open));
+
+                                }
+                                exchangeGraph.layoutPlotChildren();
+                                exchangeGraph.updateAxisRange();
+                                if (ki.getExMan().getOrderBook().getRecentData() != null) {
+                                    currentOpen.setText("Open - " + ki.getExMan().getOrderBook().getRecentData().open.doubleValue() / unitMultiplierPrice.doubleValue());
+                                    currentClose.setText("Close - " + ki.getExMan().getOrderBook().getRecentData().close.doubleValue() / unitMultiplierPrice.doubleValue());
+                                    currentHigh.setText("High - " + ki.getExMan().getOrderBook().getRecentData().high.doubleValue() / unitMultiplierPrice.doubleValue());
+                                    currentLow.setText("Low - " + ki.getExMan().getOrderBook().getRecentData().low.doubleValue() / unitMultiplierPrice.doubleValue());
+                                    lastTradeAmount.setText(format2.format(ki.getExMan().getOrderBook().getRecentData().close.doubleValue() / unitMultiplierPrice.doubleValue()) + " " + unitSelectorPrice.getSelectionModel().getSelectedItem().getText());
+                                }
+
+
+                                /*
+                                BigInteger sellTotal = BigInteger.ZERO;
+                                obSellTotal.getItems().clear();
+                                for(Order o:ki.getExMan().getOrderBook().sells())
+                                {
+                                    sellTotal = sellTotal.add(o.amountOnOffer());
+                                    obSellTotal.getItems().add(format2.format(sellTotal.doubleValue()/(unitMultiplierPrice.doubleValue())));
+                                }
+                                BigInteger buyTotal = BigInteger.ZERO;
+                                obBuyTotal.getItems().clear();
+                                for(Order o:ki.getExMan().getOrderBook().buys())
+                                {
+                                    buyTotal = buyTotal.add(o.amountOnOffer());
+                                    obBuyTotal.getItems().add(format2.format(buyTotal.doubleValue()/(unitMultiplierPrice.doubleValue())));
+                                }
+                                */
+                            }
+                        });
+                    }
                     if ((i % 10 == 0) && mining) {
+
                         if (!ki.getMinerMan().isMining()) {
                             mining = false;
                             Platform.runLater(new Thread() {
@@ -1239,6 +1763,7 @@ public class NewGUI {
                                     averageH = averageH / average.size();
                                     averageHashrate.setText("Average - " + averageH + " Mh/s");
                                 }
+
                             }
                         });
                     }
@@ -1258,8 +1783,8 @@ public class NewGUI {
                             tokenLabel.setLayoutX(walletAmount.getLayoutX() + 10);
                             transactionTable.setMinWidth(walletPane.getWidth() - (sendButton.getWidth() + 65));
                             transactionTable.setMinHeight(walletPane.getHeight() - 170);
-                            versionLabel.setLayoutX(helpPane.getWidth() / 2 - (versionLabel.getWidth() / 2));
-                            helpText.setLayoutX(helpPane.getWidth() / 2 - (helpText.getWidth() / 2));
+                            //versionLabel.setLayoutX(helpPane.getWidth() / 2 - (versionLabel.getWidth() / 2));
+                            //helpText.setLayoutX(helpPane.getWidth() / 2 - (helpText.getWidth() / 2));
                             topPane2.setMinWidth(walletPane.getWidth());
                             beScroll.setMinWidth(blockExplorerPane.getWidth());
                             beScroll.setMinHeight(blockExplorerPane.getHeight() - 60);
@@ -1336,6 +1861,7 @@ public class NewGUI {
                     });
                     Platform.runLater(new Thread() {
                         public void run() {
+
                             if (!isFinal) return;
                             //System.out.println("Setting the shit");
                             walletAmount.setText(format2.format((double) tokenValueMap.get(Token.byName(tokenBox.getSelectionModel().getSelectedItem().getText())).longValueExact() / 100_000_000));
@@ -1344,14 +1870,14 @@ public class NewGUI {
                     try {
                         sleep(100);
                     } catch (InterruptedException e) {
-                        e.printStackTrace();
+                        ki.getMainLog().error("GUI update thread interrupted ", e);
                     }
                 }
             }
         }.start();
 
         for (Token t : Token.values()) {
-            if (t.name().contains("TOKEN")) continue;
+            if (t.getName().contains("TOKEN")) continue;
             JFXButton button = new JFXButton(t.getName());
             button.setWrapText(true);
             button.setMinHeight(60);
@@ -1510,6 +2036,17 @@ public class NewGUI {
 
     private int localShare = 0;
 
+    public void bindScrolls(JFXListView list1, JFXListView list2) {
+        Node n1 = list1.lookup(".scroll-bar");
+        if (n1 instanceof ScrollBar) {
+            ScrollBar sb1 = (ScrollBar) n1;
+            Node n2 = list2.lookup(".scroll-bar");
+            if (n2 instanceof ScrollBar) {
+                ScrollBar sb2 = (ScrollBar) n2;
+                sb1.valueProperty().bindBidirectional(sb2.valueProperty());
+            }
+        }
+    }
     public void addShare() {
         localShare++;
     }
@@ -1564,14 +2101,14 @@ public class NewGUI {
 
     private volatile int blocksFoundInt = 0;
     private BigInteger latestBlock = BigInteger.ZERO;
-    private XodusStringMap guiMap = new XodusStringMap("gui.data");
-
+    //private XodusStringMap guiMap = new XodusStringMap("gui.data");
+    private XodusAmpMap guiXAM = new XodusAmpMap("ngui");
     public void blockFound() {
         if (ki.getChainMan().currentHeight().compareTo(latestBlock) > 0) {
             blocksFoundInt++;
             latestBlock = ki.getChainMan().currentHeight();
-            guiMap.put("blocksFound", "" + blocksFoundInt);
-            guiMap.put("latest", latestBlock.toString());
+            guiXAM.putBytes("blocksFound", ByteTools.deconstructInt(blocksFoundInt));
+            guiXAM.putBytes("latest", latestBlock.toByteArray());
         }
         notification("Found a block");
     }
@@ -1592,19 +2129,19 @@ public class NewGUI {
 
     private void createNewPassword(String password) {
         String hash = "";
-        hash = superAutism(password + hash, 64);
+        hash = superHash(password + hash, 64);
         pmap.put(hash, "p");
     }
 
     private void deleteOldPassword(String password) {
         String hash = "";
-        hash = superAutism(password + hash, 64);
+        hash = superHash(password + hash, 64);
         pmap.remove(hash);
     }
 
     private boolean verifyPassword(String password) {
         String hash = "";
-        hash = superAutism(password + hash, 64);
+        hash = superHash(password + hash, 64);
         return pmap.get(hash) != null;
     }
     private void handlePassword() {
@@ -1614,8 +2151,14 @@ public class NewGUI {
             public void run() {
                 if (!passwordField.getText().isEmpty()) {
                     if (pmap.get("fr") == null) {
+                        if (!confirmPassword.getText().equals(passwordField.getText())) {
+                            Label l = new Label("Passwords don't match");
+                            l.setStyle("-fx-text-fill:RED");
+                            passwordVbox.getChildren().add(l);
+                            return;
+                        }
                         String hash = "";
-                        hash = superAutism(passwordField.getText() + hash, 64);
+                        hash = superHash(passwordField.getText() + hash, 64);
                         pmap.put("fr", "fr");
                         pmap.put(hash, "p");
                         Platform.runLater(new Thread() {
@@ -1627,7 +2170,7 @@ public class NewGUI {
                         });
                     } else {
                         String hash = "";
-                        hash = superAutism(passwordField.getText() + hash, 64);
+                        hash = superHash(passwordField.getText() + hash, 64);
                         String hash2 = hash;
                         Platform.runLater(new Thread() {
                             public void run() {
@@ -1636,9 +2179,7 @@ public class NewGUI {
                                 } else {
                                     Label l = new Label("Incorrect");
                                     l.setStyle("-fx-text-fill:RED");
-                                    l.setLayoutX(passwordField.getLayoutX());
-                                    l.setLayoutY(passwordField.getLayoutY() + 60);
-                                    lockPane.getChildren().add(l);
+                                    passwordVbox.getChildren().add(l);
                                 }
 
                                 submitPassword.setDisable(false);

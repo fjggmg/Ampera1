@@ -10,7 +10,7 @@ import java.io.UnsupportedEncodingException;
 /**
  * Created by Bryan on 8/8/2017.
  */
-public class Address implements Serializable {
+public class Address implements Serializable, IAddress {
 
     public static final byte VERSION = 0X7F;
     public Address(byte version, String ID, String checksum)
@@ -43,17 +43,18 @@ public class Address implements Serializable {
         return checksum;
     }
 
-    public boolean isValid()
-    {
+    public boolean isValid() {
         String check = EncryptionManager.sha224Hex(ID);
         char[] idChar = check.toCharArray();
-        char[] cChar = {idChar[idChar.length-4],idChar[idChar.length-3],idChar[idChar.length-2],idChar[idChar.length-1]};
+        char[] cChar = {idChar[idChar.length - 4], idChar[idChar.length - 3], idChar[idChar.length - 2], idChar[idChar.length - 1]};
         String sum = new String(cChar);
-        return sum.equals(checksum);
+        return toByteArrayStrict() != null && sum.equals(checksum);
     }
 
-    public boolean canSpend(String keys, String entropy)
+    @Override
+    public boolean canSpend(String keys, String entropy, boolean p2sh)
     {
+        if (p2sh) return false;
         Address a = createNew(keys,entropy);
         //System.out.println("CAN SPEND DEBUG===================");
         //System.out.println("Address 1: " + a.encodeForChain());
@@ -95,17 +96,17 @@ public class Address implements Serializable {
         return checksum;
     }
 
-    public static Address decodeFromChain(String encoded)
+    public static IAddress decodeFromChain(String encoded)
     {
         char[] eChar = encoded.toCharArray();
         char[] vChar = {eChar[0],eChar[1],eChar[2]};
         byte version = Byte.parseByte(new String(vChar));
+        if (version != VERSION) return NewAdd.decodeFromChain(encoded);
         String ID = "";
         for(int i = 3; i < eChar.length - 4;i++)
         {
             ID = ID + eChar[i];
         }
-
         char[] cChar = {eChar[eChar.length-4],eChar[eChar.length-3],eChar[eChar.length-2],eChar[eChar.length-1]};
 
         String checksum = new String(cChar);
@@ -125,7 +126,6 @@ public class Address implements Serializable {
             return false;
         }
     }
-
     public byte[] toByteArrayStrict() {
         byte[] payload = {};
         try {
@@ -149,7 +149,6 @@ public class Address implements Serializable {
 
     public byte[] toByteArray() {
         //System.out.println("Address is: " + encodeForChain());
-
         //System.out.println("ID is: " + ID);
         byte[] payload = {};
         try {
@@ -180,7 +179,37 @@ public class Address implements Serializable {
         return array;
     }
 
-    public static Address fromByteArray(byte[] array) {
+    @Override
+    public boolean hasPrefix() {
+        return false;
+    }
+
+    @Override
+    public String getPrefix() {
+        return "";
+    }
+
+    @Override
+    public boolean canSpendPrefixed(String key, String entropy, String prefix, boolean p2sh) {
+        return false;
+    }
+
+    @Override
+    public boolean isP2SH() {
+        return false;
+    }
+
+    /**
+     * This method will point the array to NewAdd if it is not of the old address spec version, this way, we can reliably
+     * make sure we're not breaking code because we can use the same code we were using before NewAdd came around. This
+     * also means in the future if you are uncertain of what kind of address you have in a byte array you can pass it
+     * here and rest assured you'll get something correct out of it
+     *
+     * @param array byte array containing address data
+     * @return implementation of an address matching the version in the byte array
+     */
+    public static IAddress fromByteArray(byte[] array) {
+        if (array[0] != VERSION) return NewAdd.fromByteArray(array);
         if (array.length == 31) {
             byte[] ID = new byte[28];
             for (int i = 1; i < 29; i++) {
@@ -189,7 +218,7 @@ public class Address implements Serializable {
             byte[] check = new byte[2];
             check[0] = array[29];
             check[1] = array[30];
-            Address a = new Address(array[0], Utils.toBase64(ID), Utils.toHexArray(check));
+            IAddress a = new Address(array[0], Utils.toBase64(ID), Utils.toHexArray(check));
             return a;
         } else {
             byte[] ID = new byte[array.length - 3];
@@ -200,7 +229,7 @@ public class Address implements Serializable {
             byte[] check = new byte[2];
             check[0] = array[array.length - 2];
             check[1] = array[array.length - 1];
-            Address a = null;
+            IAddress a = null;
             try {
                 a = new Address(array[0], new String(ID, "UTF-8"), Utils.toHexArray(check));
             } catch (UnsupportedEncodingException e) {

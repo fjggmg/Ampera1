@@ -21,6 +21,7 @@ public interface IEncryptMan {
 
     void saveKeys();
 
+    byte[] sign(byte[] toSign);
     KeyPair loadKeys();
     String getPublicKeyString();
     PublicKey pubKeyFromShortenedString(String key);

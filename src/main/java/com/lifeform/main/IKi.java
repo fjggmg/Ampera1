@@ -1,5 +1,6 @@
 package com.lifeform.main;
 
+import com.lifeform.main.adx.ExchangeManager;
 import com.lifeform.main.blockchain.Block;
 import com.lifeform.main.blockchain.IChainMan;
 import com.lifeform.main.blockchain.IMinerMan;
@@ -11,9 +12,10 @@ import com.lifeform.main.network.pool.PoolData;
 import com.lifeform.main.transactions.IAddMan;
 import com.lifeform.main.transactions.ITrans;
 import com.lifeform.main.transactions.ITransMan;
+import com.lifeform.main.transactions.scripting.ScriptManager;
+import engine.ByteCodeEngine;
 import mining_pool.Pool;
 import org.apache.logging.log4j.Logger;
-import org.bitbucket.backspace119.generallib.Logging.LogMan;
 
 /**
  * Created by Bryan on 5/10/2017.
@@ -39,7 +41,6 @@ public interface IKi {
     IChainMan getChainMan();
     ITransMan getTransMan();
     IEncryptMan getEncryptMan();
-    LogMan getLogMan();
     Logger getMainLog();
     INetworkManager getNetMan();
     void close();
@@ -77,4 +78,10 @@ public interface IKi {
     String getStringSetting(StringSettings setting);
 
     void setStringSetting(StringSettings setting, String value);
+
+    ByteCodeEngine getBCE8();
+
+    ExchangeManager getExMan();
+
+    ScriptManager getScriptMan();
 }

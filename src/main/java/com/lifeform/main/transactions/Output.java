@@ -1,41 +1,52 @@
 package com.lifeform.main.transactions;
 
 import amp.Amplet;
+import amp.HeadlessAmplet;
+import amp.HeadlessPrefixedAmplet;
 import amp.classification.AmpClassCollection;
 import amp.classification.classes.AC_SingleElement;
 import amp.group_primitives.UnpackedGroup;
 import amp.serialization.IAmpAmpletSerializable;
+import amp.serialization.IAmpByteSerializable;
 import com.lifeform.main.data.AmpIDs;
 import com.lifeform.main.data.EncryptionManager;
+import com.lifeform.main.data.Utils;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 import java.io.Serializable;
+import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 
 /**
  * Created by Bryan on 8/8/2017.
  */
-public class Output implements TXIO, IAmpAmpletSerializable {
+public class Output implements TXIO, IAmpByteSerializable {
+    byte VERSION = 2;
 
-    public Output(BigInteger amount, Address receiver,Token token, int index,long timestamp)
+    public Output(BigInteger amount, IAddress receiver, Token token, int index, long timestamp, byte version)
     {
         this.amount = amount;
         this.receiver = receiver;
         this.token = token;
         this.index = index;
         this.timestamp = timestamp;
+        this.version = version;
     }
     private final int index;
     private final BigInteger amount;
-    private final Address receiver;
+    private final IAddress receiver;
     private final Token token;
     private final long timestamp;
+    private final byte version;
     @Override
     public String getID()
     {
-        return EncryptionManager.sha256(toJSON());
+        if (version != 2)
+            return EncryptionManager.sha256(toJSON());
+        else
+            return Utils.toBase64(EncryptionManager.sha3256(serializeToBytes()));
     }
 
     @Override
@@ -44,7 +55,7 @@ public class Output implements TXIO, IAmpAmpletSerializable {
     }
 
     @Override
-    public Address getAddress() {
+    public IAddress getAddress() {
         return receiver;
     }
 
@@ -82,45 +93,100 @@ public class Output implements TXIO, IAmpAmpletSerializable {
             JSONObject jo = (JSONObject) (new JSONParser().parse(json));
             int index = Integer.parseInt((String)jo.get("index"));
             BigInteger amount = new BigInteger((String)jo.get("amount"));
-            Address receiver = Address.decodeFromChain((String)jo.get("receiver"));
+            IAddress receiver = Address.decodeFromChain((String) jo.get("receiver"));
             Token token = Token.valueOf((String)jo.get("token"));
             long timestamp = Long.parseLong((String)jo.get("timestamp"));
-            return new Output(amount,receiver,token,index,timestamp);
+            return new Output(amount, receiver, token, index, timestamp, (byte) 1);
         } catch (ParseException e) {
             e.printStackTrace();
         }
         return null;
     }
 
-    @Override
-    public Amplet serializeToAmplet() {
+
+    public Amplet serializeToAmpletOld() {
+
         AC_SingleElement amount = AC_SingleElement.create(AmpIDs.AMOUNT_GID, this.amount.toByteArray());
         AC_SingleElement receiver = AC_SingleElement.create(AmpIDs.RECEIVER_GID, this.receiver.toByteArray());
-        AC_SingleElement token = AC_SingleElement.create(AmpIDs.TOKEN_GID, this.token.toString());
+        AC_SingleElement token = null;
+        try {
+            token = AC_SingleElement.create(AmpIDs.TOKEN_GID, this.token.toString());
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
         AC_SingleElement index = AC_SingleElement.create(AmpIDs.INDEX_GID, this.index);
         AC_SingleElement timestamp = AC_SingleElement.create(AmpIDs.TXTIMESTAMP_GID, this.timestamp);
+        AC_SingleElement version = AC_SingleElement.create(AmpIDs.TXIO_VER_GID, this.version);
         AmpClassCollection acc = new AmpClassCollection();
         acc.addClass(amount);
         acc.addClass(receiver);
         acc.addClass(token);
         acc.addClass(index);
         acc.addClass(timestamp);
+        acc.addClass(version);
         Amplet amp = acc.serializeToAmplet();
         return amp;
     }
 
     public static Output fromAmp(Amplet amp) {
+
         UnpackedGroup ag = amp.unpackGroup(AmpIDs.AMOUNT_GID);
         UnpackedGroup rg = amp.unpackGroup(AmpIDs.RECEIVER_GID);
         UnpackedGroup tg = amp.unpackGroup(AmpIDs.TOKEN_GID);
         UnpackedGroup ig = amp.unpackGroup(AmpIDs.INDEX_GID);
         UnpackedGroup tmg = amp.unpackGroup(AmpIDs.TXTIMESTAMP_GID);
+        UnpackedGroup ov = amp.unpackGroup(AmpIDs.TXIO_VER_GID);
         BigInteger amount = new BigInteger(ag.getElement(0));
-        Address receiver = Address.fromByteArray(rg.getElement(0));
-        Token token = Token.valueOf(tg.getElementAsString(0));
+        IAddress receiver = Address.fromByteArray(rg.getElement(0));
+        Token token = null;
+        try {
+            token = Token.valueOf(tg.getElementAsString(0));
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
         int index = ig.getElementAsInt(0);
         long timestamp = tmg.getElementAsLong(0);
-        return new Output(amount, receiver, token, index, timestamp);
+        byte version = 1;
+        if (ov != null)
+            version = ov.getElementAsByte(0);
+        return new Output(amount, receiver, token, index, timestamp, version);
 
+    }
+
+    public static Output fromBytes(byte[] array) {
+        HeadlessPrefixedAmplet hpa = HeadlessPrefixedAmplet.create(array);
+        BigInteger amount = new BigInteger(hpa.getNextElement());
+        IAddress receiver = Address.fromByteArray(hpa.getNextElement());
+        Token token;
+        try {
+            token = Token.byName(new String(hpa.getNextElement(), "UTF-8"));
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+            return null;
+        }
+        HeadlessAmplet hamplet = hpa.getNextElementAsHeadlessAmplet();
+        int index = hamplet.getNextInt();
+        long timestamp = hamplet.getNextLong();
+        byte version = hamplet.getNextByte();
+        return new Output(amount, receiver, token, index, timestamp, version);
+
+    }
+
+    @Override
+    public byte[] serializeToBytes() {
+        HeadlessAmplet hamplet = HeadlessAmplet.create();
+        hamplet.addElement(index);
+        hamplet.addElement(timestamp);
+        hamplet.addElement(version);
+        HeadlessPrefixedAmplet hpa = HeadlessPrefixedAmplet.create();
+        hpa.addElement(amount);
+        hpa.addBytes(receiver.toByteArray());
+        try {
+            hpa.addElement(token.getName());
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        hpa.addElement(hamplet);
+        return hpa.serializeToBytes();
     }
 }

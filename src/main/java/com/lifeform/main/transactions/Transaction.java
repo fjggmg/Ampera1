@@ -5,20 +5,18 @@ import amp.classification.AmpClassCollection;
 import amp.classification.classes.AC_ClassInstanceIDIsIndex;
 import amp.classification.classes.AC_SingleElement;
 import amp.group_primitives.UnpackedGroup;
+import com.lifeform.main.IKi;
 import com.lifeform.main.Ki;
+import com.lifeform.main.blockchain.IChainMan;
 import com.lifeform.main.data.AmpIDs;
 import com.lifeform.main.data.EncryptionManager;
 import com.lifeform.main.data.JSONManager;
 import com.lifeform.main.data.Utils;
-import com.lifeform.main.network.Packet;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
-
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.ObjectOutput;
-import java.io.ObjectOutputStream;
+import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.util.*;
 
@@ -26,6 +24,7 @@ import java.util.*;
  * Created by Bryan on 8/8/2017.
  */
 public class Transaction implements ITrans {
+
 
     /**
      *
@@ -37,37 +36,43 @@ public class Transaction implements ITrans {
      * @param entropyMap
      * @param keys this will be reordered automatically, multisig wallets order keys by lowest hash of key first and so on
      */
-    public Transaction(String message, int sigsRequired, Map<String, String> keySigMap, List<Output> outputs, List<Input> inputs, Map<String, String> entropyMap, List<String> keys, TransactionType type)
+    public Transaction(String message, int sigsRequired, Map<String, String> keySigMap, List<Output> outputs, List<Input> inputs, Map<String, String> entropyMap, List<String> keys, TransactionType type) throws InvalidTransactionException
     {
+        this(message, sigsRequired, outputs, inputs, type);
         Collections.sort(keys);
-        this.keySigMap = keySigMap;
-        if(keySigMap == null)
-        {
-            this.keySigMap = new HashMap<>();
+        if (keySigMap != null) {
+            this.keySigMap = keySigMap;
+
         }
-        this.outputs = outputs;
-        this.inputs = inputs;
-        this.sigsRequired = sigsRequired;
-        this.message = message;
         this.entropyMap = entropyMap;
         this.keys = keys;
-        this.type = type;
+
     }
 
-    public Transaction(String message, int sigsRequired, List<Output> outputs, List<Input> inputs, TransactionType type)
+
+    public Transaction(String message, int sigsRequired, List<Output> outputs, List<Input> inputs, TransactionType type) throws InvalidTransactionException
     {
+        if (type == TransactionType.NEW_TRANS)
+            throw new InvalidTransactionException("NewTrans type used with Transaction object, use NewTrans object instead");
+        if (message.length() > 256) throw new InvalidTransactionException("Message too long");
+        if (outputs.size() + inputs.size() > IChainMan.MAX_TXIOS)
+            throw new InvalidTransactionException("Too many TXIOs");
+        //if(sigsRequired < 1) throw new InvalidTransactionException("Sigs required < 1"); this needs to happen but it breaks coinbase right now
         this.outputs = outputs;
+        int i = 0;
+        for (Output o : outputs) {
+            if (o.getIndex() != i) throw new InvalidTransactionException("Bad Output index");
+            i++;
+        }
         this.inputs = inputs;
         this.sigsRequired = sigsRequired;
         this.message = message;
         this.type = type;
     }
-
     TransactionType type;
     List<String> keys;
     Map<String,String> entropyMap; //for keys
     Map<String,String> keySigMap = new HashMap<>();
-
     List<Output> outputs;
     List<Input> inputs;
 
@@ -75,23 +80,21 @@ public class Transaction implements ITrans {
 
     String message;
 
+    @Deprecated
     @Override
-    public String toJSON()
-    {
+    public String toJSON() {
         JSONObject jo = new JSONObject();
         jo.put("message",message);
         jo.put("sigsRequired",Integer.toString(sigsRequired));
         List<String> sInputs = new ArrayList<>();
-        for(Input i:inputs)
-        {
+        for(Input i:inputs) {
             sInputs.add(i.toJSON());
         }
 
         jo.put("inputs", JSONManager.parseListToJSON(sInputs).toJSONString());
 
         List<String> sOutputs = new ArrayList<>();
-        for(Output o:outputs)
-        {
+        for(Output o:outputs) {
             sOutputs.add(o.toJSON());
         }
 
@@ -111,9 +114,7 @@ public class Transaction implements ITrans {
         keySigMap.put(key,sig);
     }
 
-
-    public static Transaction fromJSON(String JSON)
-    {
+    public static Transaction fromJSON(String JSON) throws InvalidTransactionException {
         try {
             JSONObject jo = (JSONObject) new JSONParser().parse(JSON);
             String message = (String) jo.get("message");
@@ -183,6 +184,30 @@ public class Transaction implements ITrans {
     }
 
     @Override
+    public byte[] toSignBytes() {
+        AC_SingleElement msg = null;
+        try {
+            msg = AC_SingleElement.create(AmpIDs.MESSAGE_ID_GID, message);
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        AC_SingleElement sRqd = AC_SingleElement.create(AmpIDs.SIGS_REQUIRED_GID, sigsRequired);
+        AC_ClassInstanceIDIsIndex inputs = AC_ClassInstanceIDIsIndex.create(AmpIDs.INPUTS_CID, "Inputs");
+        for (Input i : getInputs()) {
+            inputs.addElement(i.serializeToAmplet());
+        }
+        AC_ClassInstanceIDIsIndex outputs = AC_ClassInstanceIDIsIndex.create(AmpIDs.OUTPUTS_CID, "Outputs");
+        for (Output o : getOutputs()) {
+            outputs.addElement(o);
+        }
+        AmpClassCollection acc = new AmpClassCollection();
+        acc.addClass(msg);
+        acc.addClass(sRqd);
+        acc.addClass(inputs);
+        acc.addClass(outputs);
+        return acc.serializeToAmplet().serializeToBytes();
+    }
+    @Override
     public List<Output> getOutputs() {
         return outputs;
     }
@@ -194,31 +219,21 @@ public class Transaction implements ITrans {
     @Override
     public boolean verifyCanSpend()
     {
-        String sKeys = "";
-        for(String key:keys)
-        {
-            sKeys = sKeys + key;
-        }
-        Map<String,Integer> idMap = new HashMap<>();
-        for(Input i:inputs)
-        {
+        List<String> ids = new ArrayList<>();
+        for (Input i : inputs) {
 
             //Ki.getInstance().debug("Input information:: ID: " + i.getID() + " Index: " + i.getIndex() );
-            if(idMap.keySet().contains(i.getID()))
-            {
-                if(idMap.get(i.getID()) == i.getIndex()) {
-                    //Ki.getInstance().debug("input already used earlier in this transaction");
-                    return false;
-                }
-            }
-            idMap.put(i.getID(),i.getIndex());
-            if(entropyMap.get(i.getAddress().encodeForChain()) == null){
-                Ki.getInstance().debug("Entropy for this address: " + i.getAddress().encodeForChain() +  " is null");
+            if (ids.contains(i.getID())) return false;
+            ids.add(i.getID());
+            if (entropyMap.get(i.getAddress().encodeForChain()) == null) {
+                Ki.getInstance().debug("Entropy for this address: " + i.getAddress().encodeForChain() + " is null");
                 return false;
             }
-            if(!i.canSpend(sKeys,entropyMap.get(i.getAddress().encodeForChain()))) return false;
+            if (!i.canSpend(keys.get(0), entropyMap.get(i.getAddress().encodeForChain()), null, i.getAddress().isP2SH()))
+                return false;
         }
         return true;
+
     }
 
     @Override
@@ -253,10 +268,11 @@ public class Transaction implements ITrans {
     }
 
     @Override
-    public boolean verifySpecial() {
+    public boolean verifySpecial(IKi ki) {
         if (type.equals(TransactionType.STANDARD))
             return true;
-
+        else if (type.equals(TransactionType.NEW_TRANS))
+            return true;
         return false;
     }
 
@@ -279,7 +295,7 @@ public class Transaction implements ITrans {
     }
 
     @Override
-    public void makeChange(BigInteger fee,Address cAdd) {
+    public void makeChange(BigInteger fee, IAddress cAdd) {
         makeChangeSecondary(cAdd);
         BigInteger allInput = BigInteger.ZERO;
         for(Input i: inputs)
@@ -299,13 +315,12 @@ public class Transaction implements ITrans {
             //not enough left to make fee
             return;
         }
-        Output o = new Output(allInput.subtract(allOutput).subtract(fee),cAdd,Token.ORIGIN,outputs.size() + 1,System.currentTimeMillis());
+        Output o = new Output(allInput.subtract(allOutput).subtract(fee), cAdd, Token.ORIGIN, outputs.size() + 1, System.currentTimeMillis(), (byte) 2);
         outputs.add(o);
 
     }
 
-
-    private void makeChangeSecondary(Address cAdd)
+    private void makeChangeSecondary(IAddress cAdd)
     {
         for(Token t:Token.values()) {
             if(t.equals(Token.ORIGIN)) continue;
@@ -325,7 +340,7 @@ public class Transaction implements ITrans {
                     allOutput = allOutput.add(o.getAmount());
             }
 
-            Output o = new Output(allInput.subtract(allOutput), cAdd, t, outputs.size() + 1, System.currentTimeMillis());
+            Output o = new Output(allInput.subtract(allOutput), cAdd, t, outputs.size() + 1, System.currentTimeMillis(), (byte) 2);
             outputs.add(o);
         }
     }
@@ -336,7 +351,10 @@ public class Transaction implements ITrans {
         int vCount = 0;
         for(String key:keySigMap.keySet())
         {
-            if(EncryptionManager.verifySig(toSign(),keySigMap.get(key),key)) vCount++;
+            if (type.equals(TransactionType.STANDARD))
+                if (EncryptionManager.verifySig(toSign(), keySigMap.get(key), key)) vCount++;
+                else if (EncryptionManager.verifySig(toSignBytes(), Utils.fromBase64(keySigMap.get(key)), key))
+                    vCount++;
             if(vCount >= sigsRequired)
             {
                 return true;
@@ -354,11 +372,15 @@ public class Transaction implements ITrans {
     public Amplet serializeToAmplet() {
         AC_SingleElement message = null;
         if (this.message != null && !this.message.isEmpty())
-            message = AC_SingleElement.create(AmpIDs.MESSAGE_ID_GID, this.message);
+            try {
+                message = AC_SingleElement.create(AmpIDs.MESSAGE_ID_GID, this.message);
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
         AC_SingleElement sigsRequiredGID = AC_SingleElement.create(AmpIDs.SIGS_REQUIRED_GID, this.sigsRequired);
         AC_ClassInstanceIDIsIndex inputs = AC_ClassInstanceIDIsIndex.create(AmpIDs.INPUTS_CID, "Inputs");
         for (Input i : getInputs()) {
-            inputs.addElement(i);
+            inputs.addElement(i.serializeToAmplet());
         }
         AC_ClassInstanceIDIsIndex outputs = AC_ClassInstanceIDIsIndex.create(AmpIDs.OUTPUTS_CID, "Outputs");
         for (Output o : getOutputs()) {
@@ -367,10 +389,19 @@ public class Transaction implements ITrans {
 
         AC_ClassInstanceIDIsIndex keys = AC_ClassInstanceIDIsIndex.create(AmpIDs.KEYS_CID, "Keys");
         for (String key : this.keys) {
-            keys.addElement(key);
+            try {
+                keys.addElement(key);
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
         }
 
-        AC_SingleElement type = AC_SingleElement.create(AmpIDs.TYPE_GID, this.type.toString());
+        AC_SingleElement type = null;
+        try {
+            type = AC_SingleElement.create(AmpIDs.TYPE_GID, this.type.toString());
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
         AC_SingleElement keySigMap;
         try {
             keySigMap = AC_SingleElement.create(AmpIDs.KEY_SIG_MAP_GID, Utils.mapToByteArray(this.keySigMap));
@@ -401,15 +432,30 @@ public class Transaction implements ITrans {
         return amp.serializeToAmplet();
     }
 
-    public static ITrans fromAmplet(Amplet amp) {
+    public static ITrans fromAmplet(Amplet amp) throws InvalidTransactionException {
+        //System.out.println("Deserializing Transaction from amp1");
+        TransactionType type = null;
+        try {
+            UnpackedGroup t = amp.unpackGroup(AmpIDs.TYPE_GID);
+
+            type = TransactionType.valueOf(t.getElementAsString(0));
+
+        } catch (Exception e) {
+            //System.out.println("Transaction does not appear to be old format, sending to NewTrans system.");
+            return NewTrans.fromAmplet(amp);
+        }
+        System.out.println("Deserializing Transaction from amp2");
+        if (type.equals(TransactionType.NEW_TRANS)) return NewTrans.fromAmplet(amp);
         UnpackedGroup eMap = amp.unpackGroup(AmpIDs.ENTROPY_MAP_GID);
         Map<String, String> entropyMap;
+        System.out.println("Deserializing Transaction from amp3");
         try {
             entropyMap = Utils.toObject(eMap.getElement(0));
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
             return null;
         }
+        System.out.println("Deserializing Transaction from amp4");
         UnpackedGroup kMap = amp.unpackGroup(AmpIDs.KEY_SIG_MAP_GID);
         Map<String, String> keyMap;
         try {
@@ -418,10 +464,16 @@ public class Transaction implements ITrans {
             e.printStackTrace();
             return null;
         }
+        System.out.println("Deserializing Transaction from amp5");
         UnpackedGroup msg = amp.unpackGroup(AmpIDs.MESSAGE_ID_GID);
         String message = "";
         if (msg != null)
-            message = msg.getElementAsString(0);
+            try {
+                message = msg.getElementAsString(0);
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+        System.out.println("Deserializing Transaction from amp6");
         UnpackedGroup sigsRqd = amp.unpackGroup(AmpIDs.SIGS_REQUIRED_GID);
         int sigsRequired = sigsRqd.getElementAsInt(0);
         List<UnpackedGroup> inputsAmp = amp.unpackClass(AmpIDs.INPUTS_CID);
@@ -431,6 +483,7 @@ public class Transaction implements ITrans {
                 inputs.add(Input.fromAmp(p.getElementAsAmplet(0)));
 
             }
+        System.out.println("Deserializing Transaction from amp7");
         List<UnpackedGroup> outputsAmp = amp.unpackClass(AmpIDs.OUTPUTS_CID);
         List<Output> outputs = new ArrayList<>();
         if (outputsAmp != null)
@@ -438,15 +491,19 @@ public class Transaction implements ITrans {
                 outputs.add(Output.fromAmp(p.getElementAsAmplet(0)));
 
             }
+        System.out.println("Deserializing Transaction from amp8");
         List<UnpackedGroup> keysAmp = amp.unpackClass(AmpIDs.KEYS_CID);
         List<String> keys = new ArrayList<>();
         if (keysAmp != null)
             for (UnpackedGroup p : keysAmp) {
-                keys.add(p.getElementAsString(0));
+                try {
+                    keys.add(p.getElementAsString(0));
+                } catch (UnsupportedEncodingException e) {
+                    e.printStackTrace();
+                }
 
             }
-        UnpackedGroup t = amp.unpackGroup(AmpIDs.TYPE_GID);
-        TransactionType type = TransactionType.valueOf(t.getElementAsString(0));
+        System.out.println("Deserializing Transaction from amp9");
 
         return new Transaction(message, sigsRequired, keyMap, outputs, inputs, entropyMap, keys, type);
     }

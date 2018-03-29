@@ -6,7 +6,7 @@ package com.lifeform.main.transactions;
 public enum Token {
 
     ORIGIN("Origin"),
-    KI("Ki"),
+    KI("Eko"),
     BITCOIN("Bitcoin"),
     GOLD("Gold"),
     SILVER("Silver"),
@@ -29,9 +29,9 @@ public enum Token {
     SOYBEAN("Soybean"),
     COCAO("Cocao"),
     REAL_ESTATE("Real Estate"),
-    TOKEN1("TOKEN"),
-    TOKEN2("TOKEN"),
-    TOKEN3("TOKEN"),
+    TOKEN1("Bitcoin Cash"),
+    TOKEN2("Litecoin"),
+    TOKEN3("Dash"),
     TOKEN4("TOKEN"),
     TOKEN5("TOKEN"),
     TOKEN6("TOKEN"),
@@ -145,5 +145,16 @@ public enum Token {
             if (t.getName().equals(name)) return t;
         }
         return null;
+    }
+
+    public static Token byID(int id) {
+        return values()[id];
+    }
+
+    public int getID() {
+        for (int i = 0; i < values().length; i++) {
+            if (values()[i].equals(this)) return i;
+        }
+        return -1;
     }
 }

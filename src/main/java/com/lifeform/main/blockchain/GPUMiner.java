@@ -8,6 +8,7 @@ import com.lifeform.main.network.BlockEnd;
 import com.lifeform.main.network.BlockHeader;
 import com.lifeform.main.network.TransactionPacket;
 import com.lifeform.main.network.pool.PoolBlockHeader;
+import com.lifeform.main.transactions.InvalidTransactionException;
 import com.lifeform.main.transactions.Transaction;
 import gpuminer.JOCL.constants.JOCLConstants;
 import gpuminer.JOCL.context.JOCLContextAndCommandQueue;
@@ -122,7 +123,11 @@ public class GPUMiner extends Thread implements IMiner {
                     b.height = ki.getPoolData().currentWork.height;
                     b.merkleRoot = ki.getPoolData().currentWork.merkleRoot;
                     b.solver = ki.getPoolData().currentWork.solver;
-                    b.setCoinbase(Transaction.fromJSON(ki.getPoolData().currentWork.coinbase));
+                    try {
+                        b.setCoinbase(Transaction.fromJSON(ki.getPoolData().currentWork.coinbase));
+                    } catch (InvalidTransactionException e) {
+                        e.printStackTrace();
+                    }
 
                 }
 
@@ -217,8 +222,8 @@ public class GPUMiner extends Thread implements IMiner {
 
                             ki.debug("HASH is: " + Utils.toHexArray(Utils.fromBase64(b.ID)));
                             ki.debug("DIFF is: " + Utils.toHexArray(difficulty));
-
-                            if (ki.getChainMan().softVerifyBlock(b).success()) {
+                            BlockState state = ki.getChainMan().softVerifyBlock(b);
+                            if (state.success()) {
                                 ki.getChainMan().setTemp(b);
                                 sendBlock(b);
                                 ki.debug("YOU FOUND A BLOCK! If it verifies you will receive it back shortly from the network.");
@@ -227,11 +232,12 @@ public class GPUMiner extends Thread implements IMiner {
                                     ki.getTransMan().getPending().remove(b.getTransaction(t));
                                 }
                             } else if (ki.getChainMan().getCurrentDifficulty().compareTo(new BigInteger(Utils.fromBase64(b.ID))) < 0) {
-                                ki.debug("FOUND AN ERROR ON OPENCL DEVICE: " + jcacq.getDInfo().getDeviceName());
+                                ki.getMainLog().fatal("FOUND AN ERROR ON OPENCL DEVICE: " + jcacq.getDInfo().getDeviceName());
 
                                 run();
                             } else {
-                                ki.debug("An error was found with the block verification. Block will not be sent to the network");
+                                ki.getMainLog().warn("An error was found with the block verification. Block will not be sent to the network, state: " + state);
+
 
                                 run();
                             }
@@ -316,7 +322,7 @@ public class GPUMiner extends Thread implements IMiner {
         for (String key : b.getTransactionKeys()) {
             TransactionPacket tp = new TransactionPacket();
             tp.block = b.ID;
-            tp.trans = b.getTransaction(key).toJSON();
+            tp.trans = b.getTransaction(key).serializeToAmplet().serializeToBytes();
             ki.getNetMan().broadcast(tp);
         }
         BlockEnd be = new BlockEnd();
@@ -335,7 +341,7 @@ public class GPUMiner extends Thread implements IMiner {
         bh.merkleRoot = b.merkleRoot;
         bh.ID = b.ID;
         bh.height = b.height;
-        bh.coinbase = b.getCoinbase().toJSON();
+        bh.coinbase = b.getCoinbase().serializeToAmplet().serializeToBytes();
         return bh;
     }
 }

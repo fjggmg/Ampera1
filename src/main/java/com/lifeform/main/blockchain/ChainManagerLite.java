@@ -119,14 +119,14 @@ public class ChainManagerLite implements IChainMan {
                 boolean add = false;
                 ITrans transaction = b.getTransaction(trans);
                 for (Output o : transaction.getOutputs()) {
-                    for (Address a : ki.getAddMan().getActive()) {
+                    for (IAddress a : ki.getAddMan().getActive()) {
                         if (o.getAddress().encodeForChain().equals(a.encodeForChain())) {
                             add = true;
                         }
                     }
                 }
                 for (Input i : transaction.getInputs()) {
-                    for (Address a : ki.getAddMan().getActive()) {
+                    for (IAddress a : ki.getAddMan().getActive()) {
                         if (i.getAddress().encodeForChain().equals(a.encodeForChain())) {
                             add = true;
                         }
@@ -245,19 +245,24 @@ public class ChainManagerLite implements IChainMan {
         for (String t : transactions.keySet()) {
             fees = fees.add(transactions.get(t).getFee());
         }
-        Output o = new Output(ChainManager.blockRewardForHeight(currentHeight().add(BigInteger.ONE)).add(fees), ki.getAddMan().getMainAdd(), Token.ORIGIN, 0, System.currentTimeMillis());
+        Output o = new Output(ChainManager.blockRewardForHeight(currentHeight().add(BigInteger.ONE)).add(fees), ki.getAddMan().getMainAdd(), Token.ORIGIN, 0, System.currentTimeMillis(), (byte) 2);
         List<Output> outputs = new ArrayList<>();
         outputs.add(o);
         int i = 1;
         if (b.height.compareTo(BigInteger.ZERO) == 0) {
             for (Token t : Token.values()) {
                 if (!t.equals(Token.ORIGIN)) {
-                    outputs.add(new Output(BigInteger.valueOf(Long.MAX_VALUE), ki.getAddMan().getMainAdd(), t, i, System.currentTimeMillis()));
+                    outputs.add(new Output(BigInteger.valueOf(Long.MAX_VALUE), ki.getAddMan().getMainAdd(), t, i, System.currentTimeMillis(), (byte) 2));
                     i++;
                 }
             }
         }
-        ITrans coinbase = new Transaction("coinbase", 0, new HashMap<String, String>(), outputs, new ArrayList<Input>(), new HashMap<>(), new ArrayList<String>(), TransactionType.STANDARD);
+        ITrans coinbase = null;
+        try {
+            coinbase = new Transaction("coinbase", 0, new HashMap<String, String>(), outputs, new ArrayList<Input>(), new HashMap<>(), new ArrayList<String>(), TransactionType.STANDARD);
+        } catch (InvalidTransactionException e) {
+            e.printStackTrace();
+        }
 
         b.setCoinbase(coinbase);
         //b.addTransaction(coinbase);

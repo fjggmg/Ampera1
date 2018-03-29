@@ -16,7 +16,7 @@ public class BlockHeader implements Serializable, Packet {
     public long timestamp;
     public String prevID;
     public byte[] payload;
-    public String coinbase;
+    public byte[] coinbase;
     public boolean laFlag = false;
 
     @Override

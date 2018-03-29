@@ -268,7 +268,7 @@ public class StateManager extends Thread implements IStateManager {
         for (String key : b.getTransactionKeys()) {
             TransactionPacket tp = new TransactionPacket();
             tp.block = b.ID;
-            tp.trans = b.getTransaction(key).toJSON();
+            tp.trans = b.getTransaction(key).serializeToAmplet().serializeToBytes();
             ki.getNetMan().broadcast(tp);
         }
         BlockEnd be = new BlockEnd();
@@ -285,7 +285,7 @@ public class StateManager extends Thread implements IStateManager {
         bh.merkleRoot = b.merkleRoot;
         bh.ID = b.ID;
         bh.height = b.height;
-        bh.coinbase = b.getCoinbase().toJSON();
+        bh.coinbase = b.getCoinbase().serializeToAmplet().serializeToBytes();
         return bh;
     }
 

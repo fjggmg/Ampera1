@@ -32,6 +32,7 @@ public class FXGUI extends Application {
         pStage.setTitle("Origin");
 
         NewGUI.stage = pStage;
+        NewGUI.app = this;
         Parent root = FXMLLoader.load(getClass().getResource("/NewGUI.fxml"));
         JFXDecorator decorator = new JFXDecorator(pStage, root);
         //decorator.setCustomMaximize(false);
@@ -40,19 +41,19 @@ public class FXGUI extends Application {
             @Override
             public void run() {
                 System.out.println("Close requested");
-                Ki.getInstance().close();
-                System.exit(0);
+                NewGUI.close = true;
+
             }
         });
         decorator.setCustomMaximize(true);
 
         decorator.setStyle("-fx-border-width:0");
-        Scene scene = new Scene(decorator, 720, 480);
+        Scene scene = new Scene(decorator, 1156, 650);
         scene.getStylesheets().add(css);
-        pStage.setMinWidth(720);
-        pStage.setMinHeight(480);
-        pStage.setWidth(720);
-        pStage.setHeight(480);
+        pStage.setMinWidth(1156);
+        pStage.setMinHeight(650);
+        pStage.setWidth(1156);
+        pStage.setHeight(650);
         pStage.getIcons().add(new Image(getClass().getResourceAsStream("/origin.png")));
         pStage.setScene(scene);
         pStage.show();

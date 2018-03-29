@@ -21,11 +21,19 @@ public class GlobalPacketQueuer extends Thread {
 
                 while (!cmppList.isEmpty()) {
                     if (cmppList.get(0).connMan != null && cmppList.get(0).packet != null) {
-                        try {
-                            cmppList.get(0).connMan.getPacketProcessor().process(cmppList.get(0).packet);
-                        } catch (Exception e) {
-                            //get ki in here for debug
-                        }
+                        IConnectionManager connMan = cmppList.get(0).connMan;
+                        Object packet = cmppList.get(0).packet;
+                        new Thread() {
+                            public void run() {
+                                setName("PacketProcessingThread");
+                                try {
+                                    connMan.getPacketProcessor().process(packet);
+                                } catch (Exception e) {
+                                    //get ki in here for debug
+                                    System.out.println("Failed to process packet");
+                                }
+                            }
+                        }.start();
                     }
                     cmppList.remove(0);
                 }

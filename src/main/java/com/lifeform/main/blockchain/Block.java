@@ -12,6 +12,7 @@ import com.lifeform.main.data.EncryptionManager;
 import com.lifeform.main.data.JSONManager;
 import com.lifeform.main.data.Utils;
 import com.lifeform.main.transactions.ITrans;
+import com.lifeform.main.transactions.InvalidTransactionException;
 import com.lifeform.main.transactions.Transaction;
 import org.json.simple.JSONObject;
 
@@ -201,11 +202,19 @@ public class Block implements IAmpAmpletSerializable {
         b.solver = map.get("solver");
         b.timestamp = Long.parseLong(map.get("timestamp"));
         b.payload = Utils.fromBase64(map.get("payload"));
-        b.setCoinbase(Transaction.fromJSON(map.get("coinbase")));
+        try {
+            b.setCoinbase(Transaction.fromJSON(map.get("coinbase")));
+        } catch (InvalidTransactionException e) {
+            e.printStackTrace();
+        }
         Map<String,String> transactions = JSONManager.parseJSONtoMap(map.get("transactions"));
         for(String trans:transactions.keySet())
         {
-            b.transactions.put(trans, Transaction.fromJSON(transactions.get(trans)));
+            try {
+                b.transactions.put(trans, Transaction.fromJSON(transactions.get(trans)));
+            } catch (InvalidTransactionException e) {
+                e.printStackTrace();
+            }
         }
         return b;
     }
@@ -216,7 +225,12 @@ public class Block implements IAmpAmpletSerializable {
 
         AC_SingleElement prevID;
         if (height.compareTo(BigInteger.ZERO) == 0) {
-            prevID = AC_SingleElement.create(AmpIDs.PREV_ID_GID, this.prevID);
+            try {
+                prevID = AC_SingleElement.create(AmpIDs.PREV_ID_GID, this.prevID);
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+                return null;
+            }
         } else {
             prevID = AC_SingleElement.create(AmpIDs.PREV_ID_GID, Utils.fromBase64(this.prevID));
         }
@@ -249,19 +263,34 @@ public class Block implements IAmpAmpletSerializable {
         BigInteger height = new BigInteger(amp.unpackGroup(AmpIDs.HEIGHT_GID).getElement(0));
         String prevID;
         if (height.compareTo(BigInteger.ZERO) == 0) {
-            prevID = amp.unpackGroup(AmpIDs.PREV_ID_GID).getElementAsString(0);
+            try {
+                prevID = amp.unpackGroup(AmpIDs.PREV_ID_GID).getElementAsString(0);
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+                return null;
+            }
         } else {
             prevID = Utils.toBase64(amp.unpackGroup(AmpIDs.PREV_ID_GID).getElement(0));
         }
         String solver = Utils.toBase64(amp.unpackGroup(AmpIDs.SOLVER_GID).getElement(0));
         long timestamp = amp.unpackGroup(AmpIDs.TIMESTAMP_GID).getElementAsLong(0);
         byte[] payload = amp.unpackGroup(AmpIDs.PAYLOAD_GID).getElement(0);
-        ITrans coinbase = Transaction.fromAmplet(amp.unpackGroup(AmpIDs.COINBASE_GID).getElementAsAmplet(0));
+        ITrans coinbase = null;
+        try {
+            coinbase = Transaction.fromAmplet(amp.unpackGroup(AmpIDs.COINBASE_GID).getElementAsAmplet(0));
+        } catch (InvalidTransactionException e) {
+            e.printStackTrace();
+        }
 
         Map<String, ITrans> transactions = new HashMap<>();
         if (amp.unpackClass(AmpIDs.TRANSACTIONS_CID) != null)
             for (UnpackedGroup p : amp.unpackClass(AmpIDs.TRANSACTIONS_CID)) {
-                ITrans t = Transaction.fromAmplet(p.getElementAsAmplet(0));
+                ITrans t = null;
+                try {
+                    t = Transaction.fromAmplet(p.getElementAsAmplet(0));
+                } catch (InvalidTransactionException e) {
+                    e.printStackTrace();
+                }
                 if (t == null) return null;
                 transactions.put(t.getID(), t);
             }

@@ -2,7 +2,13 @@ package com.lifeform.main.data;
 
 import com.lifeform.main.IKi;
 import com.lifeform.main.data.files.StringFileHandler;
+import net.i2p.crypto.eddsa.EdDSAEngine;
+import net.i2p.crypto.eddsa.EdDSASecurityProvider;
+import net.i2p.crypto.eddsa.spec.EdDSAGenParameterSpec;
+import net.i2p.crypto.eddsa.spec.EdDSANamedCurveTable;
+import net.i2p.crypto.eddsa.spec.EdDSAParameterSpec;
 import org.bouncycastle.jcajce.provider.digest.SHA3;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import java.io.UnsupportedEncodingException;
 import java.security.*;
@@ -19,14 +25,21 @@ public class EncryptionManager  implements IEncryptMan{
     public static final String KEY_FILE = "keys/key";
     public static final String KEY_PADDING = "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE";
     public static final String KEY_PROTOCOL = "brainpoolp512t1";
+    public static final String ED_PROTOCOL = "Ed25519";
+    private static boolean isEC = true;
     private IKi ki;
     public EncryptionManager(IKi ki){
         this.ki = ki;
         Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
+        Security.addProvider(new EdDSASecurityProvider());
     }
 
-    public static void initStatic()
-    {
+    public static void initStatic() {
+        Security.addProvider(new BouncyCastleProvider());
+    }
+
+    static {
+        Security.addProvider(new BouncyCastleProvider());
 
     }
 
@@ -98,6 +111,31 @@ public class EncryptionManager  implements IEncryptMan{
         }
         return null;
     }
+
+    public static String sha3256(String input) {
+        SHA3.DigestSHA3 md = null;
+        try {
+            md = new SHA3.Digest256();
+            md.update(input.getBytes("UTF-8"));
+            byte[] digest = md.digest();
+            //logger.debug("Size of hash is: " + digest.length);
+            return Utils.toBase64(digest);
+        } catch (UnsupportedEncodingException e) {
+
+
+        }
+        return null;
+    }
+
+    public static byte[] sha3256(byte[] input) {
+        //System.out.println("Call to sha3256");
+        SHA3.DigestSHA3 md = new SHA3.Digest256();
+        //System.out.println("digest created");
+        md.update(input);
+        //System.out.println("digest updated with input");
+        return md.digest();
+    }
+
     public static String sha224Hex(String input)
     {
         SHA3.DigestSHA3 md = null;
@@ -132,11 +170,41 @@ public class EncryptionManager  implements IEncryptMan{
         return null;
     }
 
+    public static byte[] sha224(byte[] input) {
+        SHA3.DigestSHA3 md = new SHA3.Digest224();
+        md.update(input);
+        return md.digest();
+    }
+
+    public static byte[] sha384(byte[] input) {
+        SHA3.DigestSHA3 md = new SHA3.Digest384();
+        md.update(input);
+        return md.digest();
+    }
+
 
     private KeyPair pair;
+
+    public KeyPair generateEDkeys() {
+        try {
+            KeyPairGenerator gen = KeyPairGenerator.getInstance("EDDSA");
+            SecureRandom random = SecureRandom.getInstance("SHA1PRNG");
+            EdDSAGenParameterSpec edspec = new EdDSAGenParameterSpec(ED_PROTOCOL);
+            gen.initialize(edspec, random);
+            KeyPair pair = gen.generateKeyPair();
+            this.pair = pair;
+            isEC = false;
+            return pair;
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        } catch (InvalidAlgorithmParameterException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
     public KeyPair generateKeys() {
         try {
-            KeyPairGenerator gen = KeyPairGenerator.getInstance("EC","BC");
+            KeyPairGenerator gen = KeyPairGenerator.getInstance("ECDSA", "BC");
 
             SecureRandom random = SecureRandom.getInstance("SHA1PRNG");
 
@@ -144,11 +212,13 @@ public class EncryptionManager  implements IEncryptMan{
             gen.initialize(ecSpec,random);
 
             KeyPair pair = gen.generateKeyPair();
+
             this.pair = pair;
             return pair;
         } catch (NoSuchAlgorithmException e) {
             //logger.error(e.getMessage());
             //logger.debug("No EC algorithm found.");
+            System.out.println("Failed to generate keys");
         } catch (InvalidAlgorithmParameterException | NoSuchProviderException e) {
             e.printStackTrace();
         }
@@ -176,16 +246,35 @@ public class EncryptionManager  implements IEncryptMan{
         }
         return null;
     }
-
     public static PublicKey pubKeyFromString(String key) {
 
         KeyFactory keyFactory = null;
         try {
             keyFactory = KeyFactory.getInstance("ECDSA","BC");
             X509EncodedKeySpec publicKeySpec = new X509EncodedKeySpec(Utils.fromBase64(key));
+
             PublicKey publicKey = keyFactory.generatePublic(publicKeySpec);
             return publicKey;
-        } catch (NoSuchAlgorithmException | InvalidKeySpecException | NoSuchProviderException e) {
+        } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
+            e.printStackTrace();
+            //logger.error(e.getMessage());
+            //logger.debug("Could not read public key from string");
+        } catch (NoSuchProviderException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public static PublicKey pubKeyFromStringED(String key) {
+
+        KeyFactory keyFactory = null;
+        try {
+            keyFactory = KeyFactory.getInstance("EDDSA");
+            X509EncodedKeySpec publicKeySpec = new X509EncodedKeySpec(Utils.fromBase64(key));
+
+            PublicKey publicKey = keyFactory.generatePublic(publicKeySpec);
+            return publicKey;
+        } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
             e.printStackTrace();
             //logger.error(e.getMessage());
             //logger.debug("Could not read public key from string");
@@ -276,8 +365,27 @@ public class EncryptionManager  implements IEncryptMan{
         return null;
     }
 
+    public byte[] sign(byte[] toSign) {
+        try {
+            Signature sig;
+            if (isEC) {
+                sig = Signature.getInstance("SHA1withECDSA", "BC");
+            } else {
+                EdDSAParameterSpec spec = EdDSANamedCurveTable.getByName(ED_PROTOCOL);
+                sig = new EdDSAEngine((MessageDigest.getInstance(spec.getHashAlgorithm())));
+            }
+            sig.initSign(getPrivateKey());
+            sig.update(toSign);
+            return sig.sign();
+        } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException | NoSuchProviderException e) {
+            e.printStackTrace();
+            //logger.debug("Could not sign input string: " + toSign);
+        }
+        return null;
+    }
 
-    public static boolean verifySig(String signed, String sig,String pubKey) {
+
+    public static boolean verifySig(String signed, String sig, String pubKey) {
         try {
             //logger.debug("Signed: " + signed);
             //logger.debug("Sig: " + sig);
@@ -287,6 +395,24 @@ public class EncryptionManager  implements IEncryptMan{
             signature.update(signed.getBytes("UTF-8"));
             return signature.verify(Utils.fromBase64(sig));
         } catch (UnsupportedEncodingException | SignatureException | InvalidKeyException | NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+        return false;
+
+    }
+
+    public static boolean verifySig(byte[] signed, byte[] sig, String pubKey) {
+        try {
+            //logger.debug("Signed: " + signed);
+            //logger.debug("Sig: " + sig);
+            //logger.debug("PubKey: " + pubKey);
+            Signature signature = Signature.getInstance("SHA1withECDSA");
+            //EdDSAParameterSpec spec = EdDSANamedCurveTable.getByName(ED_PROTOCOL);
+            //Signature signature = new EdDSAEngine((MessageDigest.getInstance(spec.getHashAlgorithm())));
+            signature.initVerify(pubKeyFromString(pubKey));
+            signature.update(signed);
+            return signature.verify(sig);
+        } catch (SignatureException | InvalidKeyException | NoSuchAlgorithmException e) {
             e.printStackTrace();
         }
         return false;

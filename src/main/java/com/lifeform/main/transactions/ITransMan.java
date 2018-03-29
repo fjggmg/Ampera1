@@ -1,5 +1,7 @@
 package com.lifeform.main.transactions;
 
+import com.lifeform.main.blockchain.Block;
+
 import java.math.BigInteger;
 import java.util.List;
 
@@ -13,18 +15,25 @@ public interface ITransMan {
 
     boolean addTransactionNoVerify(ITrans transaction);
 
-    List<Output> getUTXOs(Address address, boolean safe);
+    List<Output> getUTXOs(IAddress address, boolean safe);
     boolean verifyCoinbase(ITrans transaction,BigInteger blockHeight, BigInteger fees);
     boolean addCoinbase(ITrans transaction,BigInteger blockHeight,BigInteger fees);
     List<ITrans> getPending();
     List<String> getUsedUTXOs();
 
     void undoTransaction(ITrans trans);
-    boolean utxosChanged(Address address);
-    void commit();
+
+    boolean utxosChanged(IAddress address);
+
     void close();
 
     void clear();
 
+    ITrans createSimple(IAddress receiver, BigInteger amount, BigInteger fee, Token token, String message) throws InvalidTransactionException;
 
+    boolean postBlockProcessing(Block block);
+
+    List<Input> getInputsForAmountAndToken(IAddress address, BigInteger amount, Token token, boolean used);
+
+    void unUseUTXOs(List<Input> inputs);
 }

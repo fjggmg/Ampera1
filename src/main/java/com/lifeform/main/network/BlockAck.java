@@ -27,7 +27,7 @@ public class BlockAck implements Serializable,Packet {
                 for(ITrans t:ki.getTransMan().getPending())
                 {
                     TransactionPacket tp = new TransactionPacket();
-                    tp.trans = t.toJSON();
+                    tp.trans = t.serializeToAmplet().serializeToBytes();
                     connMan.sendPacket(tp);
                 }
             } else if (ki.getChainMan().currentHeight().compareTo(height) == 0) {

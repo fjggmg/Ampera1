@@ -7,21 +7,29 @@ import java.util.List;
  */
 public interface IAddMan {
 
-    Address getNewAdd();
-    List<Address> getActive();
-    void receivedOn(Address address);
-    void usedEntirely(Address address);
-    void verified(Address address);
+    IAddress getNewAdd();
+
+    List<IAddress> getActive();
+
+    void receivedOn(IAddress address);
+
+    void usedEntirely(IAddress address);
+
+    void verified(IAddress address);
     void blockTick();
-    Address getMainAdd();
+
+    IAddress getMainAdd();
     void load();
     void save();
-    String getEntropyForAdd(Address a);
-    void setMainAdd(Address a);
 
-    Address createNew(String entropy);
-    List<Address> getAll();
+    String getEntropyForAdd(IAddress a);
 
-    void deleteAddress(Address address);
+    void setMainAdd(IAddress a);
+
+    IAddress createNew(String binOrKey, String entropy, String prefix, AddressLength l, boolean p2sh);
+
+    List<IAddress> getAll();
+
+    void deleteAddress(IAddress address);
 
 }
