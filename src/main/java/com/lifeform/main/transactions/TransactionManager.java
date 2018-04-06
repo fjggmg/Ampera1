@@ -72,20 +72,24 @@ public class TransactionManager implements ITransMan {
                                 hpa = HeadlessPrefixedAmplet.create(utxoAmp.getBytes(o.getAddress().toByteArray()));
                             else
                                 hpa = HeadlessPrefixedAmplet.create();
+
+                            ki.debug("Putting output: " + o.getID() + " with address: " + o.getAddress().encodeForChain() + " of amount + " + o.getAmount());
+                            hpa.addElement(o.getID());
                             try {
-                                ki.debug("Putting output: " + o.getID() + " with address: " + o.getAddress().encodeForChain() + " of amount + " + o.getAmount());
-                                hpa.addElement(o.getID());
                                 hpa.addBytes(new TXIOData(o.getAddress(), o.getIndex(), o.getAmount(), o.getToken(), o.getTimestamp()).serializeToBytes());
-                                utxoAmp.putBytes(o.getAddress().toByteArray(), hpa.serializeToBytes());
-                            } catch (UnsupportedEncodingException | InvalidTXIOData e) {
-                                e.printStackTrace();
+                            } catch (InvalidTXIOData invalidTXIOData) {
+                                invalidTXIOData.printStackTrace();
+                                continue;
                             }
+                            utxoAmp.putBytes(o.getAddress().toByteArray(), hpa.serializeToBytes());
+
 
                         }
                         for (String trans : b.getTransactionKeys()) {
 
                             ITrans t = b.getTransaction(trans);
                             for (Input i : t.getInputs()) {
+                                getUsedUTXOs().remove(i.getID());
                                 HeadlessPrefixedAmplet hpa;
                                 if (utxoAmp.getBytes(i.getAddress().toByteArray()) != null)
                                     hpa = HeadlessPrefixedAmplet.create(utxoAmp.getBytes(i.getAddress().toByteArray()));
@@ -118,15 +122,18 @@ public class TransactionManager implements ITransMan {
                                     hpa = HeadlessPrefixedAmplet.create(utxoAmp.getBytes(o.getAddress().toByteArray()));
                                 else
                                     hpa = HeadlessPrefixedAmplet.create();
-                                try {
+
                                     hpa.addElement(o.getID());
                                     ki.debug("Putting output: " + o.getID() + " with address: " + o.getAddress().encodeForChain() + " of amount + " + o.getAmount());
 
+                                try {
                                     hpa.addBytes(new TXIOData(o.getAddress(), o.getIndex(), o.getAmount(), o.getToken(), o.getTimestamp()).serializeToBytes());
-                                    utxoAmp.putBytes(o.getAddress().toByteArray(), hpa.serializeToBytes());
-                                } catch (UnsupportedEncodingException | InvalidTXIOData e) {
-                                    e.printStackTrace();
+                                } catch (InvalidTXIOData invalidTXIOData) {
+                                    invalidTXIOData.printStackTrace();
+                                    continue;
                                 }
+                                utxoAmp.putBytes(o.getAddress().toByteArray(), hpa.serializeToBytes());
+
 
                             }
 
@@ -444,11 +451,35 @@ public class TransactionManager implements ITransMan {
     @Override
     public ITrans createSimple(IAddress receiver, BigInteger amount, BigInteger fee, Token token, String message) throws InvalidTransactionException {
 
+        return createSimple(receiver, amount, fee, token, message, 1);
+    }
+
+    /**
+     * this is going to override your fee if it's too low, may possibly make a method without fee shit
+     *
+     * @param receiver
+     * @param amount
+     * @param fee
+     * @param token
+     * @param message
+     * @param multipleOuts
+     * @return
+     * @throws InvalidTransactionException
+     */
+    @Override
+    public ITrans createSimple(IAddress receiver, BigInteger amount, BigInteger fee, Token token, String message, int multipleOuts) throws InvalidTransactionException {
         if (ki.getEncryptMan().getPublicKey() != null) {
-            int index = 0;
-            Output output = new Output(amount, receiver, token, index, System.currentTimeMillis(), (byte) 2);
-            java.util.List<Output> outputs = new ArrayList<>();
-            outputs.add(output);
+            if (multipleOuts < 1)
+                throw new InvalidTransactionException("Cannot create transaction with less than 1 output");
+            if (multipleOuts % 10 != 0 && multipleOuts != 1)
+                throw new InvalidTransactionException("To create a simple transaction with this method multiple outs must be divisible by 10 or equal to 1");
+
+            List<Output> outputs = new ArrayList<>();
+            for (int index = 0; index < multipleOuts; index++) {
+                Output output = new Output(amount.divide(BigInteger.valueOf(multipleOuts)), receiver, token, index, System.currentTimeMillis(), (byte) 2);
+                outputs.add(output);
+            }
+
             java.util.List<Input> inputs = new ArrayList<>();
 
             //ki.getMainLog().info("Fee is: " + fee.toString());
@@ -472,7 +503,25 @@ public class TransactionManager implements ITransMan {
             if (totalInput.compareTo(amount) < 0) {
                 throw new InvalidTransactionException("Not enough " + token.name() + " to do this transaction");
             }
-
+            int outs = outputs.size();
+            int ins = inputs.size() + 5;//arbitrary
+            int pOuts = 0;
+            int pIns = 0;
+            for (Output o : outputs) {
+                if (o.getAddress().isP2SH()) {
+                    pOuts++;
+                }
+            }
+            for (Input i : inputs) {
+                if (i.getAddress().isP2SH()) {
+                    pIns++;
+                }
+            }
+            pIns = pIns + 2;//arbitrary
+            BigInteger calcFee = TransactionFeeCalculator.calculateMinFee(outs, ins, pOuts, pIns);
+            if (fee.compareTo(calcFee) < 0) {
+                fee = calcFee;
+            }
             BigInteger feeInput = (token.equals(Token.ORIGIN)) ? totalInput : BigInteger.ZERO;
             for (IAddress a : ki.getAddMan().getActive()) {
                 //get inputs

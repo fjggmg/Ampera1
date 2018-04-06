@@ -59,11 +59,6 @@ public class Transaction implements ITrans {
             throw new InvalidTransactionException("Too many TXIOs");
         //if(sigsRequired < 1) throw new InvalidTransactionException("Sigs required < 1"); this needs to happen but it breaks coinbase right now
         this.outputs = outputs;
-        int i = 0;
-        for (Output o : outputs) {
-            if (o.getIndex() != i) throw new InvalidTransactionException("Bad Output index");
-            i++;
-        }
         this.inputs = inputs;
         this.sigsRequired = sigsRequired;
         this.message = message;
@@ -186,11 +181,9 @@ public class Transaction implements ITrans {
     @Override
     public byte[] toSignBytes() {
         AC_SingleElement msg = null;
-        try {
-            msg = AC_SingleElement.create(AmpIDs.MESSAGE_ID_GID, message);
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
+
+        msg = AC_SingleElement.create(AmpIDs.MESSAGE_ID_GID, message);
+
         AC_SingleElement sRqd = AC_SingleElement.create(AmpIDs.SIGS_REQUIRED_GID, sigsRequired);
         AC_ClassInstanceIDIsIndex inputs = AC_ClassInstanceIDIsIndex.create(AmpIDs.INPUTS_CID, "Inputs");
         for (Input i : getInputs()) {
@@ -372,15 +365,13 @@ public class Transaction implements ITrans {
     public Amplet serializeToAmplet() {
         AC_SingleElement message = null;
         if (this.message != null && !this.message.isEmpty())
-            try {
-                message = AC_SingleElement.create(AmpIDs.MESSAGE_ID_GID, this.message);
-            } catch (UnsupportedEncodingException e) {
-                e.printStackTrace();
-            }
+
+            message = AC_SingleElement.create(AmpIDs.MESSAGE_ID_GID, this.message);
+
         AC_SingleElement sigsRequiredGID = AC_SingleElement.create(AmpIDs.SIGS_REQUIRED_GID, this.sigsRequired);
         AC_ClassInstanceIDIsIndex inputs = AC_ClassInstanceIDIsIndex.create(AmpIDs.INPUTS_CID, "Inputs");
         for (Input i : getInputs()) {
-            inputs.addElement(i.serializeToAmplet());
+            inputs.addElement(i);
         }
         AC_ClassInstanceIDIsIndex outputs = AC_ClassInstanceIDIsIndex.create(AmpIDs.OUTPUTS_CID, "Outputs");
         for (Output o : getOutputs()) {
@@ -389,19 +380,14 @@ public class Transaction implements ITrans {
 
         AC_ClassInstanceIDIsIndex keys = AC_ClassInstanceIDIsIndex.create(AmpIDs.KEYS_CID, "Keys");
         for (String key : this.keys) {
-            try {
-                keys.addElement(key);
-            } catch (UnsupportedEncodingException e) {
-                e.printStackTrace();
-            }
+
+            keys.addElement(key);
         }
 
         AC_SingleElement type = null;
-        try {
-            type = AC_SingleElement.create(AmpIDs.TYPE_GID, this.type.toString());
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
+
+        type = AC_SingleElement.create(AmpIDs.TYPE_GID, this.type.toString());
+
         AC_SingleElement keySigMap;
         try {
             keySigMap = AC_SingleElement.create(AmpIDs.KEY_SIG_MAP_GID, Utils.mapToByteArray(this.keySigMap));
@@ -444,18 +430,18 @@ public class Transaction implements ITrans {
             //System.out.println("Transaction does not appear to be old format, sending to NewTrans system.");
             return NewTrans.fromAmplet(amp);
         }
-        System.out.println("Deserializing Transaction from amp2");
+        //System.out.println("Deserializing Transaction from amp2");
         if (type.equals(TransactionType.NEW_TRANS)) return NewTrans.fromAmplet(amp);
         UnpackedGroup eMap = amp.unpackGroup(AmpIDs.ENTROPY_MAP_GID);
         Map<String, String> entropyMap;
-        System.out.println("Deserializing Transaction from amp3");
+        //System.out.println("Deserializing Transaction from amp3");
         try {
             entropyMap = Utils.toObject(eMap.getElement(0));
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
             return null;
         }
-        System.out.println("Deserializing Transaction from amp4");
+        //System.out.println("Deserializing Transaction from amp4");
         UnpackedGroup kMap = amp.unpackGroup(AmpIDs.KEY_SIG_MAP_GID);
         Map<String, String> keyMap;
         try {
@@ -464,46 +450,38 @@ public class Transaction implements ITrans {
             e.printStackTrace();
             return null;
         }
-        System.out.println("Deserializing Transaction from amp5");
+        //System.out.println("Deserializing Transaction from amp5");
         UnpackedGroup msg = amp.unpackGroup(AmpIDs.MESSAGE_ID_GID);
         String message = "";
         if (msg != null)
-            try {
-                message = msg.getElementAsString(0);
-            } catch (UnsupportedEncodingException e) {
-                e.printStackTrace();
-            }
-        System.out.println("Deserializing Transaction from amp6");
+            message = msg.getElementAsString(0);
+
+        //System.out.println("Deserializing Transaction from amp6");
         UnpackedGroup sigsRqd = amp.unpackGroup(AmpIDs.SIGS_REQUIRED_GID);
         int sigsRequired = sigsRqd.getElementAsInt(0);
         List<UnpackedGroup> inputsAmp = amp.unpackClass(AmpIDs.INPUTS_CID);
         List<Input> inputs = new ArrayList<>();
         if (inputsAmp != null)
             for (UnpackedGroup p : inputsAmp) {
-                inputs.add(Input.fromAmp(p.getElementAsAmplet(0)));
+                inputs.add(Input.fromBytes(p.getElement(0)));
 
             }
-        System.out.println("Deserializing Transaction from amp7");
+        //System.out.println("Deserializing Transaction from amp7");
         List<UnpackedGroup> outputsAmp = amp.unpackClass(AmpIDs.OUTPUTS_CID);
         List<Output> outputs = new ArrayList<>();
         if (outputsAmp != null)
             for (UnpackedGroup p : outputsAmp) {
-                outputs.add(Output.fromAmp(p.getElementAsAmplet(0)));
+                outputs.add(Output.fromBytes(p.getElement(0)));
 
             }
-        System.out.println("Deserializing Transaction from amp8");
+        //System.out.println("Deserializing Transaction from amp8");
         List<UnpackedGroup> keysAmp = amp.unpackClass(AmpIDs.KEYS_CID);
         List<String> keys = new ArrayList<>();
         if (keysAmp != null)
             for (UnpackedGroup p : keysAmp) {
-                try {
-                    keys.add(p.getElementAsString(0));
-                } catch (UnsupportedEncodingException e) {
-                    e.printStackTrace();
-                }
-
+                keys.add(p.getElementAsString(0));
             }
-        System.out.println("Deserializing Transaction from amp9");
+        //System.out.println("Deserializing Transaction from amp9");
 
         return new Transaction(message, sigsRequired, keyMap, outputs, inputs, entropyMap, keys, type);
     }

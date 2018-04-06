@@ -28,34 +28,26 @@ public class KeySigEntropyPair {
     HeadlessPrefixedAmplet toAmplet() {
         //System.out.println("KSEP serialize 1");
         HeadlessPrefixedAmplet hpa = HeadlessPrefixedAmplet.create();
-        try {
-            hpa.addElement(sig);
-            hpa.addElement(entropy);
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
+
+        hpa.addElement(sig);
+        hpa.addElement(entropy);
         //System.out.println("KSEP serialize 2");
         AC_ClassInstanceIDIsIndex inputs = AC_ClassInstanceIDIsIndex.create(AmpIDs.INPUTS_CID, "Inputs");
         //System.out.println("KSEP serialize 2a");
         for (String s : this.inputs) {
             //System.out.println("KSEP serialize 2b input: " + s);
-            try {
-                inputs.addElement(s);
+
+            inputs.addElement(s);
                 // System.out.println("KSEP serialize 2c");
-            } catch (UnsupportedEncodingException e) {
-                //System.out.println("KSEP serialize 2d");
-                e.printStackTrace();
-            }
+
             //System.out.println("KSEP serialize 2e");
         }
         //System.out.println("KSEP serialize 3");
         hpa.addBytes(inputs.serializeToAmplet().serializeToBytes());
         hpa.addElement((p2sh) ? (byte) 1 : (byte) 0);
-        if (prefix != null) try {
+        if (prefix != null)
             hpa.addElement(prefix);
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
+
         //System.out.println("KSEP serialize 4");
         return hpa;
     }

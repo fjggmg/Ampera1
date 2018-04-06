@@ -76,6 +76,10 @@ public class TransactionPacket implements Serializable, Packet {
                     return;
                 }
                 ki.getTransMan().getPending().add(trans);
+                for (Input i : trans.getInputs()) {
+
+                    ki.getTransMan().getUsedUTXOs().add(i.getID());
+                }
                 if (ki.getNetMan().isRelay()) {
                     ki.debug("BROADCASTING TRANSACTION PACKET");
                     ki.getNetMan().broadcastAllBut(connMan.getID(), this);

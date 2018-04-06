@@ -37,6 +37,7 @@ public class MinerManager implements IMinerMan{
                 cm.shutdown();
             }
             ContextMaster platforms = new ContextMaster();
+            devNames.clear();
 
             cm = platforms;
             int i = 0;

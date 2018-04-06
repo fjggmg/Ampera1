@@ -17,10 +17,7 @@ import java.io.File;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentMap;
 
 /**
@@ -128,11 +125,13 @@ public class ChainManager implements IChainMan {
 
                         ki.debug("Size on map: " + blockHeightAmp.getBytes(b.height.toByteArray()).length);
                         ki.debug("Number of transactions: " + b.getTransactionKeys().size());
+                        //ki.debug("bytes: " + Arrays.toString(blockHeightAmp.getBytes(b.height.toByteArray())));
                         ki.debug("Value on map: " + Block.fromAmplet(blockHeightAmp.get(b.height.toByteArray())).ID);
                     } catch (Exception e) {
+                        ki.getMainLog().error("Error reading data back", e);
                         ki.debug("Last block size: " + blockHeightAmp.getBytes(b.height.subtract(BigInteger.ONE).toByteArray()).length);
 
-                        e.printStackTrace();
+                        //e.printStackTrace();
                     }
                 }
 
@@ -642,7 +641,7 @@ public class ChainManager implements IChainMan {
         Map<String,ITrans> transactions = new HashMap<>();
         for(ITrans trans:ki.getTransMan().getPending())
         {
-            if (trans.getFee().compareTo(minFee) >= 0)
+            if (trans.getFee().compareTo(minFee) >= 0 && trans.getFee().compareTo(TransactionFeeCalculator.calculateMinFee(trans)) >= 0)
                 transactions.put(trans.getID(),trans);
         }
         b.addAll(transactions);

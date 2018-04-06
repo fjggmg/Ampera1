@@ -150,6 +150,13 @@ public class Address implements Serializable, IAddress {
     public byte[] toByteArray() {
         //System.out.println("Address is: " + encodeForChain());
         //System.out.println("ID is: " + ID);
+        try {
+            return encodeForChain().getBytes("UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        return null;
+        /*
         byte[] payload = {};
         try {
             payload = Utils.fromBase64(ID);
@@ -177,6 +184,7 @@ public class Address implements Serializable, IAddress {
         array[array.length - 2] = check[0];
         array[array.length - 1] = check[1];
         return array;
+        */
     }
 
     @Override
@@ -209,7 +217,23 @@ public class Address implements Serializable, IAddress {
      * @return implementation of an address matching the version in the byte array
      */
     public static IAddress fromByteArray(byte[] array) {
-        if (array[0] != VERSION) return NewAdd.fromByteArray(array);
+
+        byte[] posVer = new byte[3];
+        System.arraycopy(array, 0, posVer, 0, 3);
+        String ver;
+        try {
+            ver = new String(posVer, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            return NewAdd.fromByteArray(array);
+        }
+        if (!ver.equals("" + VERSION)) return NewAdd.fromByteArray(array);
+        try {
+            return decodeFromChain(new String(array, "UTF-8"));
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        return null;
+        /*
         if (array.length == 31) {
             byte[] ID = new byte[28];
             for (int i = 1; i < 29; i++) {
@@ -237,5 +261,6 @@ public class Address implements Serializable, IAddress {
             }
             return a;
         }
+        */
     }
 }

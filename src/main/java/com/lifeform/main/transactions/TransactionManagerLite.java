@@ -153,6 +153,11 @@ public class TransactionManagerLite implements ITransMan {
     }
 
     @Override
+    public ITrans createSimple(IAddress receiver, BigInteger amount, BigInteger fee, Token token, String message, int multipleOuts) throws InvalidTransactionException {
+        return null;
+    }
+
+    @Override
     public boolean postBlockProcessing(Block block) {
         return false;
     }

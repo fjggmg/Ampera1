@@ -61,3 +61,6 @@
     -fx-scale-x: 0;
     -fx-padding: 0px;
 }
+.chart-pie-label{
+    -fx-fill: WHITE;
+}

@@ -94,7 +94,7 @@ public class Order implements IAmpByteSerializable {
     }
 
     public String getID() {
-        return EncryptionManager.sha3256(pair.name() + Utils.toBase64(bin.serializeToAmplet().serializeToBytes()) + unitPrice + address.encodeForChain() + contractAdd.encodeForChain() + buy);
+        return EncryptionManager.sha3256(pair.name() + Utils.toBase64(bin.serializeToAmplet().serializeToBytes()) + unitPrice + address.encodeForChain() + contractAdd.encodeForChain() + buy + txid);
     }
 
     public OrderMeta getOm() {
@@ -105,12 +105,9 @@ public class Order implements IAmpByteSerializable {
     public byte[] serializeToBytes() {
         HeadlessPrefixedAmplet hpa = HeadlessPrefixedAmplet.create();
         hpa.addBytes(bin.serializeToAmplet().serializeToBytes());
-        try {
-            hpa.addElement(pair.name());
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-            return null;
-        }
+
+        hpa.addElement(pair.name());
+
         hpa.addElement(unitPrice);
         hpa.addBytes(address.toByteArray());
         hpa.addElement(amountOnOffer);

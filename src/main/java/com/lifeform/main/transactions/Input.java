@@ -119,12 +119,10 @@ public class Input implements TXIO, IAmpByteSerializable {
         hpa.addElement(amount);
         hpa.addBytes(receiver.toByteArray());
 
-        try {
-            hpa.addElement(token.getName());
-            hpa.addElement(prevID);
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
+
+        hpa.addElement(token.getName());
+        hpa.addElement(prevID);
+
         hpa.addElement(hamplet);
         return hpa.serializeToBytes();
     }
@@ -152,19 +150,14 @@ public class Input implements TXIO, IAmpByteSerializable {
         AC_SingleElement amount = AC_SingleElement.create(AmpIDs.AMOUNT_GID, this.amount.toByteArray());
         AC_SingleElement receiver = AC_SingleElement.create(AmpIDs.RECEIVER_GID, this.receiver.toByteArray());
         AC_SingleElement token = null;
-        try {
-            token = AC_SingleElement.create(AmpIDs.TOKEN_GID, this.token.toString());
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
+        token = AC_SingleElement.create(AmpIDs.TOKEN_GID, this.token.toString());
+
         AC_SingleElement index = AC_SingleElement.create(AmpIDs.INDEX_GID, this.prevOut);
         AC_SingleElement timestamp = AC_SingleElement.create(AmpIDs.TXTIMESTAMP_GID, this.timestamp);
         AC_SingleElement ID = null;
-        try {
-            ID = AC_SingleElement.create(AmpIDs.ID_GID, this.getID());
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
+
+        ID = AC_SingleElement.create(AmpIDs.ID_GID, this.getID());
+
         AmpClassCollection acc = new AmpClassCollection();
         acc.addClass(amount);
         acc.addClass(receiver);
@@ -183,11 +176,8 @@ public class Input implements TXIO, IAmpByteSerializable {
         UnpackedGroup ig = amp.unpackGroup(AmpIDs.INDEX_GID);
         UnpackedGroup idg = amp.unpackGroup(AmpIDs.ID_GID);
         UnpackedGroup tmg = amp.unpackGroup(AmpIDs.TXTIMESTAMP_GID);
-        try {
-            return new Input(idg.getElementAsString(0), ig.getElementAsInt(0), new BigInteger(ag.getElement(0)), Address.fromByteArray(rg.getElement(0)), Token.valueOf(tg.getElementAsString(0)), tmg.getElementAsLong(0));
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-            return null;
-        }
+
+        return new Input(idg.getElementAsString(0), ig.getElementAsInt(0), new BigInteger(ag.getElement(0)), Address.fromByteArray(rg.getElement(0)), Token.valueOf(tg.getElementAsString(0)), tmg.getElementAsLong(0));
+
     }
 }

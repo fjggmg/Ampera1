@@ -77,7 +77,11 @@ public class Ki extends Thread implements IKi {
     private ScriptManager scriptMan;
     private ExchangeManager exchangeMan;
     public Ki(Options o) {
-
+        System.setProperty("log4j.configurationFile", "log4j.xml");
+        AmpLogging.startLogging();
+        PoolLogging.startLogging();
+        main = LogManager.getLogger("Origin");
+        main.info("Origin starting up");
         if (settings.get(VERSION) == null || !settings.get(VERSION)) {
             settings.put(VERSION, true);
             try {
@@ -151,11 +155,7 @@ public class Ki extends Thread implements IKi {
         //logMan = new LogMan(new ConsoleLogger());
 
         //main = logMan.createLogger("Main", "console", Level.DEBUG);
-        System.setProperty("log4j.configurationFile", "log4j.xml");
-        AmpLogging.startLogging();
-        PoolLogging.startLogging();
-        main = LogManager.getLogger("Origin");
-        main.info("Origin starting up");
+
         if (o.pool) {
             chainMan = new PoolChainMan();
         } else if (o.lite) {
@@ -224,7 +224,7 @@ public class Ki extends Thread implements IKi {
             ki.debug("=========================================UPDATING PPS TO: " + pps);
             ki.getPoolManager().updateCurrentPayPerShare(pps);
 
-            Block b = getChainMan().formEmptyBlock(GPUMiner.minFee);
+            Block b = getChainMan().formEmptyBlock(TransactionFeeCalculator.MIN_FEE);
             PoolBlockHeader pbh = new PoolBlockHeader();
             pbh.coinbase = b.getCoinbase().toJSON();
             ki.debug("=================================CURRENT WORK HEIGHT: " + b.height);
@@ -401,7 +401,7 @@ public class Ki extends Thread implements IKi {
 
     @Override
     public void newTransPool() {
-        Block b = getChainMan().formEmptyBlock(GPUMiner.minFee);
+        Block b = getChainMan().formEmptyBlock(TransactionFeeCalculator.MIN_FEE);
         PoolBlockHeader pbh = new PoolBlockHeader();
         pbh.coinbase = b.getCoinbase().toJSON();
         pbh.height = b.height;
@@ -495,7 +495,7 @@ public class Ki extends Thread implements IKi {
     {
         if (getOptions().poolRelay) {
             miningPool.updateCurrentHeight(ki.getChainMan().currentHeight());
-            Block b = getChainMan().formEmptyBlock(GPUMiner.minFee);
+            Block b = getChainMan().formEmptyBlock(TransactionFeeCalculator.MIN_FEE);
             PoolBlockHeader pbh = new PoolBlockHeader();
             pbh.coinbase = b.getCoinbase().toJSON();
             pbh.height = b.height;

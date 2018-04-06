@@ -97,36 +97,70 @@ public class OrderBook {
     }
 
     private ExchangeData recent = null;
-
+    private long newFrom = 0;
     public void setRecent(ExchangeData data) {
         recent = data;
     }
 
-    public ExchangeData collectRecentData() {
-        hasNew = false;
-        if (recent != null) {
-            return recent;
-        }
-        return data.get(data.size() - 1);
+    public ExchangeData getRecent() {
+        return recent;
     }
 
-    private boolean hasNew = false;
+    public List<ExchangeData> collectRecentData(long timestamp) {
+        hasNew = false;
+        System.out.println("Current size of data: " + data.size());
+        for (int i = data.size() - 1; i >= 0; i--) {
+            if (data.get(i).timestamp >= timestamp) {
+                if (i == data.size() - 1) {
+                    System.out.println("returning only one item from recent data");
+                    List<ExchangeData> data = new ArrayList<>();
+                    data.add(this.data.get(i));
+                    return data;
+                }
+                System.out.println("returning: " + (data.size() - i) + " items");
+                return data.subList(i, data.size() - 1);
+            }
+        }
+        return data;
+    }
 
-    public void addData(BigInteger amount, BigInteger price, long timestamp) {
+    public long newFrom() {
+        return newFrom;
+    }
+
+    private boolean hasNew = true;
+
+    public boolean addData(BigInteger amount, BigInteger price, long timestamp) {
         if (data.isEmpty()) {
             hasNew = true;
             ExchangeData data = new ExchangeData(price, timestamp, 5);//TODO possibly create constructor with amount?
             data.addData(price, amount);
             this.data.add(data);
         } else if (data.get(data.size() - 1).done(timestamp)) {
-            hasNew = true;
+
+
             ExchangeData ed = data.get(data.size() - 1).createNew();
-            ed.addData(price, amount);
+            if (!hasNew) {
+                hasNew = true;
+                newFrom = timestamp;
+            }
             data.add(ed);
+            if (ed.done(timestamp)) {
+
+                try {
+                    addData(amount, price, timestamp);
+                } catch (StackOverflowError e) {
+                    //ki.getMainLog().warn("Stack overflow while adding data, caused by more than 2 weeks of no exchange data.: ");
+                    return false;
+                }
+                return true;
+            }
+            ed.addData(price, amount);
+
         } else {
             data.get(data.size() - 1).addData(price, amount);
         }
-
+        return true;
     }
 
     public List<ExchangeData> getData() {
@@ -145,19 +179,16 @@ public class OrderBook {
         addData(amount, price, System.currentTimeMillis());
     }
 
-    private BigInteger totalB;
-    private BigInteger totalS;
-
     public void sort() {
 
         buys.sort(new OrderComparator(true));
-        totalB = BigInteger.ZERO;
+        BigInteger totalB = BigInteger.ZERO;
         for (Order b : buys) {
             totalB = totalB.add(b.amountOnOffer());
             b.getOm().totalAtOrder = new BigInteger(totalB.toByteArray());
         }
         sells.sort(new OrderComparator(false));
-        totalS = BigInteger.ZERO;
+        BigInteger totalS = BigInteger.ZERO;
         for (Order s : sells) {
             totalS = totalS.add(s.amountOnOffer());
             s.getOm().totalAtOrder = new BigInteger(totalS.toByteArray());

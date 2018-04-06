@@ -109,11 +109,9 @@ public class Output implements TXIO, IAmpByteSerializable {
         AC_SingleElement amount = AC_SingleElement.create(AmpIDs.AMOUNT_GID, this.amount.toByteArray());
         AC_SingleElement receiver = AC_SingleElement.create(AmpIDs.RECEIVER_GID, this.receiver.toByteArray());
         AC_SingleElement token = null;
-        try {
-            token = AC_SingleElement.create(AmpIDs.TOKEN_GID, this.token.toString());
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
+
+        token = AC_SingleElement.create(AmpIDs.TOKEN_GID, this.token.toString());
+
         AC_SingleElement index = AC_SingleElement.create(AmpIDs.INDEX_GID, this.index);
         AC_SingleElement timestamp = AC_SingleElement.create(AmpIDs.TXTIMESTAMP_GID, this.timestamp);
         AC_SingleElement version = AC_SingleElement.create(AmpIDs.TXIO_VER_GID, this.version);
@@ -139,11 +137,9 @@ public class Output implements TXIO, IAmpByteSerializable {
         BigInteger amount = new BigInteger(ag.getElement(0));
         IAddress receiver = Address.fromByteArray(rg.getElement(0));
         Token token = null;
-        try {
-            token = Token.valueOf(tg.getElementAsString(0));
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
+
+        token = Token.valueOf(tg.getElementAsString(0));
+
         int index = ig.getElementAsInt(0);
         long timestamp = tmg.getElementAsLong(0);
         byte version = 1;
@@ -181,11 +177,9 @@ public class Output implements TXIO, IAmpByteSerializable {
         HeadlessPrefixedAmplet hpa = HeadlessPrefixedAmplet.create();
         hpa.addElement(amount);
         hpa.addBytes(receiver.toByteArray());
-        try {
-            hpa.addElement(token.getName());
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
+
+        hpa.addElement(token.getName());
+
         hpa.addElement(hamplet);
         return hpa.serializeToBytes();
     }

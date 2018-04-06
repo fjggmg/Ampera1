@@ -26,7 +26,7 @@ public class UTXODataStart implements Packet,Serializable {
         {
             usa.addresses.add(a.encodeForChain());
         }
-        connMan.sendPacket(usa);//USA! USA! USA!
+        connMan.sendPacket(usa);
     }
 
     @Override

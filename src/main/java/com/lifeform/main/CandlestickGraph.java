@@ -7,7 +7,9 @@ import javafx.scene.chart.LineChart;
 import javafx.scene.chart.XYChart;
 import javafx.scene.shape.Path;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
@@ -36,10 +38,7 @@ public class CandlestickGraph extends LineChart<String, Number> {
 
         //System.out.println("Data item added");
 
-        getPlotChildren().add(createCandle(item));
-        if (getPlotChildren().size() > 24) {
-            getPlotChildren().remove(0);
-        }
+
     }
 
     @Override
@@ -122,16 +121,28 @@ public class CandlestickGraph extends LineChart<String, Number> {
 
             }
             //updateAxisRange();
+            if (ki.getExMan().getOrderBook().hasNew()) {
+                for (ExchangeData data : ki.getExMan().getOrderBook().collectRecentData(ki.getExMan().getOrderBook().newFrom())) {
+                    ki.getExMan().getOrderBook().setRecent(data);
+                    XYChart.Data<String, Number> item = new XYChart.Data<>(sdf.format(new Date(data.timestamp)), data.open);
+                    getData().get(0).getData().add(item);
+                    getPlotChildren().add(createCandle(item));
+                    if (getPlotChildren().size() > 24) {
+                        getPlotChildren().remove(0);
+                    }
+                }
+            }
         }
     }
 
+    private SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
     private Node createCandle(final Data item) {
         //System.out.println("Creating new candle");
         Node candle = item.getNode();
         if (candle instanceof Candle) {
             return candle;
         } else {
-            candle = new Candle(ki.getExMan().getOrderBook().collectRecentData());
+            candle = new Candle(ki.getExMan().getOrderBook().getRecent());
             item.setNode(candle);
         }
         return candle;

@@ -225,12 +225,9 @@ public class Block implements IAmpAmpletSerializable {
 
         AC_SingleElement prevID;
         if (height.compareTo(BigInteger.ZERO) == 0) {
-            try {
-                prevID = AC_SingleElement.create(AmpIDs.PREV_ID_GID, this.prevID);
-            } catch (UnsupportedEncodingException e) {
-                e.printStackTrace();
-                return null;
-            }
+
+            prevID = AC_SingleElement.create(AmpIDs.PREV_ID_GID, this.prevID);
+
         } else {
             prevID = AC_SingleElement.create(AmpIDs.PREV_ID_GID, Utils.fromBase64(this.prevID));
         }
@@ -263,12 +260,8 @@ public class Block implements IAmpAmpletSerializable {
         BigInteger height = new BigInteger(amp.unpackGroup(AmpIDs.HEIGHT_GID).getElement(0));
         String prevID;
         if (height.compareTo(BigInteger.ZERO) == 0) {
-            try {
-                prevID = amp.unpackGroup(AmpIDs.PREV_ID_GID).getElementAsString(0);
-            } catch (UnsupportedEncodingException e) {
-                e.printStackTrace();
-                return null;
-            }
+            prevID = amp.unpackGroup(AmpIDs.PREV_ID_GID).getElementAsString(0);
+
         } else {
             prevID = Utils.toBase64(amp.unpackGroup(AmpIDs.PREV_ID_GID).getElement(0));
         }

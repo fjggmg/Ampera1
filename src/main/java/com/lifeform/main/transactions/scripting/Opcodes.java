@@ -1,12 +1,10 @@
 package com.lifeform.main.transactions.scripting;
 
-import engine.operators.reserved_set.NoOp;
-import engine.operators.reserved_set.Term;
+import engine.operators.reserved_set.word8.NoOpWord8;
+import engine.operators.reserved_set.word8.TermWord8;
 
 public enum Opcodes {
-    TERM(Term.BASE_CODE, Term.KEYWORD),
-    NOOP(NoOp.BASE_CODE, NoOp.KEYWORD),
-    LMEMSTACK(50, "LMSK"),
+    //TODO CLEANUP
     LPCMEMSTACK(51, "LPCMSK"),
     VSIGVAL(52, "VSV"),
     VSIGVALS(53, "VSVS"),

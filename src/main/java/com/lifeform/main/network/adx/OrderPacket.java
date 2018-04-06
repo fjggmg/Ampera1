@@ -25,12 +25,15 @@ public class OrderPacket implements Packet, Serializable {
             ki.getMainLog().warn("Received order packet with null order");
             return;
         }
-        if (matched) {
-            ki.getExMan().addMatched(order);
-            return;
-        }
+
         if (transaction != null) {
-            ki.getExMan().addPending(transaction, order);
+            ki.debug("Transaction not null, ID: " + transaction);
+            if (matched) {
+                ki.debug("Matched order, ID: " + order.getID());
+                ki.getExMan().addMatchPending(transaction, order);
+            } else {
+                ki.getExMan().addPending(transaction, order);
+            }
             if (ki.getNetMan().isRelay()) {
                 if (ki.getOptions().pDebug)
                     ki.debug("Broadcasting order packet");

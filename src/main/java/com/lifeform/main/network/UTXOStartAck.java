@@ -11,8 +11,9 @@ import java.util.List;
 
 import static java.lang.Thread.sleep;
 
-public class UTXOStartAck implements Packet,Serializable {
+public class UTXOStartAck implements Packet, Serializable {
     List<String> addresses;
+
     @Override
     public void process(IKi ki, IConnectionManager connMan, PacketGlobal pg) {
         for (String address : addresses) {

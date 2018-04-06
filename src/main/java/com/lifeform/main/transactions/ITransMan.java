@@ -31,6 +31,7 @@ public interface ITransMan {
 
     ITrans createSimple(IAddress receiver, BigInteger amount, BigInteger fee, Token token, String message) throws InvalidTransactionException;
 
+    ITrans createSimple(IAddress receiver, BigInteger amount, BigInteger fee, Token token, String message, int multipleOuts) throws InvalidTransactionException;
     boolean postBlockProcessing(Block block);
 
     List<Input> getInputsForAmountAndToken(IAddress address, BigInteger amount, Token token, boolean used);

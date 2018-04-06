@@ -38,10 +38,7 @@ import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
-import javafx.scene.chart.CategoryAxis;
-import javafx.scene.chart.LineChart;
-import javafx.scene.chart.NumberAxis;
-import javafx.scene.chart.XYChart;
+import javafx.scene.chart.*;
 import javafx.scene.control.*;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
@@ -161,12 +158,15 @@ public class NewGUI {
     public Label tokenPrice;
     public JFXButton orderHistory;
     public Pane ohPane;
-    public JFXListView ohPrice;
-    public JFXListView ohAmount;
-    public JFXListView ohDate;
-    public JFXListView ohDirection;
-    public JFXListView ohCancel;
+    public JFXListView<String> ohPrice;
+    public JFXListView<String> ohAmount;
+    public JFXListView<String> ohDate;
+    public JFXListView<String> ohDirection;
+    public JFXListView<JFXButton> ohCancel;
     public JFXButton backToEx;
+    public PieChart ohPortfolio;
+    public VBox ohVbox;
+    public HBox adxBox;
     private BigInteger unitMultiplierPrice = BigInteger.valueOf(100);
     private BigInteger unitMultiplierAmount = BigInteger.valueOf(100);
     private IKi ki;
@@ -175,6 +175,7 @@ public class NewGUI {
     private volatile boolean run = true;
     private Map<String, BigInteger> heightMap = new HashMap<>();
     private List<ITrans> sTrans = new CopyOnWriteArrayList<>();
+
     public NewGUI() {
         ki = Ki.getInstance();
         transactions = FXCollections.observableArrayList();
@@ -260,6 +261,7 @@ public class NewGUI {
             t.interrupt();
         }
     }
+
     @FXML
     public JFXHamburger menuHamburger;
     @FXML
@@ -480,19 +482,16 @@ public class NewGUI {
             guiXAM.putBytes("transactions", hpa.serializeToBytes());
             heightMap.put(trans.getID(), height);
             HeadlessPrefixedAmplet hpa2 = HeadlessPrefixedAmplet.create();
-            try {
-                for (String key : heightMap.keySet()) {
 
-                    hpa2.addElement(key);
+            for (String key : heightMap.keySet()) {
 
-                    hpa2.addElement(heightMap.get(key));
-                }
-            } catch (UnsupportedEncodingException e) {
-                e.printStackTrace();
+                hpa2.addElement(key);
+
+                hpa2.addElement(heightMap.get(key));
             }
+
             guiXAM.putBytes("heightMap", hpa2.serializeToBytes());
         }
-
 
 
     }
@@ -513,6 +512,7 @@ public class NewGUI {
             }
         }
     }
+
     @FXML
     void initialize() {
         if (!ki.getOptions().pool)
@@ -775,8 +775,7 @@ public class NewGUI {
         amtColumn.setCellValueFactory((TreeTableColumn.CellDataFeatures<StoredTrans, Double> param) -> {
             if (amtColumn.validateValue(param)) {
                 return param.getValue().getValue().amount.asObject();
-            }
-            else return amtColumn.getComputedValue(param);
+            } else return amtColumn.getComputedValue(param);
         });
         JFXTreeTableColumn<StoredTrans, String> sentColumn = new JFXTreeTableColumn<>("Direction");
         sentColumn.setPrefWidth(100);
@@ -1092,7 +1091,9 @@ public class NewGUI {
         orderHistory.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
+
                 exchangePane.setVisible(false);
+                prepareOH();
                 ohPane.setVisible(true);
             }
         });
@@ -1205,6 +1206,10 @@ public class NewGUI {
             beScroll.setPrefHeight(blockExplorerPane.getHeight() - 60);
             lockPane.setMinHeight(borderPane.getHeight());
             miningDataHbox.setMinWidth(miningTab.getWidth());
+            ohVbox.setMinHeight(ohPane.getHeight());
+            ohVbox.setMinWidth(ohPane.getWidth() - 10);
+            adxBox.setMinWidth(exchangePane.getWidth() - 20);
+            adxBox.setMinHeight(exchangePane.getHeight() - 20);
         };
         goBE.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
             @Override
@@ -1279,6 +1284,7 @@ public class NewGUI {
                 setSpendAddress.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
                 changePassword.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
                 backToBE.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
+                backToEx.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
                 nextBlock.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
                 previousBlock.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
                 goBE.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
@@ -1470,7 +1476,17 @@ public class NewGUI {
         exchangeGraph.getYAxis().setAnimated(false);
         exchangeGraph.setAnimated(false);
         exchangeGraph.setCreateSymbols(false);
-
+        exchangeGraph.setPrefHeight(5000);
+        exchangeGraph.setPrefWidth(5000);
+        ohCancel.setFixedCellSize(40);
+        ohAmount.setFixedCellSize(40);
+        ohDirection.setFixedCellSize(40);
+        ohDate.setFixedCellSize(40);
+        ohPrice.setFixedCellSize(40);
+        bindScrolls(ohAmount, ohCancel);
+        bindScrolls(ohDirection, ohCancel);
+        bindScrolls(ohDate, ohDirection);
+        bindScrolls(ohPrice, ohDate);
         bindScrolls(obSellPrice, obSellSize);
         bindScrolls(obSellSize, obSellTotal);
         bindScrolls(obBuyPrice, obBuySize);
@@ -1673,7 +1689,7 @@ public class NewGUI {
                                 setDaemon(true);
                                 ki.getExMan().getOrderBook().sort();
 
-
+                                /*
                                 if (!ki.getExMan().getOrderBook().hasRun()) {
                                     for (int i = 0; i < ki.getExMan().getOrderBook().getData().size(); i++) {
                                         ExchangeData data = ki.getExMan().getOrderBook().getData().get(i);
@@ -1686,6 +1702,7 @@ public class NewGUI {
                                     exchangeGraph.getData().get(0).getData().add(new XYChart.Data<>(sdf.format(new Date(ki.getExMan().getOrderBook().getRecentData().timestamp)), ki.getExMan().getOrderBook().getRecentData().open));
 
                                 }
+                                */
                                 exchangeGraph.layoutPlotChildren();
                                 exchangeGraph.updateAxisRange();
                                 if (ki.getExMan().getOrderBook().getRecentData() != null) {
@@ -1790,6 +1807,11 @@ public class NewGUI {
                             beScroll.setMinHeight(blockExplorerPane.getHeight() - 60);
                             beScroll.setPrefHeight(blockExplorerPane.getHeight() - 60);
                             lockPane.setMinHeight(borderPane.getHeight());
+                            ohVbox.setMinHeight(ohPane.getHeight());
+                            ohVbox.setMinWidth(ohPane.getWidth() - 10);
+
+                            adxBox.setMinWidth(exchangePane.getWidth() - 20);
+                            adxBox.setMinHeight(exchangePane.getHeight() - 20);
                             heightLabel.setText("Chain Height - " + ki.getChainMan().currentHeight());
                             if (!ki.getOptions().pool)
                                 chainHeight2.setText(" " + ki.getChainMan().currentHeight().toString());
@@ -2022,6 +2044,7 @@ public class NewGUI {
     }
 
     private SimpleDateFormat sdf2 = new SimpleDateFormat("yyyy MMM dd hh:mm:ss a zzz");
+
     private void setupBlockPane(BigInteger height) {
         Block b = ki.getChainMan().getByHeight(height);
         blockHeight.setText("Height - " + b.height);
@@ -2047,6 +2070,7 @@ public class NewGUI {
             }
         }
     }
+
     public void addShare() {
         localShare++;
     }
@@ -2103,6 +2127,7 @@ public class NewGUI {
     private BigInteger latestBlock = BigInteger.ZERO;
     //private XodusStringMap guiMap = new XodusStringMap("gui.data");
     private XodusAmpMap guiXAM = new XodusAmpMap("ngui");
+
     public void blockFound() {
         if (ki.getChainMan().currentHeight().compareTo(latestBlock) > 0) {
             blocksFoundInt++;
@@ -2144,6 +2169,7 @@ public class NewGUI {
         hash = superHash(password + hash, 64);
         return pmap.get(hash) != null;
     }
+
     private void handlePassword() {
         submitPassword.setDisable(true);
         passwordWaiter.setVisible(true);
@@ -2201,6 +2227,68 @@ public class NewGUI {
     private BigInteger startHeight;
     private long currentShares = 0;
     private double currentPPS = 0;
+
+    private void prepareOH() {
+        while (!isFinal) {
+        }
+        for (Token t : tokenValueMap.keySet()) {
+            if (!t.getName().contains("TOKEN"))
+                ohPortfolio.getData().add(new PieChart.Data(t.getName(), tokenValueMap.get(t).divide(BigInteger.valueOf(100_000_000)).doubleValue()));
+        }
+        ohAmount.getItems().clear();
+        ohCancel.getItems().clear();
+        ohDate.getItems().clear();
+        ohDirection.getItems().clear();
+        ohPrice.getItems().clear();
+
+
+        for (Order o : ki.getExMan().getOrderBook().buys()) {
+            for (IAddress a : ki.getAddMan().getAll()) {
+                if (o.address().encodeForChain().equals(a.encodeForChain())) {
+                    addOrderToOH(o, true);
+                    break;
+                }
+            }
+        }
+        for (Order o : ki.getExMan().getOrderBook().sells()) {
+            for (IAddress a : ki.getAddMan().getAll()) {
+                if (o.address().encodeForChain().equals(a.encodeForChain())) {
+                    addOrderToOH(o, true);
+                    break;
+                }
+            }
+        }
+        for (Order o : ki.getExMan().getOrderBook().matched()) {
+            for (IAddress a : ki.getAddMan().getAll()) {
+                if (o.address().encodeForChain().equals(a.encodeForChain())) {
+                    addOrderToOH(o, false);
+                    break;
+                }
+            }
+        }
+    }
+
+    private void addOrderToOH(Order o, boolean cancellable) {
+        ohAmount.getItems().add(format2.format(o.amountOnOffer().divide(unitMultiplierAmount)) + " " + unitSelectorAmount.getSelectionModel().getSelectedItem().getText());
+        ohDate.getItems().add(sdf2.format(new Date(o.timestamp().longValueExact())));
+        ohDirection.getItems().add((o.buy()) ? "Buy" : "Sell");
+        ohPrice.getItems().add(format2.format(o.unitPrice().divide(unitMultiplierPrice)) + " " + unitSelectorPrice.getSelectionModel().getSelectedItem().getText());
+        JFXButton cancelButton = new JFXButton("Cancel");
+        cancelButton.setBackground(new Background(new BackgroundFill(Color.valueOf(ki.getStringSetting(StringSettings.PRIMARY_COLOR)), CornerRadii.EMPTY, Insets.EMPTY)));
+        if (cancellable) {
+            cancelButton.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+                @Override
+                public void handle(MouseEvent event) {
+                    ki.getExMan().cancelOrder(o);
+                }
+            });
+        } else {
+            cancelButton.setDisable(true);
+        }
+
+        ohCancel.getItems().add(cancelButton);
+
+    }
     public void setStart(BigInteger startHeight) {
         this.startHeight = startHeight;
     }

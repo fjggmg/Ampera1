@@ -265,11 +265,8 @@ public class NewTrans implements ITrans {
     public byte[] toSignBytes() {
         AC_SingleElement msg = null;
         if (message != null && !message.isEmpty())
-            try {
-                msg = AC_SingleElement.create(AmpIDs.MESSAGE_ID_GID, message);
-            } catch (UnsupportedEncodingException e) {
-                e.printStackTrace();
-            }
+            msg = AC_SingleElement.create(AmpIDs.MESSAGE_ID_GID, message);
+
         AC_ClassInstanceIDIsIndex inputs = AC_ClassInstanceIDIsIndex.create(AmpIDs.INPUTS_CID, "Inputs");
         for (Input i : getInputs()) {
             inputs.addElement(i.serializeToAmplet());
@@ -279,11 +276,8 @@ public class NewTrans implements ITrans {
             outputs.addElement(o);
         }
         AC_SingleElement type = null;
-        try {
-            type = AC_SingleElement.create(AmpIDs.TYPE_GID, this.type.toString());
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
+        type = AC_SingleElement.create(AmpIDs.TYPE_GID, this.type.toString());
+
         AmpClassCollection acc = new AmpClassCollection();
         acc.addClass(type);
         acc.addClass(msg);
@@ -310,13 +304,10 @@ public class NewTrans implements ITrans {
     @Override
     public Amplet serializeToAmplet() {
         HeadlessPrefixedAmplet hpa = HeadlessPrefixedAmplet.create();
-        try {
-            hpa.addElement(message);
-            hpa.addElement(type.toString());
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-            return null;
-        }
+
+        hpa.addElement(message);
+        hpa.addElement(type.toString());
+
         HeadlessPrefixedAmplet ins = HeadlessPrefixedAmplet.create();
         for (Input i : inputs) {
             ins.addBytes(i.serializeToBytes());
@@ -329,12 +320,10 @@ public class NewTrans implements ITrans {
         hpa.addElement(outs);
         HeadlessPrefixedAmplet map = HeadlessPrefixedAmplet.create();
         for (String key : keySigMap.keySet()) {
-            try {
-                map.addElement(key);
-                map.addElement(keySigMap.get(key).toAmplet());
-            } catch (UnsupportedEncodingException e) {
-                e.printStackTrace();
-            }
+
+            map.addElement(key);
+            map.addElement(keySigMap.get(key).toAmplet());
+
         }
         hpa.addElement(map);
         AC_SingleElement trans = AC_SingleElement.create(AmpIDs.ID_GID, hpa.serializeToBytes());

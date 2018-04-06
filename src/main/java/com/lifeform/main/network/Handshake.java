@@ -110,6 +110,7 @@ public class Handshake implements Serializable, Packet {
 
         for (Order o : ki.getExMan().getOrderBook().matched()) {
             OrderPacket op = new OrderPacket();
+            op.transaction = o.getTxid();
             op.matched = true;
             op.order = o.serializeToBytes();
             connMan.sendPacket(op);

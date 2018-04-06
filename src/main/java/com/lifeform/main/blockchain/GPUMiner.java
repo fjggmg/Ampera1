@@ -10,6 +10,7 @@ import com.lifeform.main.network.TransactionPacket;
 import com.lifeform.main.network.pool.PoolBlockHeader;
 import com.lifeform.main.transactions.InvalidTransactionException;
 import com.lifeform.main.transactions.Transaction;
+import com.lifeform.main.transactions.TransactionFeeCalculator;
 import gpuminer.JOCL.constants.JOCLConstants;
 import gpuminer.JOCL.context.JOCLContextAndCommandQueue;
 import gpuminer.JOCL.context.JOCLDevices;
@@ -44,10 +45,10 @@ public class GPUMiner extends Thread implements IMiner {
     private static volatile boolean autotuneDone = false;
     private static volatile boolean stopAutotune = false;
     private static volatile boolean triedNoCPU = false;
-    public static ContextMaster platforms;// = new ContextMaster();
+    public static volatile ContextMaster platforms;// = new ContextMaster();
     public volatile static boolean initDone = false;
     public static BigInteger shareDiff = new BigInteger("00000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF", 16);
-    public static BigInteger minFee = BigInteger.TEN;
+
 
     public static int init(IKi ki, ContextMaster cm) throws MiningIncompatibleException {
         //You have to shut these down when you're done with them.
@@ -114,7 +115,7 @@ public class GPUMiner extends Thread implements IMiner {
             if (mining) {
                 Block b;
                 if (!ki.getOptions().pool) {
-                    b = ki.getChainMan().formEmptyBlock(minFee);
+                    b = ki.getChainMan().formEmptyBlock(TransactionFeeCalculator.MIN_FEE);
                 } else {
                     b = new Block();
                     b.payload = ki.getPoolData().currentWork.payload;

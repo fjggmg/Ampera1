@@ -35,24 +35,7 @@ public class ScriptTest {
         em.generateKeys();
 
         ByteCodeEngine bce = new ByteCodeEngine(1);
-        bce.addOperator(LPCMemStack.class);
-        bce.addOperator(VSigVal.class);
-        bce.addOperator(VSigValS.class);
-        bce.addOperator(PushAA0.class);
-        bce.addOperator(PopPopPush.class);
-        bce.addOperator(PushI0.class);
-        bce.addOperator(ClearStack.class);
-        bce.addOperator(LConstStack.class);
-        bce.addOperator(GreaterThan.class);
-        bce.addOperator(Branch.class);
-        bce.addOperator(StoreInt.class);
-        bce.addOperator(LMemStack.class);
-        bce.addOperator(PushI1.class);
-        bce.addOperator(Dup.class);
-        bce.addOperator(LHalfP1PCCSCK.class);
-        bce.addOperator(LHalfPCMemStack.class);
-        bce.addOperator(PushI255.class);
-        bce.addOperator(PushI254.class);
+
         bce.finalizeOperators();
 
         byte[] pbytes;/* = {51,51,51,51,51,51,51,51,51,59,
@@ -70,7 +53,7 @@ public class ScriptTest {
                 "BRN", "VSVS", "DUP", "PI0", "LCSK", "GTN", "PI255", "LCSK",
                 "BRN", "CSK", "PI1", "TERM", "CSK", "PI0", "TERM");
         try {
-            pbytes = StringCompiler.compile(pStrings);
+            pbytes = StringCompiler.compile(pStrings, bce);
         } catch (CompilerException e) {
             e.printStackTrace();
             return;
@@ -135,8 +118,8 @@ public class ScriptTest {
         JumpMemory jMem = new JumpMemory();
         try {
             byte[] entropy = "Some entropy".getBytes("UTF-8");
-            binary = new Binary(program, constants, jMem, true, 1, entropy, System.currentTimeMillis(), Utils.fromBase64(em.getPublicKeyString()));
-            result = bce.executeProgram(binary, memory, null, null, true);
+            //binary = new Binary(program, constants, jMem, true, 1, entropy, System.currentTimeMillis(), Utils.fromBase64(em.getPublicKeyString()));
+            //result = bce.executeProgram(binary, memory, null, null, true);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -154,43 +137,7 @@ public class ScriptTest {
         em.generateEDkeys();
 
         ByteCodeEngine bce = new ByteCodeEngine(1);
-        bce.addOperator(LPCMemStack.class);
-        bce.addOperator(VSigVal.class);
-        bce.addOperator(VSigValS.class);
-        bce.addOperator(PushAA0.class);
-        bce.addOperator(PopPopPush.class);
-        bce.addOperator(PushI0.class);
-        bce.addOperator(ClearStack.class);
-        bce.addOperator(LConstStack.class);
-        bce.addOperator(GreaterThan.class);
-        bce.addOperator(Branch.class);
-        bce.addOperator(StoreInt.class);
-        bce.addOperator(LMemStack.class);
-        bce.addOperator(PushI1.class);
-        bce.addOperator(Dup.class);
-        bce.addOperator(LHalfP1PCCSCK.class);
-        bce.addOperator(LHalfPCMemStack.class);
-        bce.addOperator(PushI255.class);
-        bce.addOperator(PushI254.class);
-        bce.addOperator(LOutAddMemStack.class);
-        bce.addOperator(LPCConstStack.class);
-        bce.addOperator(VerAddSame.class);
-        bce.addOperator(Branch0.class);
-        bce.addOperator(LOutAmountMemSck.class);
-        bce.addOperator(VerifyRatio.class);
-        bce.addOperator(StringEquals.class);
-        bce.addOperator(LOutTokenMemStack.class);
-        bce.addOperator(PushI2.class);
-        bce.addOperator(PushOutSizeStack.class);
-        bce.addOperator(PushOutStack.class);
-        bce.addOperator(IntEquals.class);
-        bce.addOperator(PushI3.class);
-        bce.addOperator(LOutAddTransStack.class);
-        bce.addOperator(LOutAmountTransSck.class);
-        bce.addOperator(LOutTokenTransStack.class);
-        bce.addOperator(PushI4.class);
-        bce.addOperator(VerifyNetLoss.class);
-        bce.addOperator(PushI5.class);
+
         bce.finalizeOperators();
 
 
@@ -202,7 +149,7 @@ public class ScriptTest {
         IAddress add;
         byte[] pBytes;
         try {
-            pBytes = StringCompiler.compile(programShit);
+            pBytes = StringCompiler.compile(programShit, bce);
         } catch (CompilerException e) {
             e.printStackTrace();
             return;
@@ -289,7 +236,7 @@ public class ScriptTest {
         KeySigEntropyPair ksepUSD = new KeySigEntropyPair(null, otherAddEnt, associatedUSD, null, false);
         try {
             byte[] entropy = "Some entropy".getBytes("UTF-8");
-            binary = new Binary(program, constant, jMem, true, 1, entropy, System.currentTimeMillis(), Utils.fromBase64(em.getPublicKeyString()));
+            binary = new Binary(program, constant, jMem, true, 1, entropy, System.currentTimeMillis(), Utils.fromBase64(em.getPublicKeyString()), null, 0);
 
             keySigMap.put(em.getPublicKeyString(), ksepUSD);
 

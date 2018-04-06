@@ -1,18 +1,11 @@
 package com.lifeform.main.network.pool;
 
 import com.lifeform.main.IKi;
-import com.lifeform.main.blockchain.ChainManager;
-import com.lifeform.main.blockchain.GPUMiner;
 import com.lifeform.main.network.GlobalPacketQueuer;
 import com.lifeform.main.network.IConnectionManager;
 import com.lifeform.main.network.INetworkManager;
 import com.lifeform.main.network.logic.Client;
 import com.lifeform.main.network.logic.Server;
-import com.lifeform.main.transactions.Address;
-import com.sun.org.apache.bcel.internal.generic.ICONST;
-
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.*;
 
 public class PoolNetMan extends Thread implements INetworkManager {

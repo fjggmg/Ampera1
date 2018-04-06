@@ -228,7 +228,7 @@ public class ChainManagerLite implements IChainMan {
 
         Map<String, ITrans> transactions = new HashMap<>();
         for (ITrans trans : ki.getTransMan().getPending()) {
-            if (trans.getFee().compareTo(minFee) >= 0)
+            if (trans.getFee().compareTo(minFee) >= 0 && trans.getFee().compareTo(TransactionFeeCalculator.calculateMinFee(trans)) >= 0)
                 transactions.put(trans.getID(), trans);
         }
         b.addAll(transactions);

@@ -25,7 +25,7 @@ public class ExchangeManager {
     private IKi ki;
     private OrderBook orderBook;
     private Map<String, Order> pending = new HashMap<>();
-
+    private Map<String, Order> matchPending = new HashMap<>();
     public ExchangeManager(IKi ki) {
         this.ki = ki;
         orderBook = new OrderBook(ki);
@@ -169,8 +169,9 @@ public class ExchangeManager {
                         OrderReduced or = new OrderReduced();
                         or.amount = amountBuying;
                         or.ID = o.getID();
+                        or.transaction = trans.getID();
                         ki.getNetMan().broadcast(or);
-                        reduceOrder(o.getID(), amountBuying);
+                        reduceOrder(o.getID(), amountBuying, trans.getID());
                     }
                     System.out.println("Matched, building  buy transaction9");
                 } catch (InvalidTransactionException e) {
@@ -216,7 +217,7 @@ public class ExchangeManager {
                 String entropy = Utils.toBase64(ent);
                 Binary program = null;
                 try {
-                    program = new Binary(ki.getScriptMan().genericTrade(), constMem, jMem, true, ScriptManager.VERSION, ent, System.currentTimeMillis(), Utils.fromBase64(ki.getEncryptMan().getPublicKeyString()));
+                    program = new Binary(ki.getScriptMan().genericTrade(), constMem, jMem, true, ScriptManager.VERSION, ent, System.currentTimeMillis(), Utils.fromBase64(ki.getEncryptMan().getPublicKeyString()), null, 0);
                 } catch (Exception e) {
                     e.printStackTrace();
                     return OrderStatus.GENERAL_FAILURE;
@@ -230,7 +231,7 @@ public class ExchangeManager {
                 }
                 ITrans funding;
                 try {
-                    funding = ki.getTransMan().createSimple(contractAdd, amount.multiply(stopPrice).divide(BigInteger.valueOf(100_000_000)), BigInteger.TEN, pair.onOffer(), "funding ADX Buy contract");
+                    funding = ki.getTransMan().createSimple(contractAdd, amount.multiply(stopPrice).divide(BigInteger.valueOf(100_000_000)), BigInteger.TEN, pair.onOffer(), "funding ADX Buy contract", 20);
                 } catch (InvalidTransactionException e) {
 
                     ki.getMainLog().error("Error creating transaction to fund contract", e);
@@ -359,8 +360,9 @@ public class ExchangeManager {
                         //matchOrder(o.getID());
                         toRemove.add(o);
                     } else {
-                        reduceOrder(o.getID(), amountSelling);
+                        reduceOrder(o.getID(), amountSelling, trans.getID());
                         OrderReduced or = new OrderReduced();
+                        or.transaction = trans.getID();
                         or.amount = amountSelling;
                         or.ID = o.getID();
                         ki.getNetMan().broadcast(or);
@@ -407,7 +409,7 @@ public class ExchangeManager {
                 String entropy = Utils.toBase64(ent);
                 Binary program = null;
                 try {
-                    program = new Binary(ki.getScriptMan().genericTrade(), constMem, jMem, true, ScriptManager.VERSION, ent, System.currentTimeMillis(), Utils.fromBase64(ki.getEncryptMan().getPublicKeyString()));
+                    program = new Binary(ki.getScriptMan().genericTrade(), constMem, jMem, true, ScriptManager.VERSION, ent, System.currentTimeMillis(), Utils.fromBase64(ki.getEncryptMan().getPublicKeyString()), null, 0);
                 } catch (Exception e) {
                     e.printStackTrace();
                     return OrderStatus.GENERAL_FAILURE;
@@ -421,7 +423,7 @@ public class ExchangeManager {
                 }
                 ITrans funding;
                 try {
-                    funding = ki.getTransMan().createSimple(contractAdd, amount, BigInteger.TEN, pair.accepting(), "funding ADX Sell contract");
+                    funding = ki.getTransMan().createSimple(contractAdd, amount, BigInteger.TEN, pair.accepting(), "funding ADX Sell contract", 20);
                 } catch (InvalidTransactionException e) {
                     e.printStackTrace();
                     return OrderStatus.GENERAL_FAILURE;
@@ -471,11 +473,11 @@ public class ExchangeManager {
         }
     }
 
-    public void reduceOrder(String ID, BigInteger amount) {
+    public void reduceOrder(String ID, BigInteger amount, String txid) {
         Order o = orders.get(ID);
         o.reduceAmount(amount);
         try {
-            orderBook.addMatched(new Order(o.pair(), o.unitPrice(), o.address(), o.contractAdd(), amount, o.bin(), o.buy(), o.getTxid()));
+            orderBook.addMatched(new Order(o.pair(), o.unitPrice(), o.address(), o.contractAdd(), amount, o.bin(), o.buy(), txid));
         } catch (InvalidOrderException e) {
             e.printStackTrace();
         }
@@ -489,11 +491,7 @@ public class ExchangeManager {
     public void cancelOrder(Order o) {
         for (IAddress a : ki.getAddMan().getAll()) {
             if (a.encodeForChain().equals(o.address().encodeForChain())) {
-                OrderCancelled oc = new OrderCancelled();
-                oc.ID = o.getID();
-                oc.sig = ki.getEncryptMan().sign(o.serializeToBytes());
-                ki.getNetMan().broadcast(oc);
-                orderBook.removeOrder(o);
+
                 List<Output> utxos = ki.getTransMan().getUTXOs(o.contractAdd(), true);
                 if (utxos != null && !utxos.isEmpty()) {
                     BigInteger amountRecovered = BigInteger.ZERO;
@@ -530,7 +528,7 @@ public class ExchangeManager {
                     }
                     KeySigEntropyPair cKSEP = new KeySigEntropyPair(null, Utils.toBase64(o.bin().getEntropy()), associatedContract, o.contractAdd().getPrefix(), true);
                     keySigMap.put(Utils.toBase64(o.bin().serializeToAmplet().serializeToBytes()), cKSEP);
-                    KeySigEntropyPair fKESP = new KeySigEntropyPair(null, ki.getEncryptMan().getPublicKeyString(), associatedFee, o.address().getPrefix(), o.address().isP2SH());
+                    KeySigEntropyPair fKESP = new KeySigEntropyPair(null, ki.getAddMan().getEntropyForAdd(o.address()), associatedFee, o.address().getPrefix(), o.address().isP2SH());
                     keySigMap.put(ki.getEncryptMan().getPublicKeyString(), fKESP);
                     try {
                         ITrans trans = new NewTrans("Cancelled ADX order", outputs, inputs, keySigMap, TransactionType.NEW_TRANS);
@@ -539,8 +537,18 @@ public class ExchangeManager {
                         trans.addSig(Utils.toBase64(o.bin().serializeToAmplet().serializeToBytes()), Utils.toBase64(wm.serializeToBytes()));
                         trans.addSig(ki.getEncryptMan().getPublicKeyString(), Utils.toBase64(ki.getEncryptMan().sign(trans.toSignBytes())));
                         TransactionPacket tp = new TransactionPacket();
-                        tp.trans = trans.serializeToAmplet().serializeToBytes();
-                        ki.getNetMan().broadcast(tp);
+                        if (ki.getTransMan().verifyTransaction(trans)) {
+                            ki.getTransMan().getPending().add(trans);
+                            tp.trans = trans.serializeToAmplet().serializeToBytes();
+                            ki.getNetMan().broadcast(tp);
+                            OrderCancelled oc = new OrderCancelled();
+                            oc.ID = o.getID();
+                            oc.sig = ki.getEncryptMan().sign(o.serializeToBytes());
+                            ki.getNetMan().broadcast(oc);
+                            orderBook.removeOrder(o);
+                        } else {
+                            ki.getMainLog().warn("Cancellation transaction failed! Funds were unable to be recovered. Report this immediately with the debug that came before this.");
+                        }
                     } catch (InvalidTransactionException e) {
                         ki.getMainLog().error("Problem creating transaction for order cancellation", e);
                     } catch (Exception e) {
@@ -573,6 +581,13 @@ public class ExchangeManager {
         if (pending.get(txid) != null) {
             addOrder(pending.remove(txid));
         }
+        if (matchPending.get(txid) != null) {
+            addMatched(matchPending.get(txid));
+        }
+    }
+
+    public void addMatchPending(String txID, Order order) {
+        matchPending.put(txID, order);
     }
 
     /**

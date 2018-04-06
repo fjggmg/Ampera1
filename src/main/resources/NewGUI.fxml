@@ -17,6 +17,7 @@
 <?import javafx.scene.chart.CategoryAxis?>
 <?import javafx.scene.chart.LineChart?>
 <?import javafx.scene.chart.NumberAxis?>
+<?import javafx.scene.chart.PieChart?>
 <?import javafx.scene.control.Hyperlink?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ScrollPane?>
@@ -253,17 +254,17 @@
                                                          textFill="WHITE"/>
                                     </children>
                                 </Pane>
-                                <Pane fx:id="exchangePane" prefHeight="200.0" prefWidth="200.0">
+                                <Pane fx:id="exchangePane" prefHeight="200.0" prefWidth="1077.0">
                                     <children>
-                                        <HBox layoutX="12.0" layoutY="1.0" prefHeight="543.0" prefWidth="1046.0"
-                                              spacing="5.0">
+                                        <HBox fx:id="adxBox" layoutX="6.0" layoutY="1.0" prefHeight="543.0"
+                                              prefWidth="1052.0" spacing="5.0">
                                             <children>
-                                                <VBox prefHeight="543.0" prefWidth="357.0">
+                                                <VBox prefHeight="4000.0" prefWidth="5000.0">
                                                     <children>
-                                                        <HBox prefHeight="252.0" prefWidth="360.0" spacing="5.0">
+                                                        <HBox prefHeight="5000.0" prefWidth="360.0" spacing="5.0">
                                                             <children>
-                                                                <VBox alignment="TOP_CENTER" prefHeight="187.0"
-                                                                      prefWidth="350.0" spacing="5.0">
+                                                                <VBox alignment="TOP_CENTER" prefHeight="5000.0"
+                                                                      prefWidth="5000.0" spacing="5.0">
                                                                     <children>
                                                                         <HBox>
                                                                             <children>
@@ -286,15 +287,15 @@
                                                                             </children>
                                                                         </HBox>
                                                                         <JFXComboBox fx:id="pairs" prefHeight="30.0"
-                                                                                     prefWidth="200.0"/>
+                                                                                     prefWidth="981.0"/>
                                                                         <JFXButton fx:id="exchangeBuy" prefHeight="40.0"
-                                                                                   prefWidth="154.0" text="Buy"/>
+                                                                                   prefWidth="980.0" text="Buy"/>
                                                                         <JFXButton fx:id="exchangeSell"
-                                                                                   prefHeight="40.0" prefWidth="154.0"
+                                                                                   prefHeight="40.0" prefWidth="983.0"
                                                                                    text="Sell"/>
                                                                     </children>
                                                                 </VBox>
-                                                                <VBox prefHeight="249.0" prefWidth="400.0">
+                                                                <VBox prefHeight="5000.0" prefWidth="5000.0">
                                                                     <children>
                                                                         <HBox>
                                                                             <children>
@@ -314,13 +315,13 @@
                                                                                        text="Amount"/>
                                                                             </children>
                                                                         </HBox>
-                                                                        <HBox prefHeight="210.0" prefWidth="267.0">
+                                                                        <HBox prefHeight="5000.0" prefWidth="267.0">
                                                                             <children>
                                                                                 <JFXListView fx:id="activePrice"
-                                                                                             prefHeight="215.0"
+                                                                                             prefHeight="5000.0"
                                                                                              prefWidth="500.0"/>
                                                                                 <JFXListView fx:id="activeAmount"
-                                                                                             prefHeight="215.0"
+                                                                                             prefHeight="5000.0"
                                                                                              prefWidth="500.0"/>
                                                                             </children>
                                                                         </HBox>
@@ -328,21 +329,21 @@
                                                                 </VBox>
                                                             </children>
                                                         </HBox>
-                                                        <VBox prefHeight="289.0" prefWidth="347.0">
+                                                        <VBox prefHeight="5000.0" prefWidth="5000.0">
                                                             <children>
                                                                 <Label text="Recent Trades">
                                                                     <font>
                                                                         <Font size="14.0"/>
                                                                     </font>
                                                                 </Label>
-                                                                <HBox prefHeight="10.0" prefWidth="200.0">
+                                                                <HBox prefHeight="10.0" prefWidth="5000.0">
                                                                     <children>
                                                                         <Label prefWidth="500.0" text="Price"/>
                                                                         <Label prefWidth="500.0" text="Amount"/>
                                                                         <Label prefWidth="450.0" text="Direction"/>
                                                                     </children>
                                                                 </HBox>
-                                                                <HBox prefHeight="297.0" prefWidth="351.0">
+                                                                <HBox prefHeight="5000.0" prefWidth="5000.0">
                                                                     <children>
                                                                         <JFXListView fx:id="obRecentPrice"
                                                                                      prefHeight="297.0"
@@ -359,12 +360,12 @@
                                                         </VBox>
                                                     </children>
                                                 </VBox>
-                                                <VBox prefHeight="543.0" prefWidth="679.0">
+                                                <VBox prefHeight="5000.0" prefWidth="5300.0">
                                                     <children>
-                                                        <HBox prefHeight="244.0" prefWidth="690.0">
+                                                        <HBox prefHeight="5000.0" prefWidth="5000.0">
                                                             <children>
-                                                                <VBox fx:id="exchangeGraphBox" prefHeight="244.0"
-                                                                      prefWidth="706.0">
+                                                                <VBox fx:id="exchangeGraphBox" prefHeight="5000.0"
+                                                                      prefWidth="5000.0">
                                                                     <children>
                                                                         <HBox prefHeight="19.0" prefWidth="688.0">
                                                                             <children>
@@ -392,8 +393,8 @@
                                                                 </VBox>
                                                             </children>
                                                         </HBox>
-                                                        <VBox alignment="TOP_CENTER" prefHeight="296.0"
-                                                              prefWidth="696.0">
+                                                        <VBox alignment="TOP_CENTER" prefHeight="5000.0"
+                                                              prefWidth="5000.0">
                                                             <children>
                                                                 <HBox>
                                                                     <children>
@@ -478,7 +479,7 @@
                                                                         </Label>
                                                                     </children>
                                                                 </HBox>
-                                                                <HBox prefHeight="269.0" prefWidth="669.0">
+                                                                <HBox prefHeight="5000.0" prefWidth="669.0">
                                                                     <children>
                                                                         <JFXListView fx:id="obBuyTotal"
                                                                                      prefHeight="1000.0"
@@ -512,14 +513,22 @@
                                         </HBox>
                                     </children>
                                 </Pane>
-                                <Pane fx:id="ohPane" prefHeight="200.0" prefWidth="200.0" visible="false">
+                                <Pane fx:id="ohPane" prefHeight="545.0" prefWidth="1059.0" visible="false">
                                     <children>
-                                        <VBox layoutX="7.0" layoutY="14.0" prefHeight="527.0" prefWidth="1052.0">
+                                        <VBox fx:id="ohVbox" layoutX="2.0" layoutY="-1.0" prefHeight="542.0"
+                                              prefWidth="1057.0">
                                             <children>
-                                                <HBox alignment="TOP_RIGHT" prefHeight="350.0" prefWidth="1052.0">
+                                                <HBox alignment="TOP_RIGHT" prefHeight="3000.0" prefWidth="10000.0">
                                                     <children>
-                                                        <JFXButton fx:id="backToEx" text="Back"/>
-                                                        <LineChart>
+                                                        <VBox prefHeight="3000.0" prefWidth="4600.0">
+                                                            <children>
+                                                                <JFXButton fx:id="backToEx" prefHeight="25.0"
+                                                                           prefWidth="99.0" text="Back"/>
+                                                            </children>
+                                                        </VBox>
+                                                        <PieChart fx:id="ohPortfolio" prefHeight="5000.0"
+                                                                  prefWidth="5000.0" title="Portfolio"/>
+                                                        <LineChart prefHeight="5000.0" prefWidth="5000.0">
                                                             <xAxis>
                                                                 <CategoryAxis side="BOTTOM"/>
                                                             </xAxis>
@@ -558,13 +567,13 @@
                                                         </Label>
                                                     </children>
                                                 </HBox>
-                                                <HBox prefHeight="474.0" prefWidth="1052.0">
+                                                <HBox prefHeight="2950.0" prefWidth="1057.0">
                                                     <children>
-                                                        <JFXListView fx:id="ohPrice"/>
-                                                        <JFXListView fx:id="ohAmount"/>
-                                                        <JFXListView fx:id="ohDate"/>
-                                                        <JFXListView fx:id="ohDirection"/>
-                                                        <JFXListView fx:id="ohCancel"/>
+                                                        <JFXListView fx:id="ohPrice" prefWidth="1000.0"/>
+                                                        <JFXListView fx:id="ohAmount" prefWidth="1000.0"/>
+                                                        <JFXListView fx:id="ohDate" prefWidth="1000.0"/>
+                                                        <JFXListView fx:id="ohDirection" prefWidth="1000.0"/>
+                                                        <JFXListView fx:id="ohCancel" prefWidth="1000.0"/>
                                                     </children>
                                                 </HBox>
                                             </children>
