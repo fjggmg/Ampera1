@@ -9,7 +9,6 @@ import com.jfoenix.controls.*;
 import com.jfoenix.controls.datamodels.treetable.RecursiveTreeObject;
 import com.jfoenix.transitions.hamburger.HamburgerSlideCloseTransition;
 import com.jfoenix.validation.RequiredFieldValidator;
-import com.lifeform.main.adx.ExchangeData;
 import com.lifeform.main.adx.Order;
 import com.lifeform.main.adx.OrderStatus;
 import com.lifeform.main.adx.Pairs;
@@ -72,8 +71,13 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import static javafx.animation.Interpolator.EASE_BOTH;
 
+/**
+ * Fuck this file. Fuck JavaFX. Fuck Oracle. I fucking hate dealing with this horse shit and it's
+ * very clear that my coding style does not coincide well with javafx, hence all the fucking retardation
+ * that follows. This file makes fuck-all sense. You have been warned.
+ */
 public class NewGUI {
-
+    //region javafx horseshit
     protected static boolean close = false;
     public JFXTextField entropyField;
     public Label blocksFoundLabel;
@@ -167,6 +171,13 @@ public class NewGUI {
     public PieChart ohPortfolio;
     public VBox ohVbox;
     public HBox adxBox;
+    public Label pnlLabel;
+    public LineChart<String, Number> pnlGraph;
+    public JFXButton marketBuy;
+    public JFXButton limitBuy;
+    public HBox priceHBox;
+    public VBox exControlsBox;
+    //endregion
     private BigInteger unitMultiplierPrice = BigInteger.valueOf(100);
     private BigInteger unitMultiplierAmount = BigInteger.valueOf(100);
     private IKi ki;
@@ -204,6 +215,15 @@ public class NewGUI {
             Thread t = new Thread() {
                 public void run() {
                     while (run) {
+                        if (close) {
+                            try {
+                                ki.close();
+                            } catch (Exception e) {
+                                ki.getMainLog().warn("Could not close correctly error message: " + e.getMessage());
+                            }
+                            continue;
+
+                        }
                         isFinal = false;
                         for (Token t : Token.values()) {
                             tokenValueMap.put(t, BigInteger.ZERO);
@@ -237,14 +257,7 @@ public class NewGUI {
                         } catch (InterruptedException e) {
                             //do nothing as close was called
                         }
-                        if (close) {
-                            try {
-                                ki.close();
-                            } catch (Exception e) {
-                                ki.getMainLog().warn("Could not close correctly error message: " + e.getMessage());
-                            }
 
-                        }
                     }
                 }
             };
@@ -254,7 +267,7 @@ public class NewGUI {
         }
     }
 
-    List<Thread> threads = new ArrayList<>();
+    private List<Thread> threads = new ArrayList<>();
 
     public void close() {
         for (Thread t : threads) {
@@ -262,6 +275,7 @@ public class NewGUI {
         }
     }
 
+    //region "JavaFX HorseShit 2:Electric FuckYou"
     @FXML
     public JFXHamburger menuHamburger;
     @FXML
@@ -321,6 +335,7 @@ public class NewGUI {
     public JFXPasswordField cpNew;
     public JFXPasswordField cpConfirm;
     public JFXButton changePassword;
+    //endregion
     private List<Timeline> btnAnimations = new ArrayList<>();
     private List<Timeline> btnAnimationsR = new ArrayList<>();
     private Label ch2dec = new Label(" Chain Height");
@@ -330,7 +345,15 @@ public class NewGUI {
     private List<Order> activeOrders = new ArrayList<>();
     private boolean frg = true;
     static Application app;
+    private int priceControlsIndex;
 
+    /**
+     * see superHash this thing is part of the same dumb system
+     *
+     * @param data data you want to corrupt beyond all recognition
+     * @return horribly corrupted data
+     * @throws UnsupportedEncodingException because I'm lazy
+     */
     private String metaHash(String data) throws UnsupportedEncodingException {
         StringBuilder totalhash = new StringBuilder();
         String hash = "";
@@ -355,6 +378,14 @@ public class NewGUI {
 
     private Timeline lockAnimation;
 
+    /**
+     * This is possibly the most fucked up hash setup ever. it does a bunch of bullshit with
+     * SHA3-512 hashing and combinations of hashes and other shit, it's dumb and I should change it
+     *
+     * @param hash uh, a hash or something
+     * @param numberOfHashes number of iterations to do the retard function
+     * @return even more horribly corrupted data than metaHash
+     */
     private String superHash(String hash, int numberOfHashes) {
         String superHash = "";
         ConcurrentMap<Integer, Boolean> doneMap = new ConcurrentHashMap<>();
@@ -435,7 +466,13 @@ public class NewGUI {
                 }
             }
         }
-        double amount = Math.abs(allout.subtract(allin).longValueExact() / 100_000_000D);
+        double amount = 0;
+        try {
+            amount = Math.abs(allout.subtract(allin).longValueExact() / 100_000_000D);
+        } catch (Exception e) {
+            //TODO big int out of range....why
+            ki.getMainLog().warn("Can not add transaction because amount is over Long.MAX_VALUE");
+        }
         String direction;
         if (allout.compareTo(allin) > 0) {
             direction = "Received";
@@ -503,6 +540,7 @@ public class NewGUI {
     private BigInteger loadHeight;
     private SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
     private ObservableList<StoredTrans> transactions;
+    private volatile boolean limit = true;
 
     private void expandTreeView(TreeItem<?> item) {
         if (item != null && !item.isLeaf()) {
@@ -685,6 +723,27 @@ public class NewGUI {
                 }
             }
         });
+        priceControlsIndex = exControlsBox.getChildren().indexOf(priceHBox);
+        limitBuy.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                exPrice.setText("");
+                limit = true;
+                if (!exControlsBox.getChildren().contains(priceHBox)) {
+                    exControlsBox.getChildren().add(priceControlsIndex, priceHBox);
+                }
+            }
+        });
+        marketBuy.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                exPrice.setText("");
+                limit = false;
+                if (exControlsBox.getChildren().contains(priceHBox)) {
+                    exControlsBox.getChildren().remove(priceControlsIndex);
+                }
+            }
+        });
         for (Pairs pair : Pairs.values()) {
             Label label = new Label(pair.getName());
             pairs.getItems().add(label);
@@ -700,15 +759,27 @@ public class NewGUI {
                     notification("Invalid Amount");
                     return;
                 }
-                BigInteger stopPrice;
-                try {
-                    stopPrice = new BigDecimal(exPrice.getText()).multiply(BigDecimal.valueOf(unitMultiplierPrice.doubleValue())).toBigInteger();
-                    if (stopPrice.compareTo(BigInteger.valueOf(500)) < 0) throw new Exception();
-                } catch (Exception e) {
-                    notification("Invalid Price");
+                BigInteger stopPrice = null;
+                if (!ki.getExMan().getOrderBook().isSorted()) {
+                    ki.getExMan().getOrderBook().sort();
+                }
+                if (!ki.getExMan().getOrderBook().sells().isEmpty())
+                    stopPrice = ki.getExMan().getOrderBook().sells().get(0).unitPrice();
+                else if (!limit) {
+                    notification("No order to market buy from");
                     return;
                 }
-                OrderStatus status = ki.getExMan().placeOrder(true, amount, stopPrice, Pairs.byName(pairs.getSelectionModel().getSelectedItem().getText()));
+                if (limit) {
+                    try {
+                        stopPrice = new BigDecimal(exPrice.getText()).multiply(BigDecimal.valueOf(unitMultiplierPrice.doubleValue())).toBigInteger();
+                        if (stopPrice.compareTo(BigInteger.valueOf(500)) < 0) throw new Exception();
+                    } catch (Exception e) {
+                        notification("Invalid Price");
+                        return;
+                    }
+                }
+
+                OrderStatus status = ki.getExMan().placeOrder(true, amount, stopPrice, Pairs.byName(pairs.getSelectionModel().getSelectedItem().getText()),limit);
                 if (!status.succeeded()) {
                     if (!status.partial()) notification("Order not completed");
                     else notification("Order partially completed");
@@ -727,15 +798,26 @@ public class NewGUI {
                     notification("Invalid Amount");
                     return;
                 }
-                BigInteger stopPrice;
-                try {
-                    stopPrice = new BigDecimal(exPrice.getText()).multiply(BigDecimal.valueOf(unitMultiplierPrice.doubleValue())).toBigInteger();
-                    if (stopPrice.compareTo(BigInteger.valueOf(500)) < 0) throw new Exception();
-                } catch (Exception e) {
-                    notification("Invalid Price");
+                BigInteger stopPrice = null;
+                if (!ki.getExMan().getOrderBook().isSorted()) {
+                    ki.getExMan().getOrderBook().sort();
+                }
+                if (!ki.getExMan().getOrderBook().buys().isEmpty())
+                    stopPrice = ki.getExMan().getOrderBook().buys().get(0).unitPrice();
+                else if (!limit) {
+                    notification("No order to market sell to");
                     return;
                 }
-                OrderStatus status = ki.getExMan().placeOrder(false, amount, stopPrice, Pairs.byName(pairs.getSelectionModel().getSelectedItem().getText()));
+                if (limit) {
+                    try {
+                        stopPrice = new BigDecimal(exPrice.getText()).multiply(BigDecimal.valueOf(unitMultiplierPrice.doubleValue())).toBigInteger();
+                        if (stopPrice.compareTo(BigInteger.valueOf(500)) < 0) throw new Exception();
+                    } catch (Exception e) {
+                        notification("Invalid Price");
+                        return;
+                    }
+                }
+                OrderStatus status = ki.getExMan().placeOrder(false, amount, stopPrice, Pairs.byName(pairs.getSelectionModel().getSelectedItem().getText()),limit);
                 if (!status.succeeded()) {
                     if (!status.partial()) notification("Order not completed");
                     else notification("Order partially completed");
@@ -1291,8 +1373,10 @@ public class NewGUI {
                 poolConnect.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
                 poolDisconnect.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
                 resetColors.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
-                exchangeBuy.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
+                exchangeBuy.setBackground(new Background(new BackgroundFill(Color.valueOf("#18BC9C"), CornerRadii.EMPTY, Insets.EMPTY)));
                 orderHistory.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
+                limitBuy.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
+                marketBuy.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
                 exchangeSell.setBackground(new Background(new BackgroundFill(Color.valueOf("#c84128"), CornerRadii.EMPTY, Insets.EMPTY)));
                 sellLabel.setTextFill(Color.valueOf("#c84128"));
                 buyLabel.setTextFill(Color.valueOf("#18BC9C"));
@@ -1478,15 +1562,14 @@ public class NewGUI {
         exchangeGraph.setCreateSymbols(false);
         exchangeGraph.setPrefHeight(5000);
         exchangeGraph.setPrefWidth(5000);
+        pnlGraph.setLegendVisible(false);
         ohCancel.setFixedCellSize(40);
         ohAmount.setFixedCellSize(40);
         ohDirection.setFixedCellSize(40);
         ohDate.setFixedCellSize(40);
         ohPrice.setFixedCellSize(40);
-        bindScrolls(ohAmount, ohCancel);
-        bindScrolls(ohDirection, ohCancel);
-        bindScrolls(ohDate, ohDirection);
-        bindScrolls(ohPrice, ohDate);
+
+
         bindScrolls(obSellPrice, obSellSize);
         bindScrolls(obSellSize, obSellTotal);
         bindScrolls(obBuyPrice, obBuySize);
@@ -1906,7 +1989,7 @@ public class NewGUI {
             button.setPrefWidth(1000);
             button.setBackground(new Background(new BackgroundFill(Color.valueOf(getDefaultColor(new Random().nextInt(12))), CornerRadii.EMPTY, Insets.EMPTY)));
             Label l = new Label(t.getName());
-            l.setStyle("-fx-text-fill:BLACK");
+            //l.setStyle("-fx-text-fill:BLACK");
             tokenBox.getItems().add(l);
 
         }
@@ -1981,8 +2064,18 @@ public class NewGUI {
 
     private BigInteger currentBlock = BigInteger.ZERO;
 
+    /**
+     * so, this method was built to fill in the block explorer masonry pane because I really liked the effect of
+     * the masonry pane. It works, but the masonry effect never became what I actually wanted, mostly because
+     * JFoenix (the library that allows this) is fucking retarded and does stupid shit with the masonry pane that
+     * makes it really hard to do an interesting combination of sizes of blocks, so, most blocks are the same or
+     * very similar in size.
+     * @param bottomRange from block
+     * @param topRange to block
+     */
     private void fillMasonry(BigInteger bottomRange, BigInteger topRange) {
         if (topRange.compareTo(ki.getChainMan().currentHeight()) > 0) {
+            if (ki.getChainMan().currentHeight().compareTo(BigInteger.valueOf(100)) < 0) return;
             notification("Invalid range");
             return;
         }
@@ -2044,6 +2137,7 @@ public class NewGUI {
     }
 
     private SimpleDateFormat sdf2 = new SimpleDateFormat("yyyy MMM dd hh:mm:ss a zzz");
+    private SimpleDateFormat sdf3 = new SimpleDateFormat("MM/dd hh:mm:ss a");
 
     private void setupBlockPane(BigInteger height) {
         Block b = ki.getChainMan().getByHeight(height);
@@ -2231,8 +2325,9 @@ public class NewGUI {
     private void prepareOH() {
         while (!isFinal) {
         }
+        ohPortfolio.getData().clear();
         for (Token t : tokenValueMap.keySet()) {
-            if (!t.getName().contains("TOKEN"))
+            if (!t.getName().contains("TOKEN") && tokenValueMap.get(t).compareTo(BigInteger.ZERO) != 0)
                 ohPortfolio.getData().add(new PieChart.Data(t.getName(), tokenValueMap.get(t).divide(BigInteger.valueOf(100_000_000)).doubleValue()));
         }
         ohAmount.getItems().clear();
@@ -2258,28 +2353,64 @@ public class NewGUI {
                 }
             }
         }
+        pnlGraph.getData().clear();
+        XYChart.Series<String, Number> pnlSeries = new XYChart.Series<>();
+        List<XYChart.Data<String, Number>> realizedPNL = new ArrayList<>();
+        BigInteger buyPrice = BigInteger.ZERO;
+        BigInteger sellPrice = BigInteger.ZERO;
         for (Order o : ki.getExMan().getOrderBook().matched()) {
             for (IAddress a : ki.getAddMan().getAll()) {
                 if (o.address().encodeForChain().equals(a.encodeForChain())) {
+                    if (o.buy()) {
+                        buyPrice = o.unitPrice();
+                    } else {
+                        if (buyPrice.compareTo(BigInteger.ZERO) != 0) {
+                            sellPrice = o.unitPrice();
+                            realizedPNL.add(0, new XYChart.Data<String, Number>(sdf3.format(new Date(o.timestamp().longValueExact())), 100 * ((sellPrice.doubleValue() / (buyPrice.doubleValue())) - 1)));
+                        }
+                    }
                     addOrderToOH(o, false);
                     break;
                 }
             }
         }
+        if (ki.getExMan().getOrderBook().getRecentData() != null) {
+            double currentPrice = ki.getExMan().getOrderBook().getRecentData().close.doubleValue();
+            pnlLabel.setText("Unrealized PNL - " + (((currentPrice / buyPrice.doubleValue()) - 1) * 100) + "%");
+        }
+        for (XYChart.Data<String, Number> data : realizedPNL) {
+            pnlSeries.getData().add(data);
+        }
+        pnlGraph.getData().add(pnlSeries);
+        bindScrolls(ohPrice, ohAmount);
+        bindScrolls(ohAmount, ohDate);
+
+        bindScrolls(ohDate, ohDirection);
+        bindScrolls(ohDirection, ohCancel);
+        pnlGraph.layout();
     }
 
     private void addOrderToOH(Order o, boolean cancellable) {
-        ohAmount.getItems().add(format2.format(o.amountOnOffer().divide(unitMultiplierAmount)) + " " + unitSelectorAmount.getSelectionModel().getSelectedItem().getText());
+        ohAmount.getItems().add(format2.format(o.amountOnOffer().doubleValue() / (unitMultiplierAmount.doubleValue())) + " " + unitSelectorAmount.getSelectionModel().getSelectedItem().getText());
         ohDate.getItems().add(sdf2.format(new Date(o.timestamp().longValueExact())));
         ohDirection.getItems().add((o.buy()) ? "Buy" : "Sell");
-        ohPrice.getItems().add(format2.format(o.unitPrice().divide(unitMultiplierPrice)) + " " + unitSelectorPrice.getSelectionModel().getSelectedItem().getText());
+        ohPrice.getItems().add(format2.format(o.unitPrice().doubleValue() / (unitMultiplierPrice.doubleValue())) + " " + unitSelectorPrice.getSelectionModel().getSelectedItem().getText());
         JFXButton cancelButton = new JFXButton("Cancel");
         cancelButton.setBackground(new Background(new BackgroundFill(Color.valueOf(ki.getStringSetting(StringSettings.PRIMARY_COLOR)), CornerRadii.EMPTY, Insets.EMPTY)));
         if (cancellable) {
             cancelButton.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
                 @Override
                 public void handle(MouseEvent event) {
-                    ki.getExMan().cancelOrder(o);
+                    if (!ki.getExMan().cancelOrder(o)) {
+                        notification("Order could not be cancelled");
+                    } else {
+                        ohAmount.getItems().remove(ohCancel.getItems().indexOf(cancelButton));
+                        ohDate.getItems().remove(ohCancel.getItems().indexOf(cancelButton));
+                        ohDirection.getItems().remove(ohCancel.getItems().indexOf(cancelButton));
+                        ohPrice.getItems().remove(ohCancel.getItems().indexOf(cancelButton));
+                        ohCancel.getItems().remove(cancelButton);
+                        notification("Order successfully cancelled");
+                    }
                 }
             });
         } else {
@@ -2289,6 +2420,7 @@ public class NewGUI {
         ohCancel.getItems().add(cancelButton);
 
     }
+
     public void setStart(BigInteger startHeight) {
         this.startHeight = startHeight;
     }

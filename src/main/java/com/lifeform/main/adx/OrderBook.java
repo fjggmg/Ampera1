@@ -28,12 +28,13 @@ public class OrderBook {
     private boolean firstRun = false;
     private volatile ObservableList<Order> active = FXCollections.observableArrayList(new CopyOnWriteArrayList<>());
     private IKi ki;
-
+    private boolean sorted = false;
     public OrderBook(IKi ki) {
         this.ki = ki;
     }
 
     public void addOrder(Order order) {
+        sorted = false;
         Platform.runLater(new Thread() {
             public void run() {
                 if (order.buy()) {
@@ -52,6 +53,7 @@ public class OrderBook {
     }
 
     public void matchOrder(Order order) {
+        sorted = false;
         if (!matchedOrders.contains(order.getID())) {
             Platform.runLater(new Thread() {
                 public void run() {
@@ -109,6 +111,12 @@ public class OrderBook {
     public List<ExchangeData> collectRecentData(long timestamp) {
         hasNew = false;
         System.out.println("Current size of data: " + data.size());
+
+        if (timestamp == 0) {
+            List<ExchangeData> dataCopy = new ArrayList<>();
+            dataCopy.addAll(data);
+            return dataCopy;
+        }
         for (int i = data.size() - 1; i >= 0; i--) {
             if (data.get(i).timestamp >= timestamp) {
                 if (i == data.size() - 1) {
@@ -163,6 +171,9 @@ public class OrderBook {
         return true;
     }
 
+    public boolean isSorted() {
+        return sorted;
+    }
     public List<ExchangeData> getData() {
         return data;
     }
@@ -193,6 +204,7 @@ public class OrderBook {
             totalS = totalS.add(s.amountOnOffer());
             s.getOm().totalAtOrder = new BigInteger(totalS.toByteArray());
         }
+        sorted = true;
     }
 
     public void close() {
@@ -212,13 +224,16 @@ public class OrderBook {
             hpa.addBytes(o.serializeToBytes());
         }
         obMap.putBytes("matched", hpa.serializeToBytes());
+        /*
         hpa = HeadlessPrefixedAmplet.create();
         for (Order o : active) {
             hpa.addBytes(o.serializeToBytes());
         }
         obMap.putBytes("active", hpa.serializeToBytes());
+        */
 
         try {
+            //Thread.sleep(60_000);
             obMap.close();
         } catch (Exception e) {
             Ki.getInstance().getMainLog().error("Error saving order book, order book data may still be in tact", e);
@@ -230,8 +245,15 @@ public class OrderBook {
             HeadlessPrefixedAmplet hpa = HeadlessPrefixedAmplet.create(obMap.getBytes("buys"));
             if (hpa != null && hpa.hasNextElement()) {
                 while (hpa.hasNextElement()) {
-                    buys.add(Order.fromByteArray(hpa.getNextElement()));
-
+                    Order order = Order.fromByteArray(hpa.getNextElement());
+                    if (order == null) continue;
+                    buys.add(order);
+                    for (IAddress add : ki.getAddMan().getAll()) {
+                        if (add.encodeForChain().equals(order.address().encodeForChain())) {
+                            active.add(order);
+                            break;
+                        }
+                    }
                 }
             }
         }
@@ -239,7 +261,15 @@ public class OrderBook {
             HeadlessPrefixedAmplet hpa = HeadlessPrefixedAmplet.create(obMap.getBytes("sells"));
             if (hpa != null && hpa.hasNextElement()) {
                 while (hpa.hasNextElement()) {
-                    sells.add(Order.fromByteArray(hpa.getNextElement()));
+                    Order order = Order.fromByteArray(hpa.getNextElement());
+                    if (order == null) continue;
+                    sells.add(order);
+                    for (IAddress add : ki.getAddMan().getAll()) {
+                        if (add.encodeForChain().equals(order.address().encodeForChain())) {
+                            active.add(order);
+                            break;
+                        }
+                    }
                 }
             }
         }
@@ -256,6 +286,7 @@ public class OrderBook {
                 }
             }
         }
+        /*
         if (obMap.getBytes("active") != null) {
             HeadlessPrefixedAmplet hpa = HeadlessPrefixedAmplet.create(obMap.getBytes("active"));
             if (hpa != null && hpa.hasNextElement()) {
@@ -264,6 +295,7 @@ public class OrderBook {
                 }
             }
         }
+        */
     }
 
     public ObservableList<Order> active() {
@@ -286,6 +318,7 @@ public class OrderBook {
     }
 
     public void removeOrder(Order o) {
+        sorted = false;
         Platform.runLater(new Thread() {
             public void run() {
                 if (o.buy()) {

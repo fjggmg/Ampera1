@@ -73,7 +73,7 @@ public class TransactionManager implements ITransMan {
                             else
                                 hpa = HeadlessPrefixedAmplet.create();
 
-                            ki.debug("Putting output: " + o.getID() + " with address: " + o.getAddress().encodeForChain() + " of amount + " + o.getAmount());
+                            //ki.debug("Putting output: " + o.getID() + " with address: " + o.getAddress().encodeForChain() + " of amount + " + o.getAmount());
                             hpa.addElement(o.getID());
                             try {
                                 hpa.addBytes(new TXIOData(o.getAddress(), o.getIndex(), o.getAmount(), o.getToken(), o.getTimestamp()).serializeToBytes());
@@ -99,7 +99,7 @@ public class TransactionManager implements ITransMan {
                                     try {
                                         String ID = new String(hpa.peekNextElement(), "UTF-8");
                                         if (ID.equals(i.getID())) {
-                                            ki.debug("Removing output: " + i.getID() + " with address: " + i.getAddress().encodeForChain() + " of amount + " + i.getAmount());
+                                            //ki.debug("Removing output: " + i.getID() + " with address: " + i.getAddress().encodeForChain() + " of amount + " + i.getAmount());
 
                                             hpa.deleteNextElement();
                                             hpa.deleteNextElement();
@@ -124,7 +124,7 @@ public class TransactionManager implements ITransMan {
                                     hpa = HeadlessPrefixedAmplet.create();
 
                                     hpa.addElement(o.getID());
-                                    ki.debug("Putting output: " + o.getID() + " with address: " + o.getAddress().encodeForChain() + " of amount + " + o.getAmount());
+                                //ki.debug("Putting output: " + o.getID() + " with address: " + o.getAddress().encodeForChain() + " of amount + " + o.getAmount());
 
                                 try {
                                     hpa.addBytes(new TXIOData(o.getAddress(), o.getIndex(), o.getAmount(), o.getToken(), o.getTimestamp()).serializeToBytes());

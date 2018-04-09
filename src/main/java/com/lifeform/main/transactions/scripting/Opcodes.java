@@ -1,7 +1,5 @@
 package com.lifeform.main.transactions.scripting;
 
-import engine.operators.reserved_set.word8.NoOpWord8;
-import engine.operators.reserved_set.word8.TermWord8;
 
 public enum Opcodes {
     //TODO CLEANUP

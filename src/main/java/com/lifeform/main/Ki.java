@@ -12,7 +12,9 @@ import com.lifeform.main.network.pool.PoolData;
 import com.lifeform.main.network.pool.PoolNetMan;
 import com.lifeform.main.transactions.*;
 import com.lifeform.main.transactions.scripting.*;
+import engine.ASELogging;
 import engine.ByteCodeEngine;
+import gpuminer.GPULogging;
 import gpuminer.JOCL.context.JOCLContextAndCommandQueue;
 import gpuminer.miner.context.ContextMaster;
 import mining_pool.Pool;
@@ -80,8 +82,11 @@ public class Ki extends Thread implements IKi {
         System.setProperty("log4j.configurationFile", "log4j.xml");
         AmpLogging.startLogging();
         PoolLogging.startLogging();
+        GPULogging.startLogging();
+        ASELogging.startLogging();
         main = LogManager.getLogger("Origin");
         main.info("Origin starting up");
+        //region settings shit
         if (settings.get(VERSION) == null || !settings.get(VERSION)) {
             settings.put(VERSION, true);
             try {
@@ -139,23 +144,34 @@ public class Ki extends Thread implements IKi {
             if (getStringSetting(StringSettings.POOL_SERVER) == null)
                 stringSettings.put(StringSettings.POOL_SERVER.getKey(), "ampextech.ddns.net");
         }
+        //endregion
         scriptMan = new ScriptManager(bce8, bce16, this);
+        encMan = new EncryptionManager(this);
+        EncryptionManager.initStatic();
+        try {
+            ki.getEncryptMan().loadKeys();
+        } catch (Exception ex) {
+            ki.getEncryptMan().generateKeys();
+            ki.getEncryptMan().saveKeys();
+        }
+        addMan = new AddressManager(this);
+        addMan.load();
+        if (addMan.getMainAdd() == null) {
+            addMan.setMainAdd(addMan.getNewAdd());
+        }
         exchangeMan = new ExchangeManager(this);
         if (o.relay) {
+            //this is for some monitoring stuff available by the getThreads command
             ManagementFactory.getThreadMXBean().setThreadContentionMonitoringEnabled(true);
         }
         JOCLContextAndCommandQueue.setWorkaround(true);
-        JOCLContextAndCommandQueue.noIntel = true;
+        //JOCLContextAndCommandQueue.noIntel = true;
         ContextMaster.disableCUDA();
         ih = new InputHandler(this);
         ih.start();
         this.o = o;
         instance = this;
         relay = o.relay;
-        //logMan = new LogMan(new ConsoleLogger());
-
-        //main = logMan.createLogger("Main", "console", Level.DEBUG);
-
         if (o.pool) {
             chainMan = new PoolChainMan();
         } else if (o.lite) {
@@ -173,26 +189,10 @@ public class Ki extends Thread implements IKi {
         } else {
             transMan = new TransactionManager(this, o.dump);
         }
-        encMan = new EncryptionManager(this);
-        EncryptionManager.initStatic();
-        debug("EncryptMan done");
 
-        try {
-            ki.getEncryptMan().loadKeys();
-        } catch (Exception ex) {
-            ki.getEncryptMan().generateKeys();
-            ki.getEncryptMan().saveKeys();
-        }
-        addMan = new AddressManager(this);
-        addMan.load();
-
-        if (addMan.getMainAdd() == null) {
-            addMan.setMainAdd(addMan.getNewAdd());
-        }
         if (o.pool || o.poolRelay) {
             pd = new PoolData();
         }
-        debug("Addman done");
         if (o.rebuild) {
             List<Block> blocksToRebuild = new ArrayList<>();
             BigInteger b = BigInteger.ONE;
@@ -318,12 +318,15 @@ public class Ki extends Thread implements IKi {
     public NewGUI getGUIHook() {
         return guiHook;
     }
+
+    private boolean closing = false;
     public void close()
     {
+        closing = true;
         while (!canClose) {
         }
         chainMan.close();
-        guiHook.close();
+
         if (!getOptions().pool)
             transMan.close();
         addMan.save();
@@ -333,6 +336,8 @@ public class Ki extends Thread implements IKi {
         settings.close();
         stringSettings.close();
         exchangeMan.close();
+        if (!getOptions().nogui)
+            guiHook.close();
         System.exit(0);
     }
 
@@ -477,6 +482,7 @@ public class Ki extends Thread implements IKi {
     @Override
     public void debug(String debug)
     {
+        if (closing) return;
         if (getSetting(Settings.DEBUG_MODE) || isRelay())
         {
 

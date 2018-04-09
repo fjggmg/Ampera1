@@ -466,7 +466,11 @@ public class ChainManager implements IChainMan {
                     }
                 }
                 if (add) {
-                    ki.getGUIHook().addTransaction(transaction, block.height);
+                    try {
+                        ki.getGUIHook().addTransaction(transaction, block.height);
+                    } catch (Exception e) {
+                        ki.getMainLog().warn("Issue adding transaction to list for GUI.", e);
+                    }
                 }
             }
         }

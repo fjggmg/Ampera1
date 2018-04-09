@@ -254,7 +254,7 @@
                                                          textFill="WHITE"/>
                                     </children>
                                 </Pane>
-                                <Pane fx:id="exchangePane" prefHeight="200.0" prefWidth="1077.0">
+                                <Pane fx:id="exchangePane" prefHeight="200.0" prefWidth="1077.0" visible="false">
                                     <children>
                                         <HBox fx:id="adxBox" layoutX="6.0" layoutY="1.0" prefHeight="543.0"
                                               prefWidth="1052.0" spacing="5.0">
@@ -263,23 +263,35 @@
                                                     <children>
                                                         <HBox prefHeight="5000.0" prefWidth="360.0" spacing="5.0">
                                                             <children>
-                                                                <VBox alignment="TOP_CENTER" prefHeight="5000.0"
-                                                                      prefWidth="5000.0" spacing="5.0">
+                                                                <VBox fx:id="exControlsBox" alignment="TOP_CENTER"
+                                                                      prefHeight="5000.0" prefWidth="5000.0"
+                                                                      spacing="5.0">
                                                                     <children>
+                                                                        <HBox prefHeight="24.0" prefWidth="185.0"
+                                                                              spacing="5.0">
+                                                                            <children>
+                                                                                <JFXButton fx:id="marketBuy"
+                                                                                           prefWidth="2000.0"
+                                                                                           text="Market"/>
+                                                                                <JFXButton fx:id="limitBuy"
+                                                                                           prefWidth="2000.0"
+                                                                                           text="Limit"/>
+                                                                            </children>
+                                                                        </HBox>
                                                                         <HBox>
                                                                             <children>
                                                                                 <JFXTextField fx:id="amtOnOffer"
-                                                                                              prefWidth="250.0"
+                                                                                              prefWidth="300.0"
                                                                                               promptText="Amount"/>
                                                                                 <Label fx:id="tokenAmount"
                                                                                        prefHeight="26.0"
                                                                                        prefWidth="200.0" text="ORA"/>
                                                                             </children>
                                                                         </HBox>
-                                                                        <HBox>
+                                                                        <HBox fx:id="priceHBox">
                                                                             <children>
                                                                                 <JFXTextField fx:id="exPrice"
-                                                                                              prefWidth="250.0"
+                                                                                              prefWidth="300.0"
                                                                                               promptText="Price"/>
                                                                                 <Label fx:id="tokenPrice"
                                                                                        prefHeight="26.0"
@@ -515,7 +527,7 @@
                                 </Pane>
                                 <Pane fx:id="ohPane" prefHeight="545.0" prefWidth="1059.0" visible="false">
                                     <children>
-                                        <VBox fx:id="ohVbox" layoutX="2.0" layoutY="-1.0" prefHeight="542.0"
+                                        <VBox fx:id="ohVbox" layoutX="5.0" layoutY="2.0" prefHeight="542.0"
                                               prefWidth="1057.0">
                                             <children>
                                                 <HBox alignment="TOP_RIGHT" prefHeight="3000.0" prefWidth="10000.0">
@@ -524,11 +536,18 @@
                                                             <children>
                                                                 <JFXButton fx:id="backToEx" prefHeight="25.0"
                                                                            prefWidth="99.0" text="Back"/>
+                                                                <Label fx:id="pnlLabel" text="Unrealized PnL -"
+                                                                       wrapText="true">
+                                                                    <font>
+                                                                        <Font size="18.0"/>
+                                                                    </font>
+                                                                </Label>
                                                             </children>
                                                         </VBox>
                                                         <PieChart fx:id="ohPortfolio" prefHeight="5000.0"
                                                                   prefWidth="5000.0" title="Portfolio"/>
-                                                        <LineChart prefHeight="5000.0" prefWidth="5000.0">
+                                                        <LineChart fx:id="pnlGraph" prefHeight="5000.0"
+                                                                   prefWidth="5000.0" title="Realized PnL">
                                                             <xAxis>
                                                                 <CategoryAxis side="BOTTOM"/>
                                                             </xAxis>

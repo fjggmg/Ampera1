@@ -45,7 +45,7 @@ public class ExchangeManager {
         return orderBook;
     }
 
-    public OrderStatus placeOrder(boolean buy, BigInteger amount, BigInteger stopPrice, Pairs pair) {
+    public OrderStatus placeOrder(boolean buy, BigInteger amount, BigInteger stopPrice, Pairs pair, boolean limitBuy) {
         if (amount.compareTo(BigInteger.ZERO) <= 0 || stopPrice.compareTo(BigInteger.ZERO) <= 0) {
             ki.getMainLog().warn("Zero or Negative amount or price on placeOrder");
             return OrderStatus.GENERAL_FAILURE;
@@ -189,7 +189,7 @@ public class ExchangeManager {
             }
 
 
-            if (amount.compareTo(BigInteger.ZERO) > 0) {
+            if (amount.compareTo(BigInteger.ZERO) > 0 && limitBuy) {
                 short[] jumps = new short[16];
                 jumps[0] = ScriptManager.GEN_TRADE_FAIL_JUMP;
                 jumps[1] = ScriptManager.GEN_TRADE_CANCEL_JUMP;
@@ -383,7 +383,7 @@ public class ExchangeManager {
                 return currentStatus;
             }
             System.out.println("Removed orders from orderbook");
-            if (amount.compareTo(BigInteger.ZERO) > 0) {
+            if (amount.compareTo(BigInteger.ZERO) > 0 && limitBuy) {
                 short[] jumps = new short[16];
                 jumps[0] = ScriptManager.GEN_TRADE_FAIL_JUMP;
                 jumps[1] = ScriptManager.GEN_TRADE_CANCEL_JUMP;
@@ -488,7 +488,7 @@ public class ExchangeManager {
         orderBook.close();
     }
 
-    public void cancelOrder(Order o) {
+    public boolean cancelOrder(Order o) {
         for (IAddress a : ki.getAddMan().getAll()) {
             if (a.encodeForChain().equals(o.address().encodeForChain())) {
 
@@ -505,7 +505,7 @@ public class ExchangeManager {
                     List<Input> inputs = ki.getTransMan().getInputsForAmountAndToken(o.address(), BigInteger.valueOf(1_000), Token.ORIGIN, true);
                     if (inputs == null) {
                         ki.getMainLog().warn("Unable to recover funds from cancelled trade, not enough origin to pay the transaction fee");
-                        return;
+                        return false;
                     }
                     BigInteger feeOverage = BigInteger.ZERO;
                     for (Input i : inputs) {
@@ -546,19 +546,24 @@ public class ExchangeManager {
                             oc.sig = ki.getEncryptMan().sign(o.serializeToBytes());
                             ki.getNetMan().broadcast(oc);
                             orderBook.removeOrder(o);
+                            return true;
                         } else {
                             ki.getMainLog().warn("Cancellation transaction failed! Funds were unable to be recovered. Report this immediately with the debug that came before this.");
+                            return false;
                         }
                     } catch (InvalidTransactionException e) {
                         ki.getMainLog().error("Problem creating transaction for order cancellation", e);
+                        return false;
                     } catch (Exception e) {
                         ki.getMainLog().error("Problem adding signature to writable memory in order cancellation", e);
+                        return false;
                     }
 
                 }
                 break;
             }
         }
+        return false;
     }
 
     public void cancelRequest(String ID, byte[] sig) {
