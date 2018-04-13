@@ -78,7 +78,7 @@ public class NewTrans implements ITrans {
     public boolean verifySigs() {
         for (String key : keySigMap.keySet()) {
             if (!keySigMap.get(key).p2sh) {
-                if (!EncryptionManager.verifySig(toSignBytes(), Utils.fromBase64(keySigMap.get(key).sig), key))
+                if (!EncryptionManager.verifySig(toSignBytes(), Utils.fromBase64(keySigMap.get(key).sig), key, keySigMap.get(key).keyType))
                     return false;
             }
 
@@ -110,12 +110,12 @@ public class NewTrans implements ITrans {
             }
             String address = inputMap.get(keySigMap.get(key).inputs.get(0)).getAddress().encodeForChain();
             KeySigEntropyPair ksep = keySigMap.get(key);
-            if (!inputMap.get(ksep.inputs.get(0)).canSpend(key, ksep.entropy, ksep.prefix, ksep.p2sh)) {
+            if (!inputMap.get(ksep.inputs.get(0)).canSpend(key, ksep.entropy, ksep.prefix, ksep.p2sh, ksep.keyType)) {
                 System.out.println("address mismatch, Address expecting: ");
                 System.out.println(inputMap.get(ksep.inputs.get(0)).getAddress().encodeForChain());
                 System.out.println("Received: ");
                 try {
-                    System.out.println(NewAdd.createNew(key, ksep.entropy, AddressLength.byIndicator(inputMap.get(ksep.inputs.get(0)).getAddress().toByteArray()[1]), ksep.p2sh).encodeForChain());
+                    System.out.println(NewAdd.createNew(key, ksep.entropy, AddressLength.byIndicator(inputMap.get(ksep.inputs.get(0)).getAddress().toByteArray()[1]), ksep.p2sh, inputMap.get(ksep.inputs.get(0)).getAddress().getKeyType()).encodeForChain());
                 } catch (InvalidAddressException e) {
                     e.printStackTrace();
                 }

@@ -47,9 +47,10 @@ public interface IAddress {
      * @param key     key thought to be used to create this address
      * @param entropy entropy thought to be used to create this address
      * @param p2sh    if address is p2sh
+     * @param type    type of key for this address
      * @return true if the key and entropy create the same address as this one
      */
-    boolean canSpend(String key, String entropy, boolean p2sh);
+    boolean canSpend(String key, String entropy, boolean p2sh, KeyType type);
 
     /**
      * This will regen the checksum based on the ID. It does not reassign the checksum and is really only used for testing
@@ -86,9 +87,10 @@ public interface IAddress {
      * @param entropy entropy thought to be used to create this address
      * @param prefix  prefix on address
      * @param p2sh    if address is p2sh
+     * @param type    type of key for this address
      * @return true if the key, entropy, and prefix create the same address as this one
      */
-    boolean canSpendPrefixed(String key, String entropy, String prefix, boolean p2sh);
+    boolean canSpendPrefixed(String key, String entropy, String prefix, boolean p2sh, KeyType type);
 
     /**
      * For new P2SH addresses, as with hasPrefix it will always return false on 127 addresses
@@ -97,4 +99,8 @@ public interface IAddress {
      */
     boolean isP2SH();
 
+    /**
+     * @return type of key used to create this address
+     */
+    KeyType getKeyType();
 }

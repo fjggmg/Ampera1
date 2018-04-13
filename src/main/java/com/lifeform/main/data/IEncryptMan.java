@@ -1,28 +1,38 @@
 package com.lifeform.main.data;
 
+import com.lifeform.main.transactions.KeyType;
+
 import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 
 /**
  * Created by Bryan on 7/14/2017.
+ *
+ * this is being converted to be capable of ED25519 keys as well, so far the conversion is shitty.
+ * There is a pending rewrite on this for this reason
  */
 public interface IEncryptMan {
 
-    String sign(String toSign);
+    String sign(String toSign, KeyType type);
 
-    PrivateKey privKeyFromString(String key);
+    PrivateKey privKeyFromString(String key, KeyType keyType);
 
-    PublicKey getPublicKey();
+    PublicKey getPublicKey(KeyType keyType);
 
-    PrivateKey getPrivateKey();
+    PrivateKey getPrivateKey(KeyType keyType);
 
     KeyPair generateKeys();
 
+    KeyPair generateEDKeys();
+
+    KeyPair loadEDKeys();
     void saveKeys();
 
-    byte[] sign(byte[] toSign);
+    void saveEDKeys();
+
+    byte[] sign(byte[] toSign, KeyType type);
     KeyPair loadKeys();
-    String getPublicKeyString();
-    PublicKey pubKeyFromShortenedString(String key);
+
+    String getPublicKeyString(KeyType keyType);
 }

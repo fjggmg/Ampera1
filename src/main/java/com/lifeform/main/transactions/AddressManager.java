@@ -34,10 +34,10 @@ public class AddressManager implements IAddMan {
     }
 
     @Override
-    public IAddress getNewAdd() {
+    public IAddress getNewAdd(KeyType keyType) {
         IAddress a = null;
         try {
-            a = NewAdd.createNew(ki.getEncryptMan().getPublicKeyString(), entropy, AddressLength.SHA256, false);
+            a = NewAdd.createNew(ki.getEncryptMan().getPublicKeyString(keyType), entropy, AddressLength.SHA256, false, keyType);
         } catch (InvalidAddressException e) {
             e.printStackTrace();
             return null;
@@ -108,6 +108,7 @@ public class AddressManager implements IAddMan {
         if(!(fh.getLines().size() == 0))
         {
             main = Address.decodeFromChain(fh.getLine(0));
+            //ki.debug("Main type in load: " + main.getKeyType());
             addresses.add(main);
             for(String s:fh.getLines())
             {
@@ -134,18 +135,20 @@ public class AddressManager implements IAddMan {
         for (IAddress add : entropyMap.keySet())
         {
             entropy = entropyMap.get(add);
-            if(!add.encodeForChain().equals(getNewAdd().encodeForChain()))
+            if (add.getKeyType() != null)
+                if (!add.encodeForChain().equals(getNewAdd(add.getKeyType()).encodeForChain()))
             {
                 ki.debug("Address loaded is not for the keys we have, deleting address");
                 toRemove.add(add);
-            }
+            } else
+                    toRemove.add(add);
         }
         for (IAddress add : toRemove)
         {
             if(main.encodeForChain().equals(add.encodeForChain()))
             {
                 entropy = DEFAULT_ENTROPY;
-                main = getNewAdd();
+                main = getNewAdd(main.getKeyType());
             }else{
                 addresses.remove(add);
                 entropyMap.remove(add);
@@ -196,19 +199,19 @@ public class AddressManager implements IAddMan {
     }
 
     @Override
-    public IAddress createNew(String binOrKey, String entropy, String prefix, AddressLength l, boolean p2sh) {
+    public IAddress createNew(String binOrKey, String entropy, String prefix, AddressLength l, boolean p2sh, KeyType keyType) {
 
         IAddress a;
         if (prefix != null && prefix.length() == 5)
             try {
-                a = NewAdd.createNew(binOrKey, entropy, l, prefix, p2sh);
+                a = NewAdd.createNew(binOrKey, entropy, l, prefix, p2sh, keyType);
             } catch (InvalidAddressException e) {
                 e.printStackTrace();
                 return null;
             }
         else
             try {
-                a = NewAdd.createNew(binOrKey, entropy, l, p2sh);
+                a = NewAdd.createNew(binOrKey, entropy, l, p2sh, keyType);
             } catch (InvalidAddressException e) {
                 e.printStackTrace();
                 return null;

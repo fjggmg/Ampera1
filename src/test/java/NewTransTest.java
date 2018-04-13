@@ -20,7 +20,7 @@ public class NewTransTest {
         em.generateKeys();
         IAddress add = null;
         try {
-            add = NewAdd.createNew(em.getPublicKeyString(), "fake entropy", AddressLength.SHA256, false);
+            add = NewAdd.createNew(em.getPublicKeyString(KeyType.BRAINPOOLP512T1), "fake entropy", AddressLength.SHA256, false, KeyType.BRAINPOOLP512T1);
         } catch (InvalidAddressException e) {
             e.printStackTrace();
             return;
@@ -34,7 +34,7 @@ public class NewTransTest {
         Map<String, KeySigEntropyPair> keySigMap = new HashMap<>();
         List<String> ins = new ArrayList<>();
         ins.add(i.getID());
-        keySigMap.put(em.getPublicKeyString(), new KeySigEntropyPair("sig", "fake entropy", ins, null, false));
+        keySigMap.put(em.getPublicKeyString(KeyType.BRAINPOOLP512T1), new KeySigEntropyPair("sig", "fake entropy", ins, null, false, KeyType.BRAINPOOLP512T1));
         try {
             ITrans ntrans = new NewTrans("hello, is it me you're looking for", outputs, inputs, keySigMap, TransactionType.NEW_TRANS);
             ITrans des = Transaction.fromAmplet(Amplet.create(ntrans.serializeToAmplet().serializeToBytes()));

@@ -468,7 +468,7 @@ public class TransactionManager implements ITransMan {
      */
     @Override
     public ITrans createSimple(IAddress receiver, BigInteger amount, BigInteger fee, Token token, String message, int multipleOuts) throws InvalidTransactionException {
-        if (ki.getEncryptMan().getPublicKey() != null) {
+        if (ki.getEncryptMan().getPublicKey(ki.getAddMan().getMainAdd().getKeyType()) != null) {
             if (multipleOuts < 1)
                 throw new InvalidTransactionException("Cannot create transaction with less than 1 output");
             if (multipleOuts % 10 != 0 && multipleOuts != 1)
@@ -485,21 +485,21 @@ public class TransactionManager implements ITransMan {
             //ki.getMainLog().info("Fee is: " + fee.toString());
 
             BigInteger totalInput = BigInteger.ZERO;
-            for (IAddress a : ki.getAddMan().getActive()) {
-                if (ki.getTransMan().getUTXOs(a, true) == null)
-                    throw new InvalidTransactionException("No UTXOs on this address");
-                for (Output o : ki.getTransMan().getUTXOs(a, true)) {
-                    if (o.getToken().equals(token)) {
-                        if (inputs.contains(Input.fromOutput(o))) continue;
-                        inputs.add(Input.fromOutput(o));
-                        totalInput = totalInput.add(o.getAmount());
-                        if (totalInput.compareTo(amount) >= 0) break;
+            IAddress a = ki.getAddMan().getMainAdd();
+            if (ki.getTransMan().getUTXOs(a, true) == null)
+                throw new InvalidTransactionException("No UTXOs on this address");
+            for (Output o : ki.getTransMan().getUTXOs(a, true)) {
+                if (o.getToken().equals(token)) {
+                    if (inputs.contains(Input.fromOutput(o))) continue;
+                    inputs.add(Input.fromOutput(o));
+                    totalInput = totalInput.add(o.getAmount());
+                    if (totalInput.compareTo(amount) >= 0) break;
 
-                    }
                 }
-                if (totalInput.compareTo(amount) >= 0) break;
-
             }
+
+
+
             if (totalInput.compareTo(amount) < 0) {
                 throw new InvalidTransactionException("Not enough " + token.name() + " to do this transaction");
             }
@@ -523,18 +523,18 @@ public class TransactionManager implements ITransMan {
                 fee = calcFee;
             }
             BigInteger feeInput = (token.equals(Token.ORIGIN)) ? totalInput : BigInteger.ZERO;
-            for (IAddress a : ki.getAddMan().getActive()) {
-                //get inputs
-                if (feeInput.compareTo(fee) >= 0) break;
-                for (Output o : ki.getTransMan().getUTXOs(a, true)) {
-                    if (o.getToken().equals(Token.ORIGIN)) {
-                        inputs.add(Input.fromOutput(o));
-                        feeInput = feeInput.add(o.getAmount());
-                        if (feeInput.compareTo(fee) >= 0) break;
 
-                    }
+            //get inputs
+
+            for (Output o : ki.getTransMan().getUTXOs(a, true)) {
+                if (o.getToken().equals(Token.ORIGIN)) {
+                    inputs.add(Input.fromOutput(o));
+                    feeInput = feeInput.add(o.getAmount());
+                    if (feeInput.compareTo(fee) >= 0) break;
+
                 }
             }
+
 
             if (feeInput.compareTo(fee) < 0) {
                 throw new InvalidTransactionException("Not enough origin to pay for this fee");
@@ -546,12 +546,12 @@ public class TransactionManager implements ITransMan {
                 sIns.add(i.getID());
             }
             Map<String, KeySigEntropyPair> keySigMap = new HashMap<>();
-            KeySigEntropyPair ksep = new KeySigEntropyPair(null, ki.getAddMan().getEntropyForAdd(ki.getAddMan().getMainAdd()), sIns, ki.getAddMan().getMainAdd().getPrefix(), false);
-            keySigMap.put(ki.getEncryptMan().getPublicKeyString(), ksep);
+            KeySigEntropyPair ksep = new KeySigEntropyPair(null, ki.getAddMan().getEntropyForAdd(ki.getAddMan().getMainAdd()), sIns, ki.getAddMan().getMainAdd().getPrefix(), false, a.getKeyType());
+            keySigMap.put(ki.getEncryptMan().getPublicKeyString(a.getKeyType()), ksep);
             ITrans trans = new NewTrans(message, outputs, inputs, keySigMap, TransactionType.NEW_TRANS);
             ki.debug("Transaction has: " + trans.getOutputs().size() + " Outputs before finalization");
             trans.makeChange(fee, ki.getAddMan().getMainAdd()); // TODO this just sends change back to the main address......will need to give option later
-            trans.addSig(ki.getEncryptMan().getPublicKeyString(), Utils.toBase64(ki.getEncryptMan().sign(trans.toSignBytes())));
+            trans.addSig(ki.getEncryptMan().getPublicKeyString(a.getKeyType()), Utils.toBase64(ki.getEncryptMan().sign(trans.toSignBytes(), a.getKeyType())));
             ki.debug("Transaction has: " + trans.getOutputs().size() + "Outputs after finalization");
             usedUTXOs.addAll(sIns);
             return trans;

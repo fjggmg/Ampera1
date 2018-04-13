@@ -28,7 +28,7 @@ import static junit.framework.Assert.assertTrue;
 
 public class ScriptTest {
 
-
+    /*
     public void testScript() {
         EncryptionManager.initStatic();
         EncryptionManager em = new EncryptionManager(null);
@@ -38,14 +38,14 @@ public class ScriptTest {
 
         bce.finalizeOperators();
 
-        byte[] pbytes;/* = {51,51,51,51,51,51,51,51,51,59,
+        byte[] pbytes; = {51,51,51,51,51,51,51,51,51,59,
                          53,59,61,59,50,59,58,57,62,58,
                          56,59,50,53,59,61,59,50,59,58,
                          57,62,58,56,59,50,53,59,61,59,
                          50,59,58,57,62,58,56,59,50,53,
                          59,61,59,50,59,58,57,62,58,56,
-                         59,50,55, 1, 60,59, 1};*/
-
+                         59,50,55, 1, 60,59, 1};
+        /*
         List<String> pStrings = Arrays.asList("LPCMSK", "LHP1PCCS", "LHMPCS", "LHP1PCCS", "LHMPCS", "LHP1PCCS", "LHMPCS", "LHP1PCCS", "LHMPCS", "PI0",
                 "VSVS", "DUP", "PI0", "LCSK", "GTN", "PI255", "LCSK",
                 "BRN", "VSVS", "DUP", "PI0", "LCSK", "GTN", "PI255", "LCSK",
@@ -77,6 +77,8 @@ public class ScriptTest {
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         }
+        */
+        /*
         byte[] key = Utils.fromBase64(em.getPublicKeyString());
         byte[] sig = em.sign(someData);
         try {
@@ -96,12 +98,12 @@ public class ScriptTest {
             //constants.setElement(Utils.fromBase64(em.getPublicKeyString()),4);
             constantsData[4] = DataElement.create(Utils.fromBase64(em.getPublicKeyString()));
             memory.setElement(em.sign(someData), 4);
-            /*
+
             memory.setElement(DataElement.create(ByteTools.deconstructInt(60)),18);
             memory.setElement(DataElement.create(ByteTools.deconstructInt(60)),30);
             memory.setElement(DataElement.create(ByteTools.deconstructInt(60)),42);
             memory.setElement(DataElement.create(ByteTools.deconstructInt(60)),54);
-            */
+
 
         } catch (ASEException e) {
             e.printStackTrace();
@@ -130,7 +132,7 @@ public class ScriptTest {
 
     }
 
-
+    /*
     public void testScriptTrade() {
         EncryptionManager.initStatic();
         EncryptionManager em = new EncryptionManager(null);
@@ -315,4 +317,5 @@ public class ScriptTest {
         System.out.println("Build/execution took " + (stop - start) + " milliseconds");
 
     }
+    */
 }

@@ -3,7 +3,7 @@ package com.lifeform.main.transactions.scripting.word8v1ops;
 import amp.ByteTools;
 import com.lifeform.main.data.EncryptionManager;
 import com.lifeform.main.data.Utils;
-import com.lifeform.main.transactions.ITrans;
+import com.lifeform.main.transactions.*;
 import com.lifeform.main.transactions.scripting.Opcodes;
 import engine.binary.Binary;
 import engine.data.ConstantMemory;
@@ -35,8 +35,10 @@ public class VSigBin implements IOperator {
     @Override
     public void execute(Stack<DataElement> stack, Binary binary, Program program, ConstantMemory constantMemory, JumpMemory jumpMemory, WritableMemory writableMemory, OPCode opCode, ITrans transaction, byte[] executionAddress) throws Exception {
         byte[] sig = stack.pop().getData();
+        KeyType keyType = KeyType.byValue(stack.pop().getDataAsByte());
         byte[] key = binary.getPublicKey();
         byte[] signed = transaction.toSignBytes();
-        stack.push(new DataElement(ByteTools.deconstructInt((EncryptionManager.verifySig(signed, sig, Utils.toBase64(key))) ? 1 : 0)));
+
+        stack.push(new DataElement(ByteTools.deconstructInt((EncryptionManager.verifySig(signed, sig, Utils.toBase64(key), keyType)) ? 1 : 0)));
     }
 }

@@ -39,38 +39,40 @@ public class AddressTest {
     @Test
     public void newAddTest() {
         EncryptionManager em = new EncryptionManager(null);
-        em.generateEDkeys();
+        em.generateEDKeys();
         IAddress na = null;
         try {
-            na = NewAdd.createNew(em.getPublicKeyString(), "Some entropy", AddressLength.SHA224, true);
+            na = NewAdd.createNew(em.getPublicKeyString(KeyType.ED25519), "Some entropy", AddressLength.SHA224, true, KeyType.ED25519);
         } catch (InvalidAddressException e) {
             e.printStackTrace();
         }
         assertNotNull(na);
         assertTrue(na.isValid());
-        assertTrue(na.canSpend(em.getPublicKeyString(), "Some entropy", true));
+        assertTrue(na.canSpend(em.getPublicKeyString(KeyType.ED25519), "Some entropy", true, KeyType.ED25519));
         System.out.println("NewAdd: " + na.encodeForChain());
 
         try {
-            na = NewAdd.createNew(em.getPublicKeyString(), "Some entropy", AddressLength.SHA512, "AMPEX", true);
+            na = NewAdd.createNew(em.getPublicKeyString(KeyType.ED25519), "Some entropy", AddressLength.SHA512, "AMPEX", true, KeyType.ED25519);
         } catch (InvalidAddressException e) {
             e.printStackTrace();
         }
         System.out.println("NewAdd Prefixed: " + na.encodeForChain());
         assertNotNull(na);
         assertTrue(na.isValid());
-        assertTrue(na.canSpendPrefixed(em.getPublicKeyString(), "Some entropy", "AMPEX", true));
+        assertTrue(na.canSpendPrefixed(em.getPublicKeyString(KeyType.ED25519), "Some entropy", "AMPEX", true, KeyType.ED25519));
         NewAdd badAdd = null;
         try {
-            badAdd = new NewAdd((byte) 125, "33NZkUcUiDLp1Bi7SOVKQUdQH7zHn7czs/4CBw", "vg7DFZd4", AddressLength.SHA224.getIndicator(), true);
+            badAdd = new NewAdd((byte) 125, "33NZkUcUiDLp1Bi7SOVKQUdQH7zHn7czs/4CBw", "vg7DFZd4", AddressLength.SHA224.getIndicator(), true, KeyType.ED25519);
         } catch (InvalidAddressException e) {
             e.printStackTrace();
         }
         assertNotNull(badAdd);
         assertFalse(badAdd.isValid());
         IAddress nb = NewAdd.fromByteArray(na.toByteArray());
+        System.out.println("Na: " + na.encodeForChain());
 
         assertNotNull(nb);
+        System.out.println("Nb: " + nb.encodeForChain());
         assertTrue(nb.hasPrefix());
         assertEquals(na.encodeForChain(), nb.encodeForChain());
         IAddress nc = NewAdd.decodeFromChain(nb.encodeForChain());
@@ -79,7 +81,7 @@ public class AddressTest {
         assertEquals(nb.encodeForChain(), nc.encodeForChain());
 
         try {
-            na = NewAdd.createNew(em.getPublicKeyString(), "Some entropy", AddressLength.SHA512, true);
+            na = NewAdd.createNew(em.getPublicKeyString(KeyType.ED25519), "Some entropy", AddressLength.SHA512, true, KeyType.ED25519);
         } catch (InvalidAddressException e) {
             e.printStackTrace();
         }

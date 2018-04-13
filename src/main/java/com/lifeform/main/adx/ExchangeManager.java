@@ -26,6 +26,7 @@ public class ExchangeManager {
     private OrderBook orderBook;
     private Map<String, Order> pending = new HashMap<>();
     private Map<String, Order> matchPending = new HashMap<>();
+    private List<String> pendingUs = new ArrayList<>();
     public ExchangeManager(IKi ki) {
         this.ki = ki;
         orderBook = new OrderBook(ki);
@@ -90,7 +91,7 @@ public class ExchangeManager {
                 System.out.println("Matched, building  buy transaction3 buying: " + o.pair().accepting() + " with " + o.pair().onOffer());
                 buyingAmountOverage = buyingAmountOverage.subtract(amountBuying.multiply(o.unitPrice()).divide(BigInteger.valueOf(100_000_000)));
                 List<Input> toUs = ki.getTransMan().getInputsForAmountAndToken(o.contractAdd(), amountBuying, o.pair().accepting(), true);
-                if (toUs == null) {
+                if (toUs == null && !pendingUs.contains(o.getTxid())) {
                     toRemove.add(o);
                     ki.getTransMan().unUseUTXOs(inputs);
                     continue;
@@ -127,14 +128,14 @@ public class ExchangeManager {
                     associatedUs.add(i.getID());
                 }
                 System.out.println("Matched, building  buy transaction6");
-                KeySigEntropyPair ksepUs = new KeySigEntropyPair(null, ki.getAddMan().getEntropyForAdd(ki.getAddMan().getMainAdd()), associatedUs, ki.getAddMan().getMainAdd().getPrefix(), ki.getAddMan().getMainAdd().isP2SH());
-                keySigMap.put(ki.getEncryptMan().getPublicKeyString(), ksepUs);
+                KeySigEntropyPair ksepUs = new KeySigEntropyPair(null, ki.getAddMan().getEntropyForAdd(ki.getAddMan().getMainAdd()), associatedUs, ki.getAddMan().getMainAdd().getPrefix(), ki.getAddMan().getMainAdd().isP2SH(), ki.getAddMan().getMainAdd().getKeyType());
+                keySigMap.put(ki.getEncryptMan().getPublicKeyString(ki.getAddMan().getMainAdd().getKeyType()), ksepUs);
                 List<String> associatedThem = new ArrayList<>();
                 for (Input i : toUs) {
                     associatedThem.add(i.getID());
                 }
                 System.out.println("Matched, building  buy transaction7");
-                KeySigEntropyPair ksepThem = new KeySigEntropyPair(Utils.toBase64(new WritableMemory().serializeToBytes()), Utils.toBase64(o.bin().getEntropy()), associatedThem, o.contractAdd().getPrefix(), true);
+                KeySigEntropyPair ksepThem = new KeySigEntropyPair(Utils.toBase64(new WritableMemory().serializeToBytes()), Utils.toBase64(o.bin().getEntropy()), associatedThem, o.contractAdd().getPrefix(), true, KeyType.NONE);
                 keySigMap.put(Utils.toBase64(o.bin().serializeToAmplet().serializeToBytes()), ksepThem);
                 List<Output> outputs = new ArrayList<>();
                 outputs.add(btcPaying);
@@ -149,7 +150,7 @@ public class ExchangeManager {
                 System.out.println("Matched, building  buy transaction8");
                 try {
                     ITrans trans = new NewTrans("ADX transaction", outputs, inputs, keySigMap, TransactionType.NEW_TRANS);
-                    trans.addSig(ki.getEncryptMan().getPublicKeyString(), Utils.toBase64(ki.getEncryptMan().sign(trans.toSignBytes())));
+                    trans.addSig(ki.getEncryptMan().getPublicKeyString(ki.getAddMan().getMainAdd().getKeyType()), Utils.toBase64(ki.getEncryptMan().sign(trans.toSignBytes(), ki.getAddMan().getMainAdd().getKeyType())));
                     if (!ki.getTransMan().verifyTransaction(trans)) {
                         currentStatus = OrderStatus.TRANSACTION_FAILURE;
                         break;
@@ -217,14 +218,14 @@ public class ExchangeManager {
                 String entropy = Utils.toBase64(ent);
                 Binary program = null;
                 try {
-                    program = new Binary(ki.getScriptMan().genericTrade(), constMem, jMem, true, ScriptManager.VERSION, ent, System.currentTimeMillis(), Utils.fromBase64(ki.getEncryptMan().getPublicKeyString()), null, 0);
+                    program = new Binary(ki.getScriptMan().genericTrade(), constMem, jMem, true, ScriptManager.VERSION, ent, System.currentTimeMillis(), Utils.fromBase64(ki.getEncryptMan().getPublicKeyString(ki.getAddMan().getMainAdd().getKeyType())), null, 0);
                 } catch (Exception e) {
                     e.printStackTrace();
                     return OrderStatus.GENERAL_FAILURE;
                 }
                 IAddress contractAdd;
                 try {
-                    contractAdd = NewAdd.createNew(Utils.toBase64(program.serializeToAmplet().serializeToBytes()), entropy, AddressLength.SHA256, true);
+                    contractAdd = NewAdd.createNew(Utils.toBase64(program.serializeToAmplet().serializeToBytes()), entropy, AddressLength.SHA256, true, KeyType.NONE);
                 } catch (InvalidAddressException e) {
                     e.printStackTrace();
                     return OrderStatus.GENERAL_FAILURE;
@@ -280,7 +281,7 @@ public class ExchangeManager {
                 System.out.println("Your add: " + ki.getAddMan().getMainAdd().encodeForChain());
                 System.out.println("Other add: " + o.address().encodeForChain());
                 List<Input> toUs = ki.getTransMan().getInputsForAmountAndToken(o.contractAdd(), amountSelling.multiply(o.unitPrice()).divide(BigInteger.valueOf(100_000_000)), o.pair().onOffer(), true);
-                if (toUs == null) {
+                if (toUs == null && !pendingUs.contains(o.getTxid())) {
                     toRemove.add(o);
                     ki.getTransMan().unUseUTXOs(inputs);
                     continue;
@@ -322,14 +323,14 @@ public class ExchangeManager {
                 for (Input i : ourInputs) {
                     associatedUs.add(i.getID());
                 }
-                KeySigEntropyPair ksepUs = new KeySigEntropyPair(null, ki.getAddMan().getEntropyForAdd(ki.getAddMan().getMainAdd()), associatedUs, ki.getAddMan().getMainAdd().getPrefix(), ki.getAddMan().getMainAdd().isP2SH());
-                keySigMap.put(ki.getEncryptMan().getPublicKeyString(), ksepUs);
+                KeySigEntropyPair ksepUs = new KeySigEntropyPair(null, ki.getAddMan().getEntropyForAdd(ki.getAddMan().getMainAdd()), associatedUs, ki.getAddMan().getMainAdd().getPrefix(), ki.getAddMan().getMainAdd().isP2SH(), ki.getAddMan().getMainAdd().getKeyType());
+                keySigMap.put(ki.getEncryptMan().getPublicKeyString(ki.getAddMan().getMainAdd().getKeyType()), ksepUs);
                 List<String> associatedThem = new ArrayList<>();
                 for (Input i : toUs) {
                     associatedThem.add(i.getID());
                 }
                 System.out.println("Matched, building transaction9");
-                KeySigEntropyPair ksepThem = new KeySigEntropyPair(Utils.toBase64(new WritableMemory().serializeToBytes()), Utils.toBase64(o.bin().getEntropy()), associatedThem, o.contractAdd().getPrefix(), true);
+                KeySigEntropyPair ksepThem = new KeySigEntropyPair(Utils.toBase64(new WritableMemory().serializeToBytes()), Utils.toBase64(o.bin().getEntropy()), associatedThem, o.contractAdd().getPrefix(), true, KeyType.NONE);
                 keySigMap.put(Utils.toBase64(o.bin().serializeToAmplet().serializeToBytes()), ksepThem);
                 List<Output> outputs = new ArrayList<>();
                 outputs.add(originOut);
@@ -343,7 +344,7 @@ public class ExchangeManager {
                 }
                 try {
                     ITrans trans = new NewTrans("ADX transaction", outputs, inputs, keySigMap, TransactionType.NEW_TRANS);
-                    trans.addSig(ki.getEncryptMan().getPublicKeyString(), Utils.toBase64(ki.getEncryptMan().sign(trans.toSignBytes())));
+                    trans.addSig(ki.getEncryptMan().getPublicKeyString(ki.getAddMan().getMainAdd().getKeyType()), Utils.toBase64(ki.getEncryptMan().sign(trans.toSignBytes(), ki.getAddMan().getMainAdd().getKeyType())));
                     if (!ki.getTransMan().verifyTransaction(trans)) {
                         currentStatus = OrderStatus.TRANSACTION_FAILURE;
                         break;
@@ -409,14 +410,14 @@ public class ExchangeManager {
                 String entropy = Utils.toBase64(ent);
                 Binary program = null;
                 try {
-                    program = new Binary(ki.getScriptMan().genericTrade(), constMem, jMem, true, ScriptManager.VERSION, ent, System.currentTimeMillis(), Utils.fromBase64(ki.getEncryptMan().getPublicKeyString()), null, 0);
+                    program = new Binary(ki.getScriptMan().genericTrade(), constMem, jMem, true, ScriptManager.VERSION, ent, System.currentTimeMillis(), Utils.fromBase64(ki.getEncryptMan().getPublicKeyString(ki.getAddMan().getMainAdd().getKeyType())), null, 0);
                 } catch (Exception e) {
                     e.printStackTrace();
                     return OrderStatus.GENERAL_FAILURE;
                 }
                 IAddress contractAdd;
                 try {
-                    contractAdd = NewAdd.createNew(Utils.toBase64(program.serializeToAmplet().serializeToBytes()), entropy, AddressLength.SHA256, true);
+                    contractAdd = NewAdd.createNew(Utils.toBase64(program.serializeToAmplet().serializeToBytes()), entropy, AddressLength.SHA256, true, KeyType.NONE);
                 } catch (InvalidAddressException e) {
                     e.printStackTrace();
                     return OrderStatus.GENERAL_FAILURE;
@@ -445,6 +446,7 @@ public class ExchangeManager {
             ki.getTransMan().getPending().add(funding);
             ki.getNetMan().broadcast(tp);
             OrderPacket op = new OrderPacket();
+            pendingUs.add(order.getTxid());
             op.order = order.serializeToBytes();
             op.transaction = funding.getID();
             ki.getNetMan().broadcast(op);
@@ -526,16 +528,17 @@ public class ExchangeManager {
                     for (Input i : cIns) {
                         associatedContract.add(i.getID());
                     }
-                    KeySigEntropyPair cKSEP = new KeySigEntropyPair(null, Utils.toBase64(o.bin().getEntropy()), associatedContract, o.contractAdd().getPrefix(), true);
+                    KeySigEntropyPair cKSEP = new KeySigEntropyPair(null, Utils.toBase64(o.bin().getEntropy()), associatedContract, o.contractAdd().getPrefix(), true, KeyType.NONE);
                     keySigMap.put(Utils.toBase64(o.bin().serializeToAmplet().serializeToBytes()), cKSEP);
-                    KeySigEntropyPair fKESP = new KeySigEntropyPair(null, ki.getAddMan().getEntropyForAdd(o.address()), associatedFee, o.address().getPrefix(), o.address().isP2SH());
-                    keySigMap.put(ki.getEncryptMan().getPublicKeyString(), fKESP);
+                    KeySigEntropyPair fKESP = new KeySigEntropyPair(null, ki.getAddMan().getEntropyForAdd(o.address()), associatedFee, o.address().getPrefix(), o.address().isP2SH(), ki.getAddMan().getMainAdd().getKeyType());
+                    keySigMap.put(ki.getEncryptMan().getPublicKeyString(ki.getAddMan().getMainAdd().getKeyType()), fKESP);
                     try {
                         ITrans trans = new NewTrans("Cancelled ADX order", outputs, inputs, keySigMap, TransactionType.NEW_TRANS);
                         WritableMemory wm = new WritableMemory();
-                        wm.setElement(ki.getEncryptMan().sign(trans.toSignBytes()), 0);
+                        wm.setElement(ki.getEncryptMan().sign(trans.toSignBytes(), ki.getAddMan().getMainAdd().getKeyType()), 0);
+                        wm.setElement(new DataElement(new byte[]{o.address().getKeyType().getValue()}), 1);
                         trans.addSig(Utils.toBase64(o.bin().serializeToAmplet().serializeToBytes()), Utils.toBase64(wm.serializeToBytes()));
-                        trans.addSig(ki.getEncryptMan().getPublicKeyString(), Utils.toBase64(ki.getEncryptMan().sign(trans.toSignBytes())));
+                        trans.addSig(ki.getEncryptMan().getPublicKeyString(ki.getAddMan().getMainAdd().getKeyType()), Utils.toBase64(ki.getEncryptMan().sign(trans.toSignBytes(), ki.getAddMan().getMainAdd().getKeyType())));
                         TransactionPacket tp = new TransactionPacket();
                         if (ki.getTransMan().verifyTransaction(trans)) {
                             ki.getTransMan().getPending().add(trans);
@@ -543,7 +546,7 @@ public class ExchangeManager {
                             ki.getNetMan().broadcast(tp);
                             OrderCancelled oc = new OrderCancelled();
                             oc.ID = o.getID();
-                            oc.sig = ki.getEncryptMan().sign(o.serializeToBytes());
+                            oc.sig = ki.getEncryptMan().sign(o.serializeToBytes(), ki.getAddMan().getMainAdd().getKeyType());
                             ki.getNetMan().broadcast(oc);
                             orderBook.removeOrder(o);
                             return true;
@@ -569,7 +572,7 @@ public class ExchangeManager {
     public void cancelRequest(String ID, byte[] sig) {
         Order o = orders.get(ID);
         if (o != null) {
-            if (EncryptionManager.verifySig(o.serializeToBytes(), sig, Utils.toBase64(o.bin().getPublicKey()))) {
+            if (EncryptionManager.verifySig(o.serializeToBytes(), sig, Utils.toBase64(o.bin().getPublicKey()), o.address().getKeyType())) {
                 orderBook.removeOrder(o);
             }
         }
@@ -589,6 +592,7 @@ public class ExchangeManager {
         if (matchPending.get(txid) != null) {
             addMatched(matchPending.get(txid));
         }
+        pendingUs.remove(txid);
     }
 
     public void addMatchPending(String txID, Order order) {

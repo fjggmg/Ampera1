@@ -7,7 +7,7 @@ import java.util.List;
  */
 public interface IAddMan {
 
-    IAddress getNewAdd();
+    IAddress getNewAdd(KeyType keyType);
 
     List<IAddress> getActive();
 
@@ -26,7 +26,7 @@ public interface IAddMan {
 
     void setMainAdd(IAddress a);
 
-    IAddress createNew(String binOrKey, String entropy, String prefix, AddressLength l, boolean p2sh);
+    IAddress createNew(String binOrKey, String entropy, String prefix, AddressLength l, boolean p2sh, KeyType keyType);
 
     List<IAddress> getAll();
 

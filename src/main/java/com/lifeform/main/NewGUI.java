@@ -149,7 +149,9 @@ public class NewGUI {
     public JFXListView<Order> activePrice;
     public JFXListView<Order> activeAmount;
     public JFXPasswordField confirmPassword;
-    public CandlestickGraph exchangeGraph;
+    public VBox addressControls;
+    public JFXComboBox<String> addressLength;
+    private CandlestickGraph exchangeGraph;
     public VBox passwordVbox;
     public VBox exchangeGraphBox;
     public Label currentOpen;
@@ -177,6 +179,14 @@ public class NewGUI {
     public JFXButton limitBuy;
     public HBox priceHBox;
     public VBox exControlsBox;
+    public JFXButton singleSig;
+    public JFXButton multiSig;
+    public JFXComboBox<String> keyType;
+    public VBox multiSigVbox;
+    public JFXTextField addPubKey;
+    public JFXButton addKeyBtn;
+    public JFXComboBox sigsRequired;
+    public JFXButton clearKeys;
     //endregion
     private BigInteger unitMultiplierPrice = BigInteger.valueOf(100);
     private BigInteger unitMultiplierAmount = BigInteger.valueOf(100);
@@ -186,7 +196,7 @@ public class NewGUI {
     private volatile boolean run = true;
     private Map<String, BigInteger> heightMap = new HashMap<>();
     private List<ITrans> sTrans = new CopyOnWriteArrayList<>();
-
+    private boolean createMultiSig = false;
     public NewGUI() {
         ki = Ki.getInstance();
         transactions = FXCollections.observableArrayList();
@@ -990,6 +1000,21 @@ public class NewGUI {
         } catch (Exception e) {
             ki.getMainLog().error("Error loading saved transactions for GUI: ", e);
         }
+        addressControls.getChildren().remove(multiSigVbox);
+        singleSig.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                createMultiSig = false;
+                addressControls.getChildren().remove(multiSigVbox);
+            }
+        });
+        multiSig.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                createMultiSig = true;
+                addressControls.getChildren().add(multiSigVbox);
+            }
+        });
         miningDataHbox.setSpacing(10);
         addressLabel.setText("Address - " + ki.getAddMan().getMainAdd().encodeForChain());
         syncProgress.setProgress(0);
@@ -1188,6 +1213,15 @@ public class NewGUI {
         });
         entropyLabel.setWrapText(true);
         entropyLabel.setMaxWidth(256);
+        for (KeyType type : KeyType.values()) {
+            if (!type.equals(KeyType.NONE))
+                keyType.getItems().add(type.toString());
+        }
+        for (AddressLength l : AddressLength.values()) {
+            addressLength.getItems().add(l.toString());
+        }
+        addressLength.getSelectionModel().select(0);
+        keyType.getSelectionModel().select(0);
         addressList.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<String>() {
             @Override
             public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
@@ -1197,7 +1231,7 @@ public class NewGUI {
         createAddress.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
-                IAddress a = ki.getAddMan().createNew(ki.getEncryptMan().getPublicKeyString(), entropyField.getText(), null, AddressLength.SHA256, false);
+                IAddress a = ki.getAddMan().createNew(ki.getEncryptMan().getPublicKeyString(KeyType.valueOf(keyType.getSelectionModel().getSelectedItem())), entropyField.getText(), null, AddressLength.SHA256, false, KeyType.valueOf(keyType.getSelectionModel().getSelectedItem()));
                 addressList.getItems().add(a.encodeForChain());
             }
         });
@@ -1382,6 +1416,10 @@ public class NewGUI {
                 buyLabel.setTextFill(Color.valueOf("#18BC9C"));
                 poolDynamicFeeSlider.setStyle("-jfx-default-thumb:" + color);
                 payoutSlider.setStyle("-jfx-default-thumb:" + color);
+                addKeyBtn.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
+                singleSig.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
+                multiSig.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
+                clearKeys.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
 
                 ki.setStringSetting(StringSettings.PRIMARY_COLOR, color);
 
@@ -1453,7 +1491,7 @@ public class NewGUI {
         sendButton.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
-                if (ki.getEncryptMan().getPublicKey() != null) {
+                if (ki.getEncryptMan().getPublicKey(ki.getAddMan().getMainAdd().getKeyType()) != null) {
 
                     Token token = Token.byName(tokenBox.getSelectionModel().getSelectedItem().getText());
 
@@ -1474,7 +1512,7 @@ public class NewGUI {
                     java.util.List<Output> outputs = new ArrayList<>();
                     outputs.add(output);
                     java.util.List<String> keys = new ArrayList<>();
-                    keys.add(ki.getEncryptMan().getPublicKeyString());
+                    keys.add(ki.getEncryptMan().getPublicKeyString(ki.getAddMan().getMainAdd().getKeyType()));
                     java.util.List<Input> inputs = new ArrayList<>();
                     BigInteger fee;
                     if (feeText.getText() == null || feeText.getText().isEmpty()) {

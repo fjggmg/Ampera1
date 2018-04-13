@@ -41,7 +41,7 @@ public class Handshake implements Serializable, Packet {
             connMan.disconnect();
             return;
         }
-        if (ID.equals(EncryptionManager.sha224(ki.getEncryptMan().getPublicKeyString() + startTime))) {
+        if (ID.equals(EncryptionManager.sha224(ki.getEncryptMan().getPublicKeyString(ki.getAddMan().getMainAdd().getKeyType()) + startTime))) {
             ki.debug("Connected to ourself, disconnecting");
             connMan.disconnect();
             return;

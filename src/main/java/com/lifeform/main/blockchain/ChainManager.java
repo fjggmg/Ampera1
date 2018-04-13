@@ -443,7 +443,7 @@ public class ChainManager implements IChainMan {
         //setHeight(block.height);
 
         if (!ki.getOptions().nogui) {
-            if (ki.getEncryptMan().getPublicKeyString().equals(block.solver)) {
+            if (ki.getEncryptMan().getPublicKeyString(KeyType.BRAINPOOLP512T1).equals(block.solver) || ki.getEncryptMan().getPublicKeyString(KeyType.ED25519).equals(block.solver)) {
                 while (ki.getGUIHook() == null) {
                 }
                 ki.getGUIHook().blockFound();
@@ -639,7 +639,7 @@ public class ChainManager implements IChainMan {
     @Override
     public Block formEmptyBlock(BigInteger minFee) {
         Block b = new Block();
-        b.solver = ki.getEncryptMan().getPublicKeyString();
+        b.solver = ki.getEncryptMan().getPublicKeyString(ki.getAddMan().getMainAdd().getKeyType());
         b.timestamp = System.currentTimeMillis();
 
         Map<String,ITrans> transactions = new HashMap<>();

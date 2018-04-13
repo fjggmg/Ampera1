@@ -4,6 +4,7 @@ import amp.ByteTools;
 import com.lifeform.main.data.EncryptionManager;
 import com.lifeform.main.data.Utils;
 import com.lifeform.main.transactions.ITrans;
+import com.lifeform.main.transactions.KeyType;
 import com.lifeform.main.transactions.scripting.Opcodes;
 import engine.binary.Binary;
 import engine.data.ConstantMemory;
@@ -36,7 +37,8 @@ public class VSigValS implements IOperator {
         System.out.println("Result Currently: " + result);
         byte[] sig = stack.pop().getData();
         byte[] key = stack.pop().getData();
-        result = (result + ((EncryptionManager.verifySig(signed, sig, Utils.toBase64(key))) ? 1 : 0));
+        KeyType keyType = KeyType.byValue(stack.pop().getDataAsByte());
+        result = (result + ((EncryptionManager.verifySig(signed, sig, Utils.toBase64(key), keyType)) ? 1 : 0));
         stack.push(DataElement.create(ByteTools.deconstructInt(result)));
     }
 

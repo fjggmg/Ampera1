@@ -222,7 +222,7 @@ public class Transaction implements ITrans {
                 Ki.getInstance().debug("Entropy for this address: " + i.getAddress().encodeForChain() + " is null");
                 return false;
             }
-            if (!i.canSpend(keys.get(0), entropyMap.get(i.getAddress().encodeForChain()), null, i.getAddress().isP2SH()))
+            if (!i.canSpend(keys.get(0), entropyMap.get(i.getAddress().encodeForChain()), null, i.getAddress().isP2SH(), i.getAddress().getKeyType()))
                 return false;
         }
         return true;
@@ -345,8 +345,8 @@ public class Transaction implements ITrans {
         for(String key:keySigMap.keySet())
         {
             if (type.equals(TransactionType.STANDARD))
-                if (EncryptionManager.verifySig(toSign(), keySigMap.get(key), key)) vCount++;
-                else if (EncryptionManager.verifySig(toSignBytes(), Utils.fromBase64(keySigMap.get(key)), key))
+                if (EncryptionManager.verifySig(toSign(), keySigMap.get(key), key, KeyType.BRAINPOOLP512T1)) vCount++;
+                else if (EncryptionManager.verifySig(toSignBytes(), Utils.fromBase64(keySigMap.get(key)), key, KeyType.BRAINPOOLP512T1))
                     vCount++;
             if(vCount >= sigsRequired)
             {

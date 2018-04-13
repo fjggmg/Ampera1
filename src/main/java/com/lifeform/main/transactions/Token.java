@@ -5,7 +5,7 @@ package com.lifeform.main.transactions;
  */
 public enum Token {
 
-    ORIGIN("Origin"),
+    ORIGIN("Ampera"),
     KI("Eko"),
     BITCOIN("Bitcoin"),
     GOLD("Gold"),

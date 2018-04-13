@@ -97,134 +97,7 @@ public class InputHandler extends Thread {
                         i++;
                     }
                 } else if (line.startsWith("sendTransaction")) {
-                    String[] lines = line.split(" ");
-                    if (lines.length < 4) {
-                        ki.getMainLog().info("Not enough arguments");
-                    } else {
-                        IAddress receiver = Address.decodeFromChain(lines[1]);
-                        if (receiver.isValid()) {
-                            double amt;
-                            try {
-                                amt = Double.parseDouble(lines[2]);
 
-                            } catch (Exception e) {
-                                ki.getMainLog().info("Invalid amount");
-                                continue;
-                            }
-                            Token token;
-                            try {
-                                token = Token.valueOf(lines[3]);
-                            } catch (Exception e) {
-                                ki.getMainLog().info("Invalid token");
-                                continue;
-                            }
-
-                            double dFee = 0;
-                            if (lines.length >= 5) {
-                                try {
-                                    dFee = Double.parseDouble(lines[4]);
-                                } catch (Exception e) {
-                                    ki.getMainLog().info("Invalid fee");
-                                    continue;
-                                }
-                            }
-                            StringBuilder messageBuilder = new StringBuilder();
-                            if (lines.length >= 6) {
-                                for (int i = 5; i < lines.length; i++) {
-                                    messageBuilder.append(lines[i]);
-                                    messageBuilder.append(" ");
-                                }
-                            }
-                            String message = messageBuilder.toString();
-
-                            long lAmt = (long) (amt * 100000000D);
-                            BigInteger amount = BigInteger.valueOf(lAmt);
-                            int index = 0;
-                            Output output = new Output(amount, receiver, token, index, System.currentTimeMillis(), (byte) 2);
-                            java.util.List<Output> outputs = new ArrayList<>();
-                            outputs.add(output);
-                            java.util.List<String> keys = new ArrayList<>();
-                            keys.add(ki.getEncryptMan().getPublicKeyString());
-                            java.util.List<Input> inputs = new ArrayList<>();
-                            BigInteger fee;
-
-                            long lFee = (long) (dFee * 100000000D);
-                            fee = BigInteger.valueOf(lFee);
-
-                            ki.getMainLog().info("Fee is: " + fee.toString());
-
-                            BigInteger totalInput = BigInteger.ZERO;
-                            for (IAddress a : ki.getAddMan().getActive()) {
-                                if (ki.getTransMan().getUTXOs(a, true) == null) return;
-                                for (Output o : ki.getTransMan().getUTXOs(a, true)) {
-                                    if (o.getToken().equals(token)) {
-                                        if (inputs.contains(Input.fromOutput(o))) continue;
-                                        inputs.add(Input.fromOutput(o));
-                                        totalInput = totalInput.add(o.getAmount());
-                                        if (totalInput.compareTo(amount) >= 0) break;
-
-                                    }
-                                }
-                                if (totalInput.compareTo(amount) >= 0) break;
-
-                            }
-                            if (totalInput.compareTo(amount) < 0) {
-                                ki.getMainLog().info("Not enough " + token.name() + " to do this transaction");
-                                return; // not enough of this token to send;
-                            }
-
-                            BigInteger feeInput = (token.equals(Token.ORIGIN)) ? totalInput : BigInteger.ZERO;
-                            for (IAddress a : ki.getAddMan().getActive()) {
-                                //get inputs
-                                if (feeInput.compareTo(fee) >= 0) break;
-                                for (Output o : ki.getTransMan().getUTXOs(a, true)) {
-                                    if (o.getToken().equals(Token.ORIGIN)) {
-                                        inputs.add(Input.fromOutput(o));
-                                        feeInput = feeInput.add(o.getAmount());
-                                        if (feeInput.compareTo(fee) >= 0) break;
-
-                                    }
-                                }
-
-
-                            }
-
-                            if (feeInput.compareTo(fee) < 0) {
-                                ki.getMainLog().info("Not enough origin to pay for this fee");
-                                continue; //not enough origin to send this kind of fee
-                            }
-
-                            Map<String, String> entropyMap = new HashMap<>();
-
-                            for (Input i : inputs) {
-                                if (entropyMap.containsKey(i.getAddress().encodeForChain())) continue;
-                                entropyMap.put(i.getAddress().encodeForChain(), ki.getAddMan().getEntropyForAdd(i.getAddress()));
-                                ki.getMainLog().info("Matching: " + i.getAddress().encodeForChain() + " with " + ki.getAddMan().getEntropyForAdd(i.getAddress()));
-                            }
-
-
-                            ITrans trans = new Transaction(message, 1, null, outputs, inputs, entropyMap, keys, TransactionType.STANDARD);
-                            ki.debug("Transaction has: " + trans.getOutputs().size() + " Outputs before finalization");
-                            trans.makeChange(fee, ki.getAddMan().getMainAdd()); // TODO this just sends change back to the main address......will need to give option later
-                            trans.addSig(ki.getEncryptMan().getPublicKeyString(), ki.getEncryptMan().sign(trans.toSign()));
-                            ki.debug("Transaction has: " + trans.getOutputs().size() + "Outputs after finalization");
-                            if (ki.getTransMan().verifyTransaction(trans)) {
-                                ki.getTransMan().getPending().add(trans);
-                                for (Input i : trans.getInputs()) {
-                                    ki.getTransMan().getUsedUTXOs().add(i.getID());
-                                }
-                                TransactionPacket tp = new TransactionPacket();
-                                tp.trans = trans.serializeToAmplet().serializeToBytes();
-                                ki.getNetMan().broadcast(tp);
-                            } else {
-                                ki.debug("Transaction did not verify, not sending and not adding to pending list");
-                            }
-
-                        } else {
-                            ki.getMainLog().info("Invalid address");
-                        }
-
-                    }
                 } else if (line.startsWith("relays")) {
                     ki.getMainLog().info("Relay list: ");
                     for (String relay : ki.getNetMan().getRelays()) {
@@ -501,7 +374,7 @@ public class InputHandler extends Thread {
                 } else {
                     System.out.println("unrecognized input");
                 }
-            } catch (IOException | InvalidTransactionException e) {
+            } catch (IOException e) {
                 e.printStackTrace();
             }
 

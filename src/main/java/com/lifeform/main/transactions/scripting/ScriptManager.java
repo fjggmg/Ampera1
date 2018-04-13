@@ -18,7 +18,7 @@ public class ScriptManager {
     private IKi ki;
     public static final int GEN_TRADE_FAIL_JUMP = 43;
     public static final int GEN_TRADE_CANCEL_JUMP = 46;
-    public static final int GEN_TRADE_CANCEL_FAIL_JUMP = 65;
+    public static final int GEN_TRADE_CANCEL_FAIL_JUMP = 67;
     public static final byte VERSION = 1;
 
     public ScriptManager(ByteCodeEngine bce8, ByteCodeEngine bce16, IKi ki) {
@@ -56,7 +56,7 @@ public class ScriptManager {
                     "PI0", "LCSK", "PI4", "LCSK", "VRAT", "BRN0", "PI1", "LCSK", "PI1", "LOTTS", "SEQ", "BRN0",
                     "PI2", "LCSK", "PI0", "LOTTS", "SEQ", "BRN0", "CSK", "PI0", "TERM", "CSK", "PI1", "TERM",
                     "PI0", "LOATS", "PI3", "LCSK", "VAS", "BRN2", "PI1", "LOATS", "PI3", "LCSK", "VAS", "BRN2",
-                    "PI0", "LMSK", "VBS", "BRN2", "CSK", "PI0", "TERM", "CSK", "PI1", "TERM"), bce8);
+                    "PI0", "LMSK", "PI1", "LMSK", "VBS", "BRN2", "CSK", "PI0", "TERM", "CSK", "PI1", "TERM"), bce8);
             genTrade = new Program(gTrade);
         } catch (Exception e) {
             ki.getMainLog().error("Exception compiling general trade script", e);

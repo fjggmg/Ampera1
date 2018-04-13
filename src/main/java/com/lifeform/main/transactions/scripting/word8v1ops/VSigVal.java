@@ -3,6 +3,7 @@ package com.lifeform.main.transactions.scripting.word8v1ops;
 import com.lifeform.main.data.EncryptionManager;
 import com.lifeform.main.data.Utils;
 import com.lifeform.main.transactions.ITrans;
+import com.lifeform.main.transactions.KeyType;
 import com.lifeform.main.transactions.scripting.Opcodes;
 import engine.binary.Binary;
 import engine.data.ConstantMemory;
@@ -31,9 +32,9 @@ public class VSigVal implements IOperator {
         byte[] signed = stack.pop().getData();
         byte[] sig = stack.pop().getData();
         byte[] key = stack.pop().getData();
-
+        KeyType keyType = KeyType.byValue(stack.pop().getDataAsByte());
         byte[] result = new byte[1];
-        result[0] = (EncryptionManager.verifySig(signed, sig, Utils.toBase64(key))) ? (byte) 1 : (byte) 0;
+        result[0] = (EncryptionManager.verifySig(signed, sig, Utils.toBase64(key), keyType)) ? (byte) 1 : (byte) 0;
         stack.push(DataElement.create(result));
     }
 

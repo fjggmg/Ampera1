@@ -2,6 +2,7 @@ package com.lifeform.main.data;
 
 import com.lifeform.main.IKi;
 import com.lifeform.main.data.files.StringFileHandler;
+import com.lifeform.main.transactions.KeyType;
 import net.i2p.crypto.eddsa.EdDSAEngine;
 import net.i2p.crypto.eddsa.EdDSASecurityProvider;
 import net.i2p.crypto.eddsa.spec.EdDSAGenParameterSpec;
@@ -26,7 +27,7 @@ public class EncryptionManager  implements IEncryptMan{
     public static final String KEY_PADDING = "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE";
     public static final String KEY_PROTOCOL = "brainpoolp512t1";
     public static final String ED_PROTOCOL = "Ed25519";
-    private static boolean isEC = true;
+
     private IKi ki;
     public EncryptionManager(IKi ki){
         this.ki = ki;
@@ -184,20 +185,19 @@ public class EncryptionManager  implements IEncryptMan{
 
 
     private KeyPair pair;
+    private KeyPair edPair;
 
-    public KeyPair generateEDkeys() {
+    public KeyPair generateEDKeys() {
         try {
             KeyPairGenerator gen = KeyPairGenerator.getInstance("EDDSA");
             SecureRandom random = SecureRandom.getInstance("SHA1PRNG");
             EdDSAGenParameterSpec edspec = new EdDSAGenParameterSpec(ED_PROTOCOL);
             gen.initialize(edspec, random);
             KeyPair pair = gen.generateKeyPair();
-            this.pair = pair;
-            isEC = false;
+            this.edPair = pair;
+
             return pair;
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        } catch (InvalidAlgorithmParameterException e) {
+        } catch (NoSuchAlgorithmException | InvalidAlgorithmParameterException e) {
             e.printStackTrace();
         }
         return null;
@@ -246,8 +246,10 @@ public class EncryptionManager  implements IEncryptMan{
         }
         return null;
     }
-    public static PublicKey pubKeyFromString(String key) {
 
+    public static PublicKey pubKeyFromString(String key, KeyType keyType) {
+
+        if (keyType.equals(KeyType.ED25519)) return pubKeyFromStringED(key);
         KeyFactory keyFactory = null;
         try {
             keyFactory = KeyFactory.getInstance("ECDSA","BC");
@@ -255,12 +257,10 @@ public class EncryptionManager  implements IEncryptMan{
 
             PublicKey publicKey = keyFactory.generatePublic(publicKeySpec);
             return publicKey;
-        } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
+        } catch (NoSuchAlgorithmException | InvalidKeySpecException | NoSuchProviderException e) {
             e.printStackTrace();
             //logger.error(e.getMessage());
             //logger.debug("Could not read public key from string");
-        } catch (NoSuchProviderException e) {
-            e.printStackTrace();
         }
         return null;
     }
@@ -283,7 +283,7 @@ public class EncryptionManager  implements IEncryptMan{
     }
 
 
-    public PrivateKey privKeyFromString(String key) {
+    public PrivateKey privKeyFromString(String key, KeyType keyType) {
 
 
         byte[] encodedPrivateKey = Utils.fromBase64(key);
@@ -305,15 +305,27 @@ public class EncryptionManager  implements IEncryptMan{
     }
 
 
-    public PublicKey getPublicKey() {
-        if(pair == null) return null;
-        return pair.getPublic();
+    public PublicKey getPublicKey(KeyType keyType) {
+        if (keyType.equals(KeyType.BRAINPOOLP512T1)) {
+            if (pair == null) return null;
+            return pair.getPublic();
+        } else if (keyType.equals(KeyType.ED25519)) {
+            if (edPair == null) return null;
+            return edPair.getPublic();
+        }
+        return null;
     }
 
 
-    public PrivateKey getPrivateKey() {
-        if(pair == null) return null;
-        return pair.getPrivate();
+    public PrivateKey getPrivateKey(KeyType keyType) {
+        if (keyType.equals(KeyType.BRAINPOOLP512T1)) {
+            if (pair == null) return null;
+            return pair.getPrivate();
+        } else if (keyType.equals(KeyType.ED25519)) {
+            if (edPair == null) return null;
+            return edPair.getPrivate();
+        }
+        return null;
     }
 
 
@@ -322,38 +334,59 @@ public class EncryptionManager  implements IEncryptMan{
 
         //PublicKey pubKey = pubKeyFromString( trion.getDataMan().getStringFileHandler("pub." + KEY_FILE).getLine(0));
         StringFileHandler fh = new StringFileHandler(ki,KEY_FILE + ".pubk");
-        PublicKey pubKey = pubKeyFromString(fh.getLine(0));
+        PublicKey pubKey = pubKeyFromString(fh.getLine(0), KeyType.BRAINPOOLP512T1);
         fh = new StringFileHandler(ki,KEY_FILE + ".privk");
-        PrivateKey privKey = privKeyFromString(fh.getLine(0));
+        PrivateKey privKey = privKeyFromString(fh.getLine(0), KeyType.BRAINPOOLP512T1);
         //PrivateKey privKey = privKeyFromString( trion.getDataMan().getStringFileHandler("priv." + KEY_FILE).getLine(0));
         KeyPair pair = new KeyPair(pubKey,privKey);
         this.pair = pair;
         return pair;
     }
 
+    public KeyPair loadEDKeys() {
 
+
+        //PublicKey pubKey = pubKeyFromString( trion.getDataMan().getStringFileHandler("pub." + KEY_FILE).getLine(0));
+        StringFileHandler fh = new StringFileHandler(ki, KEY_FILE + ".pubkED");
+        PublicKey pubKey = pubKeyFromString(fh.getLine(0), KeyType.ED25519);
+        fh = new StringFileHandler(ki, KEY_FILE + ".privkED");
+        PrivateKey privKey = privKeyFromString(fh.getLine(0), KeyType.ED25519);
+        //PrivateKey privKey = privKeyFromString( trion.getDataMan().getStringFileHandler("priv." + KEY_FILE).getLine(0));
+        KeyPair pair = new KeyPair(pubKey, privKey);
+        this.pair = pair;
+        return pair;
+    }
     public void saveKeys()
     {
         StringFileHandler fh = new StringFileHandler(ki,KEY_FILE + ".pubk");
-        fh.replaceLine(0,Utils.toBase64(getPublicKey().getEncoded()));
+        fh.replaceLine(0, Utils.toBase64(getPublicKey(KeyType.BRAINPOOLP512T1).getEncoded()));
         fh = new StringFileHandler(ki,KEY_FILE + ".privk");
-        fh.replaceLine(0,Utils.toBase64(getPrivateKey().getEncoded()));
+        fh.replaceLine(0, Utils.toBase64(getPrivateKey(KeyType.BRAINPOOLP512T1).getEncoded()));
         //trion.getDataMan().saveStringToFlatFile("pub." + KEY_FILE, Utils.toHexArray(getPublicKey().getEncoded()));
         //trion.getDataMan().saveStringToFlatFile("priv." + KEY_FILE, Utils.toHexArray(getPrivateKey().getEncoded()));
         //logger.debug("Saved keys.");
     }
 
+    @Override
+    public void saveEDKeys() {
+        StringFileHandler fh = new StringFileHandler(ki, KEY_FILE + ".pubkED");
+        fh.replaceLine(0, Utils.toBase64(getPublicKey(KeyType.ED25519).getEncoded()));
+        fh = new StringFileHandler(ki, KEY_FILE + ".privkED");
+        fh.replaceLine(0, Utils.toBase64(getPrivateKey(KeyType.ED25519).getEncoded()));
+    }
 
-    public String getPublicKeyString()
+
+    public String getPublicKeyString(KeyType keyType)
     {
-        String key = Utils.toBase64(getPublicKey().getEncoded());
-        key = key.replaceFirst(KEY_PADDING,"");
+        String key = Utils.toBase64(getPublicKey(keyType).getEncoded());
+        //key = key.replaceFirst(KEY_PADDING,"");
         return key;
     }
-    public String sign(String toSign) {
+
+    public String sign(String toSign, KeyType type) {
         try {
             Signature sig = Signature.getInstance("SHA1withECDSA");
-            sig.initSign(getPrivateKey());
+            sig.initSign(getPrivateKey(type));
             sig.update(toSign.getBytes("UTF-8"));
 
             return Utils.toBase64(sig.sign());
@@ -365,16 +398,16 @@ public class EncryptionManager  implements IEncryptMan{
         return null;
     }
 
-    public byte[] sign(byte[] toSign) {
+    public byte[] sign(byte[] toSign, KeyType type) {
         try {
             Signature sig;
-            if (isEC) {
+            if (type.equals(KeyType.BRAINPOOLP512T1)) {
                 sig = Signature.getInstance("SHA1withECDSA", "BC");
             } else {
                 EdDSAParameterSpec spec = EdDSANamedCurveTable.getByName(ED_PROTOCOL);
                 sig = new EdDSAEngine((MessageDigest.getInstance(spec.getHashAlgorithm())));
             }
-            sig.initSign(getPrivateKey());
+            sig.initSign(getPrivateKey(type));
             sig.update(toSign);
             return sig.sign();
         } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException | NoSuchProviderException e) {
@@ -385,13 +418,19 @@ public class EncryptionManager  implements IEncryptMan{
     }
 
 
-    public static boolean verifySig(String signed, String sig, String pubKey) {
+    public static boolean verifySig(String signed, String sig, String pubKey, KeyType keyType) {
         try {
             //logger.debug("Signed: " + signed);
             //logger.debug("Sig: " + sig);
             //logger.debug("PubKey: " + pubKey);
-            Signature signature = Signature.getInstance("SHA1withECDSA");
-            signature.initVerify(pubKeyFromString(pubKey));
+            Signature signature;
+            if (keyType.equals(KeyType.BRAINPOOLP512T1))
+                signature = Signature.getInstance("SHA1withECDSA");
+            else {
+                EdDSAParameterSpec spec = EdDSANamedCurveTable.getByName(ED_PROTOCOL);
+                signature = new EdDSAEngine((MessageDigest.getInstance(spec.getHashAlgorithm())));
+            }
+            signature.initVerify(pubKeyFromString(pubKey, keyType));
             signature.update(signed.getBytes("UTF-8"));
             return signature.verify(Utils.fromBase64(sig));
         } catch (UnsupportedEncodingException | SignatureException | InvalidKeyException | NoSuchAlgorithmException e) {
@@ -401,15 +440,19 @@ public class EncryptionManager  implements IEncryptMan{
 
     }
 
-    public static boolean verifySig(byte[] signed, byte[] sig, String pubKey) {
+    public static boolean verifySig(byte[] signed, byte[] sig, String pubKey, KeyType keyType) {
         try {
             //logger.debug("Signed: " + signed);
             //logger.debug("Sig: " + sig);
             //logger.debug("PubKey: " + pubKey);
-            Signature signature = Signature.getInstance("SHA1withECDSA");
-            //EdDSAParameterSpec spec = EdDSANamedCurveTable.getByName(ED_PROTOCOL);
-            //Signature signature = new EdDSAEngine((MessageDigest.getInstance(spec.getHashAlgorithm())));
-            signature.initVerify(pubKeyFromString(pubKey));
+            Signature signature;
+            if (keyType.equals(KeyType.BRAINPOOLP512T1))
+                signature = Signature.getInstance("SHA1withECDSA");
+            else {
+                EdDSAParameterSpec spec = EdDSANamedCurveTable.getByName(ED_PROTOCOL);
+                signature = new EdDSAEngine((MessageDigest.getInstance(spec.getHashAlgorithm())));
+            }
+            signature.initVerify(pubKeyFromString(pubKey, keyType));
             signature.update(signed);
             return signature.verify(sig);
         } catch (SignatureException | InvalidKeyException | NoSuchAlgorithmException e) {

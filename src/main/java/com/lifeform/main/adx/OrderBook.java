@@ -208,7 +208,8 @@ public class OrderBook {
     }
 
     public void close() {
-        obMap.clear();
+        if (ki.getOptions().lite) return;
+        obMap.clearSafe();
         HeadlessPrefixedAmplet hpa = HeadlessPrefixedAmplet.create();
         for (Order o : buys) {
             hpa.addBytes(o.serializeToBytes());
@@ -241,6 +242,7 @@ public class OrderBook {
     }
 
     public void load() {
+        if (ki.getOptions().lite) return;
         if (obMap.getBytes("buys") != null) {
             HeadlessPrefixedAmplet hpa = HeadlessPrefixedAmplet.create(obMap.getBytes("buys"));
             if (hpa != null && hpa.hasNextElement()) {

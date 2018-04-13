@@ -79,6 +79,7 @@ public class Ki extends Thread implements IKi {
     private ScriptManager scriptMan;
     private ExchangeManager exchangeMan;
     public Ki(Options o) {
+        this.o = o;
         System.setProperty("log4j.configurationFile", "log4j.xml");
         AmpLogging.startLogging();
         PoolLogging.startLogging();
@@ -154,11 +155,18 @@ public class Ki extends Thread implements IKi {
             ki.getEncryptMan().generateKeys();
             ki.getEncryptMan().saveKeys();
         }
+        try {
+            ki.getEncryptMan().loadEDKeys();
+        } catch (Exception e) {
+            ki.getEncryptMan().generateEDKeys();
+            ki.getEncryptMan().saveEDKeys();
+        }
         addMan = new AddressManager(this);
         addMan.load();
         if (addMan.getMainAdd() == null) {
-            addMan.setMainAdd(addMan.getNewAdd());
+            addMan.setMainAdd(addMan.getNewAdd(KeyType.ED25519));
         }
+        System.out.println("Main type: " + addMan.getMainAdd().getKeyType());
         exchangeMan = new ExchangeManager(this);
         if (o.relay) {
             //this is for some monitoring stuff available by the getThreads command
@@ -169,7 +177,7 @@ public class Ki extends Thread implements IKi {
         ContextMaster.disableCUDA();
         ih = new InputHandler(this);
         ih.start();
-        this.o = o;
+
         instance = this;
         relay = o.relay;
         if (o.pool) {
@@ -208,7 +216,7 @@ public class Ki extends Thread implements IKi {
         }
         if (o.poolRelay) {
             try {
-                miningPool = new Pool(null, new BigInteger("00000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF", 16), 0, getEncryptMan().getPublicKeyString(), new KiEventHandler(this));
+                miningPool = new Pool(null, new BigInteger("00000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF", 16), 0, getEncryptMan().getPublicKeyString(getAddMan().getMainAdd().getKeyType()), new KiEventHandler(this));
                 miningPool.start();
             } catch (Exception e) {
                 ki.debug("Mining pool failed to start");

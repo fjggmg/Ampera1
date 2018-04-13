@@ -52,8 +52,9 @@ public class Address implements Serializable, IAddress {
     }
 
     @Override
-    public boolean canSpend(String keys, String entropy, boolean p2sh)
+    public boolean canSpend(String keys, String entropy, boolean p2sh, KeyType keyType)
     {
+        if (!keyType.equals(KeyType.BRAINPOOLP512T1)) return false;
         if (p2sh) return false;
         Address a = createNew(keys,entropy);
         //System.out.println("CAN SPEND DEBUG===================");
@@ -198,13 +199,18 @@ public class Address implements Serializable, IAddress {
     }
 
     @Override
-    public boolean canSpendPrefixed(String key, String entropy, String prefix, boolean p2sh) {
+    public boolean canSpendPrefixed(String key, String entropy, String prefix, boolean p2sh, KeyType keyType) {
         return false;
     }
 
     @Override
     public boolean isP2SH() {
         return false;
+    }
+
+    @Override
+    public KeyType getKeyType() {
+        return KeyType.BRAINPOOLP512T1;
     }
 
     /**

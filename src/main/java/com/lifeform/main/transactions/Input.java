@@ -37,12 +37,12 @@ public class Input implements TXIO, IAmpByteSerializable {
         return prevID;
     }
 
-    public boolean canSpend(String keys, String entropy, String prefix, boolean p2sh)
+    public boolean canSpend(String keys, String entropy, String prefix, boolean p2sh, KeyType keyType)
     {
         if (prefix == null || prefix.length() != 5)
-            return getAddress().canSpend(keys, entropy, p2sh);
+            return getAddress().canSpend(keys, entropy, p2sh, keyType);
         else
-            return getAddress().canSpendPrefixed(keys, entropy, prefix, p2sh);
+            return getAddress().canSpendPrefixed(keys, entropy, prefix, p2sh, keyType);
     }
     private String prevID;
     private int prevOut;

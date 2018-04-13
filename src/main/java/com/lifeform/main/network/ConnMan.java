@@ -29,7 +29,7 @@ public class ConnMan extends IConnectionManager {
     public ConnMan(IKi ki, boolean isRelay, INetworkEndpoint endpoint)
     {
         if (OURID == null)
-            OURID = EncryptionManager.sha224(ki.getEncryptMan().getPublicKeyString() + OURSTARTTIME);
+            OURID = EncryptionManager.sha224(ki.getEncryptMan().getPublicKeyString(ki.getAddMan().getMainAdd().getKeyType()) + OURSTARTTIME);
         this.isRelay = isRelay;
         this.ki = ki;
         pp = new PacketProcessor(ki,this);
