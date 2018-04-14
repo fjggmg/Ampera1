@@ -26,8 +26,8 @@ public class AddressManager implements IAddMan {
     private Map<IAddress, String> entropyMap = new ConcurrentHashMap<>();
     private IAddress main;
     private List<IAddress> inactive = new ArrayList<>();
-    public AddressManager(IKi ki)
-    {
+
+    public AddressManager(IKi ki) {
         File f = new File(addFolder);
         f.mkdirs();
         this.ki = ki;
@@ -42,7 +42,7 @@ public class AddressManager implements IAddMan {
             e.printStackTrace();
             return null;
         }
-        entropyMap.put(a,entropy);
+        entropyMap.put(a, entropy);
         inactive.add(a);
         save();
         return a;
@@ -55,7 +55,7 @@ public class AddressManager implements IAddMan {
 
     @Override
     public void receivedOn(IAddress address) {
-        if(address.encodeForChain().equals(main.encodeForChain())) return;
+        if (address.encodeForChain().equals(main.encodeForChain())) return;
         IAddress toRemove = null;
         for (IAddress a : inactive) {
             if (a.encodeForChain().equals(address.encodeForChain())) {
@@ -68,31 +68,28 @@ public class AddressManager implements IAddMan {
 
     @Override
     public void usedEntirely(IAddress address) {
-            //possibly not needed
+        //possibly not needed
     }
 
     @Override
     public void verified(IAddress address) {
-        verifyCounter.put(address,0);
+        verifyCounter.put(address, 0);
     }
 
     @Override
     public void blockTick() {
         List<IAddress> toRemove = new ArrayList<>();
-        for (IAddress key : verifyCounter.keySet())
-        {
-            verifyCounter.put(key,verifyCounter.get(key) + 1);
-            if(verifyCounter.get(key) > depth)
-            {
+        for (IAddress key : verifyCounter.keySet()) {
+            verifyCounter.put(key, verifyCounter.get(key) + 1);
+            if (verifyCounter.get(key) > depth) {
                 toRemove.add(key);
             }
         }
-        for (IAddress a : toRemove)
-        {
+        for (IAddress a : toRemove) {
 
             verifyCounter.remove(a);
-            if(!a.encodeForChain().equals(main.encodeForChain()))
-            addresses.remove(a);
+            if (!a.encodeForChain().equals(main.encodeForChain()))
+                addresses.remove(a);
         }
 
     }
@@ -104,22 +101,19 @@ public class AddressManager implements IAddMan {
 
     @Override
     public void load() {
-        StringFileHandler fh = new StringFileHandler(ki,addFolder + addFile);
-        if(!(fh.getLines().size() == 0))
-        {
+        StringFileHandler fh = new StringFileHandler(ki, addFolder + addFile);
+        if (!(fh.getLines().size() == 0)) {
             main = Address.decodeFromChain(fh.getLine(0));
             //ki.debug("Main type in load: " + main.getKeyType());
             addresses.add(main);
-            for(String s:fh.getLines())
-            {
-                if(!main.encodeForChain().equals(s))
-                {
+            for (String s : fh.getLines()) {
+                if (!main.encodeForChain().equals(s)) {
                     addresses.add(Address.decodeFromChain(s));
                 }
             }
         }
-        StringFileHandler fh2 = new StringFileHandler(ki,addFolder + addEntFile);
-        if(fh2.getLines().size() != 0) {
+        StringFileHandler fh2 = new StringFileHandler(ki, addFolder + addEntFile);
+        if (fh2.getLines().size() != 0) {
             try {
                 JSONObject jo = (JSONObject) new JSONParser().parse(fh2.getLine(0));
                 for (String add : (Set<String>) jo.keySet()) {
@@ -132,24 +126,22 @@ public class AddressManager implements IAddMan {
         }
 
         List<IAddress> toRemove = new ArrayList<>();
-        for (IAddress add : entropyMap.keySet())
-        {
+        for (IAddress add : entropyMap.keySet()) {
             entropy = entropyMap.get(add);
-            if (add.getKeyType() != null)
-                if (!add.encodeForChain().equals(getNewAdd(add.getKeyType()).encodeForChain()))
-            {
-                ki.debug("Address loaded is not for the keys we have, deleting address");
-                toRemove.add(add);
-            } else
+            if (add.getKeyType() != null) {
+                if (!add.encodeForChain().equals(getNewAdd(add.getKeyType()).encodeForChain())) {
+                    ki.debug("Address loaded is not for the keys we have, deleting address");
                     toRemove.add(add);
+                }
+            } else {
+                toRemove.add(add);
+            }
         }
-        for (IAddress add : toRemove)
-        {
-            if(main.encodeForChain().equals(add.encodeForChain()))
-            {
+        for (IAddress add : toRemove) {
+            if (main.encodeForChain().equals(add.encodeForChain())) {
                 entropy = DEFAULT_ENTROPY;
                 main = getNewAdd(main.getKeyType());
-            }else{
+            } else {
                 addresses.remove(add);
                 entropyMap.remove(add);
             }
@@ -158,11 +150,11 @@ public class AddressManager implements IAddMan {
 
     @Override
     public void save() {
-        StringFileHandler fh = new StringFileHandler(ki,addFolder + addFile);
+        StringFileHandler fh = new StringFileHandler(ki, addFolder + addFile);
         fh.delete();
-        if(main != null)
-        fh.addLine(main.encodeForChain());
-        if(!getActive().isEmpty()) {
+        if (main != null)
+            fh.addLine(main.encodeForChain());
+        if (!getActive().isEmpty()) {
             for (IAddress a : getActive()) {
                 if (!main.encodeForChain().equals(a.encodeForChain()))
                     fh.addLine(a.encodeForChain());
@@ -183,9 +175,8 @@ public class AddressManager implements IAddMan {
     @Override
     public String getEntropyForAdd(IAddress a) {
 
-        for (IAddress add : entropyMap.keySet())
-        {
-            if(add.encodeForChain().equals(a.encodeForChain())) return entropyMap.get(add);
+        for (IAddress add : entropyMap.keySet()) {
+            if (add.encodeForChain().equals(a.encodeForChain())) return entropyMap.get(add);
         }
         return entropyMap.get(a);
     }

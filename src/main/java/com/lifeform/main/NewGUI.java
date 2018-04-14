@@ -150,7 +150,7 @@ public class NewGUI {
     public JFXListView<Order> activeAmount;
     public JFXPasswordField confirmPassword;
     public VBox addressControls;
-    public JFXComboBox<String> addressLength;
+    public JFXComboBox<Label> addressLength;
     private CandlestickGraph exchangeGraph;
     public VBox passwordVbox;
     public VBox exchangeGraphBox;
@@ -181,7 +181,7 @@ public class NewGUI {
     public VBox exControlsBox;
     public JFXButton singleSig;
     public JFXButton multiSig;
-    public JFXComboBox<String> keyType;
+    public JFXComboBox<Label> keyType;
     public VBox multiSigVbox;
     public JFXTextField addPubKey;
     public JFXButton addKeyBtn;
@@ -1213,12 +1213,13 @@ public class NewGUI {
         });
         entropyLabel.setWrapText(true);
         entropyLabel.setMaxWidth(256);
+
         for (KeyType type : KeyType.values()) {
             if (!type.equals(KeyType.NONE))
-                keyType.getItems().add(type.toString());
+                keyType.getItems().add(new Label(type.toString()));
         }
         for (AddressLength l : AddressLength.values()) {
-            addressLength.getItems().add(l.toString());
+            addressLength.getItems().add(new Label(l.toString()));
         }
         addressLength.getSelectionModel().select(0);
         keyType.getSelectionModel().select(0);
@@ -1231,7 +1232,7 @@ public class NewGUI {
         createAddress.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
-                IAddress a = ki.getAddMan().createNew(ki.getEncryptMan().getPublicKeyString(KeyType.valueOf(keyType.getSelectionModel().getSelectedItem())), entropyField.getText(), null, AddressLength.SHA256, false, KeyType.valueOf(keyType.getSelectionModel().getSelectedItem()));
+                IAddress a = ki.getAddMan().createNew(ki.getEncryptMan().getPublicKeyString(KeyType.valueOf(keyType.getSelectionModel().getSelectedItem().getText())), entropyField.getText(), null, AddressLength.valueOf(addressLength.getSelectionModel().getSelectedItem().getText()), false, KeyType.valueOf(keyType.getSelectionModel().getSelectedItem().getText()));
                 addressList.getItems().add(a.encodeForChain());
             }
         });

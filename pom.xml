@@ -7,7 +7,9 @@
     <groupId>com.lifeform</groupId>
     <artifactId>Origin</artifactId>
     <version>0.18.0-BETA</version>
-
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
     <build>
         <plugins>
             <plugin>

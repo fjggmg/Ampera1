@@ -16,8 +16,9 @@
 .text-field{
 -fx-text-fill: WHITE;
 }
-.combo-box {
--fx-text-fill: BLACK;
+.jfx-combo-box {
+-fx-text-fill: WHITE;
+-fx-prompt-text-fill: WHITE;
 }
 .chart-plot-background{
 -fx-background-color:transparent;

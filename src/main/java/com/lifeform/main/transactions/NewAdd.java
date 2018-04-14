@@ -35,7 +35,7 @@ public class NewAdd implements IAddress {
         this.ID = ID;
         this.lengthIndicator = lengthIndicator;
         this.checksum = checksum;
-        System.out.println("Created address with key type: " + keyType);
+        //System.out.println("Created address with key type: " + keyType);
         this.keyType = keyType;
     }
 

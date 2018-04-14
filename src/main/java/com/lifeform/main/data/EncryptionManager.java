@@ -306,6 +306,7 @@ public class EncryptionManager  implements IEncryptMan{
 
 
     public PublicKey getPublicKey(KeyType keyType) {
+        //System.out.println("Public key requested: "  + keyType);
         if (keyType.equals(KeyType.BRAINPOOLP512T1)) {
             if (pair == null) return null;
             return pair.getPublic();
@@ -353,7 +354,7 @@ public class EncryptionManager  implements IEncryptMan{
         PrivateKey privKey = privKeyFromString(fh.getLine(0), KeyType.ED25519);
         //PrivateKey privKey = privKeyFromString( trion.getDataMan().getStringFileHandler("priv." + KEY_FILE).getLine(0));
         KeyPair pair = new KeyPair(pubKey, privKey);
-        this.pair = pair;
+        this.edPair = pair;
         return pair;
     }
     public void saveKeys()
@@ -378,7 +379,8 @@ public class EncryptionManager  implements IEncryptMan{
 
     public String getPublicKeyString(KeyType keyType)
     {
-        String key = Utils.toBase64(getPublicKey(keyType).getEncoded());
+        PublicKey pk = getPublicKey(keyType);
+        String key = Utils.toBase64(pk.getEncoded());
         //key = key.replaceFirst(KEY_PADDING,"");
         return key;
     }
