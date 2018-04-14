@@ -540,7 +540,8 @@ public class ChainManager implements IChainMan {
             try {
                 ki.getMinerMan().setup();
             } catch (Exception e) {
-                ki.debug("Re-initializing miners failed after difficulty recalcuation, message: " + e.getMessage());
+                ki.getMainLog().warn("Re-initializing miners failed after difficulty recalcuation", e);
+                return;
             }
             if (isMining)
                 ki.getMinerMan().startMiners();
