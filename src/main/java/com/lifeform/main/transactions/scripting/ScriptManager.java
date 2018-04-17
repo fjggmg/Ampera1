@@ -1,17 +1,27 @@
 package com.lifeform.main.transactions.scripting;
 
+import amp.ByteTools;
 import com.lifeform.main.IKi;
+import com.lifeform.main.data.KeyKeyTypePair;
+import com.lifeform.main.data.Utils;
 import com.lifeform.main.data.files.StringFileHandler;
+import com.lifeform.main.transactions.KeyType;
+import com.lifeform.main.transactions.scripting.compiling.CompilerException;
 import com.lifeform.main.transactions.scripting.compiling.StringCompiler;
 import com.lifeform.main.transactions.scripting.compiling.StringFileCompiler;
 import com.lifeform.main.transactions.scripting.word8v1ops.*;
 import engine.ByteCodeEngine;
+import engine.binary.Binary;
+import engine.data.ConstantMemory;
+import engine.data.DataElement;
+import engine.data.JumpMemory;
 import engine.program.Program;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 public class ScriptManager {
 
@@ -62,11 +72,93 @@ public class ScriptManager {
             ki.getMainLog().error("Exception compiling general trade script", e);
         }
         genTrade.seal();
+
+
     }
 
+    //load sig onto stack, then load key onto stack
+    private final List<String> mSigLoad = Arrays.asList("PI#", "LCSK", "PI#", "LMSK");
+    //push initial result to stack
+    private final List<String> mSigMid = Arrays.asList("PI0");
+    //verify sig, check against required sigs, branch to success if so
+    private final List<String> mSigVerify = Arrays.asList("VSVS", "DUP", "PIR", "LCSK", "GTN", "BRN0");
+    //fail or success
+    private final List<String> mSigEnd = Arrays.asList("CSK", "PI1", "TERM", "CSK", "PI0", "TERM");
     private Program genTrade;
     private List<Program> loadedScripts = new ArrayList<>();
 
+    /**
+     * builds a binary for multisig wallets. Handles up to 30 key multi-sig
+     *
+     * @param keys         keys involved
+     * @param sigsRequired sigs required
+     * @param bce8         an 8 bit BCE
+     * @param entropy      entropy (probably user entered through UI
+     * @param publicKey    public key for main key (no extra permissions with this multisig)
+     * @return a binary ready to use for a multi-sig wallet
+     */
+    public Binary buildMultiSig(Map<String, Byte> keys, int sigsRequired, ByteCodeEngine bce8, byte[] entropy, byte[] publicKey) {
+        if (sigsRequired > keys.size()) return null;
+        if (keys.size() > 30) return null;
+        List<String> fullCode = new ArrayList<>();
+
+        DataElement[] cm = new DataElement[32];
+        int i = 0;
+        for (String key : keys.keySet()) {
+            List<String> mSigLoad = new ArrayList<>();
+
+            for (String code : this.mSigLoad) {
+                mSigLoad.add(code.replace("#", "" + i));
+            }
+            fullCode.addAll(mSigLoad);
+            try {
+                if (KeyType.byValue(keys.get(key)) == null || KeyType.byValue(keys.get(key)) == KeyType.NONE)
+                    return null;
+                cm[i] = new DataElement(new KeyKeyTypePair(Utils.fromBase64(key), KeyType.byValue(keys.get(key))).serializeToBytes());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            i++;
+        }
+        try {
+            cm[i] = new DataElement(ByteTools.deconstructInt(sigsRequired));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        fullCode.addAll(mSigMid);
+        List<String> mSigVerify = new ArrayList<>();
+        for (String code : this.mSigVerify) {
+            mSigVerify.add(code.replaceAll("PIR", "PI" + i));
+        }
+
+        for (int k = 0; k < i; k++) {
+            fullCode.addAll(mSigVerify);
+        }
+        short branch0 = (short) (fullCode.size() + 3);
+        fullCode.addAll(mSigEnd);
+        Program mSig;
+        try {
+            mSig = new Program(StringCompiler.compile(fullCode, bce8));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+        short[] jumps = new short[16];
+        jumps[0] = branch0;
+
+        try {
+            JumpMemory jm = new JumpMemory(jumps);
+            return new Binary(mSig, new ConstantMemory(cm), jm, true, VERSION, entropy, System.currentTimeMillis(), publicKey, null, 0);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    /**
+     * will load scripts that are in bytecode format (i.e. strings of opcodes 1 per line in BCE8, will have support
+     * for BCE16 eventually)
+     */
     public void loadScripts() {
         File folder = new File("/scripts");
         if (!folder.exists()) {

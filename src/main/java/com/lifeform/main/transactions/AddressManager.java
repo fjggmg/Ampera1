@@ -1,12 +1,16 @@
 package com.lifeform.main.transactions;
 
+import amp.HeadlessPrefixedAmplet;
+import amp.database.XodusAmpMap;
 import com.lifeform.main.IKi;
 import com.lifeform.main.data.files.StringFileHandler;
+import engine.binary.Binary;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 import java.io.File;
+import java.io.UnsupportedEncodingException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -26,13 +30,18 @@ public class AddressManager implements IAddMan {
     private Map<IAddress, String> entropyMap = new ConcurrentHashMap<>();
     private IAddress main;
     private List<IAddress> inactive = new ArrayList<>();
-
+    private XodusAmpMap addressMap = new XodusAmpMap("ampAdds");
+    private XodusAmpMap addressBinMap = new XodusAmpMap("ampBins");
     public AddressManager(IKi ki) {
-        File f = new File(addFolder);
-        f.mkdirs();
         this.ki = ki;
     }
 
+    /**
+     * This returns a 256 bit address, will probably let you select length soon
+     *
+     * @param keyType type of key to use
+     * @return newly formed address with set entropy and length of 256 bits
+     */
     @Override
     public IAddress getNewAdd(KeyType keyType) {
         IAddress a = null;
@@ -44,7 +53,6 @@ public class AddressManager implements IAddMan {
         }
         entropyMap.put(a, entropy);
         inactive.add(a);
-        save();
         return a;
     }
 
@@ -101,55 +109,95 @@ public class AddressManager implements IAddMan {
 
     @Override
     public void load() {
-        StringFileHandler fh = new StringFileHandler(ki, addFolder + addFile);
-        if (!(fh.getLines().size() == 0)) {
-            main = Address.decodeFromChain(fh.getLine(0));
-            //ki.debug("Main type in load: " + main.getKeyType());
-            addresses.add(main);
-            for (String s : fh.getLines()) {
-                if (!main.encodeForChain().equals(s)) {
-                    addresses.add(Address.decodeFromChain(s));
+        if (addressMap.getBytes("firstRun") == null && new File(addFolder + addFile).exists()) {
+            StringFileHandler fh = new StringFileHandler(ki, addFolder + addFile);
+            if (!(fh.getLines().size() == 0)) {
+                main = Address.decodeFromChain(fh.getLine(0));
+                //ki.debug("Main type in load: " + main.getKeyType());
+                addresses.add(main);
+                for (String s : fh.getLines()) {
+                    if (!main.encodeForChain().equals(s)) {
+                        addresses.add(Address.decodeFromChain(s));
+                    }
                 }
             }
-        }
-        StringFileHandler fh2 = new StringFileHandler(ki, addFolder + addEntFile);
-        if (fh2.getLines().size() != 0) {
-            try {
-                JSONObject jo = (JSONObject) new JSONParser().parse(fh2.getLine(0));
-                for (String add : (Set<String>) jo.keySet()) {
-                    //ki.getMainLog().info("Shit found in the entropy file. it matches this: " + add + " " + jo.get(add));
-                    entropyMap.put(Address.decodeFromChain(add), (String) jo.get(add));
+            StringFileHandler fh2 = new StringFileHandler(ki, addFolder + addEntFile);
+            if (fh2.getLines().size() != 0) {
+                try {
+                    JSONObject jo = (JSONObject) new JSONParser().parse(fh2.getLine(0));
+                    for (String add : (Set<String>) jo.keySet()) {
+                        //ki.getMainLog().info("Shit found in the entropy file. it matches this: " + add + " " + jo.get(add));
+                        entropyMap.put(Address.decodeFromChain(add), (String) jo.get(add));
+                    }
+                } catch (ParseException e) {
+                    e.printStackTrace();
                 }
-            } catch (ParseException e) {
-                e.printStackTrace();
             }
-        }
 
-        List<IAddress> toRemove = new ArrayList<>();
-        for (IAddress add : entropyMap.keySet()) {
-            entropy = entropyMap.get(add);
-            if (add.getKeyType() != null) {
-                if (!add.encodeForChain().equals(getNewAdd(add.getKeyType()).encodeForChain())) {
-                    ki.debug("Address loaded is not for the keys we have, deleting address");
+            List<IAddress> toRemove = new ArrayList<>();
+            for (IAddress add : entropyMap.keySet()) {
+                entropy = entropyMap.get(add);
+                if (add.getKeyType() != null) {
+                    if (!add.encodeForChain().equals(getNewAdd(add.getKeyType()).encodeForChain())) {
+                        ki.debug("Address loaded is not for the keys we have, deleting address");
+                        toRemove.add(add);
+                    }
+                } else {
                     toRemove.add(add);
                 }
-            } else {
-                toRemove.add(add);
             }
-        }
-        for (IAddress add : toRemove) {
-            if (main.encodeForChain().equals(add.encodeForChain())) {
-                entropy = DEFAULT_ENTROPY;
-                main = getNewAdd(main.getKeyType());
-            } else {
-                addresses.remove(add);
-                entropyMap.remove(add);
+            for (IAddress add : toRemove) {
+                if (main.encodeForChain().equals(add.encodeForChain())) {
+                    entropy = DEFAULT_ENTROPY;
+                    main = getNewAdd(main.getKeyType());
+                } else {
+                    addresses.remove(add);
+                    entropyMap.remove(add);
+                }
+            }
+        } else {
+            if (addressMap.getBytes("addresses") != null) {
+                HeadlessPrefixedAmplet hpa = HeadlessPrefixedAmplet.create(addressMap.getBytes("addresses"));
+                main = Address.fromByteArray(hpa.getNextElement());
+                addresses.add(main);
+                while (hpa.hasNextElement()) {
+                    addresses.add(Address.fromByteArray(hpa.getNextElement()));
+                }
+                for (IAddress a : addresses) {
+                    try {
+                        entropyMap.put(a, new String(addressMap.getBytes(a.encodeForChain()), "UTF-8"));
+                    } catch (UnsupportedEncodingException e) {
+                        e.printStackTrace();
+                    }
+                }
             }
         }
     }
 
     @Override
     public void save() {
+        addressMap.clearSafe();
+        addressMap.putBytes("firstRun", new byte[]{1});
+        HeadlessPrefixedAmplet hpa = HeadlessPrefixedAmplet.create();
+        hpa.addBytes(main.toByteArray());
+        try {
+            addressMap.putBytes(main.encodeForChain(), getEntropyForAdd(main).getBytes("UTF-8"));
+        } catch (UnsupportedEncodingException e) {
+            ki.getMainLog().fatal("Unable to save entropy for main address: " + main.encodeForChain(), e);
+        }
+        for (IAddress address : addresses) {
+            if (!address.encodeForChain().equals(main.encodeForChain())) {
+                hpa.addBytes(address.toByteArray());
+                try {
+                    addressMap.putBytes(address.encodeForChain(), getEntropyForAdd(address).getBytes("UTF-8"));
+                } catch (UnsupportedEncodingException e) {
+                    ki.getMainLog().fatal("Unable to save entropy for address: " + address.encodeForChain(), e);
+                }
+            }
+        }
+        addressMap.putBytes("addresses", hpa.serializeToBytes());
+
+        /* old stuff saved for historical reasons at the moment
         StringFileHandler fh = new StringFileHandler(ki, addFolder + addFile);
         fh.delete();
         if (main != null)
@@ -170,6 +218,7 @@ public class AddressManager implements IAddMan {
             fh2.addLine(jo.toJSONString());
             fh2.save();
         }
+        */
     }
 
     @Override
@@ -230,5 +279,31 @@ public class AddressManager implements IAddMan {
         addresses.remove(address);
         save();
 
+    }
+
+    @Override
+    public void associateBinary(IAddress address, Binary bin) {
+        ki.debug("Saving binary to: " + "binary" + address.encodeForChain());
+        ki.debug("Binary shit: " + Arrays.toString(bin.serializeToAmplet().serializeToBytes()));
+        addressBinMap.put("binary" + address.encodeForChain(), bin);
+        try {
+            if (getBinary(address) == null) {
+                ki.getMainLog().error("Error saving binary in address database");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public Binary getBinary(IAddress address) {
+        ki.debug("Loading binary from: " + "binary" + address.encodeForChain());
+        ki.debug("Binary shit from map: " + Arrays.toString(addressBinMap.getBytes("binary" + address.encodeForChain())));
+        try {
+            return Binary.deserializeFromAmplet(addressBinMap.get("binary" + address.encodeForChain()));
+        } catch (Exception e) {
+            ki.getMainLog().warn("Unable to get script for address: " + address.encodeForChain(), e);
+            return null;
+        }
     }
 }

@@ -109,6 +109,11 @@ public class Transaction implements ITrans {
         keySigMap.put(key,sig);
     }
 
+    @Override
+    public String getSig(String key) {
+        return keySigMap.get(key);
+    }
+
     public static Transaction fromJSON(String JSON) throws InvalidTransactionException {
         try {
             JSONObject jo = (JSONObject) new JSONParser().parse(JSON);

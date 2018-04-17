@@ -86,6 +86,10 @@ public class NewTrans implements ITrans {
         return true;
     }
 
+    public String getSig(String key) {
+        return keySigMap.get(key).sig;
+    }
+
     @Override
     public String toSign() {
         return null;
@@ -187,7 +191,7 @@ public class NewTrans implements ITrans {
                 }
                 if (execAdd == null) return false;
                 try {
-                    ArrayList<DataElement> result = ki.getBCE8().executeProgram(Binary.deserializeFromAmplet(Amplet.create(Utils.fromBase64(key))), WritableMemory.deserializeFromBytes(Utils.fromBase64(ksep.sig)), this, execAdd.toByteArray(), false);
+                    ArrayList<DataElement> result = ki.getBCE8().executeProgram(Binary.deserializeFromAmplet(Amplet.create(Utils.fromBase64(key))), WritableMemory.deserializeFromBytes(Utils.fromBase64(ksep.sig)), this, execAdd.toByteArray(), true);
                     if (result.get(0).getDataAsInt() != 0) return false;
                 } catch (Exception e) {
                     e.printStackTrace();

@@ -1,5 +1,6 @@
 package com.lifeform.main.network;
 
+import amp.HeadlessPrefixedAmplet;
 import com.lifeform.main.IKi;
 import com.lifeform.main.transactions.Address;
 import com.lifeform.main.transactions.IAddress;
@@ -24,11 +25,11 @@ public class UTXOStartAck implements Packet, Serializable {
             if (ki.getTransMan().getUTXOs(a, true) != null)
                 utxos.addAll(ki.getTransMan().getUTXOs(a, true));
             UTXOData ud = new UTXOData();
-            List<String> sUtxos = new ArrayList<>();
+            HeadlessPrefixedAmplet hpa = HeadlessPrefixedAmplet.create();
             for (Output o : utxos) {
-                sUtxos.add(o.toJSON());
+                hpa.addBytes(o.serializeToBytes());
             }
-            ud.utxos = sUtxos;
+            ud.utxos = hpa.serializeToBytes();
             connMan.sendPacket(ud);
         }
     }

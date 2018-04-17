@@ -103,4 +103,9 @@ public interface IAddress {
      * @return type of key used to create this address
      */
     KeyType getKeyType();
+
+    /**
+     * @return length of this address, always 224 for old addresses
+     */
+    AddressLength getAddressLength();
 }

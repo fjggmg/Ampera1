@@ -17,7 +17,6 @@ import com.lifeform.main.transactions.scripting.ScriptManager;
 import engine.ByteCodeEngine;
 import mining_pool.Pool;
 import org.apache.logging.log4j.Logger;
-import org.bitbucket.backspace119.generallib.Logging.LogMan;
 
 public class DummyBCEKi implements IKi {
     public ByteCodeEngine bce;

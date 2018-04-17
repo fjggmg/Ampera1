@@ -640,7 +640,10 @@ public class ChainManager implements IChainMan {
     @Override
     public Block formEmptyBlock(BigInteger minFee) {
         Block b = new Block();
-        b.solver = ki.getEncryptMan().getPublicKeyString(ki.getAddMan().getMainAdd().getKeyType());
+        if (ki.getAddMan().getMainAdd().getKeyType().equals(KeyType.NONE))
+            b.solver = ki.getEncryptMan().getPublicKeyString(KeyType.ED25519);
+        else
+            b.solver = ki.getEncryptMan().getPublicKeyString(ki.getAddMan().getMainAdd().getKeyType());
         b.timestamp = System.currentTimeMillis();
 
         Map<String,ITrans> transactions = new HashMap<>();

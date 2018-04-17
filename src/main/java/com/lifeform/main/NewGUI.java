@@ -15,12 +15,12 @@ import com.lifeform.main.adx.Pairs;
 import com.lifeform.main.blockchain.Block;
 import com.lifeform.main.blockchain.ChainManager;
 import com.lifeform.main.blockchain.GPUMiner;
-import com.lifeform.main.data.EncryptionManager;
-import com.lifeform.main.data.Utils;
-import com.lifeform.main.data.XodusStringMap;
+import com.lifeform.main.data.*;
 import com.lifeform.main.network.IConnectionManager;
 import com.lifeform.main.network.TransactionPacket;
 import com.lifeform.main.transactions.*;
+import engine.binary.Binary;
+import engine.data.WritableMemory;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
@@ -55,12 +55,15 @@ import javafx.util.Duration;
 import java.awt.*;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -151,6 +154,12 @@ public class NewGUI {
     public JFXPasswordField confirmPassword;
     public VBox addressControls;
     public JFXComboBox<Label> addressLength;
+    public JFXTextField prefixField;
+    public JFXButton copyPublicKey;
+    public JFXButton loadMSAddress;
+    public JFXButton saveMSAddress;
+    public VBox walletBox;
+    public JFXButton loadTransaction;
     private CandlestickGraph exchangeGraph;
     public VBox passwordVbox;
     public VBox exchangeGraphBox;
@@ -185,7 +194,7 @@ public class NewGUI {
     public VBox multiSigVbox;
     public JFXTextField addPubKey;
     public JFXButton addKeyBtn;
-    public JFXComboBox sigsRequired;
+    public JFXComboBox<Label> sigsRequired;
     public JFXButton clearKeys;
     //endregion
     private BigInteger unitMultiplierPrice = BigInteger.valueOf(100);
@@ -197,6 +206,13 @@ public class NewGUI {
     private Map<String, BigInteger> heightMap = new HashMap<>();
     private List<ITrans> sTrans = new CopyOnWriteArrayList<>();
     private boolean createMultiSig = false;
+
+    //region multisig shit
+    private ITrans multiSigTransCache = null;
+    private Binary multiSigBinaryCache = null;
+    private WritableMemory multiSigWMCache = null;
+
+    //endregion
     public NewGUI() {
         ki = Ki.getInstance();
         transactions = FXCollections.observableArrayList();
@@ -392,7 +408,7 @@ public class NewGUI {
      * This is possibly the most fucked up hash setup ever. it does a bunch of bullshit with
      * SHA3-512 hashing and combinations of hashes and other shit, it's dumb and I should change it
      *
-     * @param hash uh, a hash or something
+     * @param hash           uh, a hash or something
      * @param numberOfHashes number of iterations to do the retard function
      * @return even more horribly corrupted data than metaHash
      */
@@ -606,6 +622,14 @@ public class NewGUI {
                 clpbrd.setContents(stringSelection, null);
             }
         });
+        copyPublicKey.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                StringSelection stringSelection = new StringSelection(ki.getEncryptMan().getPublicKeyString(KeyType.valueOf(keyType.getSelectionModel().getSelectedItem().getText())));
+                Clipboard clpbrd = Toolkit.getDefaultToolkit().getSystemClipboard();
+                clpbrd.setContents(stringSelection, null);
+            }
+        });
         startMining.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
@@ -789,7 +813,7 @@ public class NewGUI {
                     }
                 }
 
-                OrderStatus status = ki.getExMan().placeOrder(true, amount, stopPrice, Pairs.byName(pairs.getSelectionModel().getSelectedItem().getText()),limit);
+                OrderStatus status = ki.getExMan().placeOrder(true, amount, stopPrice, Pairs.byName(pairs.getSelectionModel().getSelectedItem().getText()), limit);
                 if (!status.succeeded()) {
                     if (!status.partial()) notification("Order not completed");
                     else notification("Order partially completed");
@@ -827,7 +851,7 @@ public class NewGUI {
                         return;
                     }
                 }
-                OrderStatus status = ki.getExMan().placeOrder(false, amount, stopPrice, Pairs.byName(pairs.getSelectionModel().getSelectedItem().getText()),limit);
+                OrderStatus status = ki.getExMan().placeOrder(false, amount, stopPrice, Pairs.byName(pairs.getSelectionModel().getSelectedItem().getText()), limit);
                 if (!status.succeeded()) {
                     if (!status.partial()) notification("Order not completed");
                     else notification("Order partially completed");
@@ -1229,13 +1253,126 @@ public class NewGUI {
                 entropyLabel.setText("Entropy of Selection: \n" + ki.getAddMan().getEntropyForAdd(Address.decodeFromChain(addressList.getSelectionModel().getSelectedItem())));
             }
         });
+        Map<String, Byte> keys = new HashMap<>();
+        addKeyBtn.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                try {
+                    if (EncryptionManager.pubKeyFromString(addPubKey.getText(), KeyType.valueOf(keyType.getSelectionModel().getSelectedItem().getText())) == null) {
+                        notification("Invalid Key");
+                        return;
+                    }
+
+                    keys.put(addPubKey.getText(), KeyType.valueOf(keyType.getSelectionModel().getSelectedItem().getText()).getValue());
+                    int selection;
+                    if (sigsRequired.getItems().size() > 0)
+                        selection = sigsRequired.getSelectionModel().getSelectedIndex();
+                    else
+                        selection = 0;
+                    sigsRequired.getItems().clear();
+                    for (int i = 0; i < keys.size(); i++) {
+                        sigsRequired.getItems().add(new Label(i + 1 + " of " + keys.size()));
+                    }
+                    sigsRequired.getSelectionModel().select(selection);
+                } catch (Exception e) {
+                    notification("Invalid key");
+                }
+            }
+        });
+        clearKeys.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                keys.clear();
+                sigsRequired.getItems().clear();
+            }
+        });
         createAddress.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
-                IAddress a = ki.getAddMan().createNew(ki.getEncryptMan().getPublicKeyString(KeyType.valueOf(keyType.getSelectionModel().getSelectedItem().getText())), entropyField.getText(), null, AddressLength.valueOf(addressLength.getSelectionModel().getSelectedItem().getText()), false, KeyType.valueOf(keyType.getSelectionModel().getSelectedItem().getText()));
-                addressList.getItems().add(a.encodeForChain());
+                IAddress a;
+                if (!createMultiSig) {
+
+                    if (prefixField.getText() == null || prefixField.getText().isEmpty()) {
+                        a = ki.getAddMan().createNew(ki.getEncryptMan().getPublicKeyString(KeyType.valueOf(keyType.getSelectionModel().getSelectedItem().getText())), entropyField.getText(), null, AddressLength.valueOf(addressLength.getSelectionModel().getSelectedItem().getText()), false, KeyType.valueOf(keyType.getSelectionModel().getSelectedItem().getText()));
+                    } else {
+                        if (prefixField.getText().length() != 5) {
+                            notification("Prefixes must be exactly 5 characters long");
+                            return;
+                        }
+                        if (prefixField.getText().contains(" ")) {
+                            notification("Prefixes cannot contain spaces");
+                            return;
+                        }
+                        a = ki.getAddMan().createNew(ki.getEncryptMan().getPublicKeyString(KeyType.valueOf(keyType.getSelectionModel().getSelectedItem().getText())), entropyField.getText(), prefixField.getText(), AddressLength.valueOf(addressLength.getSelectionModel().getSelectedItem().getText()), false, KeyType.valueOf(keyType.getSelectionModel().getSelectedItem().getText()));
+                    }
+                    addressList.getItems().add(a.encodeForChain());
+                } else {
+                    try {
+                        Binary bin = ki.getScriptMan().buildMultiSig(keys, sigsRequired.getSelectionModel().getSelectedIndex() + 1, ki.getBCE8(), entropyField.getText().getBytes("UTF-8"), ki.getEncryptMan().getPublicKey(KeyType.valueOf(keyType.getSelectionModel().getSelectedItem().getText())).getEncoded());
+                        bin.getProgram().seal();
+                        if (prefixField.getText() == null || prefixField.getText().isEmpty()) {
+
+                            a = ki.getAddMan().createNew(Utils.toBase64(bin.serializeToAmplet().serializeToBytes()), entropyField.getText(), null, AddressLength.valueOf(addressLength.getSelectionModel().getSelectedItem().getText()), true, KeyType.NONE);
+                        } else {
+                            if (prefixField.getText().length() != 5) {
+                                notification("Prefixes must be exactly 5 characters long");
+                                return;
+                            }
+                            if (prefixField.getText().contains(" ")) {
+                                notification("Prefixes cannot contain spaces");
+                                return;
+                            }
+                            a = ki.getAddMan().createNew(Utils.toBase64(bin.serializeToAmplet().serializeToBytes()), entropyField.getText(), prefixField.getText(), AddressLength.valueOf(addressLength.getSelectionModel().getSelectedItem().getText()), true, KeyType.NONE);
+
+                        }
+                        ki.getAddMan().associateBinary(a, bin);
+                    } catch (UnsupportedEncodingException e) {
+                        ki.getMainLog().warn("Unable to create multi-sig address", e);
+                        return;
+                    }
+                    addressList.getItems().add(a.encodeForChain());
+                }
             }
         });
+
+        saveMSAddress.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                if (ki.getAddMan().getMainAdd().isP2SH()) {
+                    BinALPreBucket bucket = new BinALPreBucket(ki.getAddMan().getBinary(ki.getAddMan().getMainAdd()), ki.getAddMan().getMainAdd().getAddressLength(), (ki.getAddMan().getMainAdd().hasPrefix()) ? ki.getAddMan().getMainAdd().getPrefix() : null);
+                    try (FileOutputStream fos = new FileOutputStream("multisig.address")) {
+                        fos.write(bucket.serializeToBytes());
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                } else {
+                    notification("Set the multi-sig address as your spend address to save");
+                }
+            }
+        });
+
+        loadMSAddress.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                try {
+                    Path path = Paths.get("multisig.address");
+                    BinALPreBucket bucket = BinALPreBucket.fromBytes(Files.readAllBytes(path));
+                    for (int i = 0; i < 32; i++) {
+                        KeyKeyTypePair kktp = KeyKeyTypePair.fromBytes(bucket.getBin().getConstantMemory().getElement(i).getData());
+                        if (ki.getEncryptMan().getPublicKeyString(kktp.getKeyType()).equals(Utils.toBase64(kktp.getKey()))) {
+                            IAddress a = ki.getAddMan().createNew(Utils.toBase64(bucket.getBin().serializeToAmplet().serializeToBytes()), new String(bucket.getBin().getEntropy(), "UTF-8"), bucket.getPrefix(), bucket.getAl(), true, KeyType.NONE);
+                            ki.getAddMan().associateBinary(a, bucket.getBin());
+                            addressList.getItems().add(a.encodeForChain());
+                            return;
+                        }
+                    }
+                    notification("Your keys don't exist in this address, not adding");
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
         setSpendAddress.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
@@ -1254,7 +1391,7 @@ public class NewGUI {
         if (!ki.getOptions().pool) {
             vb.getChildren().add(buildMainButton("Wallet", "/Wallet.png", 0, 0, content, walletPane));
             vb.getChildren().add(buildMainButton("Address", "/home.png", 100, 0, content, addressPane));
-            vb.getChildren().add(buildMainButton("ADX", "/exchange.png", 200, 5, content, exchangePane));
+            //vb.getChildren().add(buildMainButton("ADX", "/exchange.png", 200, 5, content, exchangePane));
         } else if (ki.getOptions().pool && !ki.getOptions().poolRelay) {
             vb.getChildren().add(buildMainButton("Pool", "/pool.png", 100, 3, content, poolPane));
         }
@@ -1306,14 +1443,14 @@ public class NewGUI {
             miningIntesity.setMinWidth(miningTab.getWidth() - 20);
             startMining.setLayoutX((miningTab.getWidth() / 2) - (startMining.getWidth() / 2) - 5);
             miLabel.setLayoutX((miningTab.getWidth() / 2) - (miLabel.getWidth() / 2) - 5);
-            addressText.setLayoutX(walletPane.getWidth() - (addressText.getWidth() + 5));
-            amountText.setLayoutX(walletPane.getWidth() - (amountText.getWidth() + 5));
-            messageText.setLayoutX(walletPane.getWidth() - (messageText.getWidth() + 5));
-            feeText.setLayoutX(walletPane.getWidth() - (feeText.getWidth() + 5));
-            sendButton.setLayoutX(walletPane.getWidth() - (sendButton.getWidth() + 5));
+            //addressText.setLayoutX(walletPane.getWidth() - (addressText.getWidth() + 5));
+            //amountText.setLayoutX(walletPane.getWidth() - (amountText.getWidth() + 5));
+            //messageText.setLayoutX(walletPane.getWidth() - (messageText.getWidth() + 5));
+            //feeText.setLayoutX(walletPane.getWidth() - (feeText.getWidth() + 5));
+            walletBox.setLayoutX(walletPane.getWidth() - (walletBox.getWidth() + 5));
             walletAmount.setLayoutX(walletPane.getWidth() - ((walletAmount.getWidth() + 15)));
             tokenLabel.setLayoutX(walletAmount.getLayoutX() + 10);
-            transactionTable.setMinWidth(walletPane.getWidth() - (sendButton.getWidth() + 65));
+            transactionTable.setMinWidth(walletPane.getWidth() - (walletBox.getWidth() + 65));
             transactionTable.setMinHeight(walletPane.getHeight() - 170);
             //versionLabel.setLayoutX(helpPane.getWidth() / 2 - (versionLabel.getWidth() / 2));
             //helpText.setLayoutX(helpPane.getWidth() / 2 - (helpText.getWidth() / 2));
@@ -1389,7 +1526,9 @@ public class NewGUI {
 
                 sendButton.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
                 //sendButton.setOpacity(255);
+                loadTransaction.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
                 copyAddress.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
+                copyPublicKey.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
                 startMining.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
                 //System.out.println("style:" + miningIntesity.getStyle());
                 String color = colorPicker.getValue().toString().replace("0x", "");
@@ -1397,6 +1536,8 @@ public class NewGUI {
                 //System.out.println("color: " + color);
                 miningIntesity.setStyle("-jfx-default-thumb:" + color);
                 createAddress.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
+                saveMSAddress.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
+                loadMSAddress.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
                 deleteAddress.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
                 setSpendAddress.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
                 changePassword.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
@@ -1492,16 +1633,132 @@ public class NewGUI {
         sendButton.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
-                if (ki.getEncryptMan().getPublicKey(ki.getAddMan().getMainAdd().getKeyType()) != null) {
+                if (multiSigTransCache != null) {
 
+                    multiSigTransCache.addSig(Utils.toBase64(multiSigBinaryCache.serializeToAmplet().serializeToBytes()), Utils.toBase64(multiSigWMCache.serializeToBytes()));
+
+                    if (ki.getTransMan().verifyTransaction(multiSigTransCache)) {
+                        ki.getTransMan().getPending().add(multiSigTransCache);
+                        for (Input i : multiSigTransCache.getInputs()) {
+                            ki.getTransMan().getUsedUTXOs().add(i.getID());
+                        }
+                        TransactionPacket tp = new TransactionPacket();
+                        tp.trans = multiSigTransCache.serializeToAmplet().serializeToBytes();
+                        ki.getNetMan().broadcast(tp);
+                        notification("Sent transaction");
+
+                    } else {
+                        notification("Not enough signatures. Saving transaction to file.");
+                        try (FileOutputStream fos = new FileOutputStream("Transaction.amp")) {
+                            fos.write(multiSigTransCache.serializeToAmplet().serializeToBytes());
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                } else if (!ki.getAddMan().getMainAdd().isP2SH()) {
+                    if (ki.getEncryptMan().getPublicKey(ki.getAddMan().getMainAdd().getKeyType()) != null) {
+
+                        Token token = Token.byName(tokenBox.getSelectionModel().getSelectedItem().getText());
+
+                        BigDecimal amt = new BigDecimal(amountText.getText());
+
+                        BigInteger amount = amt.multiply(new BigDecimal("100000000.0")).toBigInteger();
+
+                        IAddress receiver;
+                        try {
+                            receiver = Address.decodeFromChain(addressText.getText());
+                        } catch (Exception e) {
+                            notification("Send To Address Incorrect");
+                            return;
+                        }
+                        // Output output = new Output(amount, receiver, token, index, System.currentTimeMillis(), (byte) 2);
+                        //java.util.List<Output> outputs = new ArrayList<>();
+                        //outputs.add(output);
+
+                        //keys.add(ki.getEncryptMan().getPublicKeyString(ki.getAddMan().getMainAdd().getKeyType()));
+                        //java.util.List<Input> inputs = new ArrayList<>();
+                        BigInteger fee;
+                        if (feeText.getText() == null || feeText.getText().isEmpty()) {
+                            fee = BigInteger.TEN;
+                        } else {
+                            BigDecimal dFee = new BigDecimal(feeText.getText());
+                            fee = dFee.multiply(new BigDecimal("100000000.0")).toBigInteger();
+                            if (fee.compareTo(BigInteger.TEN) < 0) {
+                                fee = BigInteger.TEN;
+                            }
+                        }
+                        ki.getMainLog().info("Fee is: " + fee.toString());
+                        /*
+                        BigInteger totalInput = BigInteger.ZERO;
+                        for (IAddress a : ki.getAddMan().getActive()) {
+                            if (ki.getTransMan().getUTXOs(a, true) == null) return;
+                            for (Output o : ki.getTransMan().getUTXOs(a, true)) {
+                                if (o.getToken().equals(token)) {
+                                    if (inputs.contains(Input.fromOutput(o))) continue;
+                                    inputs.add(Input.fromOutput(o));
+                                    totalInput = totalInput.add(o.getAmount());
+                                    if (totalInput.compareTo(amount) >= 0) break;
+
+                                }
+                            }
+                            if (totalInput.compareTo(amount) >= 0) break;
+
+                        }
+                        if (totalInput.compareTo(amount) < 0) {
+                            ki.getMainLog().info("Not enough " + token.name() + " to do this transaction");
+                            return; // not enough of this token to send;
+                        }
+
+                        BigInteger feeInput = (token.equals(Token.ORIGIN)) ? totalInput : BigInteger.ZERO;
+                        for (IAddress a : ki.getAddMan().getActive()) {
+                            //get inputs
+                            if (feeInput.compareTo(fee) >= 0) break;
+                            for (Output o : ki.getTransMan().getUTXOs(a, true)) {
+                                if (o.getToken().equals(Token.ORIGIN)) {
+                                    inputs.add(Input.fromOutput(o));
+                                    feeInput = feeInput.add(o.getAmount());
+                                    if (feeInput.compareTo(fee) >= 0) break;
+
+                                }
+                            }
+                        }
+
+                        if (feeInput.compareTo(fee) < 0) {
+                            ki.getMainLog().info("Not enough origin to pay for this fee");
+                            return; //not enough origin to send this kind of fee
+                        }
+                        */
+                        ITrans trans = null;
+
+                        try {
+                            trans = ki.getTransMan().createSimple(receiver, amount, fee, token, messageText.getText());
+                        } catch (InvalidTransactionException e) {
+                            ki.getMainLog().error("Error creating transaction: ", e);
+                            return;
+                        }
+                        if (ki.getTransMan().verifyTransaction(trans)) {
+                            ki.getTransMan().getPending().add(trans);
+                            for (Input i : trans.getInputs()) {
+                                ki.getTransMan().getUsedUTXOs().add(i.getID());
+                            }
+                            TransactionPacket tp = new TransactionPacket();
+                            tp.trans = trans.serializeToAmplet().serializeToBytes();
+                            ki.getNetMan().broadcast(tp);
+                            notification("Sent transaction");
+
+                        } else {
+                            ki.debug("Transaction did not verify, not sending and not adding to pending list");
+                            notification("Transaction failed to send");
+                        }
+                    }
+                } else {
+                    //TODO find way to detect if this is a multi-sig wallet, for now we're just going to assume it is
                     Token token = Token.byName(tokenBox.getSelectionModel().getSelectedItem().getText());
-
 
                     BigDecimal amt = new BigDecimal(amountText.getText());
 
-
                     BigInteger amount = amt.multiply(new BigDecimal("100000000.0")).toBigInteger();
-                    int index = 0;
+
                     IAddress receiver;
                     try {
                         receiver = Address.decodeFromChain(addressText.getText());
@@ -1509,12 +1766,7 @@ public class NewGUI {
                         notification("Send To Address Incorrect");
                         return;
                     }
-                    Output output = new Output(amount, receiver, token, index, System.currentTimeMillis(), (byte) 2);
-                    java.util.List<Output> outputs = new ArrayList<>();
-                    outputs.add(output);
-                    java.util.List<String> keys = new ArrayList<>();
-                    keys.add(ki.getEncryptMan().getPublicKeyString(ki.getAddMan().getMainAdd().getKeyType()));
-                    java.util.List<Input> inputs = new ArrayList<>();
+
                     BigInteger fee;
                     if (feeText.getText() == null || feeText.getText().isEmpty()) {
                         fee = BigInteger.TEN;
@@ -1527,53 +1779,19 @@ public class NewGUI {
                     }
                     ki.getMainLog().info("Fee is: " + fee.toString());
 
-                    BigInteger totalInput = BigInteger.ZERO;
-                    for (IAddress a : ki.getAddMan().getActive()) {
-                        if (ki.getTransMan().getUTXOs(a, true) == null) return;
-                        for (Output o : ki.getTransMan().getUTXOs(a, true)) {
-                            if (o.getToken().equals(token)) {
-                                if (inputs.contains(Input.fromOutput(o))) continue;
-                                inputs.add(Input.fromOutput(o));
-                                totalInput = totalInput.add(o.getAmount());
-                                if (totalInput.compareTo(amount) >= 0) break;
-
-                            }
-                        }
-                        if (totalInput.compareTo(amount) >= 0) break;
-
-                    }
-                    if (totalInput.compareTo(amount) < 0) {
-                        ki.getMainLog().info("Not enough " + token.name() + " to do this transaction");
-                        return; // not enough of this token to send;
-                    }
-
-                    BigInteger feeInput = (token.equals(Token.ORIGIN)) ? totalInput : BigInteger.ZERO;
-                    for (IAddress a : ki.getAddMan().getActive()) {
-                        //get inputs
-                        if (feeInput.compareTo(fee) >= 0) break;
-                        for (Output o : ki.getTransMan().getUTXOs(a, true)) {
-                            if (o.getToken().equals(Token.ORIGIN)) {
-                                inputs.add(Input.fromOutput(o));
-                                feeInput = feeInput.add(o.getAmount());
-                                if (feeInput.compareTo(fee) >= 0) break;
-
-                            }
-                        }
-                    }
-
-                    if (feeInput.compareTo(fee) < 0) {
-                        ki.getMainLog().info("Not enough origin to pay for this fee");
-                        return; //not enough origin to send this kind of fee
-                    }
-
                     ITrans trans = null;
-
-
+                    if (ki.getAddMan().getBinary(ki.getAddMan().getMainAdd()) == null) {
+                        ki.getMainLog().warn("Do not have script for address: " + ki.getAddMan().getMainAdd().encodeForChain());
+                        notification("Do not have script for this address");
+                        return;
+                    }
                     try {
-                        trans = ki.getTransMan().createSimple(receiver, amount, fee, token, messageText.getText());
+                        trans = ki.getTransMan().createSimpleMultiSig(ki.getAddMan().getBinary(ki.getAddMan().getMainAdd()), receiver, amount, fee, token, messageText.getText(), 1);
                     } catch (InvalidTransactionException e) {
                         ki.getMainLog().error("Error creating transaction: ", e);
+                        return;
                     }
+                    //TODO this is kind of a weird hack, it relies on the transaction failing to verify to tell if there are enough sigs, we should be specifically checking the sigs.
                     if (ki.getTransMan().verifyTransaction(trans)) {
                         ki.getTransMan().getPending().add(trans);
                         for (Input i : trans.getInputs()) {
@@ -1585,9 +1803,69 @@ public class NewGUI {
                         notification("Sent transaction");
 
                     } else {
-                        ki.debug("Transaction did not verify, not sending and not adding to pending list");
-                        notification("Transaction failed to send");
+                        notification("Not enough signatures. Saving transaction to file.");
+                        try (FileOutputStream fos = new FileOutputStream("Transaction.amp")) {
+                            fos.write(trans.serializeToAmplet().serializeToBytes());
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
                     }
+                }
+            }
+        });
+
+        loadTransaction.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+
+                Path path = Paths.get("Transaction.amp");
+                try {
+                    ITrans trans = NewTrans.fromAmplet(Amplet.create(Files.readAllBytes(path)));
+                    Binary bin = null;
+
+                    for (IAddress a : ki.getAddMan().getAll()) {
+                        if (trans.getInputs().get(0).getAddress().encodeForChain().equals(a.encodeForChain()) && a.isP2SH()) {
+                            bin = ki.getAddMan().getBinary(a);
+                        }
+                    }
+                    if (bin == null) {
+                        notification("Do not have script for the address in this transaction");
+                        return;
+                    }
+                    WritableMemory wm = WritableMemory.deserializeFromBytes(Utils.fromBase64(trans.getSig(Utils.toBase64(bin.serializeToAmplet().serializeToBytes()))));
+
+                    int i = 0;
+                    for (; i < 32; i++) {
+                        try {
+                            KeyKeyTypePair kktp = KeyKeyTypePair.fromBytes(bin.getConstantMemory().getElement(i).getData());
+                            if (kktp == null) break;
+                            if (kktp.getKey() == null) break;
+                            if (kktp.getKeyType() == null) break;
+                            if (ki.getEncryptMan().getPublicKeyString(kktp.getKeyType()).equals(Utils.toBase64(kktp.getKey()))) {
+                                wm.setElement(ki.getEncryptMan().sign(trans.toSignBytes(), kktp.getKeyType()), i);
+                            }
+                        } catch (Exception e) {
+                            //fail quietly
+                            break;
+                        }
+                    }
+                    multiSigTransCache = trans;
+                    multiSigBinaryCache = bin;
+                    multiSigWMCache = wm;
+                    BigInteger amount = BigInteger.ZERO;
+                    for (Output out : trans.getOutputs()) {
+                        if (out.getAddress().encodeForChain().equals(trans.getInputs().get(0).getAddress().encodeForChain()))
+                            continue;
+                        addressText.setText(out.getAddress().encodeForChain());
+                        amount = amount.add(out.getAmount());
+                    }
+                    messageText.setText(trans.getMessage());
+                    amountText.setText("" + (amount.doubleValue() / 100_000_000D));
+
+                    //trans.addSig(Utils.toBase64(bin.serializeToAmplet().serializeToBytes()),Utils.toBase64(wm.serializeToBytes()));
+
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
             }
         });
@@ -1913,14 +2191,14 @@ public class NewGUI {
                             hashrateChart.setMinWidth(miningTab.getWidth());
                             miningIntesity.setMinWidth(miningTab.getWidth() - 20);
                             miLabel.setLayoutX((miningTab.getWidth() / 2) - (miLabel.getWidth() / 2) - 5);
-                            addressText.setLayoutX(walletPane.getWidth() - (addressText.getWidth() + 5));
-                            amountText.setLayoutX(walletPane.getWidth() - (amountText.getWidth() + 5));
-                            messageText.setLayoutX(walletPane.getWidth() - (messageText.getWidth() + 5));
-                            feeText.setLayoutX(walletPane.getWidth() - (feeText.getWidth() + 5));
-                            sendButton.setLayoutX(walletPane.getWidth() - (sendButton.getWidth() + 5));
+                            //addressText.setLayoutX(walletPane.getWidth() - (addressText.getWidth() + 5));
+                            //amountText.setLayoutX(walletPane.getWidth() - (amountText.getWidth() + 5));
+                            //messageText.setLayoutX(walletPane.getWidth() - (messageText.getWidth() + 5));
+                            //feeText.setLayoutX(walletPane.getWidth() - (feeText.getWidth() + 5));
+                            walletBox.setLayoutX(walletPane.getWidth() - (walletBox.getWidth() + 5));
                             walletAmount.setLayoutX(walletPane.getWidth() - (walletAmount.getWidth() + 15));
                             tokenLabel.setLayoutX(walletAmount.getLayoutX() + 10);
-                            transactionTable.setMinWidth(walletPane.getWidth() - (sendButton.getWidth() + 65));
+                            transactionTable.setMinWidth(walletPane.getWidth() - (walletBox.getWidth() + 65));
                             transactionTable.setMinHeight(walletPane.getHeight() - 170);
                             //versionLabel.setLayoutX(helpPane.getWidth() / 2 - (versionLabel.getWidth() / 2));
                             //helpText.setLayoutX(helpPane.getWidth() / 2 - (helpText.getWidth() / 2));
@@ -2109,8 +2387,9 @@ public class NewGUI {
      * JFoenix (the library that allows this) is fucking retarded and does stupid shit with the masonry pane that
      * makes it really hard to do an interesting combination of sizes of blocks, so, most blocks are the same or
      * very similar in size.
+     *
      * @param bottomRange from block
-     * @param topRange to block
+     * @param topRange    to block
      */
     private void fillMasonry(BigInteger bottomRange, BigInteger topRange) {
         if (topRange.compareTo(ki.getChainMan().currentHeight()) > 0) {

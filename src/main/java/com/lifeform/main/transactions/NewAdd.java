@@ -2,7 +2,6 @@ package com.lifeform.main.transactions;
 
 import com.lifeform.main.data.EncryptionManager;
 import com.lifeform.main.data.Utils;
-
 import java.io.UnsupportedEncodingException;
 
 /**
@@ -44,6 +43,16 @@ public class NewAdd implements IAddress {
         if (version != PREFIXED_VERSION) throw new InvalidAddressException("Prefix used with non prefix version");
         this.prefixed = true;
         if (prefix.length() != 5) throw new InvalidAddressException("Prefix is not 5 characters long");
+        if (prefix.contains(" ")) throw new InvalidAddressException("Prefixes must not have spaces");
+        try {
+            byte[] bytes = prefix.getBytes("UTF-8");
+            String checkString = new String(bytes, "UTF-8");
+            if (!checkString.equals(prefix)) {
+                throw new InvalidAddressException("Prefix failed to encode to UTF-8 correctly. Check special characters");
+            }
+        } catch (UnsupportedEncodingException e) {
+            throw new InvalidAddressException("Prefix is not UTF-8 encodable");
+        }
         this.prefix = prefix;
     }
 
@@ -185,12 +194,12 @@ public class NewAdd implements IAddress {
         return Utils.toBase64(eoCheck);
     }
 
-    private final byte VSIZE = 1;
-    private final byte LSIZE = 1;
-    private final byte P2SHSIZE = 1;
-    private final byte KTSIZE = 1;
-    private final byte PREFSIZE = 5;
-    private final byte CHECKSIZE = 6;
+    private static final byte VSIZE = 1;
+    private static final byte LSIZE = 1;
+    private static final byte P2SHSIZE = 1;
+    private static final byte KTSIZE = 1;
+    private static final byte PREFSIZE = 5;
+    private static final byte CHECKSIZE = 6;
 
     @Override
     public byte[] toByteArray() {
@@ -333,6 +342,11 @@ public class NewAdd implements IAddress {
     @Override
     public KeyType getKeyType() {
         return keyType;
+    }
+
+    @Override
+    public AddressLength getAddressLength() {
+        return AddressLength.byIndicator(lengthIndicator);
     }
 
     public static NewAdd createNew(String key, String entropy, AddressLength length, boolean p2sh, KeyType type) throws InvalidAddressException {

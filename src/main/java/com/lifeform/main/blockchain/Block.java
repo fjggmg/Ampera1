@@ -123,7 +123,7 @@ public class Block implements IAmpAmpletSerializable {
     private String sHeight;
     public String header()
     {
-        if (payload.length > 192) return null;//limit on payload
+        if (payload.length > 256) return null;//limit on payload
         if(solverHash == null || solverHash.isEmpty())
         {
             solverHash = EncryptionManager.sha512(solver);

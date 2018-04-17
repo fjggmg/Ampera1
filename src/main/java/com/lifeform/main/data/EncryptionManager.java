@@ -285,7 +285,7 @@ public class EncryptionManager  implements IEncryptMan{
 
     public PrivateKey privKeyFromString(String key, KeyType keyType) {
 
-
+        if (keyType.equals(KeyType.ED25519)) return privKeyFromStringED(key);
         byte[] encodedPrivateKey = Utils.fromBase64(key);
         KeyFactory keyFactory = null;
         try {
@@ -304,13 +304,32 @@ public class EncryptionManager  implements IEncryptMan{
 
     }
 
+    public PrivateKey privKeyFromStringED(String key) {
+
+
+        byte[] encodedPrivateKey = Utils.fromBase64(key);
+        KeyFactory keyFactory = null;
+        try {
+            keyFactory = KeyFactory.getInstance("EDDSA");
+            PKCS8EncodedKeySpec privateKeySpec = new PKCS8EncodedKeySpec(
+                    encodedPrivateKey);
+            PrivateKey privateKey = keyFactory.generatePrivate(privateKeySpec);
+            return privateKey;
+        } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
+            //logger.error(e.getMessage());
+            //logger.debug("Could not read private key from string");
+        }
+        return null;
+
+    }
+
 
     public PublicKey getPublicKey(KeyType keyType) {
         //System.out.println("Public key requested: "  + keyType);
         if (keyType.equals(KeyType.BRAINPOOLP512T1)) {
             if (pair == null) return null;
             return pair.getPublic();
-        } else if (keyType.equals(KeyType.ED25519)) {
+        } else if (keyType.equals(KeyType.ED25519) || keyType.equals(KeyType.NONE)) {
             if (edPair == null) return null;
             return edPair.getPublic();
         }

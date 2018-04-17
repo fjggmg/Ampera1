@@ -98,15 +98,26 @@
                                                 <Font size="18.0" />
                                             </font>
                                         </Label>
-                                        <JFXTextField fx:id="addressText" layoutX="480.0" layoutY="101.0" promptText="Address*" />
-                                        <JFXTextField fx:id="amountText" layoutX="480.0" layoutY="126.0" promptText="Amount*" />
-                                        <JFXTextField fx:id="feeText" layoutX="480.0" layoutY="151.0" promptText="Fee" />
-                                        <JFXTextField fx:id="messageText" layoutX="480.0" layoutY="176.0" promptText="Message" />
-                                        <JFXButton fx:id="sendButton" layoutX="481.0" layoutY="211.0" prefHeight="25.0" prefWidth="135.0" text="Send">
-                                            <font>
-                                                <Font size="14.0" />
-                                            </font>
-                                        </JFXButton>
+                                        <VBox fx:id="walletBox" layoutX="480.0" layoutY="101.0" spacing="5.0">
+                                            <children>
+                                                <JFXTextField fx:id="addressText" promptText="Address*"/>
+                                                <JFXTextField fx:id="amountText" promptText="Amount*"/>
+                                                <JFXTextField fx:id="feeText" promptText="Fee"/>
+                                                <JFXTextField fx:id="messageText" promptText="Message"/>
+                                                <JFXButton fx:id="sendButton" prefHeight="30.0" prefWidth="150.0"
+                                                           text="Send">
+                                                    <font>
+                                                        <Font size="14.0"/>
+                                                    </font>
+                                                </JFXButton>
+                                                <JFXButton fx:id="loadTransaction" prefHeight="34.0" prefWidth="150.0"
+                                                           text="Load Transaction">
+                                                    <font>
+                                                        <Font size="14.0"/>
+                                                    </font>
+                                                </JFXButton>
+                                            </children>
+                                        </VBox>
                                         <JFXTreeTableView fx:id="transactionTable" layoutX="14.0" layoutY="164.0" prefHeight="201.0" prefWidth="410.0" stylesheets="@tablestyle.css" />
                                         <Label fx:id="addressLabel" layoutX="14.0" layoutY="66.0" text="Address-" />
                                         <Label fx:id="heightLabel" layoutX="14.0" layoutY="44.0" text="Chain Height -" />
@@ -184,46 +195,72 @@
                                 </Pane>
                                 <Pane fx:id="addressPane" prefHeight="200.0" prefWidth="200.0" visible="false">
                                     <children>
-                                        <JFXListView fx:id="addressList" layoutX="14.0" layoutY="13.0"
-                                                     prefHeight="528.0" prefWidth="603.0"/>
-                                        <Label fx:id="entropyLabel" layoutX="631.0" layoutY="364.0"
-                                               text="Entropy of Selection:"/>
-                                        <VBox fx:id="addressControls" layoutX="631.0" layoutY="14.0" prefHeight="202.0"
-                                              prefWidth="141.0" spacing="5.0">
+                                        <HBox layoutX="14.0" layoutY="13.0" prefHeight="528.0" prefWidth="1045.0"
+                                              spacing="10.0">
                                             <children>
-                                                <HBox prefHeight="28.0" prefWidth="141.0" spacing="5.0">
+                                                <JFXListView fx:id="addressList" prefHeight="528.0" prefWidth="732.0"/>
+                                                <VBox prefHeight="528.0" prefWidth="302.0">
                                                     <children>
-                                                        <JFXButton fx:id="singleSig" prefWidth="5000.0"
-                                                                   text="Single Sig"/>
-                                                        <JFXButton fx:id="multiSig" prefWidth="5000.0"
-                                                                   text="Multi Sig"/>
-                                                    </children>
-                                                </HBox>
-                                                <JFXTextField fx:id="entropyField" labelFloat="true"
-                                                              promptText="Entropy"/>
-                                                <JFXButton fx:id="createAddress" prefHeight="25.0" prefWidth="136.0"
-                                                           text="Create"/>
-                                                <JFXButton fx:id="deleteAddress" prefHeight="25.0" prefWidth="136.0"
-                                                           text="Delete"/>
-                                                <JFXButton fx:id="setSpendAddress" prefHeight="25.0" prefWidth="136.0"
-                                                           text="Set Spend Address"/>
-                                                <Label text="KeyType:"/>
-                                                <JFXComboBox fx:id="keyType" prefHeight="25.0" prefWidth="5000.0"/>
-                                                <Label text="Address Length"/>
-                                                <JFXComboBox fx:id="addressLength" prefWidth="5000.0"/>
-                                                <VBox fx:id="multiSigVbox" prefHeight="127.0" prefWidth="141.0">
-                                                    <children>
-                                                        <JFXTextField fx:id="addPubKey" promptText="Add Public Key"/>
-                                                        <JFXButton fx:id="addKeyBtn" prefHeight="25.0"
-                                                                   prefWidth="5000.0" text="Add Key"/>
-                                                        <Label text="Sigs Required:"/>
-                                                        <JFXComboBox fx:id="sigsRequired" prefWidth="5000.0"/>
-                                                        <JFXButton fx:id="clearKeys" prefWidth="5000.0"
-                                                                   text="Clear Keys"/>
+                                                        <VBox fx:id="addressControls" prefHeight="202.0"
+                                                              prefWidth="141.0" spacing="10.0">
+                                                            <children>
+                                                                <HBox prefHeight="28.0" prefWidth="141.0" spacing="5.0">
+                                                                    <children>
+                                                                        <JFXButton fx:id="singleSig" prefWidth="5000.0"
+                                                                                   text="Single Sig"/>
+                                                                        <JFXButton fx:id="multiSig" prefWidth="5000.0"
+                                                                                   text="Multi Sig"/>
+                                                                        <JFXButton fx:id="loadMSAddress"
+                                                                                   prefWidth="5000.0"
+                                                                                   text="Load MultiSig"/>
+                                                                    </children>
+                                                                </HBox>
+                                                                <JFXTextField fx:id="entropyField" labelFloat="true"
+                                                                              promptText="Entropy"/>
+                                                                <JFXTextField fx:id="prefixField" labelFloat="true"
+                                                                              promptText="Prefix"/>
+                                                                <JFXButton fx:id="createAddress" prefHeight="25.0"
+                                                                           prefWidth="5000.0" text="Create"/>
+                                                                <JFXButton fx:id="deleteAddress" prefHeight="25.0"
+                                                                           prefWidth="5000.0" text="Delete"/>
+                                                                <HBox spacing="5.0">
+                                                                    <children>
+                                                                        <JFXButton fx:id="setSpendAddress"
+                                                                                   prefHeight="25.0" prefWidth="5000.0"
+                                                                                   text="Set Spend Address"/>
+                                                                        <JFXButton fx:id="saveMSAddress"
+                                                                                   prefWidth="5000.0"
+                                                                                   text="Save MultiSig Address"/>
+                                                                    </children>
+                                                                </HBox>
+                                                                <Label text="KeyType:"/>
+                                                                <JFXComboBox fx:id="keyType" prefHeight="25.0"
+                                                                             prefWidth="5000.0"/>
+                                                                <JFXButton fx:id="copyPublicKey" prefWidth="5000.0"
+                                                                           text="Copy Public Key"/>
+                                                                <Label text="Address Length"/>
+                                                                <JFXComboBox fx:id="addressLength" prefWidth="5000.0"/>
+                                                                <VBox fx:id="multiSigVbox" prefHeight="127.0"
+                                                                      prefWidth="141.0">
+                                                                    <children>
+                                                                        <JFXTextField fx:id="addPubKey"
+                                                                                      promptText="Add Public Key"/>
+                                                                        <JFXButton fx:id="addKeyBtn" prefHeight="25.0"
+                                                                                   prefWidth="5000.0" text="Add Key"/>
+                                                                        <Label text="Sigs Required:"/>
+                                                                        <JFXComboBox fx:id="sigsRequired"
+                                                                                     prefWidth="5000.0"/>
+                                                                        <JFXButton fx:id="clearKeys" prefWidth="5000.0"
+                                                                                   text="Clear Keys"/>
+                                                                    </children>
+                                                                </VBox>
+                                                            </children>
+                                                        </VBox>
+                                                        <Label fx:id="entropyLabel" text="Entropy of Selection:"/>
                                                     </children>
                                                 </VBox>
                                             </children>
-                                        </VBox>
+                                        </HBox>
                                     </children>
                                 </Pane>
                                 <Pane fx:id="blockPane" prefHeight="200.0" prefWidth="200.0" visible="false">

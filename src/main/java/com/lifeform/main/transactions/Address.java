@@ -213,6 +213,11 @@ public class Address implements Serializable, IAddress {
         return KeyType.BRAINPOOLP512T1;
     }
 
+    @Override
+    public AddressLength getAddressLength() {
+        return AddressLength.SHA224;
+    }
+
     /**
      * This method will point the array to NewAdd if it is not of the old address spec version, this way, we can reliably
      * make sure we're not breaking code because we can use the same code we were using before NewAdd came around. This

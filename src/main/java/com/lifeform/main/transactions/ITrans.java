@@ -48,4 +48,6 @@ public interface ITrans extends IAmpAmpletSerializable {
 
     String getMessage();
     void addSig(String key,String sig);
+
+    String getSig(String key);
 }

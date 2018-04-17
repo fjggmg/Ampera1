@@ -1,5 +1,7 @@
 package com.lifeform.main.transactions;
 
+import engine.binary.Binary;
+
 import java.util.List;
 
 /**
@@ -32,4 +34,7 @@ public interface IAddMan {
 
     void deleteAddress(IAddress address);
 
+    void associateBinary(IAddress address, Binary bin);
+
+    Binary getBinary(IAddress address);
 }

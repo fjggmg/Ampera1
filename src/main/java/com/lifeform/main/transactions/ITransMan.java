@@ -1,6 +1,7 @@
 package com.lifeform.main.transactions;
 
 import com.lifeform.main.blockchain.Block;
+import engine.binary.Binary;
 
 import java.math.BigInteger;
 import java.util.List;
@@ -28,6 +29,8 @@ public interface ITransMan {
     void close();
 
     void clear();
+
+    ITrans createSimpleMultiSig(Binary bin, IAddress receiver, BigInteger amount, BigInteger fee, Token token, String message, int multipleOuts) throws InvalidTransactionException;
 
     ITrans createSimple(IAddress receiver, BigInteger amount, BigInteger fee, Token token, String message) throws InvalidTransactionException;
 
