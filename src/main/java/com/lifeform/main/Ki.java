@@ -234,7 +234,7 @@ public class Ki extends Thread implements IKi {
 
             Block b = getChainMan().formEmptyBlock(TransactionFeeCalculator.MIN_FEE);
             PoolBlockHeader pbh = new PoolBlockHeader();
-            pbh.coinbase = b.getCoinbase().toJSON();
+            pbh.coinbase = b.getCoinbase().serializeToAmplet().serializeToBytes();
             ki.debug("=================================CURRENT WORK HEIGHT: " + b.height);
             pbh.height = b.height;
             pbh.ID = b.ID;
@@ -416,7 +416,7 @@ public class Ki extends Thread implements IKi {
     public void newTransPool() {
         Block b = getChainMan().formEmptyBlock(TransactionFeeCalculator.MIN_FEE);
         PoolBlockHeader pbh = new PoolBlockHeader();
-        pbh.coinbase = b.getCoinbase().toJSON();
+        pbh.coinbase = b.getCoinbase().serializeToAmplet().serializeToBytes();
         pbh.height = b.height;
         pbh.ID = b.ID;
         pbh.merkleRoot = b.merkleRoot();
@@ -511,7 +511,7 @@ public class Ki extends Thread implements IKi {
             miningPool.updateCurrentHeight(ki.getChainMan().currentHeight());
             Block b = getChainMan().formEmptyBlock(TransactionFeeCalculator.MIN_FEE);
             PoolBlockHeader pbh = new PoolBlockHeader();
-            pbh.coinbase = b.getCoinbase().toJSON();
+            pbh.coinbase = b.getCoinbase().serializeToAmplet().serializeToBytes();
             pbh.height = b.height;
             pbh.ID = b.ID;
             pbh.merkleRoot = b.merkleRoot();

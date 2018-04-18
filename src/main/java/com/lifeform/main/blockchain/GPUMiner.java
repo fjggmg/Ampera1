@@ -1,5 +1,6 @@
 package com.lifeform.main.blockchain;
 
+import amp.Amplet;
 import com.lifeform.main.IKi;
 import com.lifeform.main.Settings;
 import com.lifeform.main.data.EncryptionManager;
@@ -9,6 +10,7 @@ import com.lifeform.main.network.BlockHeader;
 import com.lifeform.main.network.TransactionPacket;
 import com.lifeform.main.network.pool.PoolBlockHeader;
 import com.lifeform.main.transactions.InvalidTransactionException;
+import com.lifeform.main.transactions.NewTrans;
 import com.lifeform.main.transactions.Transaction;
 import com.lifeform.main.transactions.TransactionFeeCalculator;
 import gpuminer.JOCL.constants.JOCLConstants;
@@ -114,11 +116,9 @@ public class GPUMiner extends Thread implements IMiner {
                     b.height = ki.getPoolData().currentWork.height;
                     b.merkleRoot = ki.getPoolData().currentWork.merkleRoot;
                     b.solver = ki.getPoolData().currentWork.solver;
-                    try {
-                        b.setCoinbase(Transaction.fromJSON(ki.getPoolData().currentWork.coinbase));
-                    } catch (InvalidTransactionException e) {
-                        e.printStackTrace();
-                    }
+
+                    b.setCoinbase(NewTrans.fromAmplet(Amplet.create(ki.getPoolData().currentWork.coinbase)));
+
 
                 }
 
