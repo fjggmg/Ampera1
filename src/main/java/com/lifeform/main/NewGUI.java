@@ -744,6 +744,10 @@ public class NewGUI {
             @Override
             public void handle(MouseEvent event) {
                 if (cpNew.getText().equals(cpConfirm.getText())) {
+                    if (cpNew.getText().isEmpty()) {
+                        notification("Password cannot be empty");
+                        return;
+                    }
                     if (verifyPassword(cpCurrent.getText())) {
                         deleteOldPassword(cpCurrent.getText());
 
@@ -2590,12 +2594,14 @@ public class NewGUI {
     }
 
     private void createNewPassword(String password) {
+        if (password == null || password.isEmpty()) return;
         String hash = "";
         hash = superHash(password + hash, 64);
         pmap.put(hash, "p");
     }
 
     private void deleteOldPassword(String password) {
+        if (password == null || password.isEmpty()) return;
         String hash = "";
         hash = superHash(password + hash, 64);
         pmap.remove(hash);

@@ -30,7 +30,7 @@ public class KiEventHandler implements IPoolEventHandler {
                 break;
             case RECEIPTS_AVAILABLE:
                 ki.debug("Paying miners in pool");
-                SafeTransactionGenerator stg = new SafeTransactionGenerator(ki.getPoolManager(), (Address) ki.getAddMan().getMainAdd(), ki);
+                SafeTransactionGenerator stg = new SafeTransactionGenerator(ki.getPoolManager(), ki);
                 ITrans t = stg.generatePayPeriodTransaction("Payment for pool mining");
                 if (t == null) return;
                 if (ki.getTransMan().verifyTransaction(t)) {

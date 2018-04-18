@@ -1,5 +1,7 @@
 package com.lifeform.main.network;
 
+import com.lifeform.main.Ki;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,7 +39,7 @@ public class GlobalPacketQueuer extends Thread {
                                         connMan.getPacketProcessor().process(packet);
                                     } catch (Exception e) {
                                         //get ki in here for debug
-                                        System.out.println("Failed to process packet");
+                                        Ki.getInstance().getMainLog().error("Failed to process packet", e);
                                     }
                                 }
                             };

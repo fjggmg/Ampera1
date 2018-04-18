@@ -234,7 +234,9 @@ public class Block implements IAmpAmpletSerializable {
         AC_SingleElement height = AC_SingleElement.create(AmpIDs.HEIGHT_GID, this.height.toByteArray());
         AC_SingleElement solver = AC_SingleElement.create(AmpIDs.SOLVER_GID, Utils.fromBase64(this.solver));
         AC_SingleElement timestamp = AC_SingleElement.create(AmpIDs.TIMESTAMP_GID, this.timestamp);
-        AC_SingleElement payload = AC_SingleElement.create(AmpIDs.PAYLOAD_GID, this.payload);
+        AC_SingleElement payload = null;
+        if (this.payload != null && this.payload.length != 0)
+            payload = AC_SingleElement.create(AmpIDs.PAYLOAD_GID, this.payload);
         AC_SingleElement coinbase = AC_SingleElement.create(AmpIDs.COINBASE_GID, this.coinbase);
         AC_ClassInstanceIDIsIndex transactions = AC_ClassInstanceIDIsIndex.create(AmpIDs.TRANSACTIONS_CID, "Transactions");
 
@@ -247,7 +249,8 @@ public class Block implements IAmpAmpletSerializable {
         acc.addClass(height);
         acc.addClass(solver);
         acc.addClass(timestamp);
-        acc.addClass(payload);
+        if (payload != null)
+            acc.addClass(payload);
         acc.addClass(coinbase);
         acc.addClass(transactions);
 
@@ -267,7 +270,9 @@ public class Block implements IAmpAmpletSerializable {
         }
         String solver = Utils.toBase64(amp.unpackGroup(AmpIDs.SOLVER_GID).getElement(0));
         long timestamp = amp.unpackGroup(AmpIDs.TIMESTAMP_GID).getElementAsLong(0);
-        byte[] payload = amp.unpackGroup(AmpIDs.PAYLOAD_GID).getElement(0);
+        byte[] payload = null;
+        if (amp.unpackGroup(AmpIDs.PAYLOAD_GID) != null)
+            payload = amp.unpackGroup(AmpIDs.PAYLOAD_GID).getElement(0);
         ITrans coinbase = null;
         try {
             coinbase = Transaction.fromAmplet(amp.unpackGroup(AmpIDs.COINBASE_GID).getElementAsAmplet(0));
@@ -293,7 +298,8 @@ public class Block implements IAmpAmpletSerializable {
         b.height = height;
         b.solver = solver;
         b.timestamp = timestamp;
-        b.payload = payload;
+        if (payload != null)
+            b.payload = payload;
         b.setCoinbase(coinbase);
         b.addAll(transactions);
 
