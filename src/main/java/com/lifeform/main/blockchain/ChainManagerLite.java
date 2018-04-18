@@ -232,7 +232,7 @@ public class ChainManagerLite implements IChainMan {
     @Override
     public Block formEmptyBlock(BigInteger minFee) {
         Block b = new Block();
-        b.solver = ki.getEncryptMan().getPublicKeyString(ki.getAddMan().getMainAdd().getKeyType());
+        b.solver = ki.getAddMan().getMainAdd().encodeForChain();
         b.timestamp = System.currentTimeMillis();
 
         Map<String, ITrans> transactions = new HashMap<>();

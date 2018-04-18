@@ -35,7 +35,7 @@ public class PoolBlockHeader implements Serializable, PoolPacket {
         Block b = new Block();
         if (!ki.getOptions().poolRelay) {
 
-            b.solver = solver;
+            b.solver = ki.getPoolData().payTo;
             b.merkleRoot = merkleRoot;
             ki.debug("merkle root: " + merkleRoot);
             b.ID = ID;
@@ -46,8 +46,8 @@ public class PoolBlockHeader implements Serializable, PoolPacket {
             b.prevID = prevID;
 
             try {
-                payload = (ki.getPoolData().payTo + ki.getPoolData().ID).getBytes("UTF-8");
-                b.payload = (ki.getPoolData().payTo + ki.getPoolData().ID).getBytes("UTF-8");
+                payload = (ki.getPoolData().ID).getBytes("UTF-8");
+                b.payload = (ki.getPoolData().ID).getBytes("UTF-8");
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
             }

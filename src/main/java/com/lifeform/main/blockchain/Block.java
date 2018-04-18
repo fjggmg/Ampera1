@@ -124,6 +124,7 @@ public class Block implements IAmpAmpletSerializable {
     public String header()
     {
         if (payload.length > 256) return null;//limit on payload
+        if (solver.length() > 1024) return null;//limit on solver (essentially payload 2)
         if(solverHash == null || solverHash.isEmpty())
         {
             solverHash = EncryptionManager.sha512(solver);
@@ -232,7 +233,7 @@ public class Block implements IAmpAmpletSerializable {
             prevID = AC_SingleElement.create(AmpIDs.PREV_ID_GID, Utils.fromBase64(this.prevID));
         }
         AC_SingleElement height = AC_SingleElement.create(AmpIDs.HEIGHT_GID, this.height.toByteArray());
-        AC_SingleElement solver = AC_SingleElement.create(AmpIDs.SOLVER_GID, Utils.fromBase64(this.solver));
+        AC_SingleElement solver = AC_SingleElement.create(AmpIDs.SOLVER_GID, this.solver);
         AC_SingleElement timestamp = AC_SingleElement.create(AmpIDs.TIMESTAMP_GID, this.timestamp);
         AC_SingleElement payload = null;
         if (this.payload != null && this.payload.length != 0)
@@ -268,7 +269,7 @@ public class Block implements IAmpAmpletSerializable {
         } else {
             prevID = Utils.toBase64(amp.unpackGroup(AmpIDs.PREV_ID_GID).getElement(0));
         }
-        String solver = Utils.toBase64(amp.unpackGroup(AmpIDs.SOLVER_GID).getElement(0));
+        String solver = amp.unpackGroup(AmpIDs.SOLVER_GID).getElementAsString(0);
         long timestamp = amp.unpackGroup(AmpIDs.TIMESTAMP_GID).getElementAsLong(0);
         byte[] payload = null;
         if (amp.unpackGroup(AmpIDs.PAYLOAD_GID) != null)

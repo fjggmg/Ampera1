@@ -452,7 +452,7 @@ public class ChainManager implements IChainMan {
         //setHeight(block.height);
 
         if (!ki.getOptions().nogui) {
-            if (ki.getEncryptMan().getPublicKeyString(KeyType.BRAINPOOLP512T1).equals(block.solver) || ki.getEncryptMan().getPublicKeyString(KeyType.ED25519).equals(block.solver)) {
+            if (block.getCoinbase().getOutputs().get(0).getAddress().encodeForChain().equals(ki.getAddMan().getMainAdd().encodeForChain())) {
                 while (ki.getGUIHook() == null) {
                 }
                 ki.getGUIHook().blockFound();
@@ -649,10 +649,7 @@ public class ChainManager implements IChainMan {
     @Override
     public Block formEmptyBlock(BigInteger minFee) {
         Block b = new Block();
-        if (ki.getAddMan().getMainAdd().getKeyType().equals(KeyType.NONE))
-            b.solver = ki.getEncryptMan().getPublicKeyString(KeyType.ED25519);
-        else
-            b.solver = ki.getEncryptMan().getPublicKeyString(ki.getAddMan().getMainAdd().getKeyType());
+        b.solver = ki.getAddMan().getMainAdd().encodeForChain();
         b.timestamp = System.currentTimeMillis();
 
         Map<String,ITrans> transactions = new HashMap<>();

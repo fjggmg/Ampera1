@@ -277,6 +277,7 @@ public class AddressManager implements IAddMan {
     public void deleteAddress(IAddress address) {
         inactive.remove(address);
         addresses.remove(address);
+        entropyMap.remove(address);
         save();
 
     }
