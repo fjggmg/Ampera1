@@ -51,17 +51,7 @@ public class GPUMiner extends Thread implements IMiner {
 
 
     public static int init(IKi ki, ContextMaster cm) throws MiningIncompatibleException {
-        //You have to shut these down when you're done with them.
-        for (SHA3Miner m : gpuMiners) {
-            //This takes the place of stopAndClear() for putting the SHA3Miner and its SHA3MinerThread object in an unrecoverable state.
-            //It will completely kill the thread that interacts with the GPU.
-            m.shutdown();
-        }
-        gpuMiners.clear();
-        //Gotta shut this down, too, and after the SHA3Miner objects are shut down.
-        if (platforms != null) {
-            platforms.shutdown();
-        }
+
         platforms = cm;
         ArrayList<DeviceContext> jcacqs = platforms.getContexts();
 
@@ -145,6 +135,7 @@ public class GPUMiner extends Thread implements IMiner {
                 threadCount = TimedAutotune.getAutotuneSettingsMap().get(jcacq.getDInfo().getDeviceName()).threadFactor;
 
                 if (miningIntensity == 0) miningIntensity = 1;
+                if (this.isInterrupted()) return;
                 miner.setIntensity(miningIntensity / 100);
                 byte[] difficulty = new byte[64];
                 int p = 63;
@@ -299,6 +290,19 @@ public class GPUMiner extends Thread implements IMiner {
         super.interrupt();
     }
 
+    public static void shutdown() {
+        //You have to shut these down when you're done with them.
+        for (SHA3Miner m : gpuMiners) {
+            //This takes the place of stopAndClear() for putting the SHA3Miner and its SHA3MinerThread object in an unrecoverable state.
+            //It will completely kill the thread that interacts with the GPU.
+            m.shutdown();
+        }
+        gpuMiners.clear();
+        //Gotta shut this down, too, and after the SHA3Miner objects are shut down.
+        if (platforms != null) {
+            platforms.shutdown();
+        }
+    }
     @Override
     public long getHashrate() {
         return hashrate;

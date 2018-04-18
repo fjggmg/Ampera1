@@ -17,6 +17,7 @@ import com.lifeform.main.blockchain.ChainManager;
 import com.lifeform.main.blockchain.GPUMiner;
 import com.lifeform.main.data.*;
 import com.lifeform.main.network.IConnectionManager;
+import com.lifeform.main.network.TransactionDataRequest;
 import com.lifeform.main.network.TransactionPacket;
 import com.lifeform.main.transactions.*;
 import engine.binary.Binary;
@@ -160,6 +161,7 @@ public class NewGUI {
     public JFXButton saveMSAddress;
     public VBox walletBox;
     public JFXButton loadTransaction;
+    public JFXButton copySelectedAdd;
     private CandlestickGraph exchangeGraph;
     public VBox passwordVbox;
     public VBox exchangeGraphBox;
@@ -622,6 +624,14 @@ public class NewGUI {
                 clpbrd.setContents(stringSelection, null);
             }
         });
+        copySelectedAdd.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                StringSelection stringSelection = new StringSelection(addressList.getSelectionModel().getSelectedItem());
+                Clipboard clpbrd = Toolkit.getDefaultToolkit().getSystemClipboard();
+                clpbrd.setContents(stringSelection, null);
+            }
+        });
         copyPublicKey.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
@@ -1028,15 +1038,19 @@ public class NewGUI {
         singleSig.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
-                createMultiSig = false;
-                addressControls.getChildren().remove(multiSigVbox);
+                if (createMultiSig) {
+                    createMultiSig = false;
+                    addressControls.getChildren().remove(multiSigVbox);
+                }
             }
         });
         multiSig.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
-                createMultiSig = true;
-                addressControls.getChildren().add(multiSigVbox);
+                if (!createMultiSig) {
+                    createMultiSig = true;
+                    addressControls.getChildren().add(multiSigVbox);
+                }
             }
         });
         miningDataHbox.setSpacing(10);
@@ -1290,6 +1304,10 @@ public class NewGUI {
             @Override
             public void handle(MouseEvent event) {
                 IAddress a;
+                if (entropyField.getText().isEmpty()) {
+                    notification("Entropy cannot be empty when creating an address");
+                    return;
+                }
                 if (!createMultiSig) {
 
                     if (prefixField.getText() == null || prefixField.getText().isEmpty()) {
@@ -1363,6 +1381,10 @@ public class NewGUI {
                             IAddress a = ki.getAddMan().createNew(Utils.toBase64(bucket.getBin().serializeToAmplet().serializeToBytes()), new String(bucket.getBin().getEntropy(), "UTF-8"), bucket.getPrefix(), bucket.getAl(), true, KeyType.NONE);
                             ki.getAddMan().associateBinary(a, bucket.getBin());
                             addressList.getItems().add(a.encodeForChain());
+                            if (ki.getOptions().lite) {
+                                TransactionDataRequest tdr = new TransactionDataRequest();
+                                ki.getNetMan().broadcast(tdr);
+                            }
                             return;
                         }
                     }
@@ -1528,6 +1550,7 @@ public class NewGUI {
                 //sendButton.setOpacity(255);
                 loadTransaction.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
                 copyAddress.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
+                copySelectedAdd.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
                 copyPublicKey.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
                 startMining.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
                 //System.out.println("style:" + miningIntesity.getStyle());

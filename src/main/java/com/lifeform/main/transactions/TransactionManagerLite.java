@@ -357,7 +357,7 @@ public class TransactionManagerLite implements ITransMan {
             }
 
             Map<String, KeySigEntropyPair> keySigMap = new HashMap<>();
-            KeySigEntropyPair ksep = new KeySigEntropyPair(null, ki.getAddMan().getEntropyForAdd(ki.getAddMan().getMainAdd()), sIns, ki.getAddMan().getMainAdd().getPrefix(), false, a.getKeyType());
+            KeySigEntropyPair ksep = new KeySigEntropyPair(null, ki.getAddMan().getEntropyForAdd(ki.getAddMan().getMainAdd()), sIns, ki.getAddMan().getMainAdd().getPrefix(), true, a.getKeyType());
             keySigMap.put(Utils.toBase64(bin.serializeToAmplet().serializeToBytes()), ksep);
             ITrans trans = new NewTrans(message, outputs, inputs, keySigMap, TransactionType.NEW_TRANS);
             ki.debug("Transaction has: " + trans.getOutputs().size() + " Outputs before finalization");
@@ -368,11 +368,13 @@ public class TransactionManagerLite implements ITransMan {
             int i = 0;
             for (; i < 32; i++) {
                 try {
+
                     KeyKeyTypePair kktp = KeyKeyTypePair.fromBytes(bin.getConstantMemory().getElement(i).getData());
                     if (kktp == null) break;
                     if (kktp.getKey() == null) break;
                     if (kktp.getKeyType() == null) break;
                     if (ki.getEncryptMan().getPublicKeyString(kktp.getKeyType()).equals(Utils.toBase64(kktp.getKey()))) {
+                        ki.debug("Adding signature to transaction with key: " + kktp.getKeyType());
                         wm.setElement(ki.getEncryptMan().sign(trans.toSignBytes(), kktp.getKeyType()), i);
                     }
                 } catch (Exception e) {

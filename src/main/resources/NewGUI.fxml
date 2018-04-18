@@ -221,8 +221,16 @@
                                                                               promptText="Prefix"/>
                                                                 <JFXButton fx:id="createAddress" prefHeight="25.0"
                                                                            prefWidth="5000.0" text="Create"/>
-                                                                <JFXButton fx:id="deleteAddress" prefHeight="25.0"
-                                                                           prefWidth="5000.0" text="Delete"/>
+                                                                <HBox spacing="5.0">
+                                                                    <children>
+                                                                        <JFXButton fx:id="copySelectedAdd"
+                                                                                   prefWidth="5000.0"
+                                                                                   text="Copy Selected Address"/>
+                                                                        <JFXButton fx:id="deleteAddress"
+                                                                                   prefHeight="25.0" prefWidth="5000.0"
+                                                                                   text="Delete"/>
+                                                                    </children>
+                                                                </HBox>
                                                                 <HBox spacing="5.0">
                                                                     <children>
                                                                         <JFXButton fx:id="setSpendAddress"

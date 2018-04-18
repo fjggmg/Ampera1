@@ -33,9 +33,8 @@ public class MinerManager implements IMinerMan{
     @Override
     public void setup() {
         try {
-            if (cm != null) {
-                cm.shutdown();
-            }
+
+            GPUMiner.shutdown();
             ContextMaster platforms = new ContextMaster();
             devNames.clear();
 
@@ -209,6 +208,9 @@ public class MinerManager implements IMinerMan{
     public void stopMiners() {
         for(IMiner miner:miners)
         {
+            miner.interrupt();
+        }
+        for (IMiner miner : gpuMiners) {
             miner.interrupt();
         }
         //CPUMiner.mining = false; old miner
