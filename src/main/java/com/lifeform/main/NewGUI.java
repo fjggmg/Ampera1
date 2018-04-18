@@ -1326,6 +1326,10 @@ public class NewGUI {
                     addressList.getItems().add(a.encodeForChain());
                 } else {
                     try {
+                        if (keys.isEmpty()) {
+                            notification("No keys have been added");
+                            return;
+                        }
                         Binary bin = ki.getScriptMan().buildMultiSig(keys, sigsRequired.getSelectionModel().getSelectedIndex() + 1, ki.getBCE8(), entropyField.getText().getBytes("UTF-8"), ki.getEncryptMan().getPublicKey(KeyType.valueOf(keyType.getSelectionModel().getSelectedItem().getText())).getEncoded());
                         bin.getProgram().seal();
                         if (prefixField.getText() == null || prefixField.getText().isEmpty()) {
@@ -1381,16 +1385,14 @@ public class NewGUI {
                             IAddress a = ki.getAddMan().createNew(Utils.toBase64(bucket.getBin().serializeToAmplet().serializeToBytes()), new String(bucket.getBin().getEntropy(), "UTF-8"), bucket.getPrefix(), bucket.getAl(), true, KeyType.NONE);
                             ki.getAddMan().associateBinary(a, bucket.getBin());
                             addressList.getItems().add(a.encodeForChain());
-                            if (ki.getOptions().lite) {
-                                TransactionDataRequest tdr = new TransactionDataRequest();
-                                ki.getNetMan().broadcast(tdr);
-                            }
+
                             return;
                         }
                     }
                     notification("Your keys don't exist in this address, not adding");
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    notification("Loading multisig from multisig.address file failed");
+                    //fail quietly for now
                 }
             }
         });
@@ -2600,6 +2602,8 @@ public class NewGUI {
     }
 
     private boolean verifyPassword(String password) {
+        if (password == null || password.isEmpty()) return false;
+        if (pmap.get("fr") == null) return true;
         String hash = "";
         hash = superHash(password + hash, 64);
         return pmap.get(hash) != null;

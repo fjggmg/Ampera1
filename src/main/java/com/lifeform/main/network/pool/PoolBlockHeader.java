@@ -1,5 +1,6 @@
 package com.lifeform.main.network.pool;
 
+import amp.Amplet;
 import com.lifeform.main.IKi;
 import com.lifeform.main.Settings;
 import com.lifeform.main.StringSettings;
@@ -8,10 +9,7 @@ import com.lifeform.main.network.BlockEnd;
 import com.lifeform.main.network.BlockHeader;
 import com.lifeform.main.network.IConnectionManager;
 import com.lifeform.main.network.TransactionPacket;
-import com.lifeform.main.transactions.Address;
-import com.lifeform.main.transactions.ITrans;
-import com.lifeform.main.transactions.InvalidTransactionException;
-import com.lifeform.main.transactions.Transaction;
+import com.lifeform.main.transactions.*;
 
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
@@ -27,7 +25,7 @@ public class PoolBlockHeader implements Serializable, PoolPacket {
     public long timestamp;
     public String prevID;
     public byte[] payload;
-    public String coinbase;
+    public byte[] coinbase;
     public long currentHR;
     public boolean pplns = false;
     @Override
@@ -53,11 +51,9 @@ public class PoolBlockHeader implements Serializable, PoolPacket {
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
             }
-            try {
-                b.setCoinbase(Transaction.fromJSON(coinbase));
-            } catch (InvalidTransactionException e) {
-                e.printStackTrace();
-            }
+
+            b.setCoinbase(NewTrans.fromAmplet(Amplet.create(coinbase)));
+
             ki.getPoolData().blockData = b.gpuHeader();
             ki.debug("Setting as current work");
             ki.getPoolData().currentWork = this;

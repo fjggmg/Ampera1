@@ -134,6 +134,15 @@ public class ChainManager implements IChainMan {
                         //e.printStackTrace();
                     }
                 }
+                BigInteger fees = BigInteger.ZERO;
+
+                for (String t : b.getTransactionKeys()) {
+                    fees = fees.add(b.getTransaction(t).getFee());
+                }
+                ki.getTransMan().addCoinbase(b.getCoinbase(), b.height, fees);
+                for (String t : b.getTransactionKeys()) {
+                    ki.getTransMan().addTransaction(b.getTransaction(t));
+                }
 
                 //csMap.put("height",height.toString());
                 height = height.add(BigInteger.ONE);
