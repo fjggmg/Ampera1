@@ -68,6 +68,12 @@ public class PoolBlockHeader implements Serializable, PoolPacket {
                 ki.debug("====================================End of block data==========================");
                 if (ki.getPoolData().workMap == null) ki.debug("workmap null");
                 else ki.debug("workmap not null");
+                ki.debug("contents of workmap keyset:");
+                for (String mr : ki.getPoolData().workMap.keySet()) {
+                    ki.debug(mr);
+                }
+                ki.debug("Block ID in workmap:");
+                ki.debug(ki.getPoolData().workMap.get(merkleRoot).ID);
                 if (ki.getPoolData().workMap.get(merkleRoot) == null) ki.debug("block not in work map");
                 if (Block.fromAmplet(ki.getPoolData().workMap.get(merkleRoot).serializeToAmplet()) == null)
                     ki.debug("Block did not copy correctly");
