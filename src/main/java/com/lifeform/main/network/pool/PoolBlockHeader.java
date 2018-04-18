@@ -65,7 +65,11 @@ public class PoolBlockHeader implements Serializable, PoolPacket {
                 ki.debug("height: " + height);
                 ki.debug("timestamp: " + timestamp);
                 ki.debug("ID: " + ID);
+                if (ki.getPoolData().workMap.get(merkleRoot) == null) ki.debug("block not in work map");
+                if (Block.fromAmplet(ki.getPoolData().workMap.get(merkleRoot).serializeToAmplet()) == null)
+                    ki.debug("Block did not copy correctly");
                 b = Block.fromAmplet(ki.getPoolData().workMap.get(merkleRoot).serializeToAmplet());
+                ki.debug("Block copied");
                 b.payload = payload;
                 b.timestamp = timestamp;
                 b.ID = ID;

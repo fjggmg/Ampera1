@@ -304,7 +304,7 @@
                                 </Pane>
                                 <Pane fx:id="poolRelay" prefHeight="200.0" prefWidth="200.0" visible="false">
                                     <children>
-                                        <VBox layoutX="-1.0" prefHeight="548.0" prefWidth="1065.0">
+                                        <VBox layoutX="4.0" prefHeight="548.0" prefWidth="1058.0">
                                             <children>
                                                 <HBox>
                                                     <children>
