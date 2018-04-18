@@ -304,23 +304,46 @@
                                 </Pane>
                                 <Pane fx:id="poolRelay" prefHeight="200.0" prefWidth="200.0" visible="false">
                                     <children>
-                                        <Label fx:id="poolNOC" layoutX="14.0" layoutY="14.0" text="Number of Connections -" />
-                                        <JFXSlider fx:id="poolDynamicFeeSlider" blockIncrement="0.25" layoutX="11.0"
-                                                   layoutY="54.0" majorTickUnit="0.25" max="10.0" minorTickCount="0"
-                                                   prefHeight="37.0" prefWidth="601.0" showTickLabels="true"
-                                                   showTickMarks="true" snapToTicks="true" value="0.25"/>
-                                        <Label layoutX="306.0" layoutY="89.0" text="Fee" />
-                                        <JFXToggleButton fx:id="poolDynamicFee" layoutX="177.0" layoutY="97.0" selected="true" text="Dynamic Fee" />
-                                        <JFXTextField fx:id="poolStaticFee" disable="true" layoutX="14.0" layoutY="113.0" promptText="Static PPS" />
-                              <JFXSlider fx:id="payoutSlider" layoutX="11.0" layoutY="155.0" majorTickUnit="10.0" max="120.0" minorTickCount="5" prefHeight="14.0" prefWidth="601.0" showTickLabels="true" showTickMarks="true" snapToTicks="true" value="60.0" />
-                              <Label layoutX="246.0" layoutY="192.0" text="Payout Interval (minutes)" />
-                              <Label fx:id="poolHashrate" layoutX="315.0" layoutY="14.0" text="Current Pool Hashrate (MH/s) - " />
-                                        <Label fx:id="currentPoolShares" layoutX="14.0" layoutY="222.0"
-                                               text="Current Pool Shares -"/>
-                                        <Label fx:id="estimatedNextPayout" layoutX="14.0" layoutY="252.0"
-                                               text="Estimated Next Payout -"/>
-                                        <JFXToggleButton fx:id="pplnsServer" layoutX="328.0" layoutY="97.0" text="PPLNS"
-                                                         textFill="WHITE"/>
+                                        <VBox layoutX="-1.0" prefHeight="548.0" prefWidth="1065.0">
+                                            <children>
+                                                <HBox>
+                                                    <children>
+                                                        <Label fx:id="poolNOC" prefWidth="5000.0"
+                                                               text="Number of Connections -"/>
+                                                        <Label fx:id="poolHashrate" prefWidth="5000.0"
+                                                               text="Current Pool Hashrate (MH/s) - "/>
+                                                    </children>
+                                                </HBox>
+                                                <JFXSlider fx:id="poolDynamicFeeSlider" blockIncrement="0.25"
+                                                           majorTickUnit="0.25" max="10.0" minorTickCount="0"
+                                                           prefHeight="37.0" prefWidth="601.0" showTickLabels="true"
+                                                           showTickMarks="true" snapToTicks="true" value="0.25"/>
+                                                <Label alignment="CENTER" prefWidth="5000.0" text="Fee"/>
+                                                <HBox>
+                                                    <children>
+                                                        <JFXTextField fx:id="poolStaticFee" disable="true"
+                                                                      promptText="Static PPS"/>
+                                                        <JFXToggleButton fx:id="poolDynamicFee" selected="true"
+                                                                         text="Dynamic Fee"/>
+                                                        <JFXToggleButton fx:id="pplnsServer" text="PPLNS"
+                                                                         textFill="WHITE"/>
+                                                    </children>
+                                                </HBox>
+                                                <JFXSlider fx:id="payoutSlider" majorTickUnit="10.0" max="120.0"
+                                                           minorTickCount="5" prefHeight="14.0" prefWidth="601.0"
+                                                           showTickLabels="true" showTickMarks="true" snapToTicks="true"
+                                                           value="60.0"/>
+                                                <Label alignment="CENTER" prefWidth="5000.0"
+                                                       text="Payout Interval (minutes)"/>
+                                                <VBox spacing="5.0">
+                                                    <children>
+                                                        <Label fx:id="currentPoolShares" text="Current Pool Shares -"/>
+                                                        <Label fx:id="estimatedNextPayout"
+                                                               text="Estimated Next Payout -"/>
+                                                    </children>
+                                                </VBox>
+                                            </children>
+                                        </VBox>
                                     </children>
                                 </Pane>
                                 <Pane fx:id="exchangePane" prefHeight="200.0" prefWidth="1077.0" visible="false">

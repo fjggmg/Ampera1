@@ -65,7 +65,7 @@ public class PoolBlockHeader implements Serializable, PoolPacket {
                 ki.debug("height: " + height);
                 ki.debug("timestamp: " + timestamp);
                 ki.debug("ID: " + ID);
-                b = Block.fromJSON(ki.getPoolData().workMap.get(merkleRoot).toJSON());
+                b = Block.fromAmplet(ki.getPoolData().workMap.get(merkleRoot).serializeToAmplet());
                 b.payload = payload;
                 b.timestamp = timestamp;
                 b.ID = ID;
