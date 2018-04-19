@@ -39,5 +39,8 @@ public interface ITransMan {
 
     List<Input> getInputsForAmountAndToken(IAddress address, BigInteger amount, Token token, boolean used);
 
+    List<Input> getInputsForToken(IAddress address, Token token);
+
+    BigInteger getAmountInWallet(IAddress address, Token token);
     void unUseUTXOs(List<Input> inputs);
 }

@@ -47,7 +47,7 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         //cause.printStackTrace();
-        ki.debug("Error caught on server connection: " + cause.getMessage());
+        ki.getMainLog().error("Error caught on server connection: ", cause);
         ctx.close();
     }
 }

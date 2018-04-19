@@ -1,6 +1,7 @@
 package com.lifeform.main;
 
 import com.jfoenix.controls.JFXDecorator;
+import com.lifeform.main.network.Packet;
 import javafx.application.Application;
 import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
@@ -41,6 +42,10 @@ public class FXGUI extends Application {
             @Override
             public void run() {
                 System.out.println("Close requested");
+                if (Ki.getInstance().getOptions().pool) {
+                    Ki.getInstance().close();
+                    return;
+                }
                 NewGUI.close = true;
 
             }

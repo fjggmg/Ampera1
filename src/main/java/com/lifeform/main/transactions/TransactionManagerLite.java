@@ -415,6 +415,17 @@ public class TransactionManagerLite implements ITransMan {
         return inputs;
     }
 
+    //TODO possibly implement these
+    @Override
+    public List<Input> getInputsForToken(IAddress address, Token token) {
+        return null;
+    }
+
+    @Override
+    public BigInteger getAmountInWallet(IAddress address, Token token) {
+        return null;
+    }
+
     @Override
     public void unUseUTXOs(List<Input> inputs) {
         for (Input i : inputs) {

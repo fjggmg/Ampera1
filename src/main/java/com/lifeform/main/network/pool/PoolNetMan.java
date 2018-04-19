@@ -168,12 +168,19 @@ public class PoolNetMan extends Thread implements INetworkManager {
                     while (true) {
                         for (IConnectionManager conn : connections) {
                             StatUpdate su = new StatUpdate();
-                            if (conn == null) continue;
-                            if (ki.getPoolData().addMap.get(conn.getID()) == null) continue;
+                            if (conn == null) {
+                                ki.getMainLog().warn("Skipping connection in pool stat update since it is null");
+                                continue;
+                            }
+                            if (ki.getPoolData().addMap.get(conn.getID()) == null) {
+                                ki.getMainLog().warn("Skipping connection: " + conn.getID() + " in stat update since we don't have address for it");
+                                continue;
+                            }
                             try {
                                 su.shares = ki.getPoolManager().getTotalSharesOfMiner(Address.decodeFromChain(ki.getPoolData().addMap.get(conn.getID())));
-                                //TODO update the above
+
                             } catch (Exception e) {
+                                ki.getMainLog().error("Unable to get shares of miner for stat update", e);
                                 continue;
                             }
                             su.currentPPS = ki.getPoolManager().getCurrentPayPerShare();

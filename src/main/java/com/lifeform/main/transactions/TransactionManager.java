@@ -738,6 +738,31 @@ public class TransactionManager implements ITransMan {
     }
 
     @Override
+    public List<Input> getInputsForToken(IAddress address, Token token) {
+        List<Input> inputs = new ArrayList<>();
+        List<Output> outs = getUTXOs(address, true);
+        if (outs == null) return null;
+        for (Output o : outs) {
+            if (o.getToken().equals(token)) {
+                inputs.add(Input.fromOutput(o));
+            }
+        }
+        return inputs;
+    }
+
+    @Override
+    public BigInteger getAmountInWallet(IAddress address, Token token) {
+        BigInteger amount = BigInteger.ZERO;
+        List<Output> outs = getUTXOs(address, true);
+        if (outs == null) return null;
+        for (Output o : outs) {
+            if (o.getToken().equals(token)) {
+                amount = amount.add(o.getAmount());
+            }
+        }
+        return amount;
+    }
+    @Override
     public void unUseUTXOs(List<Input> inputs) {
         for (Input i : inputs) {
             usedUTXOs.remove(i.getID());

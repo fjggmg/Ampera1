@@ -42,6 +42,7 @@ public class KiEventHandler implements IPoolEventHandler {
                     }
                     ki.debug("Inputs: " + t.getInputs().size());
 
+                    ki.getTransMan().getPending().add(t);
                     TransactionPacket tp = new TransactionPacket();
                     tp.trans = t.serializeToAmplet().serializeToBytes();
                     ki.getNetMan().broadcast(tp);
