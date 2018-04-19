@@ -6,6 +6,8 @@ import com.lifeform.main.network.IConnectionManager;
 import com.lifeform.main.network.INetworkManager;
 import com.lifeform.main.network.logic.Client;
 import com.lifeform.main.network.logic.Server;
+import com.lifeform.main.transactions.Address;
+
 import java.util.*;
 
 public class PoolNetMan extends Thread implements INetworkManager {
@@ -169,7 +171,7 @@ public class PoolNetMan extends Thread implements INetworkManager {
                             if (conn == null) continue;
                             if (ki.getPoolData().addMap.get(conn.getID()) == null) continue;
                             try {
-                                //su.shares = ki.getPoolManager().getTotalSharesOfMiner(Address.decodeFromChain(ki.getPoolData().addMap.get(conn.getID())));
+                                su.shares = ki.getPoolManager().getTotalSharesOfMiner(Address.decodeFromChain(ki.getPoolData().addMap.get(conn.getID())));
                                 //TODO update the above
                             } catch (Exception e) {
                                 continue;

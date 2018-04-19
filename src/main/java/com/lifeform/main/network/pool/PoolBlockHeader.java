@@ -5,6 +5,7 @@ import com.lifeform.main.IKi;
 import com.lifeform.main.Settings;
 import com.lifeform.main.StringSettings;
 import com.lifeform.main.blockchain.Block;
+import com.lifeform.main.data.Utils;
 import com.lifeform.main.network.BlockEnd;
 import com.lifeform.main.network.BlockHeader;
 import com.lifeform.main.network.IConnectionManager;
@@ -35,7 +36,7 @@ public class PoolBlockHeader implements Serializable, PoolPacket {
         Block b = new Block();
         if (!ki.getOptions().poolRelay) {
 
-            b.solver = ki.getPoolData().payTo;
+            b.solver = Utils.toBase64(ki.getPoolData().payTo.toByteArray());
             b.merkleRoot = merkleRoot;
             ki.debug("merkle root: " + merkleRoot);
             b.ID = ID;

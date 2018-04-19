@@ -61,9 +61,14 @@ public class PoolConnMan extends IConnectionManager {
         ki.debug("Pool connection established");
 
         PoolHandshake ph = new PoolHandshake();
-        ki.getPoolData().ID = EncryptionManager.sha224(ki.getPoolData().payTo + System.currentTimeMillis());
-        ph.ID = ki.getPoolData().ID;
-        ph.address = ki.getPoolData().payTo;
+        if (ki.getOptions().pool) {
+            ki.getPoolData().ID = EncryptionManager.sha224(ki.getPoolData().payTo.encodeForChain() + System.currentTimeMillis());
+            ph.ID = ki.getPoolData().ID;
+            ph.address = ki.getPoolData().payTo.encodeForChain();
+        } else {
+            ph.ID = EncryptionManager.sha224(ki.getAddMan().getMainAdd().encodeForChain());
+            ph.address = ki.getAddMan().getMainAdd().encodeForChain();
+        }
         ph.version = PoolNetMan.POOL_NET_VERSION;
         sendPacket(ph);
     }

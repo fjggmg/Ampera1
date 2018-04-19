@@ -111,7 +111,7 @@ public class ChainManagerLite implements IChainMan {
             mostRecent = b;
             chain.put(b.height, b);
 
-            if (b.solver.equals(ki.getEncryptMan().getPublicKeyString(KeyType.BRAINPOOLP512T1)) || b.solver.equals(ki.getEncryptMan().getPublicKeyString(KeyType.ED25519))) {
+            if (b.getCoinbase().getOutputs().get(0).getAddress().encodeForChain().equals(ki.getAddMan().getMainAdd().encodeForChain())) {
                 if (ki.getGUIHook() != null)
                     ki.getGUIHook().blockFound();
             }
@@ -232,7 +232,7 @@ public class ChainManagerLite implements IChainMan {
     @Override
     public Block formEmptyBlock(BigInteger minFee) {
         Block b = new Block();
-        b.solver = ki.getAddMan().getMainAdd().encodeForChain();
+        b.solver = Utils.toBase64(ki.getAddMan().getMainAdd().toByteArray());
         b.timestamp = System.currentTimeMillis();
 
         Map<String, ITrans> transactions = new HashMap<>();

@@ -164,6 +164,8 @@ public class ChainManager implements IChainMan {
 
     public synchronized BlockState addBlock(Block block) {
         Ki.canClose = false;
+        ki.debug("Block data: ");
+        ki.debug("Solver: " + block.solver);
         BlockState state = verifyBlock(block);
         if (!state.success()) {
             Ki.canClose = true;
@@ -649,7 +651,7 @@ public class ChainManager implements IChainMan {
     @Override
     public Block formEmptyBlock(BigInteger minFee) {
         Block b = new Block();
-        b.solver = ki.getAddMan().getMainAdd().encodeForChain();
+        b.solver = Utils.toBase64(ki.getAddMan().getMainAdd().toByteArray());
         b.timestamp = System.currentTimeMillis();
 
         Map<String,ITrans> transactions = new HashMap<>();

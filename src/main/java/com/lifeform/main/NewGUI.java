@@ -1631,7 +1631,7 @@ public class NewGUI {
             @Override
             public void handle(MouseEvent event) {
                 if (paytoAddress.getText().isEmpty()) return;
-                ki.getPoolData().payTo = paytoAddress.getText();
+                ki.getPoolData().payTo = Address.decodeFromChain(paytoAddress.getText());
                 ki.getNetMan().attemptConnect(ipField.getText());
                 ki.getPoolData().poolConn = ipField.getText();
                 ki.setStringSetting(StringSettings.POOL_PAYTO, paytoAddress.getText());

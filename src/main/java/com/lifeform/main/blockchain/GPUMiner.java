@@ -153,17 +153,7 @@ public class GPUMiner extends Thread implements IMiner {
                 if (ki.getOptions().pool) {
 
                     try {
-                        int addLength = ki.getPoolData().payTo.getBytes("UTF-8").length;
-                        byte[] extra = new byte[addLength + 20];
-                        byte[] add = ki.getPoolData().payTo.getBytes("UTF-8");
-
-                        byte[] carry = ki.getPoolData().ID.getBytes("UTF-8");
-                        for (int i = 0; i < addLength; i++) {
-                            extra[i] = add[i];
-                        }
-                        for (int i = 0; i < 20; i++) {
-                            extra[addLength + i] = carry[i];
-                        }
+                        byte[] extra = ki.getPoolData().ID.getBytes("UTF-8");
                         miner.resumeMining(message, extra);
                     } catch (UnsupportedEncodingException e) {
                         e.printStackTrace();
