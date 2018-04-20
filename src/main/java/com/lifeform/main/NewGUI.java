@@ -1419,7 +1419,7 @@ public class NewGUI {
         if (!ki.getOptions().pool) {
             vb.getChildren().add(buildMainButton("Wallet", "/Wallet.png", 0, 0, content, walletPane));
             vb.getChildren().add(buildMainButton("Address", "/home.png", 100, 0, content, addressPane));
-            vb.getChildren().add(buildMainButton("ADX", "/exchange.png", 200, 5, content, exchangePane));
+            //vb.getChildren().add(buildMainButton("ADX", "/exchange.png", 200, 5, content, exchangePane));
         } else if (ki.getOptions().pool && !ki.getOptions().poolRelay) {
             vb.getChildren().add(buildMainButton("Pool", "/pool.png", 100, 3, content, poolPane));
         }

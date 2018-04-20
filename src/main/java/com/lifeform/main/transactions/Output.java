@@ -1,6 +1,7 @@
 package com.lifeform.main.transactions;
 
 import amp.Amplet;
+import amp.ByteTools;
 import amp.HeadlessAmplet;
 import amp.HeadlessPrefixedAmplet;
 import amp.classification.AmpClassCollection;
@@ -8,6 +9,7 @@ import amp.classification.classes.AC_SingleElement;
 import amp.group_primitives.UnpackedGroup;
 import amp.serialization.IAmpAmpletSerializable;
 import amp.serialization.IAmpByteSerializable;
+import com.lifeform.main.Ki;
 import com.lifeform.main.data.AmpIDs;
 import com.lifeform.main.data.EncryptionManager;
 import com.lifeform.main.data.Utils;
@@ -96,6 +98,10 @@ public class Output implements TXIO, IAmpByteSerializable {
             IAddress receiver = Address.decodeFromChain((String) jo.get("receiver"));
             Token token = Token.valueOf((String)jo.get("token"));
             long timestamp = Long.parseLong((String)jo.get("timestamp"));
+            if (token == null) {
+                Ki.getInstance().getMainLog().error("Token pulled from map is null, value on map: " + jo.get("token"));
+                return null;
+            }
             return new Output(amount, receiver, token, index, timestamp, (byte) 1);
         } catch (ParseException e) {
             e.printStackTrace();
@@ -154,12 +160,10 @@ public class Output implements TXIO, IAmpByteSerializable {
         BigInteger amount = new BigInteger(hpa.getNextElement());
         IAddress receiver = Address.fromByteArray(hpa.getNextElement());
         Token token;
-        try {
-            token = Token.byName(new String(hpa.getNextElement(), "UTF-8"));
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-            return null;
-        }
+
+        byte[] bytes = hpa.getNextElement();
+        token = Token.byID(ByteTools.buildInt(bytes[0], bytes[1], bytes[2], bytes[3]));
+
         HeadlessAmplet hamplet = hpa.getNextElementAsHeadlessAmplet();
         int index = hamplet.getNextInt();
         long timestamp = hamplet.getNextLong();
@@ -177,8 +181,10 @@ public class Output implements TXIO, IAmpByteSerializable {
         HeadlessPrefixedAmplet hpa = HeadlessPrefixedAmplet.create();
         hpa.addElement(amount);
         hpa.addBytes(receiver.toByteArray());
-
-        hpa.addElement(token.getName());
+        if (token == null) {
+            Ki.getInstance().getMainLog().fatal("TOKEN IN OUTPUT WAS NULL");
+        }
+        hpa.addBytes(ByteTools.deconstructInt(token.getID()));
 
         hpa.addElement(hamplet);
         return hpa.serializeToBytes();
