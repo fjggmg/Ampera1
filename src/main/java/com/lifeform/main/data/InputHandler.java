@@ -209,35 +209,19 @@ public class InputHandler extends Thread {
                     }
                     ki.debug("Done testing result: " + ((success) ? "Success" : "Failure"));
                 } else if (line.startsWith("rebuildChain")) {
-
-
-                    Map<BigInteger, Block> chain = new HashMap<>();
-
-                    BigInteger h = BigInteger.ZERO;
-                    while (h.compareTo(ki.getChainMan().currentHeight()) <= 0) {
-
-                        chain.put(new BigInteger(h.toByteArray()), ki.getChainMan().getByHeight(h));
-                        h = h.add(BigInteger.ONE);
-                    }
-                    BigInteger height = BigInteger.ZERO;
-                    ki.getChainMan().setDiff(new BigInteger("00000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF", 16));
-                    boolean success = true;
-                    BigInteger height2 = new BigInteger(ki.getChainMan().currentHeight().toByteArray());
-                    ki.getChainMan().undoToBlock(height);
+                    BigInteger currentHeight = ki.getChainMan().currentHeight();
+                    ki.getChainMan().setHeight(BigInteger.valueOf(-1));
                     ki.getTransMan().clear();
-
-
-                    while (height.compareTo(height2) <= 0) {
-                        ki.debug("Rebuilding block: " + height);
-                        BlockState bs = ki.getChainMan().addBlock(chain.get(height));
-                        if (!bs.success()) {
-                            ki.debug("Failed: block state: " + bs);
-                            success = false;
-                            break;
+                    while (ki.getChainMan().currentHeight().compareTo(currentHeight) <= 0) {
+                        ki.debug("Rebuilding block: " + currentHeight);
+                        BlockState state = ki.getChainMan().addBlock(ki.getChainMan().getByHeight(currentHeight));
+                        if (!state.success()) {
+                            ki.getMainLog().fatal("Unable to rebuild chain, state at block: " + currentHeight + " is " + state);
+                            return;
                         }
-                        height = height.add(BigInteger.ONE);
+                        currentHeight = currentHeight.add(BigInteger.ONE);
                     }
-                    ki.debug("Done rebuilding result: " + ((success) ? "Success" : "Failure"));
+                    ki.debug("Rebuilt chain successfully");
 
                 } else if (line.startsWith("checkSolver")) {
                     if (line.split(" ").length < 2) {

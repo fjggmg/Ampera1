@@ -181,6 +181,13 @@ public class Ki extends Thread implements IKi {
         instance = this;
         relay = o.relay;
         if (o.pool) {
+            //no trans man
+        } else if (o.lite) {
+            transMan = new TransactionManagerLite(this);
+        } else {
+            transMan = new TransactionManager(this, o.dump);
+        }
+        if (o.pool) {
             chainMan = new PoolChainMan();
         } else if (o.lite) {
             chainMan = new ChainManagerLite(this, (o.testNet) ? ChainManager.TEST_NET : ChainManager.POW_CHAIN);
@@ -190,13 +197,7 @@ public class Ki extends Thread implements IKi {
         Handshake.CHAIN_VER = (o.testNet) ? ChainManager.TEST_NET : ChainManager.POW_CHAIN;
         chainMan.loadChain();
         getMainLog().info("Chain loaded. Current height: " + chainMan.currentHeight());
-        if (o.pool) {
-            //no trans man
-        } else if (o.lite) {
-            transMan = new TransactionManagerLite(this);
-        } else {
-            transMan = new TransactionManager(this, o.dump);
-        }
+
 
         if (o.pool || o.poolRelay) {
             pd = new PoolData();

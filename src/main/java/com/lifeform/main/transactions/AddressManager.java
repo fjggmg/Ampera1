@@ -56,6 +56,18 @@ public class AddressManager implements IAddMan {
         return a;
     }
 
+    private IAddress getNewAddOld() {
+        IAddress a = null;
+        try {
+            a = Address.createNew(ki.getEncryptMan().getPublicKeyString(KeyType.BRAINPOOLP512T1), entropy);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+
+        return a;
+    }
+
     @Override
     public List<IAddress> getActive() {
         return addresses;
@@ -138,7 +150,7 @@ public class AddressManager implements IAddMan {
             for (IAddress add : entropyMap.keySet()) {
                 entropy = entropyMap.get(add);
                 if (add.getKeyType() != null) {
-                    if (!add.encodeForChain().equals(getNewAdd(add.getKeyType()).encodeForChain())) {
+                    if (!add.encodeForChain().equals(getNewAddOld().encodeForChain())) {
                         ki.debug("Address loaded is not for the keys we have, deleting address");
                         toRemove.add(add);
                     }

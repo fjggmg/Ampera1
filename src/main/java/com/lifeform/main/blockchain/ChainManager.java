@@ -141,8 +141,13 @@ public class ChainManager implements IChainMan {
                 }
                 ki.getTransMan().addCoinbase(b.getCoinbase(), b.height, fees);
                 for (String t : b.getTransactionKeys()) {
-                    ki.getTransMan().addTransaction(b.getTransaction(t));
+                    if (!ki.getTransMan().addTransaction(b.getTransaction(t))) {
+                        ki.debug("Unable to add transaction from block during conversion. shutting down");
+                        ki.close();
+                        System.exit(1);
+                    }
                 }
+                ki.getTransMan().postBlockProcessing(b);
 
                 //csMap.put("height",height.toString());
                 height = height.add(BigInteger.ONE);

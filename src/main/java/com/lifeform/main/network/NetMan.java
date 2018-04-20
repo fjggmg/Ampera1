@@ -14,7 +14,7 @@ public class NetMan extends Thread implements INetworkManager {
 
     public static final String[] testBoot = {"73.108.51.16"};
     public static final String[] bootstrap = {"mimpve.host"};
-    public static final String NET_VER = "2.1.0";
+    public static final String NET_VER = "2.1.1";
     private IKi ki;
     private boolean isRelay;
     public static final int PORT = 29555;

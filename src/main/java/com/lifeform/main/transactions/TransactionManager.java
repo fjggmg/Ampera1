@@ -32,9 +32,9 @@ public class TransactionManager implements ITransMan {
     private final Object processLock = new Object();
     public TransactionManager(IKi ki, boolean dump) {
         this.ki = ki;
-        new File("transactions" + ki.getChainMan().getChainVer() + "/").mkdirs();
-        utxoAmp = new XodusAmpMap("transactions" + ki.getChainMan().getChainVer() + "/utxoAmp.dat");//utxoDB.hashMap("utxoDB", Serializer.STRING, Serializer.STRING).createOrOpen();
-        utxoVerMap = new XodusAmpMap("transactions" + ki.getChainMan().getChainVer() + "/utxoVer.dat");
+        new File("transactions" + ((ki.getOptions().testNet) ? ChainManager.TEST_NET : ChainManager.POW_CHAIN) + "/").mkdirs();
+        utxoAmp = new XodusAmpMap("transactions" + ((ki.getOptions().testNet) ? ChainManager.TEST_NET : ChainManager.POW_CHAIN) + "/utxoAmp.dat");//utxoDB.hashMap("utxoDB", Serializer.STRING, Serializer.STRING).createOrOpen();
+        utxoVerMap = new XodusAmpMap("transactions" + ((ki.getOptions().testNet) ? ChainManager.TEST_NET : ChainManager.POW_CHAIN) + "/utxoVer.dat");
         new Thread() {
             public void run() {
                 List<ITrans> toRemove = new ArrayList<>();

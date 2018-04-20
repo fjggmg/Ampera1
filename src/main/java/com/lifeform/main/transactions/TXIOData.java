@@ -38,7 +38,10 @@ public class TXIOData implements IAmpByteSerializable {
     private long timestamp;
 
     public TXIOData(IAddress address, int index, BigInteger amount, Token token, long timestamp) throws InvalidTXIOData {
-        if (!address.isValid()) throw new InvalidTXIOData("Invalid address");
+        //we're special casing this, the old address system fucked up and failed us, unfortunately that leaves
+        //this a bit vulnerable, but what the fuck ever, after the old address lockout this won't cause any harm
+        if (!address.isValid() && address.getVersion() != Address.VERSION)
+            throw new InvalidTXIOData("Invalid address: " + address.encodeForChain());
         this.address = address;
         if (index > IChainMan.MAX_TXIOS) throw new InvalidTXIOData("Invalid index");
         this.index = index;
