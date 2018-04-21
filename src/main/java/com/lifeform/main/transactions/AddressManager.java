@@ -27,7 +27,7 @@ public class AddressManager implements IAddMan {
     private final int depth = 30;
     private List<IAddress> addresses = new ArrayList<>();
     private Map<IAddress, Integer> verifyCounter = new HashMap<>();
-    private Map<IAddress, String> entropyMap = new ConcurrentHashMap<>();
+    private Map<String, String> entropyMap = new ConcurrentHashMap<>();
     private IAddress main;
     private List<IAddress> inactive = new ArrayList<>();
     private XodusAmpMap addressMap = new XodusAmpMap("ampAdds");
@@ -43,7 +43,7 @@ public class AddressManager implements IAddMan {
      * @return newly formed address with set entropy and length of 256 bits
      */
     @Override
-    public IAddress getNewAdd(KeyType keyType) {
+    public IAddress getNewAdd(KeyType keyType, boolean save) {
         IAddress a = null;
         try {
             a = NewAdd.createNew(ki.getEncryptMan().getPublicKeyString(keyType), entropy, AddressLength.SHA256, false, keyType);
@@ -51,8 +51,11 @@ public class AddressManager implements IAddMan {
             e.printStackTrace();
             return null;
         }
-        entropyMap.put(a, entropy);
+        entropyMap.put(a.encodeForChain(), entropy);
         inactive.add(a);
+        if (save) {
+            save();
+        }
         return a;
     }
 
@@ -139,7 +142,7 @@ public class AddressManager implements IAddMan {
                     JSONObject jo = (JSONObject) new JSONParser().parse(fh2.getLine(0));
                     for (String add : (Set<String>) jo.keySet()) {
                         //ki.getMainLog().info("Shit found in the entropy file. it matches this: " + add + " " + jo.get(add));
-                        entropyMap.put(Address.decodeFromChain(add), (String) jo.get(add));
+                        entropyMap.put(add, (String) jo.get(add));
                     }
                 } catch (ParseException e) {
                     e.printStackTrace();
@@ -147,8 +150,9 @@ public class AddressManager implements IAddMan {
             }
 
             List<IAddress> toRemove = new ArrayList<>();
-            for (IAddress add : entropyMap.keySet()) {
-                entropy = entropyMap.get(add);
+            for (String a : entropyMap.keySet()) {
+                IAddress add = Address.decodeFromChain(a);
+                entropy = getEntropyForAdd(add);
                 if (add.getKeyType() != null) {
                     if (!add.encodeForChain().equals(getNewAddOld().encodeForChain())) {
                         ki.debug("Address loaded is not for the keys we have, deleting address");
@@ -161,10 +165,10 @@ public class AddressManager implements IAddMan {
             for (IAddress add : toRemove) {
                 if (main.encodeForChain().equals(add.encodeForChain())) {
                     entropy = DEFAULT_ENTROPY;
-                    main = getNewAdd(main.getKeyType());
+                    main = getNewAdd(main.getKeyType(), false);
                 } else {
                     addresses.remove(add);
-                    entropyMap.remove(add);
+                    entropyMap.remove(add.encodeForChain());
                 }
             }
         } else {
@@ -177,7 +181,11 @@ public class AddressManager implements IAddMan {
                 }
                 for (IAddress a : addresses) {
                     try {
-                        entropyMap.put(a, new String(addressMap.getBytes(a.encodeForChain()), "UTF-8"));
+                        if (addressMap.getBytes(a.encodeForChain()) == null) {
+                            ki.getMainLog().warn("Null entropy for address: " + a.encodeForChain() + " address database corrupted");
+                            continue;
+                        }
+                        entropyMap.put(a.encodeForChain(), new String(addressMap.getBytes(a.encodeForChain()), "UTF-8"));
                     } catch (UnsupportedEncodingException e) {
                         e.printStackTrace();
                     }
@@ -187,10 +195,20 @@ public class AddressManager implements IAddMan {
     }
 
     @Override
-    public void save() {
+    public synchronized void save() {
+        //safety check?
+        if (main == null) return;
         addressMap.clearSafe();
         addressMap.putBytes("firstRun", new byte[]{1});
         HeadlessPrefixedAmplet hpa = HeadlessPrefixedAmplet.create();
+        List<IAddress> toRemove = new ArrayList<>();
+        for (IAddress address : addresses) {
+            if (getEntropyForAdd(address) == null) {
+                ki.getMainLog().error("Entropy for address: " + address.encodeForChain() + " is null");
+                toRemove.add(address);
+            }
+        }
+        addresses.removeAll(toRemove);
         hpa.addBytes(main.toByteArray());
         try {
             addressMap.putBytes(main.encodeForChain(), getEntropyForAdd(main).getBytes("UTF-8"));
@@ -236,10 +254,8 @@ public class AddressManager implements IAddMan {
     @Override
     public String getEntropyForAdd(IAddress a) {
 
-        for (IAddress add : entropyMap.keySet()) {
-            if (add.encodeForChain().equals(a.encodeForChain())) return entropyMap.get(add);
-        }
-        return entropyMap.get(a);
+        if (!entropyMap.containsKey(a.encodeForChain())) return "";
+        return entropyMap.get(a.encodeForChain());
     }
 
     @Override
@@ -269,7 +285,7 @@ public class AddressManager implements IAddMan {
                 return null;
             }
 
-        entropyMap.put(a, entropy);
+        entropyMap.put(a.encodeForChain(), entropy);
         addresses.add(a);
         save();
         return a;
@@ -289,7 +305,7 @@ public class AddressManager implements IAddMan {
     public void deleteAddress(IAddress address) {
         inactive.remove(address);
         addresses.remove(address);
-        entropyMap.remove(address);
+        entropyMap.remove(address.encodeForChain());
         save();
 
     }
@@ -319,4 +335,11 @@ public class AddressManager implements IAddMan {
             return null;
         }
     }
+
+    @Override
+    public void close() {
+        save();
+        addressMap.close();
+    }
+
 }

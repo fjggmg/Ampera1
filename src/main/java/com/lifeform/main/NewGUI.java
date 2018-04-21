@@ -247,7 +247,7 @@ public class NewGUI {
                             try {
                                 ki.close();
                             } catch (Exception e) {
-                                ki.getMainLog().warn("Could not close correctly error message: " + e.getMessage());
+                                ki.getMainLog().error("Could not close correctly ", e);
                             }
                             continue;
 
@@ -1894,7 +1894,7 @@ public class NewGUI {
                     //trans.addSig(Utils.toBase64(bin.serializeToAmplet().serializeToBytes()),Utils.toBase64(wm.serializeToBytes()));
 
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    ki.getMainLog().error("Could not load transaction from file Transaction.amp", e);
                 }
             }
         });

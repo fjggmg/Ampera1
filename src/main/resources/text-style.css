@@ -62,6 +62,9 @@
     -fx-scale-x: 0;
     -fx-padding: 0px;
 }
+.list-view .list-cell:selected {
+    -fx-background-color: rgba(127,127,127,0.3);
+}
 .chart-pie-label{
     -fx-fill: WHITE;
 }

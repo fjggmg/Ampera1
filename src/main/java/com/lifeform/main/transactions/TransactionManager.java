@@ -78,7 +78,7 @@ public class TransactionManager implements ITransMan {
                             //ki.debug("Putting output: " + o.getID() + " with address: " + o.getAddress().encodeForChain() + " of amount + " + o.getAmount());
                             hpa.addElement(o.getID());
                             try {
-                                hpa.addBytes(new TXIOData(o.getAddress(), o.getIndex(), o.getAmount(), o.getToken(), o.getTimestamp()).serializeToBytes());
+                                hpa.addBytes(new TXIOData(o.getAddress(), o.getIndex(), o.getAmount(), o.getToken(), o.getTimestamp(), o.getVersion()).serializeToBytes());
                             } catch (InvalidTXIOData invalidTXIOData) {
                                 invalidTXIOData.printStackTrace();
                                 continue;
@@ -129,7 +129,7 @@ public class TransactionManager implements ITransMan {
                                 //ki.debug("Putting output: " + o.getID() + " with address: " + o.getAddress().encodeForChain() + " of amount + " + o.getAmount());
 
                                 try {
-                                    hpa.addBytes(new TXIOData(o.getAddress(), o.getIndex(), o.getAmount(), o.getToken(), o.getTimestamp()).serializeToBytes());
+                                    hpa.addBytes(new TXIOData(o.getAddress(), o.getIndex(), o.getAmount(), o.getToken(), o.getTimestamp(), o.getVersion()).serializeToBytes());
                                 } catch (InvalidTXIOData invalidTXIOData) {
                                     invalidTXIOData.printStackTrace();
                                     continue;
@@ -306,7 +306,7 @@ public class TransactionManager implements ITransMan {
         for (Output o : transaction.getOutputs()) {
             TXIOData data;
             try {
-                data = new TXIOData(o.getAddress(), o.getIndex(), o.getAmount(), o.getToken(), o.getTimestamp());
+                data = new TXIOData(o.getAddress(), o.getIndex(), o.getAmount(), o.getToken(), o.getTimestamp(), o.getVersion());
             } catch (InvalidTXIOData invalidTXIOData) {
                 invalidTXIOData.printStackTrace();
                 return false;
@@ -356,7 +356,7 @@ public class TransactionManager implements ITransMan {
                     TXIOData data = TXIOData.fromByteArray(hpa.getNextElement());
                     //ki.debug("Adding data" + utxoID + " " + data.getAmount());
                     if (data != null)
-                        utxos.add(new Output(data.getAmount(), data.getAddress(), data.getToken(), data.getIndex(), data.getTimestamp(), (byte) 2));
+                        utxos.add(new Output(data.getAmount(), data.getAddress(), data.getToken(), data.getIndex(), data.getTimestamp(), data.getVersion()));
                 }
                 try {
                     utxoID = new String(hpa.getNextElement(), "UTF-8");
@@ -400,7 +400,7 @@ public class TransactionManager implements ITransMan {
             }
             TXIOData data = null;
             try {
-                data = new TXIOData(o.getAddress(), o.getIndex(), o.getAmount(), o.getToken(), o.getTimestamp());
+                data = new TXIOData(o.getAddress(), o.getIndex(), o.getAmount(), o.getToken(), o.getTimestamp(), o.getVersion());
             } catch (InvalidTXIOData invalidTXIOData) {
                 invalidTXIOData.printStackTrace();
                 return false;

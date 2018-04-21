@@ -9,7 +9,7 @@ import java.util.List;
  */
 public interface IAddMan {
 
-    IAddress getNewAdd(KeyType keyType);
+    IAddress getNewAdd(KeyType keyType, boolean save);
 
     List<IAddress> getActive();
 
@@ -37,4 +37,6 @@ public interface IAddMan {
     void associateBinary(IAddress address, Binary bin);
 
     Binary getBinary(IAddress address);
+
+    void close();
 }

@@ -164,7 +164,7 @@ public class Ki extends Thread implements IKi {
         addMan = new AddressManager(this);
         addMan.load();
         if (addMan.getMainAdd() == null) {
-            addMan.setMainAdd(addMan.getNewAdd(KeyType.ED25519));
+            addMan.setMainAdd(addMan.getNewAdd(KeyType.ED25519, true));
         }
         System.out.println("Main type: " + addMan.getMainAdd().getKeyType());
         exchangeMan = new ExchangeManager(this);
@@ -338,7 +338,8 @@ public class Ki extends Thread implements IKi {
 
         if (!getOptions().pool)
             transMan.close();
-        addMan.save();
+
+        addMan.close();
         netMan.close();
         if (ki.getOptions().pool || ki.getOptions().poolRelay)
             poolNet.close();

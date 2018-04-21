@@ -32,12 +32,16 @@ public class TXIOData implements IAmpByteSerializable {
         return timestamp;
     }
 
+    public byte getVersion() {
+        return version;
+    }
     private int index;
     private BigInteger amount;
     private Token token;
     private long timestamp;
+    private byte version;
 
-    public TXIOData(IAddress address, int index, BigInteger amount, Token token, long timestamp) throws InvalidTXIOData {
+    public TXIOData(IAddress address, int index, BigInteger amount, Token token, long timestamp, byte version) throws InvalidTXIOData {
         //we're special casing this, the old address system fucked up and failed us, unfortunately that leaves
         //this a bit vulnerable, but what the fuck ever, after the old address lockout this won't cause any harm
         if (!address.isValid() && address.getVersion() != Address.VERSION)
@@ -49,6 +53,7 @@ public class TXIOData implements IAmpByteSerializable {
         this.amount = amount;
         this.token = token;
         this.timestamp = timestamp;
+        this.version = version;
     }
 
     @Override
@@ -59,6 +64,7 @@ public class TXIOData implements IAmpByteSerializable {
         hpa.addElement(amount);
         hpa.addBytes(ByteTools.deconstructInt(token.getID()));
         hpa.addBytes(ByteTools.deconstructLong(timestamp));
+        hpa.addElement(version);
         return hpa.serializeToBytes();
     }
 
@@ -70,8 +76,9 @@ public class TXIOData implements IAmpByteSerializable {
         BigInteger amount = new BigInteger(hpa.getNextElement());
         int token = hpa.getNextElementAsHeadlessAmplet().getNextInt();
         long timestamp = hpa.getNextElementAsHeadlessAmplet().getNextLong();
+        byte version = hpa.getNextElement()[0];
         try {
-            return new TXIOData(add, index, amount, Token.byID(token), timestamp);
+            return new TXIOData(add, index, amount, Token.byID(token), timestamp, version);
         } catch (InvalidTXIOData invalidTXIOData) {
             invalidTXIOData.printStackTrace();
             return null;

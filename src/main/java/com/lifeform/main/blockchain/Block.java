@@ -125,16 +125,8 @@ public class Block implements IAmpAmpletSerializable {
     {
         if (payload.length > 256) return null;//limit on payload
         if (solver.length() > 1024) return null;//limit on solver (essentially payload 2)
-        if(solverHash == null || solverHash.isEmpty())
-        {
-            solverHash = EncryptionManager.sha512(solver);
-        }
-        if(coinbaseID == null || coinbaseID.isEmpty())
-        {
-            coinbaseID = coinbase.getID();
-        }
-
-
+        solverHash = EncryptionManager.sha512(solver);
+        coinbaseID = coinbase.getID();
         sHeight = Utils.toBase64(height.toByteArray());
 
 

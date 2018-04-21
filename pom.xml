@@ -6,7 +6,7 @@
 
     <groupId>com.lifeform</groupId>
     <artifactId>Origin</artifactId>
-    <version>0.18.0-BETA</version>
+    <version>0.18.1-BETA</version>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
@@ -105,7 +105,7 @@
         <dependency>
             <groupId>com.ampex</groupId>
             <artifactId>mining-pool</artifactId>
-            <version>1.2.37</version>
+            <version>1.2.41</version>
         </dependency>
         <dependency>
             <groupId>com.ampex</groupId>

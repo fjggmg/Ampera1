@@ -36,6 +36,7 @@ public class PoolBlockHeader implements Serializable, PoolPacket {
         Block b = new Block();
         if (!ki.getOptions().poolRelay) {
 
+            solver = Utils.toBase64(ki.getPoolData().payTo.toByteArray());
             b.solver = Utils.toBase64(ki.getPoolData().payTo.toByteArray());
             b.merkleRoot = merkleRoot;
             ki.debug("merkle root: " + merkleRoot);
@@ -59,12 +60,12 @@ public class PoolBlockHeader implements Serializable, PoolPacket {
             ki.debug("Setting as current work");
             ki.getPoolData().currentWork = this;
         } else {
-            ki.debug("Merkle root is: " + merkleRoot);
+            //ki.debug("Merkle root is: " + merkleRoot);
 
             if (ki.getPoolData().workMap.keySet().contains(merkleRoot)) {
-                ki.debug("Adding share to share list");
+                //ki.debug("Adding share to share list");
                 ki.debug("height: " + height);
-                ki.debug("timestamp: " + timestamp);
+                //ki.debug("timestamp: " + timestamp);
                 ki.debug("ID: " + ID);
                 //ki.debug("====================================End of block data==========================");
                 //if (ki.getPoolData().workMap == null) ki.debug("workmap null");
@@ -79,10 +80,11 @@ public class PoolBlockHeader implements Serializable, PoolPacket {
                 if (Block.fromAmplet(ki.getPoolData().workMap.get(merkleRoot).serializeToAmplet()) == null)
                     ki.debug("Block did not copy correctly");
                 b = Block.fromAmplet(ki.getPoolData().workMap.get(merkleRoot).serializeToAmplet());
-                ki.debug("Block copied");
+
                 b.payload = payload;
                 b.timestamp = timestamp;
                 b.ID = ID;
+                b.solver = solver;
                 ki.getPoolData().hrMap.put(connMan.getID(), currentHR);
                 if (ki.getChainMan().softVerifyBlock(b).success()) {
                     ki.debug("Share is a solve");

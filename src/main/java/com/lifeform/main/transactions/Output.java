@@ -42,9 +42,14 @@ public class Output implements TXIO, IAmpByteSerializable {
     private final Token token;
     private final long timestamp;
     private final byte version;
+
+    public byte getVersion() {
+        return version;
+    }
     @Override
     public String getID()
     {
+        //System.out.println("Getting ID of output of version: " + version);
         if (version != 2)
             return EncryptionManager.sha256(toJSON());
         else
@@ -79,6 +84,7 @@ public class Output implements TXIO, IAmpByteSerializable {
     @Override
     @SuppressWarnings("unchecked")
     public String toJSON() {
+        //System.out.println("Calling toJSON on output");
         JSONObject jo = new JSONObject();
         jo.put("index",Integer.toString(index));
         jo.put("amount",amount.toString());
