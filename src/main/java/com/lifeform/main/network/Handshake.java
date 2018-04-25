@@ -69,6 +69,7 @@ public class Handshake implements Serializable, Packet {
         }
         if (!ki.getOptions().lite && ki.getGUIHook() != null)
             ki.getGUIHook().setStart(currentHeight);
+        ki.setStartHeight(currentHeight);
         connMan.setStartTime(startTime);
         if (ki.getChainMan().currentHeight().compareTo(BigInteger.valueOf(-1L)) == 0)
             connMan.sendPacket(new DoneDownloading());

@@ -62,7 +62,7 @@ public class Ki extends Thread implements IKi {
     private IKi ki = this;
     private boolean run = true;
     //TODO: need to start saving version number to file for future conversion of files
-    public static final String VERSION = "0.18.0-BETA";
+    public static final String VERSION = "0.18.2-BETA";
     private boolean relay = false;
     private NewGUI guiHook;
     public static boolean debug = true;
@@ -229,7 +229,8 @@ public class Ki extends Thread implements IKi {
             BigDecimal cd = new BigDecimal(ki.getChainMan().getCurrentDifficulty());
             ki.debug("Current diff: " + cd);
             ki.debug("cd/sd " + cd.divide(sd, 9, RoundingMode.HALF_DOWN));
-            long pps = (long) (((cd.divide(sd, 9, RoundingMode.HALF_DOWN).doubleValue() * ChainManager.blockRewardForHeight(ki.getChainMan().currentHeight()).longValueExact()) * 0.99));
+            long pps = (long) (((cd.divide(sd, 9, RoundingMode.HALF_DOWN).doubleValue() * ChainManager.blockRewardForHeight(ki.getChainMan().currentHeight()).longValueExact()) * (1 - (Double.parseDouble(getStringSetting(StringSettings.POOL_FEE)) / 100))));
+
             ki.debug("=========================================UPDATING PPS TO: " + pps);
             ki.getPoolManager().updateCurrentPayPerShare(pps);
 
@@ -245,6 +246,9 @@ public class Ki extends Thread implements IKi {
             pbh.solver = b.solver;
             pbh.timestamp = b.timestamp;
             getPoolData().workMap.put(b.merkleRoot(), b);
+            List<String> roots = new ArrayList<>();
+            roots.add(b.merkleRoot());
+            getPoolData().tracking.put(b.height, roots);
             getPoolData().currentWork = pbh;
             poolNet = new PoolNetMan(this);
             poolNet.start();
@@ -426,6 +430,17 @@ public class Ki extends Thread implements IKi {
         pbh.solver = b.solver;
         pbh.timestamp = b.timestamp;
         getPoolData().workMap.put(b.merkleRoot(), b);
+        if (getPoolData().tracking.get(b.height) != null) {
+            getPoolData().tracking.get(b.height).add(b.merkleRoot());
+        } else {
+            List<String> roots = new ArrayList<>();
+            roots.add(b.merkleRoot());
+            getPoolData().tracking.put(b.height, roots);
+        }
+        if (getPoolData().lowestHeight.equals(BigInteger.ZERO) || b.height.compareTo(getPoolData().lowestHeight) < 0) {
+            getPoolData().lowestHeight = b.height;
+        }
+
         getPoolData().currentWork = pbh;
         poolNet.broadcast(pbh);
     }
@@ -506,23 +521,43 @@ public class Ki extends Thread implements IKi {
         return netMan;
     }
 
+    private BigInteger startHeight = BigInteger.ZERO;
+
+    @Override
+    public void setStartHeight(BigInteger startHeight) {
+        this.startHeight = startHeight;
+    }
     @Override
     public void blockTick(Block block)
     {
         if (getOptions().poolRelay) {
+
             miningPool.updateCurrentHeight(ki.getChainMan().currentHeight());
-            Block b = getChainMan().formEmptyBlock(TransactionFeeCalculator.MIN_FEE);
-            PoolBlockHeader pbh = new PoolBlockHeader();
-            pbh.coinbase = b.getCoinbase().serializeToAmplet().serializeToBytes();
-            pbh.height = b.height;
-            pbh.ID = b.ID;
-            pbh.merkleRoot = b.merkleRoot();
-            pbh.prevID = b.prevID;
-            pbh.solver = b.solver;
-            pbh.timestamp = b.timestamp;
-            getPoolData().workMap.put(b.merkleRoot(), b);
-            getPoolData().currentWork = pbh;
-            poolNet.broadcast(pbh);
+            if (block.height.compareTo(startHeight) >= 0) {
+                Block b = getChainMan().formEmptyBlock(TransactionFeeCalculator.MIN_FEE);
+                PoolBlockHeader pbh = new PoolBlockHeader();
+                pbh.coinbase = b.getCoinbase().serializeToAmplet().serializeToBytes();
+                pbh.height = b.height;
+                pbh.ID = b.ID;
+                pbh.merkleRoot = b.merkleRoot();
+                pbh.prevID = b.prevID;
+                pbh.solver = b.solver;
+                pbh.timestamp = b.timestamp;
+                getPoolData().workMap.put(b.merkleRoot(), b);
+                BigInteger height = getPoolData().lowestHeight;
+                while (height.compareTo(b.height) != 0) {
+                    if (getPoolData().tracking.get(height) != null)
+                        for (String root : getPoolData().tracking.get(height)) {
+                            getPoolData().workMap.remove(root);
+                        }
+                    getPoolData().tracking.remove(height);
+
+                    height = height.add(BigInteger.ONE);
+                }
+                getPoolData().lowestHeight = b.height;
+                getPoolData().currentWork = pbh;
+                poolNet.broadcast(pbh);
+            }
         }
     }
 

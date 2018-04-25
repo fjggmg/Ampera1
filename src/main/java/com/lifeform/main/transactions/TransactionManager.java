@@ -47,8 +47,12 @@ public class TransactionManager implements ITransMan {
                         }
                     }
                     if (!toRemove.isEmpty()) {
+                        for (ITrans t : toRemove) {
+                            unUseUTXOs(t.getInputs());
+                        }
                         pending.removeAll(toRemove);
                         toRemove.clear();
+
                     }
                     try {
                         sleep(3_600_0000);
@@ -84,7 +88,6 @@ public class TransactionManager implements ITransMan {
                                 continue;
                             }
                             utxoAmp.putBytes(o.getAddress().toByteArray(), hpa.serializeToBytes());
-
 
                         }
                         for (String trans : b.getTransactionKeys()) {
@@ -621,22 +624,17 @@ public class TransactionManager implements ITransMan {
             List<String> sIns = new ArrayList<>();
             if (ki.getTransMan().getUTXOs(a, true) == null)
                 throw new InvalidTransactionException("No UTXOs on this address");
-            for (Output o : ki.getTransMan().getUTXOs(a, true)) {
-                if (o.getToken().equals(token)) {
-                    if (sIns.contains(Input.fromOutput(o).getID())) continue;
-                    inputs.add(Input.fromOutput(o));
-                    sIns.add(Input.fromOutput(o).getID());
-                    totalInput = totalInput.add(o.getAmount());
-                    if (totalInput.compareTo(amount) >= 0) break;
+            List<Input> tempIns = getInputsForAmountAndToken(a, amount, token, true);
+            if (tempIns != null)
+                inputs.addAll(tempIns);
+            else
+                throw new InvalidTransactionException("Not enough " + token.getName() + " to do this transaction");
 
-                }
+            for (Input i : inputs) {
+                sIns.add(i.getID());
+                totalInput = totalInput.add(i.getAmount());
             }
 
-
-
-            if (totalInput.compareTo(amount) < 0) {
-                throw new InvalidTransactionException("Not enough " + token.name() + " to do this transaction");
-            }
             int outs = outputs.size();
             int ins = inputs.size() + 5;//arbitrary
             int pOuts = 0;
@@ -663,23 +661,13 @@ public class TransactionManager implements ITransMan {
             if (fee.compareTo(calcFee) < 0) {
                 fee = calcFee;
             }
-            BigInteger feeInput = (token.equals(Token.ORIGIN)) ? totalInput : BigInteger.ZERO;
-
-            for (Output o : ki.getTransMan().getUTXOs(a, true)) {
-                if (o.getToken().equals(Token.ORIGIN)) {
-                    if (!sIns.contains(Input.fromOutput(o).getID())) {
-                        inputs.add(Input.fromOutput(o));
-                        sIns.add(Input.fromOutput(o).getID());
-                        feeInput = feeInput.add(o.getAmount());
-                        if (feeInput.compareTo(fee) >= 0) break;
-                    }
-
+            if (!token.equals(Token.ORIGIN) || totalInput.subtract(amount).compareTo(fee) < 0) {
+                List<Input> tempFee = getInputsForAmountAndToken(a, fee, Token.ORIGIN, true);
+                if (tempFee == null) throw new InvalidTransactionException("Not enough Origin to pay this fee");
+                inputs.addAll(tempFee);
+                for (Input i : tempFee) {
+                    sIns.add(i.getID());
                 }
-            }
-
-
-            if (feeInput.compareTo(fee) < 0) {
-                throw new InvalidTransactionException("Not enough origin to pay for this fee");
             }
 
             Map<String, KeySigEntropyPair> keySigMap = new HashMap<>();
@@ -687,10 +675,10 @@ public class TransactionManager implements ITransMan {
             keySigMap.put(ki.getEncryptMan().getPublicKeyString(a.getKeyType()), ksep);
             ITrans trans = new NewTrans(message, outputs, inputs, keySigMap, TransactionType.NEW_TRANS);
             ki.debug("Transaction has: " + trans.getOutputs().size() + " Outputs before finalization");
-            trans.makeChange(fee, ki.getAddMan().getMainAdd()); // TODO this just sends change back to the main address......will need to give option later
+            trans.makeChange(fee, a); // TODO this just sends change back to the main address......will need to give option later
             trans.addSig(ki.getEncryptMan().getPublicKeyString(a.getKeyType()), Utils.toBase64(ki.getEncryptMan().sign(trans.toSignBytes(), a.getKeyType())));
-            ki.debug("Transaction has: " + trans.getOutputs().size() + "Outputs after finalization");
-            usedUTXOs.addAll(sIns);
+            ki.debug("Transaction has: " + trans.getOutputs().size() + " Outputs after finalization");
+            //usedUTXOs.addAll(sIns);
             return trans;
 
         }
@@ -754,7 +742,7 @@ public class TransactionManager implements ITransMan {
     public BigInteger getAmountInWallet(IAddress address, Token token) {
         BigInteger amount = BigInteger.ZERO;
         List<Output> outs = getUTXOs(address, true);
-        if (outs == null) return null;
+        if (outs == null) return BigInteger.ZERO;
         for (Output o : outs) {
             if (o.getToken().equals(token)) {
                 amount = amount.add(o.getAmount());
@@ -767,5 +755,10 @@ public class TransactionManager implements ITransMan {
         for (Input i : inputs) {
             usedUTXOs.remove(i.getID());
         }
+    }
+
+    @Override
+    public void setCurrentHeight(BigInteger currentHeight) {
+        this.currentHeight = currentHeight;
     }
 }

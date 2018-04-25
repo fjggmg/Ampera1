@@ -20,7 +20,7 @@ public class PacketGlobal {
     }
 
     List<Block> addedBlocks = new ArrayList<>();
-    boolean doneDownloading = false;
+    public boolean doneDownloading = false;
     BigInteger startHeight;
     boolean laFlag = false;
     boolean onRightChain = true;

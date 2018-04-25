@@ -17,6 +17,8 @@ import engine.ByteCodeEngine;
 import mining_pool.Pool;
 import org.apache.logging.log4j.Logger;
 
+import java.math.BigInteger;
+
 /**
  * Created by Bryan on 5/10/2017.
  * Copyright (C) 2017  Bryan Sharpe
@@ -84,4 +86,6 @@ public interface IKi {
     ExchangeManager getExMan();
 
     ScriptManager getScriptMan();
+
+    void setStartHeight(BigInteger startHeight);
 }

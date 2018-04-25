@@ -5,6 +5,7 @@ import com.lifeform.main.IKi;
 import com.lifeform.main.Settings;
 import com.lifeform.main.StringSettings;
 import com.lifeform.main.blockchain.Block;
+import com.lifeform.main.blockchain.ChainManager;
 import com.lifeform.main.data.Utils;
 import com.lifeform.main.network.BlockEnd;
 import com.lifeform.main.network.BlockHeader;
@@ -86,23 +87,25 @@ public class PoolBlockHeader implements Serializable, PoolPacket {
                 b.ID = ID;
                 b.solver = solver;
                 ki.getPoolData().hrMap.put(connMan.getID(), currentHR);
-                if (ki.getChainMan().softVerifyBlock(b).success()) {
-                    ki.debug("Share is a solve");
-                    BlockHeader bh2 = formHeader(b);
-                    ki.getNetMan().broadcast(bh2);
-                    for (String key : b.getTransactionKeys()) {
-                        TransactionPacket tp = new TransactionPacket();
-                        tp.block = b.ID;
-                        tp.trans = b.getTransaction(key).serializeToAmplet().serializeToBytes();
-                        ki.getNetMan().broadcast(tp);
-                    }
-                    BlockEnd be = new BlockEnd();
-                    be.ID = b.ID;
-                    ki.getNetMan().broadcast(be);
-                    if (pplns && ki.getSetting(Settings.PPLNS_SERVER)) {
-                        List<Block> bs = new ArrayList<>();
-                        bs.add(b);
-                        ki.getPoolManager().endPPLNSRound(bs, Double.parseDouble(ki.getStringSetting(StringSettings.POOL_FEE)) / 100, ki);
+                if (ChainManager.checkSolve(ki.getChainMan().getCurrentDifficulty(), b.height, b.ID)) {
+                    if (ki.getChainMan().softVerifyBlock(b).success()) {
+                        ki.debug("Share is a solve");
+                        BlockHeader bh2 = formHeader(b);
+                        ki.getNetMan().broadcast(bh2);
+                        for (String key : b.getTransactionKeys()) {
+                            TransactionPacket tp = new TransactionPacket();
+                            tp.block = b.ID;
+                            tp.trans = b.getTransaction(key).serializeToAmplet().serializeToBytes();
+                            ki.getNetMan().broadcast(tp);
+                        }
+                        BlockEnd be = new BlockEnd();
+                        be.ID = b.ID;
+                        ki.getNetMan().broadcast(be);
+                        if (pplns && ki.getSetting(Settings.PPLNS_SERVER)) {
+                            List<Block> bs = new ArrayList<>();
+                            bs.add(b);
+                            ki.getPoolManager().endPPLNSRound(bs, Double.parseDouble(ki.getStringSetting(StringSettings.POOL_FEE)) / 100, ki);
+                        }
                     }
                 }
                 if (pplns) {

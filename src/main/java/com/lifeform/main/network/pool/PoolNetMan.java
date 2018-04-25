@@ -166,11 +166,18 @@ public class PoolNetMan extends Thread implements INetworkManager {
                 public void run() {
                     setName("StatUpdate");
                     while (true) {
+                        List<IConnectionManager> toRemove = new ArrayList<>();
                         for (IConnectionManager conn : connections) {
                             StatUpdate su = new StatUpdate();
                             if (conn == null) {
                                 ki.getMainLog().warn("Skipping connection in pool stat update since it is null");
                                 continue;
+                            }
+                            if (!conn.isConnected()) {
+                                conn.disconnect();
+                                connMap.remove(conn.getID());
+                                ki.getPoolData().hrMap.remove(conn.getID());
+                                toRemove.add(conn);
                             }
                             if (ki.getPoolData().addMap.get(conn.getID()) == null) {
                                 ki.getMainLog().warn("Skipping connection: " + conn.getID() + " in stat update since we don't have address for it");
@@ -187,6 +194,7 @@ public class PoolNetMan extends Thread implements INetworkManager {
 
                             conn.sendPacket(su);
                         }
+                        connections.removeAll(toRemove);
                         try {
                             sleep(30000);
                         } catch (InterruptedException e) {

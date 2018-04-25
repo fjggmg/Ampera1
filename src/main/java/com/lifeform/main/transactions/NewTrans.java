@@ -118,10 +118,18 @@ public class NewTrans implements ITrans {
                 System.out.println("address mismatch, Address expecting: ");
                 System.out.println(inputMap.get(ksep.inputs.get(0)).getAddress().encodeForChain());
                 System.out.println("Received: ");
+                System.out.println("Entropy: " + ksep.entropy);
+                System.out.println("Key: " + key);
                 try {
                     System.out.println(NewAdd.createNew(key, ksep.entropy, AddressLength.byIndicator(inputMap.get(ksep.inputs.get(0)).getAddress().toByteArray()[1]), ksep.p2sh, inputMap.get(ksep.inputs.get(0)).getAddress().getKeyType()).encodeForChain());
                 } catch (InvalidAddressException e) {
-                    e.printStackTrace();
+                    try {
+                        System.out.println(Address.createNew(key, ksep.entropy).encodeForChain());
+                    } catch (Exception e1) {
+                        System.out.println("This is not necessarily an error, this is probably why the transaction failed.");
+                        e.printStackTrace();
+                        e1.printStackTrace();
+                    }
                 }
                 return false;
             }

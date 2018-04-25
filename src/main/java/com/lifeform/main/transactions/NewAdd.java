@@ -350,6 +350,7 @@ public class NewAdd implements IAddress {
     }
 
     public static NewAdd createNew(String key, String entropy, AddressLength length, boolean p2sh, KeyType type) throws InvalidAddressException {
+        if (length == null) throw new InvalidAddressException("Null address length");
         byte[] keyB = Utils.fromBase64(key);
         byte[] ent = {};
         try {

@@ -1,8 +1,11 @@
 package com.lifeform.main.data;
 
 import com.lifeform.main.IKi;
+import com.lifeform.main.Settings;
 import com.lifeform.main.blockchain.Block;
 import com.lifeform.main.blockchain.BlockState;
+import com.lifeform.main.blockchain.ChainManager;
+import com.lifeform.main.blockchain.GPUMiner;
 import com.lifeform.main.network.IConnectionManager;
 import com.lifeform.main.network.Ping;
 import com.lifeform.main.network.TransactionDataRequest;
@@ -14,7 +17,9 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadInfo;
+import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.*;
@@ -97,7 +102,7 @@ public class InputHandler extends Thread {
                         i++;
                     }
                 } else if (line.startsWith("sendTransaction")) {
-
+                    ki.getMainLog().info("Not implemented for NovusTX system yet");
                 } else if (line.startsWith("relays")) {
                     ki.getMainLog().info("Relay list: ");
                     for (String relay : ki.getNetMan().getRelays()) {
@@ -185,6 +190,15 @@ public class InputHandler extends Thread {
                             ki.debug("Output data : " + out.getID() + " Address: " + out.getAddress().encodeForChain() + " Amount: " + out.getAmount());
                         }
                     ki.debug("Done getting UTXOs");
+
+
+                } else if (line.startsWith("getBalance")) {
+                    if (line.split(" ").length < 1) {
+                        ki.debug("Not enough args");
+                        continue;
+                    }
+                    if (ki.getTransMan().getUTXOs(Address.decodeFromChain(line.split(" ")[1]), true) != null)
+                        ki.getMainLog().info("Balance in wallet is: " + ki.getTransMan().getAmountInWallet(Address.decodeFromChain(line.split(" ")[1]), Token.ORIGIN));
 
 
                 } else if (line.startsWith("verifyTransactions")) {
@@ -355,6 +369,118 @@ public class InputHandler extends Thread {
                             ki.debug(ManagementFactory.getThreadMXBean().getThreadInfo(id).getThreadName() + " is deadlocked");
                         }
 
+                } else if (line.equalsIgnoreCase("checkBalance")) {
+                    ki.getMainLog().info("Balance in main wallet " + ki.getAddMan().getMainAdd().encodeForChain() + " is: \n" + (ki.getTransMan().getAmountInWallet(ki.getAddMan().getMainAdd(), Token.ORIGIN).doubleValue() / 100_000_000d) + " " + Token.ORIGIN.getName());
+                } else if (line.contains("setDynamicPPS")) {
+                    if (ki.getOptions().poolRelay) {
+                        String[] args = line.replaceFirst("setDynamicPPS", "").split(" ");
+                        if (args.length < 1) {
+                            ki.getMainLog().info("Not enough arguments");
+                            continue;
+                        }
+                        double rate = 0;
+                        try {
+                            rate = Double.parseDouble(args[0]);
+                        } catch (Exception e) {
+                            ki.getMainLog().info("Invalid rate " + args[0]);
+                            continue;
+                        }
+                        ki.getMainLog().info("Setting dynamic fee rate to: " + rate + "%");
+                        BigDecimal sd = new BigDecimal(GPUMiner.shareDiff);
+                        BigDecimal cd = new BigDecimal(ki.getChainMan().getCurrentDifficulty());
+                        long pps = (long) (((cd.divide(sd, 9, RoundingMode.HALF_DOWN).doubleValue() * ChainManager.blockRewardForHeight(ki.getChainMan().currentHeight()).longValueExact()) * (1 - (rate / 100))));
+                        ki.getPoolManager().updateCurrentPayPerShare(pps);
+                        ki.setSetting(Settings.DYNAMIC_FEE, true);
+
+                    } else {
+                        ki.getMainLog().info("Not a pool relay");
+                    }
+                } else if (line.contains("setStaticPPS")) {
+                    if (ki.getOptions().poolRelay) {
+                        String[] args = line.replaceFirst("setStaticPPS", "").split(" ");
+                        if (args.length < 1) {
+                            ki.getMainLog().info("Not enough arguments");
+                            continue;
+                        }
+                        double rate = 0;
+                        try {
+                            rate = Double.parseDouble(args[0]);
+                        } catch (Exception e) {
+                            ki.getMainLog().info("Invalid rate");
+                            continue;
+                        }
+                        ki.getMainLog().info("Setting static fee rate to: " + rate + " ORA");
+                        long pps = (long) (rate * 100_000_000L);
+                        ki.getPoolManager().updateCurrentPayPerShare(pps);
+                        ki.setSetting(Settings.DYNAMIC_FEE, false);
+
+                    } else {
+                        ki.getMainLog().info("Not a pool relay");
+                    }
+                } else if (line.contains("checkMiners")) {
+                    if (ki.getOptions().poolRelay) {
+                        ki.getMainLog().info("There are " + ki.getPoolNet().getConnections().size() + " miners connected currently");
+                    } else {
+                        ki.getMainLog().info("Not a pool relay");
+                    }
+                } else if (line.contains("checkHashrate")) {
+                    if (ki.getOptions().poolRelay) {
+                        long totalHR = 0;
+                        for (String ID : ki.getPoolData().hrMap.keySet()) {
+                            totalHR += (ki.getPoolData().hrMap.get(ID) / 1000000);
+                        }
+                        ki.getMainLog().info("Current pool hashrate is: " + totalHR + " MH/s");
+                    } else {
+                        ki.getMainLog().info("Not a pool relay");
+                    }
+                } else if (line.contains("checkShares")) {
+                    if (ki.getOptions().poolRelay) {
+                        ki.getMainLog().info("There are " + ki.getPoolManager().getTotalSharesOfCurrentPayPeriod() + " shares this pay period");
+                    } else {
+                        ki.getMainLog().info("Not a pool relay");
+                    }
+                } else if (line.contains("checkPayout")) {
+                    if (ki.getOptions().poolRelay) {
+                        ki.getMainLog().info("Estimated next payout at current pps is: " + (double) (ki.getPoolManager().getTotalSharesOfCurrentPayPeriod() * (double) ((double) ki.getPoolManager().getCurrentPayPerShare() / 100_000_000D)));
+                    } else {
+                        ki.getMainLog().info("Not a pool relay");
+                    }
+                } else if (line.contains("enablePPLNS")) {
+                    if (ki.getOptions().poolRelay) {
+                        ki.getMainLog().info("enabling PPLNS");
+                        ki.setSetting(Settings.PPLNS_SERVER, true);
+                    } else {
+                        ki.getMainLog().info("Not a pool relay");
+                    }
+                } else if (line.contains("disablePPLNS")) {
+                    if (ki.getOptions().poolRelay) {
+                        ki.getMainLog().info("Disabling PPLNS");
+                        ki.setSetting(Settings.PPLNS_SERVER, false);
+                    } else {
+                        ki.getMainLog().info("Not a pool relay");
+                    }
+                } else if (line.contains("setPayoutTime")) {
+                    if (ki.getOptions().poolRelay) {
+                        String[] args = line.replaceFirst("setPayoutTime", "").split(" ");
+                        if (args.length < 1) {
+                            ki.getMainLog().info("Not enough arguments");
+                            continue;
+                        }
+                        long payoutTime = 0;
+                        try {
+                            payoutTime = Long.parseLong(args[0]);
+                        } catch (Exception e) {
+                            ki.getMainLog().info("Invalid payout time");
+                            continue;
+                        }
+                        if (payoutTime < 1 || payoutTime > 720) {
+                            ki.getMainLog().info("Invalid payout time, range must be between 1 and 720 minutes");
+                            continue;
+                        }
+                        ki.getPoolManager().updateCurrentPayInterval(payoutTime * 60_000L);
+                    } else {
+                        ki.getMainLog().info("Not a pool relay");
+                    }
                 } else {
                     System.out.println("unrecognized input");
                 }

@@ -266,6 +266,7 @@ public class ChainManager implements IChainMan {
             return;
         }
         currentDifficulty = new BigInteger(csMap.get("diff"));
+        ki.getTransMan().setCurrentHeight(currentHeight);
 
 
 
@@ -425,6 +426,43 @@ public class ChainManager implements IChainMan {
         return BlockState.SUCCESS;
     }
 
+    public static boolean checkSolve(BigInteger currentDifficulty, BigInteger height, String hash) {
+        byte[] bigIntDiffByteArray = currentDifficulty.toByteArray();
+        byte[] byteDiff = new byte[64];
+        int p = 63;
+        int k = bigIntDiffByteArray.length - 1;
+        while (k >= 0) {
+            byteDiff[p] = bigIntDiffByteArray[k];
+            k--;
+            p--;
+        }
+
+        int mostSignificant0Digits = 0;
+        for (int i = 0; i < byteDiff.length; i++) {
+            mostSignificant0Digits = i;
+            if (byteDiff[i] != 0) {
+                break;
+            }
+        }
+        int mostSignificantByte = byteDiff[mostSignificant0Digits] & 0x0000ff;
+
+        byte[] byteHash = Utils.fromBase64(hash);
+
+        int precedingZeroes = 0;
+        for (int i = 0; i < mostSignificant0Digits; i++) {
+            precedingZeroes = (precedingZeroes | byteHash[i]) & 0x00ff;
+        }
+        if (height.compareTo(BigInteger.valueOf(32910L)) < 0) {
+            if (!(precedingZeroes == 0 && byteHash[mostSignificant0Digits] <= mostSignificantByte)) {
+                return false;
+            }
+        } else {
+            if (!(precedingZeroes == 0 && ((byteHash[mostSignificant0Digits] & 0x00ff) <= mostSignificantByte))) {
+                return false;
+            }
+        }
+        return true;
+    }
     private synchronized int getCurrentSegment()
     {
         return currentHeight.divide(BigInteger.valueOf(1000L)).intValueExact();

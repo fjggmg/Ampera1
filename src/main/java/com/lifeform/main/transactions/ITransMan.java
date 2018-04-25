@@ -43,4 +43,6 @@ public interface ITransMan {
 
     BigInteger getAmountInWallet(IAddress address, Token token);
     void unUseUTXOs(List<Input> inputs);
+
+    void setCurrentHeight(BigInteger currentHeight);
 }

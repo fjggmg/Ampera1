@@ -18,6 +18,8 @@ import engine.ByteCodeEngine;
 import mining_pool.Pool;
 import org.apache.logging.log4j.Logger;
 
+import java.math.BigInteger;
+
 public class DummyBCEKi implements IKi {
     public ByteCodeEngine bce;
 
@@ -174,5 +176,10 @@ public class DummyBCEKi implements IKi {
     @Override
     public ScriptManager getScriptMan() {
         return null;
+    }
+
+    @Override
+    public void setStartHeight(BigInteger startHeight) {
+
     }
 }
