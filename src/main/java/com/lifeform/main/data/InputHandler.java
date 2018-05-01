@@ -2,6 +2,7 @@ package com.lifeform.main.data;
 
 import com.lifeform.main.IKi;
 import com.lifeform.main.Settings;
+import com.lifeform.main.StringSettings;
 import com.lifeform.main.blockchain.Block;
 import com.lifeform.main.blockchain.BlockState;
 import com.lifeform.main.blockchain.ChainManager;
@@ -185,11 +186,15 @@ public class InputHandler extends Thread {
                         ki.debug("Not enough args");
                         continue;
                     }
-                    if (ki.getTransMan().getUTXOs(Address.decodeFromChain(line.split(" ")[1]), true) != null)
-                        for (Output out : ki.getTransMan().getUTXOs(Address.decodeFromChain(line.split(" ")[1]), true)) {
-                            ki.debug("Output data : " + out.getID() + " Address: " + out.getAddress().encodeForChain() + " Amount: " + out.getAmount());
-                        }
-                    ki.debug("Done getting UTXOs");
+                    try {
+                        if (ki.getTransMan().getUTXOs(Address.decodeFromChain(line.split(" ")[1]), true) != null)
+                            for (Output out : ki.getTransMan().getUTXOs(Address.decodeFromChain(line.split(" ")[1]), true)) {
+                                ki.debug("Output data : " + out.getID() + " Address: " + out.getAddress().encodeForChain() + " Amount: " + out.getAmount());
+                            }
+                        ki.debug("Done getting UTXOs");
+                    } catch (Exception e) {
+                        ki.debug("Invalid address");
+                    }
 
 
                 } else if (line.startsWith("getBalance")) {
@@ -373,16 +378,16 @@ public class InputHandler extends Thread {
                     ki.getMainLog().info("Balance in main wallet " + ki.getAddMan().getMainAdd().encodeForChain() + " is: \n" + (ki.getTransMan().getAmountInWallet(ki.getAddMan().getMainAdd(), Token.ORIGIN).doubleValue() / 100_000_000d) + " " + Token.ORIGIN.getName());
                 } else if (line.contains("setDynamicPPS")) {
                     if (ki.getOptions().poolRelay) {
-                        String[] args = line.replaceFirst("setDynamicPPS", "").split(" ");
-                        if (args.length < 1) {
+                        String[] args = line.split(" ");
+                        if (args.length < 2) {
                             ki.getMainLog().info("Not enough arguments");
                             continue;
                         }
                         double rate = 0;
                         try {
-                            rate = Double.parseDouble(args[0]);
+                            rate = Double.parseDouble(args[1]);
                         } catch (Exception e) {
-                            ki.getMainLog().info("Invalid rate " + args[0]);
+                            ki.getMainLog().info("Invalid rate " + args[1]);
                             continue;
                         }
                         ki.getMainLog().info("Setting dynamic fee rate to: " + rate + "%");
@@ -390,6 +395,7 @@ public class InputHandler extends Thread {
                         BigDecimal cd = new BigDecimal(ki.getChainMan().getCurrentDifficulty());
                         long pps = (long) (((cd.divide(sd, 9, RoundingMode.HALF_DOWN).doubleValue() * ChainManager.blockRewardForHeight(ki.getChainMan().currentHeight()).longValueExact()) * (1 - (rate / 100))));
                         ki.getPoolManager().updateCurrentPayPerShare(pps);
+                        ki.setStringSetting(StringSettings.POOL_FEE, "" + rate);
                         ki.setSetting(Settings.DYNAMIC_FEE, true);
 
                     } else {
@@ -397,14 +403,14 @@ public class InputHandler extends Thread {
                     }
                 } else if (line.contains("setStaticPPS")) {
                     if (ki.getOptions().poolRelay) {
-                        String[] args = line.replaceFirst("setStaticPPS", "").split(" ");
-                        if (args.length < 1) {
+                        String[] args = line.split(" ");
+                        if (args.length < 2) {
                             ki.getMainLog().info("Not enough arguments");
                             continue;
                         }
                         double rate = 0;
                         try {
-                            rate = Double.parseDouble(args[0]);
+                            rate = Double.parseDouble(args[1]);
                         } catch (Exception e) {
                             ki.getMainLog().info("Invalid rate");
                             continue;
@@ -461,14 +467,14 @@ public class InputHandler extends Thread {
                     }
                 } else if (line.contains("setPayoutTime")) {
                     if (ki.getOptions().poolRelay) {
-                        String[] args = line.replaceFirst("setPayoutTime", "").split(" ");
-                        if (args.length < 1) {
+                        String[] args = line.split(" ");
+                        if (args.length < 2) {
                             ki.getMainLog().info("Not enough arguments");
                             continue;
                         }
                         long payoutTime = 0;
                         try {
-                            payoutTime = Long.parseLong(args[0]);
+                            payoutTime = Long.parseLong(args[1]);
                         } catch (Exception e) {
                             ki.getMainLog().info("Invalid payout time");
                             continue;
@@ -477,10 +483,25 @@ public class InputHandler extends Thread {
                             ki.getMainLog().info("Invalid payout time, range must be between 1 and 720 minutes");
                             continue;
                         }
+                        ki.getMainLog().info("Setting payout time to " + args[1] + " minutes");
                         ki.getPoolManager().updateCurrentPayInterval(payoutTime * 60_000L);
                     } else {
                         ki.getMainLog().info("Not a pool relay");
                     }
+                } else if (line.contains("checkPPS")) {
+                    if (ki.getOptions().poolRelay) {
+                        if (ki.getSetting(Settings.DYNAMIC_FEE)) {
+                            ki.getMainLog().info("Current dynamic fee rate: " + ki.getStringSetting(StringSettings.POOL_FEE));
+                        } else {
+                            ki.getMainLog().info("Current PPS: " + ki.getPoolManager().getCurrentPayPerShare());
+                        }
+                    } else {
+                        ki.getMainLog().info("Not a pool relay");
+                    }
+                } else if (line.equalsIgnoreCase("pauseDebug")) {
+                    ki.setSetting(Settings.DEBUG_MODE, false);
+                } else if (line.equalsIgnoreCase("unpauseDebug")) {
+                    ki.setSetting(Settings.DEBUG_MODE, true);
                 } else {
                     System.out.println("unrecognized input");
                 }

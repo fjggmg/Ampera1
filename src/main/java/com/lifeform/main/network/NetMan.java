@@ -14,7 +14,7 @@ public class NetMan extends Thread implements INetworkManager {
 
     public static final String[] testBoot = {"73.108.51.16"};
     public static final String[] bootstrap = {"mimpve.host"};
-    public static final String NET_VER = "2.1.2";
+    public static final String NET_VER = "2.1.1";
     private IKi ki;
     private boolean isRelay;
     public static final int PORT = 29555;
@@ -325,16 +325,12 @@ public class NetMan extends Thread implements INetworkManager {
         return connMap.get(ID);
     }
 
-    private static boolean canInit = true;
     @Override
-    public boolean connectionInit(String ID, IConnectionManager connMan) {
-        while (!canInit) {
-        }
-        canInit = false;
+    public synchronized boolean connectionInit(String ID, IConnectionManager connMan) {
+
         if (!isRelay) {
             for (IConnectionManager cm : connections) {
                 if (cm.getAddress().replace("/", "").split(":")[0].equals(connMan.getAddress().replace("/", "").split(":")[0])) {
-                    canInit = true;
                     return false;
                 }
             }
@@ -342,7 +338,6 @@ public class NetMan extends Thread implements INetworkManager {
 
         for (IConnectionManager cm : connections) {
             if (cm.getID().equals(ID)) {
-                canInit = true;
                 return false;
             }
         }
@@ -350,7 +345,6 @@ public class NetMan extends Thread implements INetworkManager {
         connMap.put(ID,connMan);
         connections.add(connMan);
         ki.debug("Connection init for: " + ID + " is complete");
-        canInit = true;
         return true;
 
     }

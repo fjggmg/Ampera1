@@ -47,12 +47,7 @@ public class Handshake implements Serializable, Packet {
             return;
         }
         connMan.gotHS();
-        ki.debug("Received handshake: ");
-        ki.debug("ID: " + ID);
-        ki.debug("Most recent block: " + mostRecentBlock);
-        ki.debug("version: " + version);
-        ki.debug("Height: " + currentHeight);
-        ki.debug("Chain ver: " + chainVer);
+
         if (connMan.getChannel() != null && connMan.getChannel().remoteAddress() != null)
             ki.debug("Address: " + connMan.getAddress());
         else {
@@ -60,16 +55,26 @@ public class Handshake implements Serializable, Packet {
             connMan.disconnect();
             return;
         }
-        ki.debug("Is Relay: " + isRelay);
+
         connMan.setID(ID);
         if (!ki.getNetMan().connectionInit(ID, connMan)) {
-            //connMan.disconnect();
+            //TODO uncommented next line to test against possible attacks, will update this to require some work to prove connect is legit later
+            connMan.disconnect();
             ki.debug("Already connected to this address");
             return;
         }
+        ki.debug("Received handshake: ");
+        ki.debug("ID: " + ID);
+        //ki.debug("Most recent block: " + mostRecentBlock);
+        ki.debug("version: " + version);
+        ki.debug("Height: " + currentHeight);
+        ki.debug("Chain ver: " + chainVer);
+        if (!ki.getOptions().relay)
+            ki.debug("Is Relay: " + isRelay);
         if (!ki.getOptions().lite && ki.getGUIHook() != null)
             ki.getGUIHook().setStart(currentHeight);
-        ki.setStartHeight(currentHeight);
+        if (ki.getOptions().poolRelay)
+            ki.setStartHeight(currentHeight);
         connMan.setStartTime(startTime);
         if (ki.getChainMan().currentHeight().compareTo(BigInteger.valueOf(-1L)) == 0)
             connMan.sendPacket(new DoneDownloading());

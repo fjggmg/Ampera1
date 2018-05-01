@@ -162,6 +162,7 @@ public class NewGUI {
     public VBox walletBox;
     public JFXButton loadTransaction;
     public JFXButton copySelectedAdd;
+    public Label exchangeTotalPurchase;
     private CandlestickGraph exchangeGraph;
     public VBox passwordVbox;
     public VBox exchangeGraphBox;
@@ -874,6 +875,68 @@ public class NewGUI {
                 }
             }
         });
+
+
+        amtOnOffer.textProperty().addListener(new ChangeListener<String>() {
+            @Override
+            public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
+                if (!limit) {
+                    BigInteger amount;
+                    try {
+                        amount = new BigDecimal(amtOnOffer.getText()).multiply(BigDecimal.valueOf(unitMultiplierAmount.doubleValue())).toBigInteger();
+                    } catch (Exception e) {
+                        //notification("Invalid Amount");
+                        return;
+                    }
+                    BigInteger priceSell = ki.getExMan().getOrderBook().buys().get(0).unitPrice();
+                    BigInteger priceBuy = ki.getExMan().getOrderBook().sells().get(0).unitPrice();
+                    double totalBuy = (priceBuy.doubleValue() / 100_000_000D) * amount.doubleValue();
+                    double totalSell = (priceSell.doubleValue() / 100_000_000D) * amount.doubleValue();
+                    exchangeTotalPurchase.setText("Totals -" + "\n" + "Buy: " + format2.format(totalBuy / unitMultiplierPrice.doubleValue()) + unitSelectorPrice.getSelectionModel().getSelectedItem().getText() + "\n" + "Sell: " + format2.format(totalSell / unitMultiplierPrice.doubleValue()) + unitSelectorPrice.getSelectionModel().getSelectedItem().getText());
+                } else {
+                    BigInteger amount;
+                    BigInteger stopPrice = null;
+                    try {
+                        amount = new BigDecimal(amtOnOffer.getText()).multiply(BigDecimal.valueOf(unitMultiplierAmount.doubleValue())).toBigInteger();
+                    } catch (Exception e) {
+                        //notification("Invalid Amount");
+                        return;
+                    }
+                    try {
+                        stopPrice = new BigDecimal(exPrice.getText()).multiply(BigDecimal.valueOf(unitMultiplierPrice.doubleValue())).toBigInteger();
+                        if (stopPrice.compareTo(BigInteger.valueOf(500)) < 0) throw new Exception();
+                    } catch (Exception e) {
+                        //notification("Invalid Price");
+                        return;
+                    }
+                    double total = (stopPrice.doubleValue() / unitMultiplierPrice.doubleValue()) * amount.doubleValue();
+                    exchangeTotalPurchase.setText("Total - " + format2.format(total / unitMultiplierPrice.doubleValue()) + unitSelectorPrice.getSelectionModel().getSelectedItem().getText());
+                }
+            }
+        });
+
+        exPrice.textProperty().addListener(new ChangeListener<String>() {
+            @Override
+            public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
+                BigInteger amount;
+                BigInteger stopPrice = null;
+                try {
+                    amount = new BigDecimal(amtOnOffer.getText()).multiply(BigDecimal.valueOf(unitMultiplierAmount.doubleValue())).toBigInteger();
+                } catch (Exception e) {
+                    //notification("Invalid Amount");
+                    return;
+                }
+                try {
+                    stopPrice = new BigDecimal(exPrice.getText()).multiply(BigDecimal.valueOf(unitMultiplierPrice.doubleValue())).toBigInteger();
+                    if (stopPrice.compareTo(BigInteger.valueOf(500)) < 0) throw new Exception();
+                } catch (Exception e) {
+                    //notification("Invalid Price");
+                    return;
+                }
+                double total = (stopPrice.doubleValue() / unitMultiplierPrice.doubleValue()) * amount.doubleValue();
+                exchangeTotalPurchase.setText("Total - " + format2.format(total / unitMultiplierPrice.doubleValue()) + unitSelectorPrice.getSelectionModel().getSelectedItem().getText());
+            }
+        });
         faqLink.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
@@ -1419,7 +1482,7 @@ public class NewGUI {
         if (!ki.getOptions().pool) {
             vb.getChildren().add(buildMainButton("Wallet", "/Wallet.png", 0, 0, content, walletPane));
             vb.getChildren().add(buildMainButton("Address", "/home.png", 100, 0, content, addressPane));
-            vb.getChildren().add(buildMainButton("ADX", "/exchange.png", 200, 5, content, exchangePane));
+            //vb.getChildren().add(buildMainButton("ADX", "/exchange.png", 200, 5, content, exchangePane));
         } else if (ki.getOptions().pool && !ki.getOptions().poolRelay) {
             vb.getChildren().add(buildMainButton("Pool", "/pool.png", 100, 3, content, poolPane));
         }
@@ -2579,10 +2642,13 @@ public class NewGUI {
         notification("Found a block");
     }
 
+    private JFXSnackbar sb;
     private void notification(String text) {
         Platform.runLater(new Thread() {
             public void run() {
-                JFXSnackbar sb = new JFXSnackbar(topPane2);
+                if (sb == null) {
+                    sb = new JFXSnackbar(topPane2);
+                }
                 sb.enqueue(new JFXSnackbar.SnackbarEvent(text));
             }
         });
