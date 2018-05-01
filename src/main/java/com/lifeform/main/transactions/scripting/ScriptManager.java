@@ -148,7 +148,7 @@ public class ScriptManager {
 
         try {
             JumpMemory jm = new JumpMemory(jumps);
-            return new Binary(mSig, new ConstantMemory(cm), jm, true, VERSION, entropy, System.currentTimeMillis(), publicKey, null, 0);
+            return new Binary(mSig, new ConstantMemory(cm), jm, true, VERSION, entropy, System.currentTimeMillis(), publicKey, KeyType.NONE, null, 0);
         } catch (Exception e) {
             e.printStackTrace();
             return null;

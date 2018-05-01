@@ -199,7 +199,7 @@ public class NewTrans implements ITrans {
                 }
                 if (execAdd == null) return false;
                 try {
-                    ArrayList<DataElement> result = ki.getBCE8().executeProgram(Binary.deserializeFromAmplet(Amplet.create(Utils.fromBase64(key))), WritableMemory.deserializeFromBytes(Utils.fromBase64(ksep.sig)), this, execAdd.toByteArray(), true);
+                    ArrayList<DataElement> result = ki.getBCE8().executeProgram(Binary.deserializeFromAmplet(Amplet.create(Utils.fromBase64(key))), WritableMemory.deserializeFromBytes(Utils.fromBase64(ksep.sig)), this, execAdd.toByteArray(), false);
                     if (result.get(0).getDataAsInt() != 0) return false;
                 } catch (Exception e) {
                     e.printStackTrace();

@@ -390,6 +390,8 @@
                                                                                        prefWidth="200.0" text="BTC"/>
                                                                             </children>
                                                                         </HBox>
+                                                                        <Label fx:id="exchangeTotalPurchase"
+                                                                               text="Total -"/>
                                                                         <JFXComboBox fx:id="pairs" prefHeight="30.0"
                                                                                      prefWidth="981.0"/>
                                                                         <JFXButton fx:id="exchangeBuy" prefHeight="40.0"

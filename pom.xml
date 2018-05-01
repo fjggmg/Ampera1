@@ -6,7 +6,7 @@
 
     <groupId>com.lifeform</groupId>
     <artifactId>Origin</artifactId>
-    <version>0.18.2-BETA</version>
+    <version>0.18.3-BETA</version>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
@@ -105,17 +105,17 @@
         <dependency>
             <groupId>com.ampex</groupId>
             <artifactId>mining-pool</artifactId>
-            <version>1.2.42</version>
+            <version>1.2.53</version>
         </dependency>
         <dependency>
             <groupId>com.ampex</groupId>
             <artifactId>Amp</artifactId>
-            <version>1.3.35</version>
+            <version>1.3.37</version>
         </dependency>
         <dependency>
             <groupId>com.ampex</groupId>
             <artifactId>ampex-script-engine</artifactId>
-            <version>1.0.56</version>
+            <version>1.0.60</version>
         </dependency>
         <dependency>
             <groupId>org.fusesource.jansi</groupId>

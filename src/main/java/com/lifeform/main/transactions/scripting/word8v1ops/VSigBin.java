@@ -35,7 +35,7 @@ public class VSigBin implements IOperator {
     @Override
     public void execute(Stack<DataElement> stack, Binary binary, Program program, ConstantMemory constantMemory, JumpMemory jumpMemory, WritableMemory writableMemory, OPCode opCode, ITrans transaction, byte[] executionAddress) throws Exception {
         byte[] sig = stack.pop().getData();
-        KeyType keyType = KeyType.byValue(stack.pop().getDataAsByte());
+        KeyType keyType = binary.getPublicKeyType();
         byte[] key = binary.getPublicKey();
         byte[] signed = transaction.toSignBytes();
 

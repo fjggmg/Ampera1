@@ -115,6 +115,34 @@ public class PoolBlockHeader implements Serializable, PoolPacket {
                     ki.getPoolManager().addShare(b);
                 }
                 //ki.debug("Shares for address:  " + ki.getPoolManager().getTotalSharesOfMiner(Address.decodeFromChain(ki.getPoolData().addMap.get(connMan.getID()))));
+            } else {
+                if (ki.getPoolData().workMap.containsKey(ki.getPoolData().currentWork.merkleRoot))
+                    connMan.sendPacket(ki.getPoolData().currentWork);
+                else {
+                    b = ki.getChainMan().formEmptyBlock(TransactionFeeCalculator.MIN_FEE);
+                    PoolBlockHeader pbh = new PoolBlockHeader();
+                    pbh.coinbase = b.getCoinbase().serializeToAmplet().serializeToBytes();
+                    pbh.height = b.height;
+                    pbh.ID = b.ID;
+                    pbh.merkleRoot = b.merkleRoot();
+                    pbh.prevID = b.prevID;
+                    pbh.solver = b.solver;
+                    pbh.timestamp = b.timestamp;
+                    ki.getPoolData().workMap.put(b.merkleRoot(), b);
+                    BigInteger height = ki.getPoolData().lowestHeight;
+                    while (height.compareTo(b.height) != 0) {
+                        if (ki.getPoolData().tracking.get(height) != null)
+                            for (String root : ki.getPoolData().tracking.get(height)) {
+                                ki.getPoolData().workMap.remove(root);
+                            }
+                        ki.getPoolData().tracking.remove(height);
+
+                        height = height.add(BigInteger.ONE);
+                    }
+                    ki.getPoolData().lowestHeight = b.height;
+                    ki.getPoolData().currentWork = pbh;
+                    ki.getPoolNet().broadcast(pbh);
+                }
             }
         }
 

@@ -218,7 +218,7 @@ public class ExchangeManager {
                 String entropy = Utils.toBase64(ent);
                 Binary program = null;
                 try {
-                    program = new Binary(ki.getScriptMan().genericTrade(), constMem, jMem, true, ScriptManager.VERSION, ent, System.currentTimeMillis(), Utils.fromBase64(ki.getEncryptMan().getPublicKeyString(ki.getAddMan().getMainAdd().getKeyType())), null, 0);
+                    program = new Binary(ki.getScriptMan().genericTrade(), constMem, jMem, true, ScriptManager.VERSION, ent, System.currentTimeMillis(), Utils.fromBase64(ki.getEncryptMan().getPublicKeyString(ki.getAddMan().getMainAdd().getKeyType())), ki.getAddMan().getMainAdd().getKeyType(), null, 0);
                 } catch (Exception e) {
                     e.printStackTrace();
                     return OrderStatus.GENERAL_FAILURE;
@@ -410,7 +410,7 @@ public class ExchangeManager {
                 String entropy = Utils.toBase64(ent);
                 Binary program = null;
                 try {
-                    program = new Binary(ki.getScriptMan().genericTrade(), constMem, jMem, true, ScriptManager.VERSION, ent, System.currentTimeMillis(), Utils.fromBase64(ki.getEncryptMan().getPublicKeyString(ki.getAddMan().getMainAdd().getKeyType())), null, 0);
+                    program = new Binary(ki.getScriptMan().genericTrade(), constMem, jMem, true, ScriptManager.VERSION, ent, System.currentTimeMillis(), Utils.fromBase64(ki.getEncryptMan().getPublicKeyString(ki.getAddMan().getMainAdd().getKeyType())), ki.getAddMan().getMainAdd().getKeyType(), null, 0);
                 } catch (Exception e) {
                     e.printStackTrace();
                     return OrderStatus.GENERAL_FAILURE;

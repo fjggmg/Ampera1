@@ -125,51 +125,55 @@ public class AddressManager implements IAddMan {
     @Override
     public void load() {
         if (addressMap.getBytes("firstRun") == null && new File(addFolder + addFile).exists()) {
-            StringFileHandler fh = new StringFileHandler(ki, addFolder + addFile);
-            if (!(fh.getLines().size() == 0)) {
-                main = Address.decodeFromChain(fh.getLine(0));
-                //ki.debug("Main type in load: " + main.getKeyType());
-                addresses.add(main);
-                for (String s : fh.getLines()) {
-                    if (!main.encodeForChain().equals(s)) {
-                        addresses.add(Address.decodeFromChain(s));
+            try {
+                StringFileHandler fh = new StringFileHandler(ki, addFolder + addFile);
+                if (!(fh.getLines().size() == 0)) {
+                    main = Address.decodeFromChain(fh.getLine(0));
+                    //ki.debug("Main type in load: " + main.getKeyType());
+                    addresses.add(main);
+                    for (String s : fh.getLines()) {
+                        if (!main.encodeForChain().equals(s)) {
+                            addresses.add(Address.decodeFromChain(s));
+                        }
                     }
                 }
-            }
-            StringFileHandler fh2 = new StringFileHandler(ki, addFolder + addEntFile);
-            if (fh2.getLines().size() != 0) {
-                try {
-                    JSONObject jo = (JSONObject) new JSONParser().parse(fh2.getLine(0));
-                    for (String add : (Set<String>) jo.keySet()) {
-                        //ki.getMainLog().info("Shit found in the entropy file. it matches this: " + add + " " + jo.get(add));
-                        entropyMap.put(add, (String) jo.get(add));
+                StringFileHandler fh2 = new StringFileHandler(ki, addFolder + addEntFile);
+                if (fh2.getLines().size() != 0) {
+                    try {
+                        JSONObject jo = (JSONObject) new JSONParser().parse(fh2.getLine(0));
+                        for (String add : (Set<String>) jo.keySet()) {
+                            //ki.getMainLog().info("Shit found in the entropy file. it matches this: " + add + " " + jo.get(add));
+                            entropyMap.put(add, (String) jo.get(add));
+                        }
+                    } catch (ParseException e) {
+                        e.printStackTrace();
                     }
-                } catch (ParseException e) {
-                    e.printStackTrace();
                 }
-            }
 
-            List<IAddress> toRemove = new ArrayList<>();
-            for (String a : entropyMap.keySet()) {
-                IAddress add = Address.decodeFromChain(a);
-                entropy = getEntropyForAdd(add);
-                if (add.getKeyType() != null) {
-                    if (!add.encodeForChain().equals(getNewAddOld().encodeForChain())) {
-                        ki.debug("Address loaded is not for the keys we have, deleting address");
+                List<IAddress> toRemove = new ArrayList<>();
+                for (String a : entropyMap.keySet()) {
+                    IAddress add = Address.decodeFromChain(a);
+                    entropy = getEntropyForAdd(add);
+                    if (add.getKeyType() != null) {
+                        if (!add.encodeForChain().equals(getNewAddOld().encodeForChain())) {
+                            ki.debug("Address loaded is not for the keys we have, deleting address");
+                            toRemove.add(add);
+                        }
+                    } else {
                         toRemove.add(add);
                     }
-                } else {
-                    toRemove.add(add);
                 }
-            }
-            for (IAddress add : toRemove) {
-                if (main.encodeForChain().equals(add.encodeForChain())) {
-                    entropy = DEFAULT_ENTROPY;
-                    main = getNewAdd(main.getKeyType(), false);
-                } else {
-                    addresses.remove(add);
-                    entropyMap.remove(add.encodeForChain());
+                for (IAddress add : toRemove) {
+                    if (main.encodeForChain().equals(add.encodeForChain())) {
+                        entropy = DEFAULT_ENTROPY;
+                        main = getNewAdd(main.getKeyType(), false);
+                    } else {
+                        addresses.remove(add);
+                        entropyMap.remove(add.encodeForChain());
+                    }
                 }
+            } catch (Exception e) {
+                ki.getMainLog().warn("Unable to load from old address system, if you did not have any addresses before 18.0, this is not a problem, if you did, report this.", e);
             }
         } else {
             if (addressMap.getBytes("addresses") != null) {
@@ -182,7 +186,7 @@ public class AddressManager implements IAddMan {
                 for (IAddress a : addresses) {
                     try {
                         if (addressMap.getBytes(a.encodeForChain()) == null) {
-                            ki.getMainLog().warn("Null entropy for address: " + a.encodeForChain() + " address database corrupted");
+                            ki.getMainLog().warn("Null entropy for address: " + a.encodeForChain() + " address database possibly corrupted");
                             continue;
                         }
                         entropyMap.put(a.encodeForChain(), new String(addressMap.getBytes(a.encodeForChain()), "UTF-8"));
@@ -198,11 +202,13 @@ public class AddressManager implements IAddMan {
     public synchronized void save() {
         //safety check?
         if (main == null) return;
-        addressMap.clearSafe();
+        //addressMap.clearSafe(); //shouldn't be needed, we're overwriting
         addressMap.putBytes("firstRun", new byte[]{1});
         HeadlessPrefixedAmplet hpa = HeadlessPrefixedAmplet.create();
         List<IAddress> toRemove = new ArrayList<>();
+
         for (IAddress address : addresses) {
+            //this will never fire
             if (getEntropyForAdd(address) == null) {
                 ki.getMainLog().error("Entropy for address: " + address.encodeForChain() + " is null");
                 toRemove.add(address);
@@ -303,11 +309,17 @@ public class AddressManager implements IAddMan {
 
     @Override
     public void deleteAddress(IAddress address) {
-        inactive.remove(address);
-        addresses.remove(address);
+
+        List<IAddress> toRemove = new ArrayList<>();
+        for (IAddress add : addresses) {
+            if (add.encodeForChain().equals(address.encodeForChain()))
+                toRemove.add(add);
+
+        }
+        addresses.removeAll(toRemove);
+        inactive.removeAll(toRemove);
         entropyMap.remove(address.encodeForChain());
         save();
-
     }
 
     @Override
