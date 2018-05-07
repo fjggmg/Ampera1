@@ -243,18 +243,6 @@ public class TransactionManagerLite implements ITransMan {
         throw new InvalidTransactionException("Public key null");
     }
 
-    /**
-     * currently, you must run this with the multi sig address set as main. In the future, we may include another method where you can pass in said multi-sig address
-     *
-     * @param receiver
-     * @param amount
-     * @param fee
-     * @param token
-     * @param message
-     * @param multipleOuts
-     * @return
-     * @throws InvalidTransactionException
-     */
     @Override
     public ITrans createSimpleMultiSig(Binary bin, IAddress receiver, BigInteger amount, BigInteger fee, Token token, String message, int multipleOuts) throws InvalidTransactionException {
         if (ki.getEncryptMan().getPublicKey(ki.getAddMan().getMainAdd().getKeyType()) != null) {

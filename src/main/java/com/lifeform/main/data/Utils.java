@@ -72,7 +72,12 @@ public class Utils {
 
     public static String toBase64(byte[] array)
     {
-        return new String(Base64.getEncoder().encode(array));
+        try {
+            return new String(Base64.getEncoder().encode(array), "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
 

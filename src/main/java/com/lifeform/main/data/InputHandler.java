@@ -16,6 +16,7 @@ import com.lifeform.main.transactions.*;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadInfo;
 import java.math.BigDecimal;
@@ -37,7 +38,13 @@ public class InputHandler extends Thread {
     @Override
     public void run() {
         setName("CommandLine Input");
-        BufferedReader s = new BufferedReader(new InputStreamReader(System.in));
+        BufferedReader s = null;
+        try {
+            s = new BufferedReader(new InputStreamReader(System.in, "UTF-8"));
+        } catch (UnsupportedEncodingException e) {
+            ki.getMainLog().error("Unable to create input reader for handling CLI. ", e);
+            return;
+        }
         while (true) {
             try {
                 sleep(500);
@@ -51,7 +58,7 @@ public class InputHandler extends Thread {
                 if (line.startsWith("exit")) {
                     System.out.println("Exiting program");
                     ki.close();
-                    System.exit(0);
+                    //System.exit(0);
                 } else if (line.startsWith("mineGPU")) {
                     System.out.println("starting gpu miner");
                     ki.getMinerMan().startMiners();

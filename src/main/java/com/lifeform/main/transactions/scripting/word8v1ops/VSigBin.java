@@ -38,7 +38,7 @@ public class VSigBin implements IOperator {
         KeyType keyType = binary.getPublicKeyType();
         byte[] key = binary.getPublicKey();
         byte[] signed = transaction.toSignBytes();
-
+        //System.out.println("=================KEY TYPE IS: " + keyType + " =========================");
         stack.push(new DataElement(ByteTools.deconstructInt((EncryptionManager.verifySig(signed, sig, Utils.toBase64(key), keyType)) ? 1 : 0)));
     }
 }

@@ -104,10 +104,12 @@ public class Output implements TXIO, IAmpByteSerializable {
             IAddress receiver = Address.decodeFromChain((String) jo.get("receiver"));
             Token token = Token.valueOf((String)jo.get("token"));
             long timestamp = Long.parseLong((String)jo.get("timestamp"));
+            /*
             if (token == null) {
                 Ki.getInstance().getMainLog().error("Token pulled from map is null, value on map: " + jo.get("token"));
                 return null;
             }
+            */
             return new Output(amount, receiver, token, index, timestamp, (byte) 1);
         } catch (ParseException e) {
             e.printStackTrace();

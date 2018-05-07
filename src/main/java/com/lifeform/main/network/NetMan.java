@@ -8,21 +8,22 @@ import com.lifeform.main.network.logic.Client;
 import com.lifeform.main.network.logic.Server;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 public class NetMan extends Thread implements INetworkManager {
 
-    public static final String[] testBoot = {"73.108.51.16"};
-    public static final String[] bootstrap = {"mimpve.host"};
-    public static final String NET_VER = "2.1.1";
+    static final String[] testBoot = {"73.108.51.16"};
+    static final String[] bootstrap = {"mimpve.host"};
+    public static final String NET_VER = "2.1.2";
     private IKi ki;
     private boolean isRelay;
     public static final int PORT = 29555;
     public boolean live = false;
-    volatile Set<IConnectionManager> connections = new CopyOnWriteArraySet<>();
+    volatile List<IConnectionManager> connections = new CopyOnWriteArrayList<>();
     volatile Map<String, IConnectionManager> connMap = new ConcurrentHashMap<>();
     volatile Map<String, Client> clientMap = new HashMap<>();
-    volatile List<Client> clients = new ArrayList<>();
+    //volatile List<Client> clients = new ArrayList<>();
     private volatile List<String> relays = new ArrayList<>();
     private XodusStringMap rList;
     public static boolean DIFF_SET = false;
@@ -246,7 +247,7 @@ public class NetMan extends Thread implements INetworkManager {
         super.interrupt();
     }
     @Override
-    public Set<IConnectionManager> getConnections() {
+    public List<IConnectionManager> getConnections() {
         return connections;
     }
 

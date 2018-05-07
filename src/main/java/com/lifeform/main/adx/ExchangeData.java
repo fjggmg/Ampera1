@@ -26,11 +26,11 @@ public class ExchangeData {
         this.close = open;
         this.avg = open;
         this.timestamp = timestamp;
-        this.endTimestamp = timestamp + (60_000 * minutes);
+        this.endTimestamp = timestamp + (60_000L * (long) minutes);
         this.minutes = minutes;
     }
 
-    private SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
+    //private SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
 
     public boolean done(long timestamp) {
         //System.out.println("Timestamp: " + sdf.format(new Date(timestamp)));

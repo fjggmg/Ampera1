@@ -27,15 +27,18 @@ public class Transaction implements ITrans {
 
 
     /**
-     *
-     * @param message
-     * @param sigsRequired
+     * OLD TRANSACTION SYSTEM! DO NOT USE
+     * @param message message on transaction
+     * @param sigsRequired required number of signatures
      * @param keySigMap if this is null it will be initialized so you can add signatures to it
-     * @param outputs
-     * @param inputs
-     * @param entropyMap
+     * @param outputs list of outputs
+     * @param inputs list of inputs
+     * @param entropyMap map of key to entropy for addresses
      * @param keys this will be reordered automatically, multisig wallets order keys by lowest hash of key first and so on
+     * @param type Type of transaction, always use standard if reconstructing old transactions here
+     * @throws InvalidTransactionException if parameters provided do not create a valid transaction
      */
+    @Deprecated
     public Transaction(String message, int sigsRequired, Map<String, String> keySigMap, List<Output> outputs, List<Input> inputs, Map<String, String> entropyMap, List<String> keys, TransactionType type) throws InvalidTransactionException
     {
         this(message, sigsRequired, outputs, inputs, type);
@@ -156,9 +159,13 @@ public class Transaction implements ITrans {
     }
 
     /**
-     * same as "toJSON" but does not include key map to avoid chicken->egg
+     * WARNING!!!! THIS METHOD INCLUDES A SECURITY ISSUE!!! THE NEW TRANSACTION SYSTEM DOES NOT USE THIS SORT OF SIGNING
+     * ANYMORE AND SHOULD BE USED INSTEAD. THIS SYSTEM WILL BE COMPLETELY LOCKED OUT SOON. IT IS LEFT AS IS TO MAINTAIN
+     * COMPATIBILITY WITH OLD TRANSACTIONS
+     * same as "toJSON" but does not include key map to avoid chicken-egg
      * @return string to sign
      */
+    @Deprecated
     @Override
     public String toSign()
     {

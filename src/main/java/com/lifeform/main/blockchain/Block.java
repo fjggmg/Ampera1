@@ -71,10 +71,10 @@ public class Block implements IAmpAmpletSerializable {
     public void addAll(Map<String,ITrans> transes)
     {
         merkleRoot = null;
-        for(String trans:transes.keySet())
+        for (Map.Entry<String, ITrans> trans : transes.entrySet())
         {
             //System.out.println("Adding transaction: " + trans);
-            transactions.put(trans,transes.get(trans));
+            transactions.put(trans.getKey(), trans.getValue());
         }
     }
 
@@ -144,7 +144,7 @@ public class Block implements IAmpAmpletSerializable {
     /**
      * no payload header for gpu mining
      *
-     * @return
+     * @return byte array header without the payload so the GPU miner can set the payload itself
      */
     public byte[] gpuHeader() {
         if (solverHash == null || solverHash.isEmpty()) {
@@ -176,9 +176,9 @@ public class Block implements IAmpAmpletSerializable {
         obj.put("timestamp",timestamp.toString());
         obj.put("payload", Utils.toBase64(payload));
         JSONObject obj2 = new JSONObject();
-        for(String trans:transactions.keySet())
+        for (Map.Entry<String, ITrans> trans : transactions.entrySet())
         {
-            obj2.put(trans,transactions.get(trans).toJSON());
+            obj2.put(trans.getKey(), trans.getValue().toJSON());
         }
         obj.put("transactions",obj2.toJSONString());
         obj.put("coinbase",coinbase.toJSON());

@@ -18,6 +18,6 @@ public class PoolData {
     public Map<String, String> addMap = new HashMap<>();
     public Map<String, Long> hrMap = new HashMap<>();
     public String poolConn;
-    public List<Block> pplnsBlocks;
+    //public List<Block> pplnsBlocks;
     public BigInteger lowestHeight = BigInteger.ZERO;
 }

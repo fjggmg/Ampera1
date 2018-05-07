@@ -27,6 +27,7 @@ public class ExchangeManager {
     private Map<String, Order> pending = new HashMap<>();
     private Map<String, Order> matchPending = new HashMap<>();
     private List<String> pendingUs = new ArrayList<>();
+    private Map<String, ITrans> pendingAccept = new HashMap<>();
     public ExchangeManager(IKi ki) {
         this.ki = ki;
         orderBook = new OrderBook(ki);
@@ -46,6 +47,7 @@ public class ExchangeManager {
         return orderBook;
     }
 
+    private Random entRand = new Random();
     public OrderStatus placeOrder(boolean buy, BigInteger amount, BigInteger stopPrice, Pairs pair, boolean limitBuy) {
         if (amount.compareTo(BigInteger.ZERO) <= 0 || stopPrice.compareTo(BigInteger.ZERO) <= 0) {
             ki.getMainLog().warn("Zero or Negative amount or price on placeOrder");
@@ -214,7 +216,7 @@ public class ExchangeManager {
                     return OrderStatus.GENERAL_FAILURE;
                 }
                 byte[] ent = new byte[64];
-                new Random().nextBytes(ent);
+                entRand.nextBytes(ent);
                 String entropy = Utils.toBase64(ent);
                 Binary program = null;
                 try {
@@ -441,10 +443,9 @@ public class ExchangeManager {
             if (!ki.getTransMan().verifyTransaction(funding)) return;
             Order order = new Order(pair, unitPrice, payTo, contractAdd, amountOnOffer, program, buy, funding.getID());
             addOrder(order);
-            TransactionPacket tp = new TransactionPacket();
-            tp.trans = funding.serializeToAmplet().serializeToBytes();
-            ki.getTransMan().getPending().add(funding);
-            ki.getNetMan().broadcast(tp);
+
+            //ki.getTransMan().getPending().add(funding);
+            pendingAccept.put(order.getID(), funding);
             OrderPacket op = new OrderPacket();
             pendingUs.add(order.getTxid());
             op.order = order.serializeToBytes();
@@ -466,6 +467,17 @@ public class ExchangeManager {
         orders.put(order.getID(), order);
     }
 
+    public Order getOrder(String ID) {
+        return orders.get(ID);
+    }
+
+    public Set<String> getOrderIDs() {
+        return orders.keySet();
+    }
+
+    public void removeOrder(String ID) {
+        orderBook.removeOrder(orders.remove(ID));
+    }
 
     public void matchOrder(String ID) {
         Order o = orders.get(ID);
@@ -492,8 +504,9 @@ public class ExchangeManager {
 
     public boolean cancelOrder(Order o) {
         for (IAddress a : ki.getAddMan().getAll()) {
+            ki.debug("Address for cancel: " + a.encodeForChain());
             if (a.encodeForChain().equals(o.address().encodeForChain())) {
-
+                ki.debug("Address is one of ours");
                 List<Output> utxos = ki.getTransMan().getUTXOs(o.contractAdd(), true);
                 if (utxos != null && !utxos.isEmpty()) {
                     BigInteger amountRecovered = BigInteger.ZERO;
@@ -536,7 +549,7 @@ public class ExchangeManager {
                         ITrans trans = new NewTrans("Cancelled ADX order", outputs, inputs, keySigMap, TransactionType.NEW_TRANS);
                         WritableMemory wm = new WritableMemory();
                         wm.setElement(ki.getEncryptMan().sign(trans.toSignBytes(), ki.getAddMan().getMainAdd().getKeyType()), 0);
-                        wm.setElement(new DataElement(new byte[]{o.address().getKeyType().getValue()}), 1);
+                        //wm.setElement(new DataElement(new byte[]{o.address().getKeyType().getValue()}), 1);
                         trans.addSig(Utils.toBase64(o.bin().serializeToAmplet().serializeToBytes()), Utils.toBase64(wm.serializeToBytes()));
                         trans.addSig(ki.getEncryptMan().getPublicKeyString(ki.getAddMan().getMainAdd().getKeyType()), Utils.toBase64(ki.getEncryptMan().sign(trans.toSignBytes(), ki.getAddMan().getMainAdd().getKeyType())));
                         TransactionPacket tp = new TransactionPacket();
@@ -562,10 +575,13 @@ public class ExchangeManager {
                         return false;
                     }
 
+                } else {
+                    ki.getMainLog().warn("Unable to cancel transaction because the contract is not funded");
+                    return false;
                 }
-                break;
             }
         }
+        ki.getMainLog().warn("Order does not include one of your addresses, cannot cancel. Address on order: " + o.address().encodeForChain());
         return false;
     }
 
@@ -602,7 +618,7 @@ public class ExchangeManager {
     /**
      * mostly for network use, adds an order that may be an inverse of a previous reduction
      *
-     * @param o
+     * @param o order to add as matched
      */
     public void addMatched(Order o) {
         if (orders.keySet().contains(o.getID())) return;
@@ -619,5 +635,25 @@ public class ExchangeManager {
         return orders.get(oID).getTxid();
     }
 
+    public void addTXPendingAccept(String oID, ITrans t) {
+        pendingAccept.put(oID, t);
+    }
+
+    public void orderRejected(String ID) {
+        if (pendingAccept.get(ID) != null) {
+            ITrans t = pendingAccept.remove(ID);
+            ki.getTransMan().unUseUTXOs(t.getInputs());
+        }
+    }
+
+    public void orderAccepted(String ID) {
+        if (pendingAccept.get(ID) != null) {
+            TransactionPacket tp = new TransactionPacket();
+            ITrans trans = pendingAccept.remove(ID);
+            tp.trans = trans.serializeToAmplet().serializeToBytes();
+            ki.getTransMan().getPending().add(trans);
+            ki.getNetMan().broadcast(tp);
+        }
+    }
 
 }

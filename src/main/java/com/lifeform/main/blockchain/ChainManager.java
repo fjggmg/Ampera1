@@ -54,7 +54,7 @@ public class ChainManager implements IChainMan {
     //ConcurrentMap<String,String> tmMap;
     //ConcurrentMap<String,String> exMap;
     //ConcurrentMap<String,String> cmMap;
-    private String fileName = "block.data";
+    //private String fileName = "block.data";
     private String folderName;
     private short chainID;
     private boolean bDebug;
@@ -95,8 +95,15 @@ public class ChainManager implements IChainMan {
     }
 
     /**
-     * PoW system only
-     * @param chainID
+     * Full node chain management system
+     * @param ki god object reference
+     * @param chainID which chain we are on (testnet or mainnet)
+     * @param folderName folder where blocks are kept
+     * @param csFile file name where chainstate vars are kept
+     * @param transFile no longer used
+     * @param extraFile no longer used
+     * @param cmFile no longer used
+     * @param bDebug true to debug here, false to not
      */
     public ChainManager(IKi ki, short chainID, String folderName, String csFile, String transFile, String extraFile, String cmFile, boolean bDebug)
     {
@@ -104,7 +111,9 @@ public class ChainManager implements IChainMan {
         this.folderName = chainID + folderName;
         this.chainID = chainID;
         this.bDebug = bDebug;
-        new File("chain" + chainID + "/").mkdirs();
+        if (!new File("chain" + chainID + "/").mkdirs()) {
+            ki.getMainLog().warn("Unable to create chain folder");
+        }
 
         csMap = new XodusStringMap("chain" + chainID + "/" + csFile + "xodus");
         blockHeightAmp = new XodusAmpMap(folderName + chainID + "ampHeight");
@@ -144,7 +153,7 @@ public class ChainManager implements IChainMan {
                     if (!ki.getTransMan().addTransaction(b.getTransaction(t))) {
                         ki.debug("Unable to add transaction from block during conversion. shutting down");
                         ki.close();
-                        System.exit(1);
+                        //System.exit(1);
                     }
                 }
                 ki.getTransMan().postBlockProcessing(b);
@@ -282,10 +291,11 @@ public class ChainManager implements IChainMan {
     public synchronized void clearFile() {
         File folder = new File(folderName);
         File[] all = folder.listFiles();
-
-        for(int i = 0; i < all.length; i++)
-        {
-            all[i].delete();
+        if (all == null) return;
+        for (File anAll : all) {
+            if (!anAll.delete()) {
+                ki.getMainLog().warn("Unable to delete chain files");
+            }
         }
         csMap.clear();
     }
@@ -653,7 +663,7 @@ public class ChainManager implements IChainMan {
     }
 
     @Override
-    public BigInteger getCurrentDifficulty()
+    public synchronized BigInteger getCurrentDifficulty()
     {
         return currentDifficulty;
     }
@@ -670,7 +680,7 @@ public class ChainManager implements IChainMan {
     }
 
     @Override
-    public void setDiff(BigInteger diff) {
+    public synchronized void setDiff(BigInteger diff) {
         currentDifficulty = diff;
     }
 

@@ -9,7 +9,7 @@ import java.util.Set;
 
 public interface INetworkManager {
 
-    Set<IConnectionManager> getConnections();
+    List<IConnectionManager> getConnections();
     void broadcast(Object o);
     void broadcastAllBut(String ID,Object o);
     IConnectionManager getConnection(String ID);

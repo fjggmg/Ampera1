@@ -32,7 +32,9 @@ public class TransactionManager implements ITransMan {
     private final Object processLock = new Object();
     public TransactionManager(IKi ki, boolean dump) {
         this.ki = ki;
-        new File("transactions" + ((ki.getOptions().testNet) ? ChainManager.TEST_NET : ChainManager.POW_CHAIN) + "/").mkdirs();
+        if (!new File("transactions" + ((ki.getOptions().testNet) ? ChainManager.TEST_NET : ChainManager.POW_CHAIN) + "/").mkdirs()) {
+            ki.getMainLog().warn("Unable to create transactions folder");
+        }
         utxoAmp = new XodusAmpMap("transactions" + ((ki.getOptions().testNet) ? ChainManager.TEST_NET : ChainManager.POW_CHAIN) + "/utxoAmp.dat");//utxoDB.hashMap("utxoDB", Serializer.STRING, Serializer.STRING).createOrOpen();
         utxoVerMap = new XodusAmpMap("transactions" + ((ki.getOptions().testNet) ? ChainManager.TEST_NET : ChainManager.POW_CHAIN) + "/utxoVer.dat");
         new Thread() {
@@ -145,10 +147,11 @@ public class TransactionManager implements ITransMan {
                             ki.getExMan().transactionProccessed(trans);
                         }
                     }
-                    if (processMap.isEmpty())
+
                         synchronized (processLock) {
                             try {
-                                processLock.wait();
+                                if (processMap.isEmpty())
+                                    processLock.wait();
                             } catch (InterruptedException e) {
                                 e.printStackTrace();
                             }
@@ -294,7 +297,7 @@ public class TransactionManager implements ITransMan {
     /**
      * very dangerous method, only use when you are certain the transaction you are adding is valid
      *
-     * @param transaction
+     * @param transaction transaction to add to DB
      * @return true if successful
      */
     @Override
@@ -431,9 +434,6 @@ public class TransactionManager implements ITransMan {
 
     }
 
-
-    private String lastHash = "";
-    private String cHash;
     @Override
     public boolean utxosChanged(IAddress address) {
 
@@ -453,18 +453,7 @@ public class TransactionManager implements ITransMan {
         utxoVerMap.clear();
     }
 
-    /**
-     * currently, you must run this with the multi sig address set as main. In the future, we may include another method where you can pass in said multi-sig address
-     *
-     * @param receiver
-     * @param amount
-     * @param fee
-     * @param token
-     * @param message
-     * @param multipleOuts
-     * @return
-     * @throws InvalidTransactionException
-     */
+
     @Override
     public ITrans createSimpleMultiSig(Binary bin, IAddress receiver, BigInteger amount, BigInteger fee, Token token, String message, int multipleOuts) throws InvalidTransactionException {
         if (ki.getEncryptMan().getPublicKey(ki.getAddMan().getMainAdd().getKeyType()) != null) {
@@ -589,18 +578,7 @@ public class TransactionManager implements ITransMan {
         return createSimple(receiver, amount, fee, token, message, 1);
     }
 
-    /**
-     * this is going to override your fee if it's too low, may possibly make a method without fee shit
-     *
-     * @param receiver
-     * @param amount
-     * @param fee
-     * @param token
-     * @param message
-     * @param multipleOuts
-     * @return
-     * @throws InvalidTransactionException
-     */
+
     @Override
     public ITrans createSimple(IAddress receiver, BigInteger amount, BigInteger fee, Token token, String message, int multipleOuts) throws InvalidTransactionException {
         if (ki.getEncryptMan().getPublicKey(ki.getAddMan().getMainAdd().getKeyType()) != null) {

@@ -308,7 +308,7 @@ public class OrderBook {
      * mainly used for adding an "order" that's not really an order but a inverse of the recuction of another so we
      * can have it on recents
      *
-     * @param order
+     * @param order Order to add as matched
      */
     public void addMatched(Order order) {
         Platform.runLater(new Thread() {

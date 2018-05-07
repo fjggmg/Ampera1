@@ -12,9 +12,7 @@ public class ClientHandler extends ChannelInboundHandlerAdapter {
     private IKi ki;
     private IConnectionManager connMan;
     private Client client;
-    /**
-     * Creates a client-side handler.
-     */
+
     public ClientHandler(IKi ki, IConnectionManager connMan,Client client) {
         this.ki = ki;
         this.connMan = connMan;

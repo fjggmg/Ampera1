@@ -37,7 +37,6 @@ import static org.jocl.CL.stringFor_cl_device_address_info;
 public class GPUMiner extends Thread implements IMiner {
 
     private IKi ki;
-    private int index;
     public static volatile boolean mining = false;
 
     private SHA3Miner miner;
@@ -49,7 +48,7 @@ public class GPUMiner extends Thread implements IMiner {
     private static volatile boolean triedNoCPU = false;
     public static volatile ContextMaster platforms;// = new ContextMaster();
     public volatile static boolean initDone = false;
-    public static BigInteger shareDiff = new BigInteger("00000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF", 16);
+    public static final BigInteger shareDiff = new BigInteger("00000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF", 16);
 
 
     public static int init(IKi ki, ContextMaster cm) throws MiningIncompatibleException {
@@ -91,7 +90,7 @@ public class GPUMiner extends Thread implements IMiner {
 
     public GPUMiner(IKi ki, int index) {
         this.ki = ki;
-        this.devName = devName + " #" + index;
+        //this.devName = devName + " #" + index;
     }
 
     private long lastPrint = System.currentTimeMillis();

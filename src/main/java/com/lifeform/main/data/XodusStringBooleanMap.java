@@ -25,12 +25,12 @@ public class XodusStringBooleanMap {
         env.executeInTransaction(txn -> store.put(txn, convertedKey, convertedValue));
     }
 
-    public Boolean get(String _key) {
+    public boolean get(String _key) {
         final ByteIterable convertedKey = StringBinding.stringToEntry(_key);
 
         //@Override
         ByteIterable output = env.computeInReadonlyTransaction(txn -> store.get(txn, convertedKey));
-        if (output == null) return null;
+        if (output == null) return false;
         return BooleanBinding.entryToBoolean(output);
     }
 

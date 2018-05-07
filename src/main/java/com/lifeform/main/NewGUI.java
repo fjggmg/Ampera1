@@ -81,8 +81,8 @@ import static javafx.animation.Interpolator.EASE_BOTH;
  * that follows. This file makes fuck-all sense. You have been warned.
  */
 public class NewGUI {
-    //region javafx horseshit
-    protected static boolean close = false;
+    //region javafx horsesh
+    static boolean close = false;
     public JFXTextField entropyField;
     public Label blocksFoundLabel;
     public Pane blockPane;
@@ -141,12 +141,6 @@ public class NewGUI {
     public JFXListView<Order> obSellTotal;
     public Label buyLabel;
     public Label sellLabel;
-    public Label bTotal;
-    public Label bSize;
-    public Label bPrice;
-    public Label sPrice;
-    public Label sSize;
-    public Label sTotal;
     public JFXListView<Order> obRecentPrice;
     public JFXListView<Order> obRecentAmount;
     public JFXListView<Order> obRecentDirection;
@@ -243,6 +237,7 @@ public class NewGUI {
         if (!ki.getOptions().pool) {
             Thread t = new Thread() {
                 public void run() {
+                    setDaemon(true);
                     while (run) {
                         if (close) {
                             try {
@@ -251,7 +246,6 @@ public class NewGUI {
                                 ki.getMainLog().error("Could not close correctly ", e);
                             }
                             continue;
-
                         }
                         isFinal = false;
                         for (Token t : Token.values()) {
@@ -278,9 +272,6 @@ public class NewGUI {
                         isFinal = true;
 
                         try {
-                            //System.out.println("sleeping");
-                            //TODO cheap and stupid fix
-                            System.gc();
                             sleep(1200);
                             //System.out.println("done sleeping");
                         } catch (InterruptedException e) {
@@ -343,7 +334,6 @@ public class NewGUI {
     public Label versionLabel;
     public Label miLabel;
     public JFXToggleButton debugMode;
-    public Label helpText;
     public StackPane topPane2;
     public Pane addressPane;
     public Pane blockExplorerPane;
@@ -371,7 +361,7 @@ public class NewGUI {
     private Label chainHeight2 = new Label(" 26554");
     private Label latency = new Label(" Latency - 125ms");
     private XodusStringMap pmap = new XodusStringMap("security");
-    private List<Order> activeOrders = new ArrayList<>();
+    //private List<Order> activeOrders = new ArrayList<>();
     private boolean frg = true;
     static Application app;
     private int priceControlsIndex;
@@ -416,7 +406,7 @@ public class NewGUI {
      * @return even more horribly corrupted data than metaHash
      */
     private String superHash(String hash, int numberOfHashes) {
-        String superHash = "";
+        StringBuilder superHash = new StringBuilder();
         ConcurrentMap<Integer, Boolean> doneMap = new ConcurrentHashMap<>();
         ConcurrentMap<Integer, Thread> tmap = new ConcurrentHashMap<>();
         ConcurrentMap<Integer, String> hmap = new ConcurrentHashMap<>();
@@ -445,118 +435,119 @@ public class NewGUI {
         boolean allDone = false;
         while (!allDone) {
             allDone = true;
-            for (Integer key : doneMap.keySet()) {
+            for (Map.Entry<Integer, Boolean> v : doneMap.entrySet()) {
 
-                if (!doneMap.get(key)) {
+                if (!v.getValue()) {
                     allDone = false;
                     //break;
                 }
             }
         }
         for (int i = 0; i < tmap.keySet().size(); i++) {
-            superHash = superHash + hmap.get(i);
+            superHash.append(hmap.get(i));
         }
-        return superHash;
+        return superHash.toString();
     }
 
     public synchronized void addTransaction(ITrans trans, BigInteger height) {
         if (ki.getOptions().pool) return;
-        BigInteger allout = BigInteger.ZERO;
-        List<String> involved = new ArrayList<>();
-
-        for (Output o : trans.getOutputs()) {
-            List<String> checked = new ArrayList<>();
-            for (IAddress a : ki.getAddMan().getAll()) {
-                if (o.getAddress().encodeForChain().equals(a.encodeForChain())) {
-                    if (!involved.contains(a.encodeForChain())) {
-                        involved.add(a.encodeForChain());
-                    }
-                    if (!checked.contains(a.encodeForChain())) {
-                        checked.add(a.encodeForChain());
-                        allout = allout.add(o.getAmount());
-                    }
-
-                }
-            }
-        }
-
-        BigInteger allin = BigInteger.ZERO;
-        for (Input o : trans.getInputs()) {
-            List<String> checked = new ArrayList<>();
-            for (IAddress a : ki.getAddMan().getAll()) {
-                if (o.getAddress().encodeForChain().equals(a.encodeForChain())) {
-                    if (!involved.contains(a.encodeForChain())) {
-                        involved.add(a.encodeForChain());
-                    }
-                    if (!checked.contains(a.encodeForChain())) {
-                        checked.add(a.encodeForChain());
-                        allin = allin.add(o.getAmount());
-                    }
-                }
-            }
-        }
-        double amount = 0;
         try {
-            amount = Math.abs(allout.subtract(allin).longValueExact() / 100_000_000D);
+            BigInteger allout = BigInteger.ZERO;
+            List<String> involved = new ArrayList<>();
+
+            for (Output o : trans.getOutputs()) {
+                List<String> checked = new ArrayList<>();
+                for (IAddress a : ki.getAddMan().getAll()) {
+                    if (o.getAddress().encodeForChain().equals(a.encodeForChain())) {
+                        if (!involved.contains(a.encodeForChain())) {
+                            involved.add(a.encodeForChain());
+                        }
+                        if (!checked.contains(a.encodeForChain())) {
+                            checked.add(a.encodeForChain());
+                            allout = allout.add(o.getAmount());
+                        }
+
+                    }
+                }
+            }
+
+            BigInteger allin = BigInteger.ZERO;
+            for (Input o : trans.getInputs()) {
+                List<String> checked = new ArrayList<>();
+                for (IAddress a : ki.getAddMan().getAll()) {
+                    if (o.getAddress().encodeForChain().equals(a.encodeForChain())) {
+                        if (!involved.contains(a.encodeForChain())) {
+                            involved.add(a.encodeForChain());
+                        }
+                        if (!checked.contains(a.encodeForChain())) {
+                            checked.add(a.encodeForChain());
+                            allin = allin.add(o.getAmount());
+                        }
+                    }
+                }
+            }
+            double amount = 0;
+            try {
+                amount = Math.abs(allout.subtract(allin).longValueExact() / 100_000_000D);
+            } catch (Exception e) {
+                //TODO big int out of range....why
+                ki.getMainLog().warn("Can not add transaction because amount is over Long.MAX_VALUE");
+            }
+            String direction;
+            if (allout.compareTo(allin) > 0) {
+                direction = "Received";
+            } else {
+                direction = "Sent";
+                //amount += trans.getFee().longValueExact() / 100_000_000D;
+            }
+
+            String timestamp = sdf2.format(new Date(trans.getOutputs().get(0).getTimestamp()));
+            List<String> outputs = new ArrayList<>();
+
+            for (Output o : trans.getOutputs()) {
+                outputs.add(o.getAddress().encodeForChain() + ":" + format2.format(o.getAmount().longValueExact() / 100_000_000D) + " " + o.getToken().getName());
+            }
+            ObservableList<String> obsOutputs = FXCollections.observableArrayList(outputs);
+            List<String> inputs = new ArrayList<>();
+
+            for (Input i : trans.getInputs()) {
+                inputs.add(i.getAddress().encodeForChain() + ":" + format2.format(i.getAmount().longValueExact() / 100_000_000D) + " " + i.getToken().getName());
+            }
+            ObservableList<String> obsInputs = FXCollections.observableArrayList(inputs);
+            for (String add : involved) {
+
+                StoredTrans st = new StoredTrans(add, amount, direction, trans.getMessage(), trans.getInputs().get(0).getAddress().encodeForChain(), timestamp, height.toString(), obsOutputs, obsInputs, trans.getFee().longValueExact() / 100_000_000D);
+                transactions.add(st);
+                if (transactionTable != null && transactionTable.getRoot() != null) {
+                    transactionTable.getRoot().getChildren().add(new TreeItem<>(st));
+                    String sText = searchBox.getText();
+                    searchBox.setText("refresh");
+                    searchBox.setText(sText);
+                }
+                //final TreeItem<StoredTrans> root = new RecursiveTreeItem<StoredTrans>(transactions, RecursiveTreeObject::getChildren);
+                //if(transactionTable != null)
+                //transactionTable.setRoot(root);
+            }
+            if (!sTrans.contains(trans)) {
+                sTrans.add(trans);
+                HeadlessPrefixedAmplet hpa = HeadlessPrefixedAmplet.create();
+                for (ITrans t : sTrans) {
+                    hpa.addElement(t.serializeToAmplet());
+                }
+                guiXAM.putBytes("transactions", hpa.serializeToBytes());
+                heightMap.put(trans.getID(), height);
+                HeadlessPrefixedAmplet hpa2 = HeadlessPrefixedAmplet.create();
+
+                for (Map.Entry<String, BigInteger> key : heightMap.entrySet()) {
+
+                    hpa2.addElement(key.getKey());
+                    hpa2.addElement(key.getValue());
+                }
+
+                guiXAM.putBytes("heightMap", hpa2.serializeToBytes());
+            }
         } catch (Exception e) {
-            //TODO big int out of range....why
-            ki.getMainLog().warn("Can not add transaction because amount is over Long.MAX_VALUE");
-        }
-        String direction;
-        if (allout.compareTo(allin) > 0) {
-            direction = "Received";
-        } else {
-            direction = "Sent";
-            //amount += trans.getFee().longValueExact() / 100_000_000D;
-        }
-        String h = height.toString();
-
-
-        String timestamp = sdf2.format(new Date(trans.getOutputs().get(0).getTimestamp()));
-        List<String> outputs = new ArrayList<>();
-
-        for (Output o : trans.getOutputs()) {
-            outputs.add(o.getAddress().encodeForChain() + ":" + format2.format(o.getAmount().longValueExact() / 100_000_000D) + " " + o.getToken().getName());
-        }
-        ObservableList<String> obsOutputs = FXCollections.observableArrayList(outputs);
-        List<String> inputs = new ArrayList<>();
-
-        for (Input i : trans.getInputs()) {
-            inputs.add(i.getAddress().encodeForChain() + ":" + format2.format(i.getAmount().longValueExact() / 100_000_000D) + " " + i.getToken().getName());
-        }
-        ObservableList<String> obsInputs = FXCollections.observableArrayList(inputs);
-        for (String add : involved) {
-
-            StoredTrans st = new StoredTrans(add, amount, direction, trans.getMessage(), trans.getInputs().get(0).getAddress().encodeForChain(), timestamp, height.toString(), obsOutputs, obsInputs, trans.getFee().longValueExact() / 100_000_000D);
-            transactions.add(st);
-            if (transactionTable != null && transactionTable.getRoot() != null) {
-                transactionTable.getRoot().getChildren().add(new TreeItem<>(st));
-                String sText = searchBox.getText();
-                searchBox.setText("refresh");
-                searchBox.setText(sText);
-            }
-            //final TreeItem<StoredTrans> root = new RecursiveTreeItem<StoredTrans>(transactions, RecursiveTreeObject::getChildren);
-            //if(transactionTable != null)
-            //transactionTable.setRoot(root);
-        }
-        if (!sTrans.contains(trans)) {
-            sTrans.add(trans);
-            HeadlessPrefixedAmplet hpa = HeadlessPrefixedAmplet.create();
-            for (ITrans t : sTrans) {
-                hpa.addElement(t.serializeToAmplet());
-            }
-            guiXAM.putBytes("transactions", hpa.serializeToBytes());
-            heightMap.put(trans.getID(), height);
-            HeadlessPrefixedAmplet hpa2 = HeadlessPrefixedAmplet.create();
-
-            for (String key : heightMap.keySet()) {
-
-                hpa2.addElement(key);
-
-                hpa2.addElement(heightMap.get(key));
-            }
-
-            guiXAM.putBytes("heightMap", hpa2.serializeToBytes());
+            ki.getMainLog().warn("Adding a transaction to the table failed. This is not a critical error.", e);
         }
 
 
@@ -909,7 +900,7 @@ public class NewGUI {
                         //notification("Invalid Price");
                         return;
                     }
-                    double total = (stopPrice.doubleValue() / unitMultiplierPrice.doubleValue()) * amount.doubleValue();
+                    double total = (stopPrice.doubleValue() / 100_000_000) * amount.doubleValue();
                     exchangeTotalPurchase.setText("Total - " + format2.format(total / unitMultiplierPrice.doubleValue()) + unitSelectorPrice.getSelectionModel().getSelectedItem().getText());
                 }
             }
@@ -933,7 +924,7 @@ public class NewGUI {
                     //notification("Invalid Price");
                     return;
                 }
-                double total = (stopPrice.doubleValue() / unitMultiplierPrice.doubleValue()) * amount.doubleValue();
+                double total = (stopPrice.doubleValue() / 100_000_000) * amount.doubleValue();
                 exchangeTotalPurchase.setText("Total - " + format2.format(total / unitMultiplierPrice.doubleValue()) + unitSelectorPrice.getSelectionModel().getSelectedItem().getText());
             }
         });
@@ -1275,7 +1266,7 @@ public class NewGUI {
                     ki.setStringSetting(StringSettings.POOL_STATIC_PPS, "" + pps);
                     ki.getPoolManager().updateCurrentPayPerShare(pps);
                 } catch (Exception e) {
-
+                    ki.getMainLog().warn("Could not parse static pool fee " + newValue);
                 }
             }
         });
@@ -1457,6 +1448,8 @@ public class NewGUI {
                         }
                     }
                     notification("Your keys don't exist in this address, not adding");
+                } catch (RuntimeException e) {
+                    throw e;
                 } catch (Exception e) {
                     notification("Loading multisig from multisig.address file failed");
                     //fail quietly for now
@@ -1482,7 +1475,7 @@ public class NewGUI {
         if (!ki.getOptions().pool) {
             vb.getChildren().add(buildMainButton("Wallet", "/Wallet.png", 0, 0, content, walletPane));
             vb.getChildren().add(buildMainButton("Address", "/home.png", 100, 0, content, addressPane));
-            //vb.getChildren().add(buildMainButton("ADX", "/exchange.png", 200, 5, content, exchangePane));
+            vb.getChildren().add(buildMainButton("ADX", "/exchange.png", 200, 5, content, exchangePane));
         } else if (ki.getOptions().pool && !ki.getOptions().poolRelay) {
             vb.getChildren().add(buildMainButton("Pool", "/pool.png", 100, 3, content, poolPane));
         }
@@ -2421,7 +2414,7 @@ public class NewGUI {
 
     private JFXButton buildButton(String text, String image, int offset, int graphicOffset) {
         for (int i = 0; i < graphicOffset; i++) {
-            if (i % 2 == 1)
+            if (i % 2 != 0)
                 text = " " + text;
             else
                 text = text + " ";
@@ -2649,6 +2642,7 @@ public class NewGUI {
                 if (sb == null) {
                     sb = new JFXSnackbar(topPane2);
                 }
+                sb.close();
                 sb.enqueue(new JFXSnackbar.SnackbarEvent(text));
             }
         });
@@ -2743,16 +2737,15 @@ public class NewGUI {
         while (!isFinal) {
         }
         ohPortfolio.getData().clear();
-        for (Token t : tokenValueMap.keySet()) {
-            if (!t.getName().contains("TOKEN") && tokenValueMap.get(t).compareTo(BigInteger.ZERO) != 0)
-                ohPortfolio.getData().add(new PieChart.Data(t.getName(), tokenValueMap.get(t).divide(BigInteger.valueOf(100_000_000)).doubleValue()));
+        for (Map.Entry<Token, BigInteger> t : tokenValueMap.entrySet()) {
+            if (!t.getKey().getName().contains("TOKEN") && t.getValue().compareTo(BigInteger.ZERO) != 0)
+                ohPortfolio.getData().add(new PieChart.Data(t.getKey().getName(), t.getValue().divide(BigInteger.valueOf(100_000_000)).doubleValue()));
         }
         ohAmount.getItems().clear();
         ohCancel.getItems().clear();
         ohDate.getItems().clear();
         ohDirection.getItems().clear();
         ohPrice.getItems().clear();
-
 
         for (Order o : ki.getExMan().getOrderBook().buys()) {
             for (IAddress a : ki.getAddMan().getAll()) {
@@ -2833,9 +2826,7 @@ public class NewGUI {
         } else {
             cancelButton.setDisable(true);
         }
-
         ohCancel.getItems().add(cancelButton);
-
     }
 
     public void setStart(BigInteger startHeight) {

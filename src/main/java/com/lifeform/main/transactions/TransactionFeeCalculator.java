@@ -16,8 +16,8 @@ public class TransactionFeeCalculator {
     /**
      * Key rates only apply to inputs, since those are where the verification will happen
      *
-     * @param trans
-     * @return
+     * @param trans transaction to calculate fee for
+     * @return minimum fee required for this transaction
      */
     public static BigInteger calculateMinFee(ITrans trans) {
         BigInteger fee = BASE_FEE;

@@ -24,7 +24,6 @@ public class AddressManager implements IAddMan {
     String addEntFile = "addresses.entropy";
     String addFolder = "addresses/";
     private IKi ki;
-    private final int depth = 30;
     private List<IAddress> addresses = new ArrayList<>();
     private Map<IAddress, Integer> verifyCounter = new HashMap<>();
     private Map<String, String> entropyMap = new ConcurrentHashMap<>();
@@ -101,20 +100,6 @@ public class AddressManager implements IAddMan {
 
     @Override
     public void blockTick() {
-        List<IAddress> toRemove = new ArrayList<>();
-        for (IAddress key : verifyCounter.keySet()) {
-            verifyCounter.put(key, verifyCounter.get(key) + 1);
-            if (verifyCounter.get(key) > depth) {
-                toRemove.add(key);
-            }
-        }
-        for (IAddress a : toRemove) {
-
-            verifyCounter.remove(a);
-            if (!a.encodeForChain().equals(main.encodeForChain()))
-                addresses.remove(a);
-        }
-
     }
 
     @Override

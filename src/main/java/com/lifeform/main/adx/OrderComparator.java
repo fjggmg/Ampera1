@@ -1,8 +1,9 @@
 package com.lifeform.main.adx;
 
+import java.io.Serializable;
 import java.util.Comparator;
 
-public class OrderComparator implements Comparator<Order> {
+public class OrderComparator implements Comparator<Order>, Serializable {
     private boolean buy;
 
     public OrderComparator(boolean buy) {

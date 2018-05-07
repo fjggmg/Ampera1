@@ -24,7 +24,6 @@ public class FXGUI extends Application {
     {
         launch(args);
     }
-    private static Stage primaryStage;
     @Override
     public void start(final Stage pStage) throws Exception{
 

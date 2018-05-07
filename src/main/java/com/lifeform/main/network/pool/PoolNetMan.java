@@ -9,13 +9,14 @@ import com.lifeform.main.network.logic.Server;
 import com.lifeform.main.transactions.Address;
 
 import java.util.*;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class PoolNetMan extends Thread implements INetworkManager {
 
 
     private IKi ki;
     private static final int PORT = 29999;
-    private Set<IConnectionManager> connections = new HashSet<>();
+    private List<IConnectionManager> connections = new CopyOnWriteArrayList<>();
     private Map<String, IConnectionManager> connMap = new HashMap<>();
     public static final String POOL_NET_VERSION = "1.0.3";
     GlobalPacketQueuer gpq = new GlobalPacketQueuer();
@@ -43,7 +44,7 @@ public class PoolNetMan extends Thread implements INetworkManager {
     }
 
     @Override
-    public Set<IConnectionManager> getConnections() {
+    public List<IConnectionManager> getConnections() {
         return connections;
     }
 

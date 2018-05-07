@@ -20,7 +20,6 @@ public class KiEventHandler implements IPoolEventHandler {
     @Override
     public void handle(Pool pool, PoolEventType poolEventType) throws Exception {
         switch (poolEventType) {
-
             case NEW_HEIGHT:
 
                 break;
@@ -49,6 +48,8 @@ public class KiEventHandler implements IPoolEventHandler {
                 } else {
                     ki.debug("Transaction failed to verify");
                 }
+                break;
+            default:
                 break;
         }
     }

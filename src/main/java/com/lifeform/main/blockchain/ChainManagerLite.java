@@ -307,7 +307,7 @@ public class ChainManagerLite implements IChainMan {
 
     @Override
     public void setTemp(Block b) {
-        this.temp = temp;
+        this.temp = b;
     }
 
     @Override

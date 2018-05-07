@@ -23,6 +23,7 @@ public class CandlestickGraph extends LineChart<String, Number> {
      *
      * @param stringAxis X Axis for this XY chart
      * @param numberAxis Y Axis for this XY chart
+     * @param ki god object reference
      */
     public CandlestickGraph(Axis<String> stringAxis, Axis<Number> numberAxis, IKi ki) {
         super(stringAxis, numberAxis);

@@ -7,7 +7,7 @@ public class Options {
 
     public boolean relay = false;
     public boolean mining = true;
-    public int relayToUse = 0;
+    //public int relayToUse = 0;
     public boolean nogui = false;
     public boolean testNet = false;
     public boolean dump = false;

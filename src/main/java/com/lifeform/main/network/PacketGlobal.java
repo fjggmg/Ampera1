@@ -29,7 +29,6 @@ public class PacketGlobal {
     List<Block> cuBlocks = new ArrayList<>();
     List<Block> futureBlocks = new ArrayList<>();
     Map<String, BlockHeader> headerMap = new HashMap<>();
-    ChainManager temp;
     IConnectionManager connMan;
     IKi ki;
     boolean gotPending = false;

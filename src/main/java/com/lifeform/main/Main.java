@@ -19,7 +19,7 @@ import static java.lang.Thread.sleep;
  GNU General Public License for more details.
 
  You should have received a copy of the GNU General Public License
- along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ along with this program.  If not, see http://www.gnu.org/licenses/.
 
  *
  * ANYWHERE THE AFOREMENTIONED LICENSE IS NOT FOUND IN THE SOURCE CODE CREATED BY BRYAN SHARPE
@@ -42,7 +42,7 @@ public class Main {
 
         for (String s : args) {
 
-            if (s.startsWith("-ur")) o.relayToUse = Integer.parseInt(s.replaceFirst("-ur", ""));
+            //if (s.startsWith("-ur")) o.relayToUse = Integer.parseInt(s.replaceFirst("-ur", ""));
             if (s.equals("-testnet")) o.testNet = true;
             if (s.equals("-nogui")) o.nogui = true;
             if (s.equals("-bd")) o.bDebug = true;

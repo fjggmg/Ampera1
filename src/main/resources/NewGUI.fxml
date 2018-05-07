@@ -175,7 +175,7 @@
                                             <children>
                                                 <Label fx:id="versionLabel" alignment="CENTER" text="Version -"
                                                        textAlignment="CENTER"/>
-                                                <Label fx:id="helpText" prefHeight="40.0" prefWidth="420.0"
+                                                <Label prefHeight="40.0" prefWidth="420.0"
                                                        text="Please report any issues in the discord server or in the bitbucket issues page."
                                                        textAlignment="CENTER" wrapText="true"/>
                                                 <Hyperlink fx:id="faqLink" text="FAQ"/>
@@ -533,17 +533,15 @@
                                                                            prefWidth="200.0"/>
                                                                 <HBox prefHeight="60.0" prefWidth="200.0">
                                                                     <children>
-                                                                        <Label fx:id="bTotal" alignment="CENTER"
-                                                                               prefWidth="1000.0"
+                                                                        <Label alignment="CENTER" prefWidth="1000.0"
                                                                                stylesheets="@buy-text-style.css"
                                                                                text="Total" textFill="#18bc9c">
                                                                             <font>
                                                                                 <Font size="14.0"/>
                                                                             </font>
                                                                         </Label>
-                                                                        <Label fx:id="bSize" alignment="CENTER"
-                                                                               contentDisplay="RIGHT" prefHeight="17.0"
-                                                                               prefWidth="1000.0"
+                                                                        <Label alignment="CENTER" contentDisplay="RIGHT"
+                                                                               prefHeight="17.0" prefWidth="1000.0"
                                                                                stylesheets="@buy-text-style.css"
                                                                                text="Size" textAlignment="RIGHT"
                                                                                textFill="#18bc9c">
@@ -551,32 +549,32 @@
                                                                                 <Font size="14.0"/>
                                                                             </font>
                                                                         </Label>
-                                                                        <Label fx:id="bPrice" alignment="CENTER"
-                                                                               prefHeight="17.0" prefWidth="1000.0"
+                                                                        <Label alignment="CENTER" prefHeight="17.0"
+                                                                               prefWidth="1000.0"
                                                                                stylesheets="@buy-text-style.css"
                                                                                text="Price" textFill="#18bc9c">
                                                                             <font>
                                                                                 <Font size="14.0"/>
                                                                             </font>
                                                                         </Label>
-                                                                        <Label fx:id="sPrice" alignment="CENTER"
-                                                                               prefHeight="17.0" prefWidth="1000.0"
+                                                                        <Label alignment="CENTER" prefHeight="17.0"
+                                                                               prefWidth="1000.0"
                                                                                stylesheets="@sell-text-style.css"
                                                                                text="Price" textFill="#c84128">
                                                                             <font>
                                                                                 <Font size="14.0"/>
                                                                             </font>
                                                                         </Label>
-                                                                        <Label fx:id="sSize" alignment="CENTER"
-                                                                               prefHeight="17.0" prefWidth="1000.0"
+                                                                        <Label alignment="CENTER" prefHeight="17.0"
+                                                                               prefWidth="1000.0"
                                                                                stylesheets="@sell-text-style.css"
                                                                                text="Size" textFill="#c84128">
                                                                             <font>
                                                                                 <Font size="14.0"/>
                                                                             </font>
                                                                         </Label>
-                                                                        <Label fx:id="sTotal" alignment="CENTER"
-                                                                               prefHeight="17.0" prefWidth="1000.0"
+                                                                        <Label alignment="CENTER" prefHeight="17.0"
+                                                                               prefWidth="1000.0"
                                                                                stylesheets="@sell-text-style.css"
                                                                                text="Total" textFill="#c84128">
                                                                             <font>

@@ -103,16 +103,16 @@ public class Address implements Serializable, IAddress {
         char[] vChar = {eChar[0],eChar[1],eChar[2]};
         byte version = Byte.parseByte(new String(vChar));
         if (version != VERSION) return NewAdd.decodeFromChain(encoded);
-        String ID = "";
+        StringBuilder ID = new StringBuilder();
         for(int i = 3; i < eChar.length - 4;i++)
         {
-            ID = ID + eChar[i];
+            ID.append(eChar[i]);
         }
         char[] cChar = {eChar[eChar.length-4],eChar[eChar.length-3],eChar[eChar.length-2],eChar[eChar.length-1]};
 
         String checksum = new String(cChar);
 
-        return new Address(version,ID,checksum);
+        return new Address(version, ID.toString(), checksum);
     }
 
 
@@ -128,7 +128,7 @@ public class Address implements Serializable, IAddress {
         }
     }
     public byte[] toByteArrayStrict() {
-        byte[] payload = {};
+        byte[] payload;// = {};
         try {
             payload = Utils.fromBase64(ID);
         } catch (Exception e) {
