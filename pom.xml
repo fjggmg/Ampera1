@@ -64,6 +64,7 @@
                                     <exclude>*:xml-apis</exclude>
                                     <exclude>org.apache.maven:lib:tests</exclude>
                                     <exclude>log4j:log4j:jar:</exclude>
+                                    <exclude>org.codehaus.mojo:findbugs-maven-plugin</exclude>
                                 </excludes>
                             </artifactSet>
                             <shadedArtifactAttached>true</shadedArtifactAttached>
@@ -80,7 +81,7 @@
 
         </plugins>
 
-        <defaultGoal>clean compile package javadoc:javadoc site install</defaultGoal>
+        <defaultGoal>clean compile package install javadoc:javadoc site</defaultGoal>
     </build>
 
     <dependencies>
@@ -109,6 +110,8 @@
             <groupId>org.codehaus.mojo</groupId>
             <artifactId>findbugs-maven-plugin</artifactId>
             <version>3.0.5</version>
+            <scope>test</scope>
+            <optional>true</optional>
         </dependency>
 
         <!-- https://mvnrepository.com/artifact/io.netty/netty-all -->
