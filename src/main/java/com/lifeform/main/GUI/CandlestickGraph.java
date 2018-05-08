@@ -132,7 +132,7 @@ public class CandlestickGraph extends LineChart<String, Number> {
                     if (getPlotChildren().size() > 24) {
                         getPlotChildren().remove(0);
                         getData().get(0).getData().remove(0);
-                        ki.debug("Removing plot items since size is > 24");
+                        //ki.debug("Removing plot items since size is > 24");
                     }
                 }
             }

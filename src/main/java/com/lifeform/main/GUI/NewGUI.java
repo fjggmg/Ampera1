@@ -242,7 +242,7 @@ public class NewGUI {
         if (!ki.getOptions().pool) {
             Thread t = new Thread() {
                 public void run() {
-                    setDaemon(true);
+                    //setDaemon(true);
                     while (run) {
                         if (close) {
                             try {
@@ -287,6 +287,7 @@ public class NewGUI {
                 }
             };
             t.setName("GUI-Backend");
+            t.setDaemon(true);
             threads.add(t);
             t.start();
         }
@@ -2580,7 +2581,7 @@ public class NewGUI {
         return color;
     }
 
-    private volatile int blocksFoundInt = 0;
+    private int blocksFoundInt = 0;
     private BigInteger latestBlock = BigInteger.ZERO;
     //private XodusStringMap guiMap = new XodusStringMap("gui.data");
     private XodusAmpMap guiXAM = new XodusAmpMap("ngui");
@@ -2695,6 +2696,11 @@ public class NewGUI {
 
     private void prepareOH() {
         while (!isFinal) {
+            try {
+                Thread.sleep(50);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
         ohPortfolio.getData().clear();
         for (Map.Entry<Token, BigInteger> t : tokenValueMap.entrySet()) {

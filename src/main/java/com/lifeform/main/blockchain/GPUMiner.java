@@ -28,7 +28,7 @@ import java.util.List;
 public class GPUMiner extends Thread implements IMiner {
 
     private IKi ki;
-    public static volatile boolean mining = false;
+    private boolean mining = false;
 
     private SHA3Miner miner;
     private DeviceContext jcacq;
@@ -81,12 +81,13 @@ public class GPUMiner extends Thread implements IMiner {
 
     public GPUMiner(IKi ki, int index) {
         this.ki = ki;
+        this.mining = true;
         //this.devName = devName + " #" + index;
     }
 
     private long lastPrint = System.currentTimeMillis();
     private DecimalFormat format = new DecimalFormat("###,###,###,###");
-    private int threadCount;
+    //private int threadCount;
     //TODO investigate another way to do this without a public static variable
     public static double miningIntensity = 100;
     @Override
@@ -122,7 +123,7 @@ public class GPUMiner extends Thread implements IMiner {
 
                 message = b.gpuHeader();
 
-                threadCount = TimedAutotune.getAutotuneSettingsMap().get(jcacq.getDInfo().getDeviceName()).threadFactor;
+                //threadCount = TimedAutotune.getAutotuneSettingsMap().get(jcacq.getDInfo().getDeviceName()).threadFactor;
 
                 if (this.isInterrupted()) return;
                 miner.setIntensity((miningIntensity == 0) ? 1 : miningIntensity / 100);
@@ -205,12 +206,12 @@ public class GPUMiner extends Thread implements IMiner {
                             } else if (ki.getChainMan().getCurrentDifficulty().compareTo(new BigInteger(Utils.fromBase64(b.ID))) < 0) {
                                 ki.getMainLog().fatal("FOUND AN ERROR ON OPENCL DEVICE: " + jcacq.getDInfo().getDeviceName());
 
-                                run();
+                                //run();
                             } else {
                                 ki.getMainLog().warn("An error was found with the block verification. Block will not be sent to the network, state: " + state);
 
 
-                                run();
+                                //run();
                             }
                         } else {
 
@@ -265,6 +266,7 @@ public class GPUMiner extends Thread implements IMiner {
 
     @Override
     public void interrupt() {
+        mining = false;
         miner.pauseMining();
         super.interrupt();
     }
@@ -328,4 +330,5 @@ public class GPUMiner extends Thread implements IMiner {
         bh.coinbase = b.getCoinbase().serializeToAmplet().serializeToBytes();
         return bh;
     }
+
 }

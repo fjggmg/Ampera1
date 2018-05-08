@@ -162,7 +162,13 @@ public class MinerManager implements IMinerMan{
     @Override
     public void startMiners() {
         if (!miningCompatible) return;
-        while(!GPUMiner.initDone) {}
+        while (!GPUMiner.initDone) {
+            try {
+                sleep(500);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
         if(ki.getOptions().mining) {
             mining = true;
             /* old miner, OCL miner can use both CPU and GPU now
@@ -183,7 +189,7 @@ public class MinerManager implements IMinerMan{
 
             }
             */
-                GPUMiner.mining = true;
+            //GPUMiner.mining = true;
 
                 if (!gpuMiners.isEmpty()) {
                     for (IMiner miner : gpuMiners) {
@@ -212,7 +218,7 @@ public class MinerManager implements IMinerMan{
             miner.interrupt();
         }
         //CPUMiner.mining = false; old miner
-        GPUMiner.mining = false;
+        //GPUMiner.mining = false;
         mining = false;
         miners.clear();
         gpuMiners.clear();

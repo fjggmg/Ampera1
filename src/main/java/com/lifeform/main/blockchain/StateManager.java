@@ -256,7 +256,8 @@ public class StateManager extends Thread implements IStateManager {
 
             synchronized (sync) {
                 try {
-                    sync.wait();
+                    if (addHeight.compareTo(ki.getChainMan().currentHeight()) <= 0)
+                        sync.wait();
                     ki.debug("State Manager notified");
                 } catch (InterruptedException e) {
                     e.printStackTrace();

@@ -1,13 +1,10 @@
 package com.lifeform.main.network.adx;
 
-import amp.Amplet;
 import com.lifeform.main.IKi;
 import com.lifeform.main.adx.Order;
 import com.lifeform.main.network.IConnectionManager;
 import com.lifeform.main.network.Packet;
 import com.lifeform.main.network.PacketGlobal;
-import com.lifeform.main.transactions.ITrans;
-import com.lifeform.main.transactions.NewTrans;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -20,8 +17,8 @@ public class OrderPacket implements Packet, Serializable {
 
     @Override
     public void process(IKi ki, IConnectionManager connMan, PacketGlobal pg) {
-        if (ki.getOptions().pDebug)
-            ki.debug("Received Order Packet");
+        //if (ki.getOptions().pDebug)
+        //ki.debug("Received Order Packet");
         Order order = Order.fromByteArray(this.order);
         if (order == null) {
             ki.getMainLog().warn("Received order packet with null order");
@@ -29,7 +26,7 @@ public class OrderPacket implements Packet, Serializable {
         }
 
         if (transaction != null) {
-            ki.debug("Transaction not null, ID: " + transaction);
+            //ki.debug("Transaction not null, ID: " + transaction);
             boolean onChain = false;
             BigInteger amountExpected;
             if (order.buy())
@@ -39,13 +36,13 @@ public class OrderPacket implements Packet, Serializable {
 
             if (!ki.getOptions().lite && ki.getTransMan().getAmountInWallet(order.contractAdd(), (order.buy()) ? order.pair().onOffer() : order.pair().accepting()).equals(amountExpected)) {
                 onChain = true;
-                ki.debug("Order already on chain");
+                //ki.debug("Order already on chain");
             } else {
-                ki.debug("Order not on chain, amount of: " + ((order.buy()) ? order.pair().onOffer() : order.pair().accepting()) + " in contract is: " + ki.getTransMan().getAmountInWallet(order.contractAdd(), (order.buy()) ? order.pair().onOffer() : order.pair().accepting()));
-                ki.debug("Amount expected from this contract: " + amountExpected);
+                //ki.debug("Order not on chain, amount of: " + ((order.buy()) ? order.pair().onOffer() : order.pair().accepting()) + " in contract is: " + ki.getTransMan().getAmountInWallet(order.contractAdd(), (order.buy()) ? order.pair().onOffer() : order.pair().accepting()));
+                //ki.debug("Amount expected from this contract: " + amountExpected);
             }
             if (matched) {
-                ki.debug("Matched order, ID: " + order.getID());
+                //ki.debug("Matched order, ID: " + order.getID());
                 if (!onChain) {
                     //TODO possibly put trigger code here
                     ki.getExMan().addMatchPending(transaction, order);

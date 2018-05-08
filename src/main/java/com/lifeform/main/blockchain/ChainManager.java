@@ -331,7 +331,7 @@ public class ChainManager implements IChainMan {
 
     //TODO: removing synchronized on this method as it appears to be locking up sometimes during mining, see what affect this has elsewhere
     @Override
-    public BlockState softVerifyBlock(Block block) {
+    public synchronized BlockState softVerifyBlock(Block block) {
 
         Block current = getByHeight(block.height.subtract(BigInteger.ONE));
         if (bDebug)

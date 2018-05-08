@@ -8,10 +8,7 @@ import com.lifeform.main.transactions.IAddress;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import org.fusesource.jansi.AnsiConsole;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
@@ -205,6 +202,9 @@ public class OrderBook {
             s.getOm().totalAtOrder = new BigInteger(totalS.toByteArray());
         }
         sorted = true;
+        if (matched.size() > 10_000) {
+            matched.remove(10_000, matched.size() - 1);
+        }
     }
 
     public void close() {
