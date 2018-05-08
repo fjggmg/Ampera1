@@ -22,7 +22,7 @@ public class StringFileHandler extends FileManager implements IStringFileHandler
     public void addLine(String line) {
         try {
 
-            PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter(file,true)),true);
+            PrintWriter writer = new PrintWriter(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file, true), StandardCharsets.UTF_8)));
             writer.println(line);
             writer.close();
 

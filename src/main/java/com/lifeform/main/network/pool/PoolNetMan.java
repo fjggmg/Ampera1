@@ -8,7 +8,10 @@ import com.lifeform.main.network.logic.Client;
 import com.lifeform.main.network.logic.Server;
 import com.lifeform.main.transactions.Address;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public class PoolNetMan extends Thread implements INetworkManager {
@@ -23,7 +26,7 @@ public class PoolNetMan extends Thread implements INetworkManager {
     public PoolNetMan(IKi ki) {
 
         this.ki = ki;
-        gpq.start();
+
         if (ki.getOptions().pool) {
             new Thread() {
                 public void run() {
@@ -144,6 +147,7 @@ public class PoolNetMan extends Thread implements INetworkManager {
     }
 
     public void run() {
+        gpq.start();
         if (ki.getOptions().poolRelay) {
             ki.debug("Starting pool server");
             Thread t = new Thread() {

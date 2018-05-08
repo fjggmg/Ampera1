@@ -176,7 +176,7 @@ public class Ki extends Thread implements IKi {
         //JOCLContextAndCommandQueue.noIntel = true;
         ContextMaster.disableCUDA();
         ih = new InputHandler(this);
-        ih.start();
+
 
         //instance = this;
         relay = o.relay;
@@ -300,6 +300,7 @@ public class Ki extends Thread implements IKi {
     boolean setupDone = false;
     @Override
     public void run() {
+        ih.start();
         while (true) {
             if (o.relay || o.poolRelay) return;
             try {

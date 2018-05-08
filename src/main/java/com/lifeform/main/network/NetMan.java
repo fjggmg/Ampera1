@@ -3,13 +3,15 @@ package com.lifeform.main.network;
 import com.lifeform.main.IKi;
 import com.lifeform.main.data.JSONManager;
 import com.lifeform.main.data.XodusStringMap;
-import com.lifeform.main.data.files.StringFileHandler;
 import com.lifeform.main.network.logic.Client;
 import com.lifeform.main.network.logic.Server;
-import java.util.*;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.CopyOnWriteArraySet;
 
 public class NetMan extends Thread implements INetworkManager {
 
@@ -37,64 +39,6 @@ public class NetMan extends Thread implements INetworkManager {
         if (rList.get("relays") != null) {
             relays = JSONManager.parseJSONToList(rList.get("relays"));
         }
-        gpq.start();
-
-        //These are anonymous because java is fucking retarded and won't let you name lambda'd threads
-        //they're also anonymous because they do fuck all and aren't worth tracking
-        //may possibly track in the future
-        new Thread() {
-            public void run() {
-                setName("Network Cleanup");
-                while (true) {
-                    List<IConnectionManager> toRemove = new ArrayList<>();
-                    for (IConnectionManager connMan : connections) {
-                        if (connMan == null || !connMan.isConnected()) {
-                            toRemove.add(connMan);
-                            if (connMan != null) {
-                                connMan.getPacketProcessor().getPacketGlobal().cancelAllResends();
-                                //connMan.getPacketProcessor().getThread().interrupt();
-                                ki.debug("Cleaning up PacketProcessor: " + connMan.getID());
-                            }
-                        }
-                    }
-                    List<Thread> tToRemove = new ArrayList<>();
-                    for (Thread t : threads) {
-                        if (!t.isAlive()) {
-                            tToRemove.add(t);
-                        }
-                    }
-                    if (!toRemove.isEmpty()) {
-                        connections.removeAll(toRemove);
-                    }
-                    if (!tToRemove.isEmpty()) {
-                        threads.removeAll(tToRemove);
-                    }
-                    try {
-                        sleep(300000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        }.start();
-
-        if (!isRelay)
-            new Thread() {
-                public void run() {
-                setName("BlockSync");
-                    while (true) {
-                        try {
-                            sleep(300000);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-
-                        BlockSyncRequest bsr = new BlockSyncRequest();
-                        bsr.height = ki.getChainMan().currentHeight();
-                        broadcast(bsr);
-                    }
-            }
-            }.start();
 
     }
 
@@ -186,6 +130,62 @@ public class NetMan extends Thread implements INetworkManager {
     @Override
     public void run()
     {
+        gpq.start();
+        //These are anonymous because java is fucking retarded and won't let you name lambda'd threads
+        //they're also anonymous because they do fuck all and aren't worth tracking
+        //may possibly track in the future
+        new Thread() {
+            public void run() {
+                setName("Network Cleanup");
+                while (true) {
+                    List<IConnectionManager> toRemove = new ArrayList<>();
+                    for (IConnectionManager connMan : connections) {
+                        if (connMan == null || !connMan.isConnected()) {
+                            toRemove.add(connMan);
+                            if (connMan != null) {
+                                connMan.getPacketProcessor().getPacketGlobal().cancelAllResends();
+                                //connMan.getPacketProcessor().getThread().interrupt();
+                                ki.debug("Cleaning up PacketProcessor: " + connMan.getID());
+                            }
+                        }
+                    }
+                    List<Thread> tToRemove = new ArrayList<>();
+                    for (Thread t : threads) {
+                        if (!t.isAlive()) {
+                            tToRemove.add(t);
+                        }
+                    }
+                    if (!toRemove.isEmpty()) {
+                        connections.removeAll(toRemove);
+                    }
+                    if (!tToRemove.isEmpty()) {
+                        threads.removeAll(tToRemove);
+                    }
+                    try {
+                        sleep(300000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }.start();
+        if (!isRelay)
+            new Thread() {
+                public void run() {
+                    setName("BlockSync");
+                    while (true) {
+                        try {
+                            sleep(300000);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+
+                        BlockSyncRequest bsr = new BlockSyncRequest();
+                        bsr.height = ki.getChainMan().currentHeight();
+                        broadcast(bsr);
+                    }
+                }
+            }.start();
         setName("Networking-Main");
         if (!isRelay) {
             Thread t = new Thread() {
