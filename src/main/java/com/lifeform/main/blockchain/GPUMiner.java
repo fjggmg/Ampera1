@@ -9,15 +9,9 @@ import com.lifeform.main.network.BlockEnd;
 import com.lifeform.main.network.BlockHeader;
 import com.lifeform.main.network.TransactionPacket;
 import com.lifeform.main.network.pool.PoolBlockHeader;
-import com.lifeform.main.transactions.InvalidTransactionException;
 import com.lifeform.main.transactions.NewTrans;
-import com.lifeform.main.transactions.Transaction;
 import com.lifeform.main.transactions.TransactionFeeCalculator;
-import gpuminer.JOCL.constants.JOCLConstants;
-import gpuminer.JOCL.context.JOCLContextAndCommandQueue;
-import gpuminer.JOCL.context.JOCLDevices;
 import gpuminer.miner.SHA3.SHA3Miner;
-import gpuminer.miner.autotune.Autotune;
 import gpuminer.miner.autotune.TimedAutotune;
 import gpuminer.miner.context.ContextMaster;
 import gpuminer.miner.context.DeviceContext;
@@ -30,9 +24,6 @@ import java.math.BigInteger;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
-
-import static org.jocl.CL.CL_DEVICE_TYPE_GPU;
-import static org.jocl.CL.stringFor_cl_device_address_info;
 
 public class GPUMiner extends Thread implements IMiner {
 
@@ -133,9 +124,8 @@ public class GPUMiner extends Thread implements IMiner {
 
                 threadCount = TimedAutotune.getAutotuneSettingsMap().get(jcacq.getDInfo().getDeviceName()).threadFactor;
 
-                if (miningIntensity == 0) miningIntensity = 1;
                 if (this.isInterrupted()) return;
-                miner.setIntensity(miningIntensity / 100);
+                miner.setIntensity((miningIntensity == 0) ? 1 : miningIntensity / 100);
                 byte[] difficulty = new byte[64];
                 int p = 63;
                 if (!ki.getOptions().pool)

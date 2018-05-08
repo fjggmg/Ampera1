@@ -5,11 +5,12 @@ import amp.serialization.IAmpByteSerializable;
 import com.lifeform.main.transactions.KeyType;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 
 public class KeyKeyTypePair implements IAmpByteSerializable {
     public KeyKeyTypePair(@NotNull byte[] key, @NotNull KeyType keyType) {
+        //find bugs wants me to have the next line for some reason? possibly report as bug to findbugs
+        if (key == null) return;
         this.key = Arrays.copyOf(key, key.length);
         this.keyType = keyType;
     }

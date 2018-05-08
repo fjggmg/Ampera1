@@ -87,9 +87,9 @@ public class TransactionManagerLite implements ITransMan {
     @Override
     public List<Output> getUTXOs(IAddress address, boolean safe) {
         List<Output> utxos = new ArrayList<>();
-        for (String ID : utxoMap.keySet()) {
-            if (!usedUTXO.contains(ID) && utxoMap.get(ID).getAddress().encodeForChain().equals(address.encodeForChain()))
-                utxos.add((Output) utxoMap.get(ID));
+        for (Map.Entry<String, TXIO> ID : utxoMap.entrySet()) {
+            if (!usedUTXO.contains(ID.getKey()) && ID.getValue().getAddress().encodeForChain().equals(address.encodeForChain()))
+                utxos.add((Output) ID.getValue());
         }
         return utxos;
     }

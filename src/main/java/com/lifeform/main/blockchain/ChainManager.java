@@ -9,7 +9,6 @@ import com.lifeform.main.data.EncryptionManager;
 import com.lifeform.main.data.JSONManager;
 import com.lifeform.main.data.Utils;
 import com.lifeform.main.data.XodusStringMap;
-import com.lifeform.main.data.files.StringFileHandler;
 import com.lifeform.main.transactions.*;
 import org.json.simple.JSONObject;
 
@@ -17,8 +16,10 @@ import java.io.File;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
-import java.util.*;
-import java.util.concurrent.ConcurrentMap;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Created by Bryan on 5/28/2017.
@@ -185,7 +186,6 @@ public class ChainManager implements IChainMan {
             Ki.canClose = true;
             return state;
         }
-
 
         current = block;
         currentHeight = block.height;
@@ -652,9 +652,9 @@ public class ChainManager implements IChainMan {
         Map<String,String> map = JSONManager.parseJSONtoMap(json);
         map.remove("segment");
         Map<BigInteger,Block> bmap = new HashMap<>();
-        for(String ID:map.keySet())
+        for (Map.Entry<String, String> ID : map.entrySet())
         {
-            Block b = Block.fromJSON(map.get(ID));
+            Block b = Block.fromJSON(ID.getValue());
             bmap.put(b.height,b);
 
         }
@@ -780,10 +780,10 @@ public class ChainManager implements IChainMan {
         Map<String,String> map = JSONManager.parseJSONtoMap(json);
         map.remove("segment");
         Map<String,Block> bmap = new HashMap<>();
-        for(String ID:map.keySet())
+        for (Map.Entry<String, String> ID : map.entrySet())
         {
-            Block b = Block.fromJSON(map.get(ID));
-            bmap.put(ID,b);
+            Block b = Block.fromJSON(ID.getValue());
+            bmap.put(ID.getKey(), b);
 
         }
 
@@ -796,10 +796,10 @@ public class ChainManager implements IChainMan {
     {
         Map<String,String> map = JSONManager.parseJSONtoMap(json);
         map.remove("segment");
-        for(String ID:map.keySet())
+        for (Map.Entry<String, String> ID : map.entrySet())
         {
-            Block b = Block.fromJSON(map.get(ID));
-            blockchainMap.put(ID, b);
+            Block b = Block.fromJSON(ID.getValue());
+            blockchainMap.put(ID.getKey(), b);
             heightMap.put(b.height,b);
             if(currentHeight.compareTo(b.height) < 0)
             {

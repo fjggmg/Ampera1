@@ -35,7 +35,9 @@ import javafx.beans.property.ListProperty;
 import javafx.beans.property.SimpleListProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
-import javafx.collections.*;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.collections.ObservableMap;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
@@ -53,13 +55,14 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
-import javafx.stage.WindowEvent;
 import javafx.util.Duration;
 
 import java.awt.*;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
-import java.io.*;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
@@ -306,7 +309,7 @@ public class NewGUI {
     public Pane topPane;
     @FXML
     public Pane walletPane;
-    public volatile static Stage stage;
+    //public volatile static Stage stage;
     @FXML
     public BorderPane borderPane;
     public JFXColorPicker colorPicker;
@@ -365,7 +368,6 @@ public class NewGUI {
     private XodusStringMap pmap = new XodusStringMap("security");
     //private List<Order> activeOrders = new ArrayList<>();
     private boolean frg = true;
-    static Application app;
     private int priceControlsIndex;
 
     /**
@@ -930,24 +932,8 @@ public class NewGUI {
                 exchangeTotalPurchase.setText("Total - " + format2.format(total / unitMultiplierPrice.doubleValue()) + unitSelectorPrice.getSelectionModel().getSelectedItem().getText());
             }
         });
-        faqLink.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-                app.getHostServices().showDocument("https://bitbucket.org/backspace119/ki-project-origin/wiki/FAQ");
-            }
-        });
-        issuesPageLink.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-                app.getHostServices().showDocument("https://bitbucket.org/backspace119/ki-project-origin/issues?status=new&status=open");
-            }
-        });
-        discordServerLink.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-                app.getHostServices().showDocument("https://discord.gg/6PjeMzd");
-            }
-        });
+
+
         JFXTreeTableColumn<StoredTrans, String> oaColumn = new JFXTreeTableColumn<>("Sender");
         oaColumn.setPrefWidth(150);
         oaColumn.setCellValueFactory((TreeTableColumn.CellDataFeatures<StoredTrans, String> param) -> {
@@ -1145,6 +1131,7 @@ public class NewGUI {
             }
         });
         versionLabel.setText("Version - " + Ki.VERSION);
+        /*
         stage.setOnCloseRequest(new EventHandler<WindowEvent>() {
             @Override
             public void handle(WindowEvent event) {
@@ -1152,6 +1139,7 @@ public class NewGUI {
                 close = true;
             }
         });
+        */
         deleteAddress.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
@@ -1523,34 +1511,6 @@ public class NewGUI {
         //vb.setStyle("-fx-background-color:" + ki.getStringSetting(StringSettings.PRIMARY_COLOR));
         //vb.setBackground(new Background(new BackgroundImage(img, BackgroundRepeat.NO_REPEAT, BackgroundRepeat.NO_REPEAT, BackgroundPosition.CENTER, BackgroundSize.DEFAULT)));
         menuDrawer.getSidePane().add(vb);
-        ChangeListener<Number> stageSizeListener = (observable, oldValue, newValue) -> {
-            //System.out.println("Height: " + stage.getHeight() + " Width: " + stage.getWidth());
-            hashrateChart.setMinWidth(miningTab.getWidth());
-            miningIntesity.setMinWidth(miningTab.getWidth() - 20);
-            startMining.setLayoutX((miningTab.getWidth() / 2) - (startMining.getWidth() / 2) - 5);
-            miLabel.setLayoutX((miningTab.getWidth() / 2) - (miLabel.getWidth() / 2) - 5);
-            //addressText.setLayoutX(walletPane.getWidth() - (addressText.getWidth() + 5));
-            //amountText.setLayoutX(walletPane.getWidth() - (amountText.getWidth() + 5));
-            //messageText.setLayoutX(walletPane.getWidth() - (messageText.getWidth() + 5));
-            //feeText.setLayoutX(walletPane.getWidth() - (feeText.getWidth() + 5));
-            walletBox.setLayoutX(walletPane.getWidth() - (walletBox.getWidth() + 5));
-            walletAmount.setLayoutX(walletPane.getWidth() - ((walletAmount.getWidth() + 15)));
-            tokenLabel.setLayoutX(walletAmount.getLayoutX() + 10);
-            transactionTable.setMinWidth(walletPane.getWidth() - (walletBox.getWidth() + 65));
-            transactionTable.setMinHeight(walletPane.getHeight() - 170);
-            //versionLabel.setLayoutX(helpPane.getWidth() / 2 - (versionLabel.getWidth() / 2));
-            //helpText.setLayoutX(helpPane.getWidth() / 2 - (helpText.getWidth() / 2));
-            topPane2.setMinWidth(walletPane.getWidth());
-            beScroll.setMinWidth(blockExplorerPane.getWidth());
-            beScroll.setMinHeight(blockExplorerPane.getHeight() - 60);
-            beScroll.setPrefHeight(blockExplorerPane.getHeight() - 60);
-            lockPane.setMinHeight(borderPane.getHeight());
-            miningDataHbox.setMinWidth(miningTab.getWidth());
-            ohVbox.setMinHeight(ohPane.getHeight());
-            ohVbox.setMinWidth(ohPane.getWidth() - 10);
-            adxBox.setMinWidth(exchangePane.getWidth() - 20);
-            adxBox.setMinHeight(exchangePane.getHeight() - 20);
-        };
         goBE.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
@@ -1579,8 +1539,6 @@ public class NewGUI {
                 fillMasonry(BigInteger.valueOf(start), BigInteger.valueOf(end));
             }
         });
-        stage.widthProperty().addListener(stageSizeListener);
-        stage.heightProperty().addListener(stageSizeListener);
         HamburgerSlideCloseTransition burgerTask = new HamburgerSlideCloseTransition(menuHamburger);
         burgerTask.setRate(-1);
         menuHamburger.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
@@ -2362,7 +2320,7 @@ public class NewGUI {
                                 poolNOC.setText("Number of Connections - " + ki.getPoolNet().getConnections().size());
                                 currentPoolShares.setText("Current Pool Shares - " + ki.getPoolManager().getTotalSharesOfCurrentPayPeriod());
                                 //ki.debug("Current PPS: " + ki.getPoolManager().getCurrentPayPerShare());
-                                estimatedNextPayout.setText("Estimated Next Payout - " + format2.format((double) (ki.getPoolManager().getTotalSharesOfCurrentPayPeriod() * (double) ((double) ki.getPoolManager().getCurrentPayPerShare() / 100_000_000D))));
+                                estimatedNextPayout.setText("Estimated Next Payout - " + format2.format(ki.getPoolManager().getTotalSharesOfCurrentPayPeriod() * (double) ki.getPoolManager().getCurrentPayPerShare() / 100_000_000D));
                             }
 
 
@@ -2831,6 +2789,62 @@ public class NewGUI {
         ohCancel.getItems().add(cancelButton);
     }
 
+    void postInit(Application app, Stage stage) {
+        Platform.runLater(new Thread() {
+            public void run() {
+                setDaemon(true);
+                faqLink.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+                    @Override
+                    public void handle(MouseEvent event) {
+                        app.getHostServices().showDocument("https://bitbucket.org/backspace119/ki-project-origin/wiki/FAQ");
+                    }
+                });
+                issuesPageLink.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+                    @Override
+                    public void handle(MouseEvent event) {
+                        app.getHostServices().showDocument("https://bitbucket.org/backspace119/ki-project-origin/issues?status=new&status=open");
+                    }
+                });
+                discordServerLink.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+                    @Override
+                    public void handle(MouseEvent event) {
+                        app.getHostServices().showDocument("https://discord.gg/6PjeMzd");
+                    }
+                });
+
+                ChangeListener<Number> stageSizeListener = (observable, oldValue, newValue) -> {
+                    //System.out.println("Height: " + stage.getHeight() + " Width: " + stage.getWidth());
+                    hashrateChart.setMinWidth(miningTab.getWidth());
+                    miningIntesity.setMinWidth(miningTab.getWidth() - 20);
+                    startMining.setLayoutX((miningTab.getWidth() / 2) - (startMining.getWidth() / 2) - 5);
+                    miLabel.setLayoutX((miningTab.getWidth() / 2) - (miLabel.getWidth() / 2) - 5);
+                    //addressText.setLayoutX(walletPane.getWidth() - (addressText.getWidth() + 5));
+                    //amountText.setLayoutX(walletPane.getWidth() - (amountText.getWidth() + 5));
+                    //messageText.setLayoutX(walletPane.getWidth() - (messageText.getWidth() + 5));
+                    //feeText.setLayoutX(walletPane.getWidth() - (feeText.getWidth() + 5));
+                    walletBox.setLayoutX(walletPane.getWidth() - (walletBox.getWidth() + 5));
+                    walletAmount.setLayoutX(walletPane.getWidth() - ((walletAmount.getWidth() + 15)));
+                    tokenLabel.setLayoutX(walletAmount.getLayoutX() + 10);
+                    transactionTable.setMinWidth(walletPane.getWidth() - (walletBox.getWidth() + 65));
+                    transactionTable.setMinHeight(walletPane.getHeight() - 170);
+                    //versionLabel.setLayoutX(helpPane.getWidth() / 2 - (versionLabel.getWidth() / 2));
+                    //helpText.setLayoutX(helpPane.getWidth() / 2 - (helpText.getWidth() / 2));
+                    topPane2.setMinWidth(walletPane.getWidth());
+                    beScroll.setMinWidth(blockExplorerPane.getWidth());
+                    beScroll.setMinHeight(blockExplorerPane.getHeight() - 60);
+                    beScroll.setPrefHeight(blockExplorerPane.getHeight() - 60);
+                    lockPane.setMinHeight(borderPane.getHeight());
+                    miningDataHbox.setMinWidth(miningTab.getWidth());
+                    ohVbox.setMinHeight(ohPane.getHeight());
+                    ohVbox.setMinWidth(ohPane.getWidth() - 10);
+                    adxBox.setMinWidth(exchangePane.getWidth() - 20);
+                    adxBox.setMinHeight(exchangePane.getHeight() - 20);
+                };
+                stage.widthProperty().addListener(stageSizeListener);
+                stage.heightProperty().addListener(stageSizeListener);
+            }
+        });
+    }
     public void setStart(BigInteger startHeight) {
         this.startHeight = startHeight;
     }

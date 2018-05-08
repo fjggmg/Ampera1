@@ -3,13 +3,15 @@ package com.lifeform.main.network;
 import amp.Amplet;
 import com.lifeform.main.IKi;
 import com.lifeform.main.blockchain.Block;
-import com.lifeform.main.blockchain.ChainManager;
 import com.lifeform.main.transactions.ITrans;
 import com.lifeform.main.transactions.InvalidTransactionException;
 import com.lifeform.main.transactions.Transaction;
 
 import java.math.BigInteger;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class PacketGlobal {
 
@@ -25,7 +27,7 @@ public class PacketGlobal {
     boolean laFlag = false;
     boolean onRightChain = true;
     Map<BlockHeader, List<ITrans>> bMap = new HashMap<>();
-    Map<BlockHeader, Set<ITrans>> cuMap = new HashMap<>();
+    //Map<BlockHeader, Set<ITrans>> cuMap = new HashMap<>();
     //List<Block> cuBlocks = new ArrayList<>();
     List<Block> futureBlocks = new ArrayList<>();
     Map<String, BlockHeader> headerMap = new HashMap<>();

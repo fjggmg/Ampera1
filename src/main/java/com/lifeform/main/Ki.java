@@ -12,7 +12,7 @@ import com.lifeform.main.network.pool.PoolBlockHeader;
 import com.lifeform.main.network.pool.PoolData;
 import com.lifeform.main.network.pool.PoolNetMan;
 import com.lifeform.main.transactions.*;
-import com.lifeform.main.transactions.scripting.*;
+import com.lifeform.main.transactions.scripting.ScriptManager;
 import engine.ASELogging;
 import engine.ByteCodeEngine;
 import gpuminer.GPULogging;
@@ -22,6 +22,7 @@ import mining_pool.Pool;
 import mining_pool.PoolLogging;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
 import java.lang.management.ManagementFactory;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -65,7 +66,7 @@ public class Ki extends Thread implements IKi {
     private boolean relay = false;
     private com.lifeform.main.GUI.NewGUI guiHook;
     public static boolean debug = true;
-    private static IKi instance;
+    static IKi instance;
     private InputHandler ih;
     private IStateManager stateMan;
     private Pool miningPool;
@@ -177,7 +178,7 @@ public class Ki extends Thread implements IKi {
         ih = new InputHandler(this);
         ih.start();
 
-        instance = this;
+        //instance = this;
         relay = o.relay;
         if (o.pool) {
             //no trans man
@@ -368,13 +369,6 @@ public class Ki extends Thread implements IKi {
         return relay;
     }
 
-    private volatile boolean rn = false;
-
-    @Override
-    public void restartNetwork() {
-        rn = true;
-    }
-
     @Override
     public IStateManager getStateManager() {
         return stateMan;
@@ -464,11 +458,6 @@ public class Ki extends Thread implements IKi {
         return bce8;
     }
 
-    private void rn() {
-        rn = false;
-        netMan.interrupt();
-        netMan = new NetMan(ki, o.relay);
-    }
     private String relayer;
     @Override
     public String getRelayer() {

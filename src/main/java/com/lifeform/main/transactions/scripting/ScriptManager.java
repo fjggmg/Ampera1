@@ -6,10 +6,8 @@ import com.lifeform.main.data.KeyKeyTypePair;
 import com.lifeform.main.data.Utils;
 import com.lifeform.main.data.files.StringFileHandler;
 import com.lifeform.main.transactions.KeyType;
-import com.lifeform.main.transactions.scripting.compiling.CompilerException;
 import com.lifeform.main.transactions.scripting.compiling.StringCompiler;
 import com.lifeform.main.transactions.scripting.compiling.StringFileCompiler;
-import com.lifeform.main.transactions.scripting.word8v1ops.*;
 import engine.ByteCodeEngine;
 import engine.binary.Binary;
 import engine.data.ConstantMemory;
@@ -31,6 +29,7 @@ public class ScriptManager {
     public static final int GEN_TRADE_CANCEL_FAIL_JUMP = 65;
     public static final byte VERSION = 1;
 
+    private static final String SCRIPTS_FOLDER = "/scripts";
     public ScriptManager(ByteCodeEngine bce8, ByteCodeEngine bce16, IKi ki) {
         this.ki = ki;
         /*
@@ -104,7 +103,7 @@ public class ScriptManager {
 
         DataElement[] cm = new DataElement[32];
         int i = 0;
-        for (String key : keys.keySet()) {
+        for (Map.Entry<String, Byte> key : keys.entrySet()) {
             List<String> mSigLoad = new ArrayList<>();
 
             for (String code : this.mSigLoad) {
@@ -112,9 +111,9 @@ public class ScriptManager {
             }
             fullCode.addAll(mSigLoad);
             try {
-                if (KeyType.byValue(keys.get(key)) == null || KeyType.byValue(keys.get(key)) == KeyType.NONE)
+                if (KeyType.byValue(key.getValue()) == null || KeyType.byValue(key.getValue()) == KeyType.NONE)
                     return null;
-                cm[i] = new DataElement(new KeyKeyTypePair(Utils.fromBase64(key), KeyType.byValue(keys.get(key))).serializeToBytes());
+                cm[i] = new DataElement(new KeyKeyTypePair(Utils.fromBase64(key.getKey()), KeyType.byValue(key.getValue())).serializeToBytes());
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -160,7 +159,7 @@ public class ScriptManager {
      * for BCE16 eventually)
      */
     public void loadScripts() {
-        File folder = new File("/scripts");
+        File folder = new File(SCRIPTS_FOLDER);
         if (!folder.exists()) {
 
             if (!folder.mkdirs()) {
@@ -168,13 +167,14 @@ public class ScriptManager {
             }
 
         }
-        if (folder.listFiles() == null) return;
-        if (folder.listFiles().length == 0) {
+        File[] files = folder.listFiles();
+        if (files == null) return;
+        if (files.length == 0) {
             ki.debug("No scripts to load");
             return;
         }
 
-        for (File f : folder.listFiles()) {
+        for (File f : files) {
             StringFileCompiler sfc = new StringFileCompiler(new StringFileHandler(ki, folder.getName() + File.pathSeparator + f.getName()), ki.getBCE8());
             Program p = null;
             try {

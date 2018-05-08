@@ -1,20 +1,17 @@
 package com.lifeform.main.network.pool;
 
-import amp.Amplet;
 import com.lifeform.main.IKi;
 import com.lifeform.main.Settings;
 import com.lifeform.main.StringSettings;
 import com.lifeform.main.blockchain.Block;
 import com.lifeform.main.blockchain.ChainManager;
-import com.lifeform.main.data.Utils;
 import com.lifeform.main.network.BlockEnd;
 import com.lifeform.main.network.BlockHeader;
 import com.lifeform.main.network.IConnectionManager;
 import com.lifeform.main.network.TransactionPacket;
-import com.lifeform.main.transactions.*;
+import com.lifeform.main.transactions.TransactionFeeCalculator;
 
 import java.io.Serializable;
-import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,9 +31,9 @@ public class PoolBlockHeader implements Serializable, PoolPacket {
     public void process(IKi ki, IConnectionManager connMan) {
 
         ki.debug("Received pool block header");
-        Block b = new Block();
+        Block b;// = new Block();
         if (!ki.getOptions().poolRelay) {
-
+            /*
             solver = Utils.toBase64(ki.getPoolData().payTo.toByteArray());
             b.solver = Utils.toBase64(ki.getPoolData().payTo.toByteArray());
             b.merkleRoot = merkleRoot;
@@ -56,8 +53,8 @@ public class PoolBlockHeader implements Serializable, PoolPacket {
             }
 
             b.setCoinbase(NewTrans.fromAmplet(Amplet.create(coinbase)));
-
-            ki.getPoolData().blockData = b.gpuHeader();
+            */
+            //ki.getPoolData().blockData = b.gpuHeader();
             ki.debug("Setting as current work");
             ki.getPoolData().currentWork = this;
         } else {

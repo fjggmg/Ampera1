@@ -7,7 +7,6 @@ import amp.HeadlessPrefixedAmplet;
 import amp.classification.AmpClassCollection;
 import amp.classification.classes.AC_SingleElement;
 import amp.group_primitives.UnpackedGroup;
-import amp.serialization.IAmpAmpletSerializable;
 import amp.serialization.IAmpByteSerializable;
 import com.lifeform.main.Ki;
 import com.lifeform.main.data.AmpIDs;
@@ -17,8 +16,6 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
-import java.io.Serializable;
-import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 
 /**
@@ -191,6 +188,7 @@ public class Output implements TXIO, IAmpByteSerializable {
         hpa.addBytes(receiver.toByteArray());
         if (token == null) {
             Ki.getInstance().getMainLog().fatal("TOKEN IN OUTPUT WAS NULL");
+            return null;
         }
         hpa.addBytes(ByteTools.deconstructInt(token.getID()));
 

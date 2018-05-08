@@ -16,9 +16,7 @@ import engine.data.DataElement;
 import engine.data.JumpMemory;
 import engine.data.WritableMemory;
 
-import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.math.RoundingMode;
 import java.util.*;
 
 public class ExchangeManager {
@@ -93,9 +91,11 @@ public class ExchangeManager {
                 System.out.println("Matched, building  buy transaction3 buying: " + o.pair().accepting() + " with " + o.pair().onOffer());
                 buyingAmountOverage = buyingAmountOverage.subtract(amountBuying.multiply(o.unitPrice()).divide(BigInteger.valueOf(100_000_000)));
                 List<Input> toUs = ki.getTransMan().getInputsForAmountAndToken(o.contractAdd(), amountBuying, o.pair().accepting(), true);
-                if (toUs == null && !pendingUs.contains(o.getTxid())) {
-                    toRemove.add(o);
-                    ki.getTransMan().unUseUTXOs(inputs);
+                if (toUs == null) {
+                    if (!pendingUs.contains(o.getTxid())) {
+                        toRemove.add(o);
+                        ki.getTransMan().unUseUTXOs(inputs);
+                    }
                     continue;
                 }
                 amount = amount.subtract(amountBuying);
@@ -283,9 +283,11 @@ public class ExchangeManager {
                 System.out.println("Your add: " + ki.getAddMan().getMainAdd().encodeForChain());
                 System.out.println("Other add: " + o.address().encodeForChain());
                 List<Input> toUs = ki.getTransMan().getInputsForAmountAndToken(o.contractAdd(), amountSelling.multiply(o.unitPrice()).divide(BigInteger.valueOf(100_000_000)), o.pair().onOffer(), true);
-                if (toUs == null && !pendingUs.contains(o.getTxid())) {
-                    toRemove.add(o);
-                    ki.getTransMan().unUseUTXOs(inputs);
+                if (toUs == null) {
+                    if (!pendingUs.contains(o.getTxid())) {
+                        toRemove.add(o);
+                        ki.getTransMan().unUseUTXOs(inputs);
+                    }
                     continue;
                 }
                 amount = amount.subtract(amountSelling);
@@ -406,9 +408,8 @@ public class ExchangeManager {
                     e.printStackTrace();
                     return OrderStatus.GENERAL_FAILURE;
                 }
-                ;
                 byte[] ent = new byte[64];
-                new Random().nextBytes(ent);
+                entRand.nextBytes(ent);
                 String entropy = Utils.toBase64(ent);
                 Binary program = null;
                 try {

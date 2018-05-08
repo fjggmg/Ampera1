@@ -15,8 +15,8 @@ import com.lifeform.main.data.Utils;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
+
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.util.*;
 
@@ -179,13 +179,13 @@ public class Transaction implements ITrans {
         }
 
         jo.put("inputs", JSONManager.parseListToJSON(sInputs));
-
+        /*
         List<String> sOutputs = new ArrayList<>();
         for(Output o:outputs)
         {
             sOutputs.add(o.toJSON());
         }
-
+         */
         jo.put("outputs", JSONManager.parseListToJSON(sInputs));
         return jo.toJSONString();
     }
@@ -354,11 +354,12 @@ public class Transaction implements ITrans {
     public boolean verifySigs() {
         if (sigsRequired < 1) return false;
         int vCount = 0;
-        for(String key:keySigMap.keySet())
+        for (Map.Entry<String, String> key : keySigMap.entrySet())
         {
             if (type.equals(TransactionType.STANDARD))
-                if (EncryptionManager.verifySig(toSign(), keySigMap.get(key), key, KeyType.BRAINPOOLP512T1)) vCount++;
-                else if (EncryptionManager.verifySig(toSignBytes(), Utils.fromBase64(keySigMap.get(key)), key, KeyType.BRAINPOOLP512T1))
+                if (EncryptionManager.verifySig(toSign(), key.getValue(), key.getKey(), KeyType.BRAINPOOLP512T1))
+                    vCount++;
+                else if (EncryptionManager.verifySig(toSignBytes(), Utils.fromBase64(key.getValue()), key.getKey(), KeyType.BRAINPOOLP512T1))
                     vCount++;
             if(vCount >= sigsRequired)
             {
@@ -391,10 +392,11 @@ public class Transaction implements ITrans {
         }
 
         AC_ClassInstanceIDIsIndex keys = AC_ClassInstanceIDIsIndex.create(AmpIDs.KEYS_CID, "Keys");
-        for (String key : this.keys) {
+        if (this.keys != null && !this.keys.isEmpty())
+            for (String key : this.keys) {
 
-            keys.addElement(key);
-        }
+                keys.addElement(key);
+            }
 
         AC_SingleElement type = null;
 

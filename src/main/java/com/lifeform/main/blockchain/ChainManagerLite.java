@@ -245,8 +245,11 @@ public class ChainManagerLite implements IChainMan {
         b.height = currentHeight().add(BigInteger.ONE);
         //if(b.height.compareTo(BigInteger.ZERO) == 0) b.height = b.height.add(BigInteger.ONE);
         if (!(currentHeight().compareTo(BigInteger.valueOf(-1L)) == 0)) {
-            if (mostRecent == null) ki.getMainLog().info("Current is null");
-            b.prevID = mostRecent.ID;
+            if (mostRecent == null) {
+                ki.getMainLog().info("Current is null");
+            } else {
+                b.prevID = mostRecent.ID;
+            }
         } else
             b.prevID = "0";
 

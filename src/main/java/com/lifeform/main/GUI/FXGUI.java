@@ -28,8 +28,7 @@ public class FXGUI extends Application {
         //pStage.setResizable(false);
         pStage.setTitle("Origin");
 
-        NewGUI.stage = pStage;
-        NewGUI.app = this;
+        //NewGUI.stage = pStage;
         Parent root = FXMLLoader.load(getClass().getResource("/NewGUI.fxml"));
         JFXDecorator decorator = new JFXDecorator(pStage, root);
         //decorator.setCustomMaximize(false);
@@ -58,6 +57,7 @@ public class FXGUI extends Application {
         pStage.getIcons().add(new Image(getClass().getResourceAsStream("/origin.png")));
         pStage.setScene(scene);
         pStage.show();
+        Ki.getInstance().getGUIHook().postInit(this, pStage);
 
 
     }

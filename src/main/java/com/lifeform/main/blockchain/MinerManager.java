@@ -1,13 +1,9 @@
 package com.lifeform.main.blockchain;
 
 import com.lifeform.main.IKi;
-import gpuminer.JOCL.constants.JOCLConstants;
-import gpuminer.JOCL.context.JOCLContextAndCommandQueue;
-import gpuminer.JOCL.context.JOCLDevices;
 import gpuminer.miner.context.ContextMaster;
 import gpuminer.miner.context.DeviceContext;
 
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -57,9 +53,11 @@ public class MinerManager implements IMinerMan{
             }*/
 
         } catch (Exception e) {
-            e.printStackTrace();
-            ki.debug("Message: " + e.getMessage());
-            ki.debug("Previous errors are from miner startup, this system is not compatible with the mining program, disabling mining. Contact support with this error and your hardware info if you believe yours is compatible");
+            if (mDebug) {
+                e.printStackTrace();
+                ki.debug("Message: " + e.getMessage());
+                ki.debug("Previous errors are from miner startup, this system is not compatible with the mining program, disabling mining. Contact support with this error and your hardware info if you believe yours is compatible");
+            }
             miningCompatible = false;
         } finally {
             setup = true;

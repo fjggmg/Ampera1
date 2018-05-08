@@ -15,7 +15,6 @@ import engine.data.DataElement;
 import engine.data.WritableMemory;
 
 import java.io.UnsupportedEncodingException;
-import java.io.WriteAbortedException;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -189,8 +188,8 @@ public class NewTrans implements ITrans {
 
     @Override
     public boolean verifySpecial(IKi ki) {
-        for (String key : keySigMap.keySet()) {
-            KeySigEntropyPair ksep = keySigMap.get(key);
+        for (Map.Entry<String, KeySigEntropyPair> key : keySigMap.entrySet()) {
+            KeySigEntropyPair ksep = key.getValue();
             if (ksep.p2sh) {
                 IAddress execAdd = null;
                 for (Input i : inputs) {
@@ -199,7 +198,7 @@ public class NewTrans implements ITrans {
                 }
                 if (execAdd == null) return false;
                 try {
-                    ArrayList<DataElement> result = ki.getBCE8().executeProgram(Binary.deserializeFromAmplet(Amplet.create(Utils.fromBase64(key))), WritableMemory.deserializeFromBytes(Utils.fromBase64(ksep.sig)), this, execAdd.toByteArray(), false);
+                    ArrayList<DataElement> result = ki.getBCE8().executeProgram(Binary.deserializeFromAmplet(Amplet.create(Utils.fromBase64(key.getKey()))), WritableMemory.deserializeFromBytes(Utils.fromBase64(ksep.sig)), this, execAdd.toByteArray(), false);
                     if (result.get(0).getDataAsInt() != 0) return false;
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -331,10 +330,10 @@ public class NewTrans implements ITrans {
         hpa.addElement(ins);
         hpa.addElement(outs);
         HeadlessPrefixedAmplet map = HeadlessPrefixedAmplet.create();
-        for (String key : keySigMap.keySet()) {
+        for (Map.Entry<String, KeySigEntropyPair> key : keySigMap.entrySet()) {
 
-            map.addElement(key);
-            map.addElement(keySigMap.get(key).toAmplet());
+            map.addElement(key.getKey());
+            map.addElement(key.getValue().toAmplet());
 
         }
         hpa.addElement(map);

@@ -2,8 +2,6 @@ package com.lifeform.main;
 
 import com.lifeform.main.data.Options;
 
-import static java.lang.Thread.sleep;
-
 /**
  * Created by Bryan on 4/7/2017.
  * Copyright (C) 2017  Ampex Technologies LLC
@@ -34,6 +32,7 @@ public class Main {
     {
         Options o = decode(args);
         IKi main = new Ki(o);
+        Ki.instance = main;
         main.start();
     }
 

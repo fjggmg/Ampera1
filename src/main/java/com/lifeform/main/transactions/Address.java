@@ -2,7 +2,6 @@ package com.lifeform.main.transactions;
 
 import com.lifeform.main.data.EncryptionManager;
 import com.lifeform.main.data.Utils;
-import org.json.simple.JSONObject;
 
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
@@ -115,18 +114,6 @@ public class Address implements Serializable, IAddress {
         return new Address(version, ID.toString(), checksum);
     }
 
-
-    @Override
-    public boolean equals(Object o)
-    {
-        if(o instanceof Address)
-        {
-            Address a = (Address) o;
-            return a.encodeForChain().equals(encodeForChain());
-        }else{
-            return false;
-        }
-    }
     public byte[] toByteArrayStrict() {
         byte[] payload;// = {};
         try {

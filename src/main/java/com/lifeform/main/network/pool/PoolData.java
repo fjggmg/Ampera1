@@ -10,7 +10,7 @@ import java.util.Map;
 
 public class PoolData {
     public IAddress payTo;
-    public byte[] blockData;
+    //byte[] blockData;
     public String ID;
     public PoolBlockHeader currentWork;
     public Map<BigInteger, List<String>> tracking = new HashMap<>();

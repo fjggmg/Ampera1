@@ -145,8 +145,6 @@ public interface IKi {
     void setGUIHook(NewGUI guiHook);
     IMinerMan getMinerMan();
 
-    void restartNetwork();
-
     IStateManager getStateManager();
 
     void resetLite();

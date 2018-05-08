@@ -1,5 +1,5 @@
-import com.lifeform.main.IKi;
 import com.lifeform.main.GUI.NewGUI;
+import com.lifeform.main.IKi;
 import com.lifeform.main.Settings;
 import com.lifeform.main.StringSettings;
 import com.lifeform.main.adx.ExchangeManager;
@@ -106,11 +106,6 @@ public class DummyBCEKi implements IKi {
     @Override
     public IMinerMan getMinerMan() {
         return null;
-    }
-
-    @Override
-    public void restartNetwork() {
-
     }
 
     @Override

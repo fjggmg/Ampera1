@@ -1,7 +1,10 @@
 package com.lifeform.main.blockchain;
 
 import com.lifeform.main.IKi;
-import com.lifeform.main.network.*;
+import com.lifeform.main.network.BlockEnd;
+import com.lifeform.main.network.BlockHeader;
+import com.lifeform.main.network.LastAgreedStart;
+import com.lifeform.main.network.TransactionPacket;
 import com.lifeform.main.transactions.ITrans;
 
 import java.math.BigInteger;
@@ -212,8 +215,8 @@ public class StateManager extends Thread implements IStateManager {
 
                                     if (!doneMitigating) {
 
-                                        for (BigInteger h : transMap.keySet()) {
-                                            for (ITrans t : transMap.get(h)) {
+                                        for (Map.Entry<BigInteger, Set<ITrans>> h : transMap.entrySet()) {
+                                            for (ITrans t : h.getValue()) {
                                                 ki.getTransMan().undoTransaction(t);
                                             }
                                         }
