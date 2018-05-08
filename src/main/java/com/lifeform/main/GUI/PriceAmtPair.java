@@ -1,4 +1,4 @@
-package com.lifeform.main;
+package com.lifeform.main.GUI;
 
 import java.math.BigInteger;
 

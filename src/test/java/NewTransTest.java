@@ -25,7 +25,7 @@ public class NewTransTest {
             e.printStackTrace();
             return;
         }
-        Output o = new Output(BigInteger.valueOf(10000000L), add, Token.ORIGIN, 0, System.currentTimeMillis(), (byte) 2);
+        Output o = new Output(BigInteger.valueOf(10000000L), add, Token.ORIGIN, 0, System.currentTimeMillis(), Output.VERSION);
         Input i = new Input(o.getID(), 0, BigInteger.valueOf(10000000L), add, Token.ORIGIN, System.currentTimeMillis());
         List<Output> outputs = new ArrayList<>();
         outputs.add(o);

@@ -1,5 +1,8 @@
 package com.lifeform.main;
 
+/**
+ * This enum is for settings that are true/false and handled by the god object
+ */
 public enum Settings {
     HIGH_SECURITY("highSecurity"),
     DEBUG_MODE("debugMode"),

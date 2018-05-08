@@ -6,10 +6,11 @@ import com.lifeform.main.transactions.KeyType;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.UnsupportedEncodingException;
+import java.util.Arrays;
 
 public class KeyKeyTypePair implements IAmpByteSerializable {
     public KeyKeyTypePair(@NotNull byte[] key, @NotNull KeyType keyType) {
-        this.key = key;
+        this.key = Arrays.copyOf(key, key.length);
         this.keyType = keyType;
     }
 
@@ -42,7 +43,7 @@ public class KeyKeyTypePair implements IAmpByteSerializable {
     }
 
     public byte[] getKey() {
-        return key;
+        return Arrays.copyOf(key, key.length);
     }
 
     public KeyType getKeyType() {

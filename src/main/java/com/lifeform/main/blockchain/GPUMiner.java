@@ -96,6 +96,7 @@ public class GPUMiner extends Thread implements IMiner {
     private long lastPrint = System.currentTimeMillis();
     private DecimalFormat format = new DecimalFormat("###,###,###,###");
     private int threadCount;
+    //TODO investigate another way to do this without a public static variable
     public static double miningIntensity = 100;
     @Override
     public void run() {
@@ -130,7 +131,6 @@ public class GPUMiner extends Thread implements IMiner {
 
                 message = b.gpuHeader();
 
-                //Six preceding zeroes on the difficulty is hard enough that the miner is likely to be able to time its hashrate.
                 threadCount = TimedAutotune.getAutotuneSettingsMap().get(jcacq.getDInfo().getDeviceName()).threadFactor;
 
                 if (miningIntensity == 0) miningIntensity = 1;

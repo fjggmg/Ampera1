@@ -38,9 +38,9 @@ public class NewTrans implements ITrans {
             if (o.getIndex() != i) throw new InvalidTransactionException("Bad Output index");
             i++;
         }
-        for (String key : keySigMap.keySet()) {
-            if (keySigMap.get(key).inputs == null) throw new InvalidTransactionException("Null inputs in KSEP");
-            if (keySigMap.get(key).inputs.isEmpty()) throw new InvalidTransactionException("Empty inputs in KSEP");
+        for (Map.Entry<String, KeySigEntropyPair> key : keySigMap.entrySet()) {
+            if (key.getValue().inputs == null) throw new InvalidTransactionException("Null inputs in KSEP");
+            if (key.getValue().inputs.isEmpty()) throw new InvalidTransactionException("Empty inputs in KSEP");
         }
         this.outputs = outputs;
         this.inputs = inputs;
@@ -76,9 +76,9 @@ public class NewTrans implements ITrans {
 
     @Override
     public boolean verifySigs() {
-        for (String key : keySigMap.keySet()) {
-            if (!keySigMap.get(key).p2sh) {
-                if (!EncryptionManager.verifySig(toSignBytes(), Utils.fromBase64(keySigMap.get(key).sig), key, keySigMap.get(key).keyType))
+        for (Map.Entry<String, KeySigEntropyPair> key : keySigMap.entrySet()) {
+            if (!key.getValue().p2sh) {
+                if (!EncryptionManager.verifySig(toSignBytes(), Utils.fromBase64(key.getValue().sig), key.getKey(), key.getValue().keyType))
                     return false;
             }
 
@@ -107,24 +107,24 @@ public class NewTrans implements ITrans {
             inputIDs.add(i.getID());
             inputMap.put(i.getID(), i);
         }
-        for (String key : keySigMap.keySet()) {
-            if (inputMap.get(keySigMap.get(key).inputs.get(0)) == null) {
+        for (Map.Entry<String, KeySigEntropyPair> key : keySigMap.entrySet()) {
+            if (inputMap.get(key.getValue().inputs.get(0)) == null) {
                 System.out.println("input 0 null");
                 return false;
             }
-            String address = inputMap.get(keySigMap.get(key).inputs.get(0)).getAddress().encodeForChain();
-            KeySigEntropyPair ksep = keySigMap.get(key);
-            if (!inputMap.get(ksep.inputs.get(0)).canSpend(key, ksep.entropy, ksep.prefix, ksep.p2sh, ksep.keyType)) {
+            String address = inputMap.get(key.getValue().inputs.get(0)).getAddress().encodeForChain();
+            KeySigEntropyPair ksep = key.getValue();
+            if (!inputMap.get(ksep.inputs.get(0)).canSpend(key.getKey(), ksep.entropy, ksep.prefix, ksep.p2sh, ksep.keyType)) {
                 System.out.println("address mismatch, Address expecting: ");
                 System.out.println(inputMap.get(ksep.inputs.get(0)).getAddress().encodeForChain());
                 System.out.println("Received: ");
                 System.out.println("Entropy: " + ksep.entropy);
                 System.out.println("Key: " + key);
                 try {
-                    System.out.println(NewAdd.createNew(key, ksep.entropy, AddressLength.byIndicator(inputMap.get(ksep.inputs.get(0)).getAddress().toByteArray()[1]), ksep.p2sh, inputMap.get(ksep.inputs.get(0)).getAddress().getKeyType()).encodeForChain());
+                    System.out.println(NewAdd.createNew(key.getKey(), ksep.entropy, AddressLength.byIndicator(inputMap.get(ksep.inputs.get(0)).getAddress().toByteArray()[1]), ksep.p2sh, inputMap.get(ksep.inputs.get(0)).getAddress().getKeyType()).encodeForChain());
                 } catch (InvalidAddressException e) {
                     try {
-                        System.out.println(Address.createNew(key, ksep.entropy).encodeForChain());
+                        System.out.println(Address.createNew(key.getKey(), ksep.entropy).encodeForChain());
                     } catch (Exception e1) {
                         System.out.println("This is not necessarily an error, this is probably why the transaction failed.");
                         e.printStackTrace();
@@ -133,7 +133,7 @@ public class NewTrans implements ITrans {
                 }
                 return false;
             }
-            for (String input : keySigMap.get(key).inputs) {
+            for (String input : key.getValue().inputs) {
                 if (!inputMap.get(input).getAddress().encodeForChain().equals(address)) {
                     System.out.println("address mismatch");
                     return false;
@@ -244,7 +244,7 @@ public class NewTrans implements ITrans {
             //not enough left to make fee
             return;
         }
-        Output o = new Output(allInput.subtract(allOutput).subtract(fee), cAdd, Token.ORIGIN, outputs.size(), System.currentTimeMillis(), (byte) 2);
+        Output o = new Output(allInput.subtract(allOutput).subtract(fee), cAdd, Token.ORIGIN, outputs.size(), System.currentTimeMillis(), Output.VERSION);
         outputs.add(o);
 
     }
@@ -268,7 +268,7 @@ public class NewTrans implements ITrans {
                     allOutput = allOutput.add(o.getAmount());
             }
 
-            Output o = new Output(allInput.subtract(allOutput), cAdd, t, outputs.size(), System.currentTimeMillis(), (byte) 2);
+            Output o = new Output(allInput.subtract(allOutput), cAdd, t, outputs.size(), System.currentTimeMillis(), Output.VERSION);
             outputs.add(o);
         }
     }

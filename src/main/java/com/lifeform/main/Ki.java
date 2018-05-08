@@ -1,7 +1,8 @@
 package com.lifeform.main;
 
 import amp.AmpLogging;
-import amp.exceptions.AmpException;
+import com.lifeform.main.GUI.FXGUI;
+import com.lifeform.main.GUI.NewGUI;
 import com.lifeform.main.adx.ExchangeManager;
 import com.lifeform.main.blockchain.*;
 import com.lifeform.main.data.*;
@@ -19,7 +20,6 @@ import gpuminer.JOCL.context.JOCLContextAndCommandQueue;
 import gpuminer.miner.context.ContextMaster;
 import mining_pool.Pool;
 import mining_pool.PoolLogging;
-import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import java.lang.management.ManagementFactory;
@@ -28,7 +28,6 @@ import java.math.BigInteger;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Properties;
 
 /**
  * Created by Bryan on 5/10/2017.
@@ -64,7 +63,7 @@ public class Ki extends Thread implements IKi {
     //TODO: need to start saving version number to file for future conversion of files
     public static final String VERSION = "0.18.4-BETA";
     private boolean relay = false;
-    private NewGUI guiHook;
+    private com.lifeform.main.GUI.NewGUI guiHook;
     public static boolean debug = true;
     private static IKi instance;
     private InputHandler ih;
@@ -194,7 +193,7 @@ public class Ki extends Thread implements IKi {
         } else {
             chainMan = new ChainManager(this, (o.testNet) ? ChainManager.TEST_NET : ChainManager.POW_CHAIN, "blocks/", "chain.state", "transaction.meta", "extra.chains", "chain.meta", o.bDebug);
         }
-        Handshake.CHAIN_VER = (o.testNet) ? ChainManager.TEST_NET : ChainManager.POW_CHAIN;
+        //Handshake.CHAIN_VER = (o.testNet) ? ChainManager.TEST_NET : ChainManager.POW_CHAIN;
         chainMan.loadChain();
         getMainLog().info("Chain loaded. Current height: " + chainMan.currentHeight());
 
@@ -308,7 +307,7 @@ public class Ki extends Thread implements IKi {
                 e.printStackTrace();
             }
             if (!setupDone && !o.relay) {
-                if (getOptions().lite && !NetMan.DIFF_SET && !getOptions().pool)
+                if (getOptions().lite && !getNetMan().isDiffSet() && !getOptions().pool)
                     continue;
                 minerMan.setup();
                 setupDone = true;
@@ -323,7 +322,7 @@ public class Ki extends Thread implements IKi {
         }
     }
     @Override
-    public void setGUIHook(NewGUI guiHook) {
+    public void setGUIHook(com.lifeform.main.GUI.NewGUI guiHook) {
         this.guiHook = guiHook;
     }
 

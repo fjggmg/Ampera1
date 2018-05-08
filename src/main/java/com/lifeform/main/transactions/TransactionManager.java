@@ -464,7 +464,7 @@ public class TransactionManager implements ITransMan {
 
             List<Output> outputs = new ArrayList<>();
             for (int index = 0; index < multipleOuts; index++) {
-                Output output = new Output(amount.divide(BigInteger.valueOf(multipleOuts)), receiver, token, index, System.currentTimeMillis(), (byte) 2);
+                Output output = new Output(amount.divide(BigInteger.valueOf(multipleOuts)), receiver, token, index, System.currentTimeMillis(), Output.VERSION);
                 outputs.add(output);
             }
 
@@ -589,7 +589,7 @@ public class TransactionManager implements ITransMan {
 
             List<Output> outputs = new ArrayList<>();
             for (int index = 0; index < multipleOuts; index++) {
-                Output output = new Output(amount.divide(BigInteger.valueOf(multipleOuts)), receiver, token, index, System.currentTimeMillis(), (byte) 2);
+                Output output = new Output(amount.divide(BigInteger.valueOf(multipleOuts)), receiver, token, index, System.currentTimeMillis(), Output.VERSION);
                 outputs.add(output);
             }
 

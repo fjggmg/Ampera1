@@ -1,4 +1,4 @@
-package com.lifeform.main;
+package com.lifeform.main.GUI;
 
 import amp.Amplet;
 import amp.ByteTools;
@@ -9,6 +9,10 @@ import com.jfoenix.controls.*;
 import com.jfoenix.controls.datamodels.treetable.RecursiveTreeObject;
 import com.jfoenix.transitions.hamburger.HamburgerSlideCloseTransition;
 import com.jfoenix.validation.RequiredFieldValidator;
+import com.lifeform.main.IKi;
+import com.lifeform.main.Ki;
+import com.lifeform.main.Settings;
+import com.lifeform.main.StringSettings;
 import com.lifeform.main.adx.Order;
 import com.lifeform.main.adx.OrderStatus;
 import com.lifeform.main.adx.Pairs;
@@ -17,7 +21,6 @@ import com.lifeform.main.blockchain.ChainManager;
 import com.lifeform.main.blockchain.GPUMiner;
 import com.lifeform.main.data.*;
 import com.lifeform.main.network.IConnectionManager;
-import com.lifeform.main.network.TransactionDataRequest;
 import com.lifeform.main.network.TransactionPacket;
 import com.lifeform.main.transactions.*;
 import engine.binary.Binary;
@@ -76,9 +79,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import static javafx.animation.Interpolator.EASE_BOTH;
 
 /**
- * Fuck this file. Fuck JavaFX. Fuck Oracle. I fucking hate dealing with this horse shit and it's
- * very clear that my coding style does not coincide well with javafx, hence all the fucking retardation
- * that follows. This file makes fuck-all sense. You have been warned.
+ * This file is horribly written. JavaFX is a complex and not an easy API to work with. I've discovered better ways to
+ * write this but I'm not going to update this for quite a while.
  */
 public class NewGUI {
     //region javafx horsesh

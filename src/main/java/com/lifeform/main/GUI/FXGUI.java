@@ -1,16 +1,13 @@
-package com.lifeform.main;
+package com.lifeform.main.GUI;
 
 import com.jfoenix.controls.JFXDecorator;
-import com.lifeform.main.network.Packet;
+import com.lifeform.main.Ki;
 import javafx.application.Application;
-import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.stage.Stage;
-import javafx.stage.StageStyle;
-import javafx.stage.WindowEvent;
 
 
 /**

@@ -119,11 +119,11 @@ public class ExchangeManager {
                 feeOverage = feeOverage.subtract(BigInteger.valueOf(1_000_00));
                 inputs.addAll(feeIn);
                 ourInputs.addAll(feeIn);
-                Output btcPaying = new Output(amountBuying.multiply(o.unitPrice()).divide(BigInteger.valueOf(100_000_000)), o.address(), o.pair().onOffer(), 0, System.currentTimeMillis(), (byte) 2);
-                Output originToUs = new Output(amountBuying, ki.getAddMan().getMainAdd(), o.pair().accepting(), 1, System.currentTimeMillis(), (byte) 2);
-                Output btcChange = new Output(buyingAmountOverage, ki.getAddMan().getMainAdd(), o.pair().onOffer(), 2, System.currentTimeMillis(), (byte) 2);
-                Output originChange = new Output(receivingAmountOverage, o.contractAdd(), o.pair().accepting(), 3, System.currentTimeMillis(), (byte) 2);
-                Output feeBack = new Output(feeOverage, ki.getAddMan().getMainAdd(), Token.ORIGIN, 4, System.currentTimeMillis(), (byte) 2);
+                Output btcPaying = new Output(amountBuying.multiply(o.unitPrice()).divide(BigInteger.valueOf(100_000_000)), o.address(), o.pair().onOffer(), 0, System.currentTimeMillis(), Output.VERSION);
+                Output originToUs = new Output(amountBuying, ki.getAddMan().getMainAdd(), o.pair().accepting(), 1, System.currentTimeMillis(), Output.VERSION);
+                Output btcChange = new Output(buyingAmountOverage, ki.getAddMan().getMainAdd(), o.pair().onOffer(), 2, System.currentTimeMillis(), Output.VERSION);
+                Output originChange = new Output(receivingAmountOverage, o.contractAdd(), o.pair().accepting(), 3, System.currentTimeMillis(), Output.VERSION);
+                Output feeBack = new Output(feeOverage, ki.getAddMan().getMainAdd(), Token.ORIGIN, 4, System.currentTimeMillis(), Output.VERSION);
                 Map<String, KeySigEntropyPair> keySigMap = new HashMap<>();
                 List<String> associatedUs = new ArrayList<>();
                 for (Input i : ourInputs) {
@@ -314,11 +314,11 @@ public class ExchangeManager {
                 for (Input i : inputs) {
                     System.out.println(i.getToken().getName() + " " + i.getAmount());
                 }
-                Output originOut = new Output(amountSelling, o.address(), o.pair().accepting(), 0, System.currentTimeMillis(), (byte) 2);
-                Output btcOut = new Output(amountSelling.multiply(o.unitPrice()).divide(BigInteger.valueOf(100_000_000)), ki.getAddMan().getMainAdd(), o.pair().onOffer(), 1, System.currentTimeMillis(), (byte) 2);
-                Output originBack = new Output(buyingAmountOverage, ki.getAddMan().getMainAdd(), o.pair().accepting(), 2, System.currentTimeMillis(), (byte) 2);
-                Output btcBack = new Output(receivingAmountOverage, o.contractAdd(), o.pair().onOffer(), 3, System.currentTimeMillis(), (byte) 2);
-                Output feeBack = new Output(feeOverage, ki.getAddMan().getMainAdd(), Token.ORIGIN, 4, System.currentTimeMillis(), (byte) 2);
+                Output originOut = new Output(amountSelling, o.address(), o.pair().accepting(), 0, System.currentTimeMillis(), Output.VERSION);
+                Output btcOut = new Output(amountSelling.multiply(o.unitPrice()).divide(BigInteger.valueOf(100_000_000)), ki.getAddMan().getMainAdd(), o.pair().onOffer(), 1, System.currentTimeMillis(), Output.VERSION);
+                Output originBack = new Output(buyingAmountOverage, ki.getAddMan().getMainAdd(), o.pair().accepting(), 2, System.currentTimeMillis(), Output.VERSION);
+                Output btcBack = new Output(receivingAmountOverage, o.contractAdd(), o.pair().onOffer(), 3, System.currentTimeMillis(), Output.VERSION);
+                Output feeBack = new Output(feeOverage, ki.getAddMan().getMainAdd(), Token.ORIGIN, 4, System.currentTimeMillis(), Output.VERSION);
                 Map<String, KeySigEntropyPair> keySigMap = new HashMap<>();
                 List<String> associatedUs = new ArrayList<>();
                 System.out.println("Matched, building transaction8");
@@ -516,7 +516,7 @@ public class ExchangeManager {
                         amountRecovered = amountRecovered.add(out.getAmount());
                         cIns.add(Input.fromOutput(out));
                     }
-                    Output out = new Output(amountRecovered, o.address(), t, 0, System.currentTimeMillis(), (byte) 2);
+                    Output out = new Output(amountRecovered, o.address(), t, 0, System.currentTimeMillis(), Output.VERSION);
                     List<Input> inputs = ki.getTransMan().getInputsForAmountAndToken(o.address(), BigInteger.valueOf(1_000), Token.ORIGIN, true);
                     if (inputs == null) {
                         ki.getMainLog().warn("Unable to recover funds from cancelled trade, not enough origin to pay the transaction fee");
@@ -527,7 +527,7 @@ public class ExchangeManager {
                         feeOverage = feeOverage.add(i.getAmount());
                     }
                     feeOverage = feeOverage.subtract(BigInteger.valueOf(1_000));
-                    Output feeReturn = new Output(feeOverage, o.address(), Token.ORIGIN, 1, System.currentTimeMillis(), (byte) 2);
+                    Output feeReturn = new Output(feeOverage, o.address(), Token.ORIGIN, 1, System.currentTimeMillis(), Output.VERSION);
                     List<String> associatedFee = new ArrayList<>();
                     for (Input i : inputs) {
                         associatedFee.add(i.getID());

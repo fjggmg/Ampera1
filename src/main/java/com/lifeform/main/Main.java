@@ -26,6 +26,7 @@ import static java.lang.Thread.sleep;
  * IS STILL COVERED UNDER GPL V3 EXCLUDING ANY GUI RELATED FILES
  * SEE LICENSE.txt FOR DETAILS.
  *
+ * @author Bryan
  */
 public class Main {
 
@@ -36,8 +37,14 @@ public class Main {
         main.start();
     }
 
-    public static Options decode(String[] args)
-    {
+    /**
+     * Sets up Options for launching the god object
+     *
+     * @param args args passed into the program
+     * @return Options object properly configured
+     * @see Options
+     */
+    public static Options decode(String[] args) {
         Options o = new Options();
 
         for (String s : args) {

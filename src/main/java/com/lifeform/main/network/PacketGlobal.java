@@ -19,20 +19,20 @@ public class PacketGlobal {
         this.ki = ki;
     }
 
-    List<Block> addedBlocks = new ArrayList<>();
+    //List<Block> addedBlocks = new ArrayList<>();
     public boolean doneDownloading = false;
     BigInteger startHeight;
     boolean laFlag = false;
     boolean onRightChain = true;
     Map<BlockHeader, List<ITrans>> bMap = new HashMap<>();
     Map<BlockHeader, Set<ITrans>> cuMap = new HashMap<>();
-    List<Block> cuBlocks = new ArrayList<>();
+    //List<Block> cuBlocks = new ArrayList<>();
     List<Block> futureBlocks = new ArrayList<>();
     Map<String, BlockHeader> headerMap = new HashMap<>();
     IConnectionManager connMan;
     IKi ki;
-    boolean gotPending = false;
-    boolean cuFlag = false;
+    //boolean gotPending = false;
+    //boolean cuFlag = false;
     List<String> relays;
     private boolean sfhLock = false;
     void sendFromHeight(BigInteger height) {
@@ -50,8 +50,8 @@ public class PacketGlobal {
     }
 
     void cancelAllResends() {
-        for (BigInteger height : resendMap.keySet()) {
-            resendMap.get(height).interrupt();
+        for (Map.Entry<BigInteger, Thread> height : resendMap.entrySet()) {
+            height.getValue().interrupt();
         }
         resendMap.clear();
     }
@@ -115,8 +115,9 @@ public class PacketGlobal {
         Block b = ki.getChainMan().getByHeight(height);
         sendBlock(b);
     }
-    private BigInteger lastCancelled = BigInteger.ZERO;
-    private Map<BigInteger,Integer> resendTimesMap = new HashMap<>();
+
+    //private BigInteger lastCancelled = BigInteger.ZERO;
+    //private Map<BigInteger,Integer> resendTimesMap = new HashMap<>();
     private Map<BigInteger,Thread> resendMap = new HashMap<>();
     public void cancelResend(BigInteger height)
     {
@@ -197,7 +198,7 @@ public class PacketGlobal {
         return bh;
     }
 
-    void processBlocks() {
+    private void processBlocks() {
         List<Block> toRemove = new ArrayList<>();
         for (Block b : futureBlocks) {
             if (b.height.compareTo(ki.getChainMan().currentHeight().add(BigInteger.ONE)) == 0) {

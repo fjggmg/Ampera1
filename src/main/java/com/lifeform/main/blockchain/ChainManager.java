@@ -637,9 +637,9 @@ public class ChainManager implements IChainMan {
         JSONObject obj = new JSONObject();
 
         obj.put("segment",currentHeight.divide(BigInteger.valueOf(1000L)).toString());
-        for(String ID:blockchainMap.keySet())
+        for (Map.Entry<String, Block> ID : blockchainMap.entrySet())
         {
-            obj.put(ID,blockchainMap.get(ID).toJSON());
+            obj.put(ID.getKey(), ID.getValue().toJSON());
         }
 
         return obj.toJSONString();
@@ -724,11 +724,11 @@ public class ChainManager implements IChainMan {
             b.prevID = "0";
 
         BigInteger fees = BigInteger.ZERO;
-        for(String t:transactions.keySet())
+        for (Map.Entry<String, ITrans> t : transactions.entrySet())
         {
-            fees = fees.add(transactions.get(t).getFee());
+            fees = fees.add(t.getValue().getFee());
         }
-        Output o = new Output(blockRewardForHeight(currentHeight().add(BigInteger.ONE)).add(fees), ki.getAddMan().getMainAdd(), Token.ORIGIN, 0, System.currentTimeMillis(), (byte) 2);
+        Output o = new Output(blockRewardForHeight(currentHeight().add(BigInteger.ONE)).add(fees), ki.getAddMan().getMainAdd(), Token.ORIGIN, 0, System.currentTimeMillis(), Output.VERSION);
         List<Output> outputs = new ArrayList<>();
         outputs.add(o);
         int i = 1;
@@ -737,7 +737,7 @@ public class ChainManager implements IChainMan {
             for(Token t:Token.values())
             {
                 if(!t.equals(Token.ORIGIN)) {
-                    outputs.add(new Output(BigInteger.valueOf(Long.MAX_VALUE), ki.getAddMan().getMainAdd(), t, i, System.currentTimeMillis(), (byte) 2));
+                    outputs.add(new Output(BigInteger.valueOf(Long.MAX_VALUE), ki.getAddMan().getMainAdd(), t, i, System.currentTimeMillis(), Output.VERSION));
                     i++;
                 }
             }

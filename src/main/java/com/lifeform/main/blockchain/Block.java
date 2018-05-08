@@ -201,10 +201,10 @@ public class Block implements IAmpAmpletSerializable {
             e.printStackTrace();
         }
         Map<String,String> transactions = JSONManager.parseJSONtoMap(map.get("transactions"));
-        for(String trans:transactions.keySet())
+        for (Map.Entry<String, String> trans : transactions.entrySet())
         {
             try {
-                b.transactions.put(trans, Transaction.fromJSON(transactions.get(trans)));
+                b.transactions.put(trans.getKey(), Transaction.fromJSON(trans.getValue()));
             } catch (InvalidTransactionException e) {
                 e.printStackTrace();
             }
@@ -233,8 +233,8 @@ public class Block implements IAmpAmpletSerializable {
         AC_SingleElement coinbase = AC_SingleElement.create(AmpIDs.COINBASE_GID, this.coinbase);
         AC_ClassInstanceIDIsIndex transactions = AC_ClassInstanceIDIsIndex.create(AmpIDs.TRANSACTIONS_CID, "Transactions");
 
-        for (String tid : this.transactions.keySet()) {
-            transactions.addElement(this.transactions.get(tid));
+        for (Map.Entry<String, ITrans> tid : this.transactions.entrySet()) {
+            transactions.addElement(tid.getValue());
         }
         AmpClassCollection acc = new AmpClassCollection();
         acc.addClass(ID);

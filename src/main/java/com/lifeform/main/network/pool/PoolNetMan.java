@@ -243,4 +243,14 @@ public class PoolNetMan extends Thread implements INetworkManager {
     public GlobalPacketQueuer getGPQ() {
         return gpq;
     }
+
+    @Override
+    public void diffSet() {
+
+    }
+
+    @Override
+    public boolean isDiffSet() {
+        return false;
+    }
 }

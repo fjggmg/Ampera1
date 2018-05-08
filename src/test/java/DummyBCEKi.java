@@ -1,5 +1,5 @@
 import com.lifeform.main.IKi;
-import com.lifeform.main.NewGUI;
+import com.lifeform.main.GUI.NewGUI;
 import com.lifeform.main.Settings;
 import com.lifeform.main.StringSettings;
 import com.lifeform.main.adx.ExchangeManager;

@@ -1,10 +1,8 @@
-package com.lifeform.main;
+package com.lifeform.main.GUI;
 
 import com.jfoenix.controls.datamodels.treetable.RecursiveTreeObject;
 import javafx.beans.property.*;
 import javafx.collections.ObservableList;
-
-import java.util.List;
 
 
 public class StoredTrans extends RecursiveTreeObject<StoredTrans> {

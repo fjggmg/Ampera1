@@ -88,7 +88,7 @@ public class PacketProcessor implements IPacketProcessor{
     }*/
 
     private volatile List<Object> packets = new ArrayList<>();
-    private boolean run = true;
+    //private boolean run = true;
     private IConnectionManager connMan;
     private PacketGlobal pg;
     @Override

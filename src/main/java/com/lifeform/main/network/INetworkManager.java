@@ -35,5 +35,16 @@ public interface INetworkManager {
 
     GlobalPacketQueuer getGPQ();
 
+    /**
+     * run when we receive difficulty from the relay on a lite node. Added to protect from using a static variable
+     */
+    void diffSet();
+
+    /**
+     * @return true if difficulty has been set on lite node
+     * @see INetworkManager#diffSet()
+     */
+    boolean isDiffSet();
+
 
 }

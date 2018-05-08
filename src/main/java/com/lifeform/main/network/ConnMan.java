@@ -89,7 +89,7 @@ public class ConnMan extends IConnectionManager {
         else
             hs.mostRecentBlock = "";
         hs.version = Handshake.VERSION;
-        hs.chainVer = Handshake.CHAIN_VER;
+        hs.chainVer = ki.getChainMan().getChainVer();
         sendPacket(hs);
 
         new Thread() {

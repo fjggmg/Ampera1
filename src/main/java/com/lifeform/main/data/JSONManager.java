@@ -31,9 +31,9 @@ public class JSONManager {
 
     public static JSONObject parseMapToJSON(Map<String, String> map) {
         JSONObject obj = new JSONObject();
-        for(String key:map.keySet())
+        for (Map.Entry<String, String> key : map.entrySet())
         {
-            obj.put(key,map.get(key));
+            obj.put(key.getKey(), key.getValue());
         }
         return obj;
     }

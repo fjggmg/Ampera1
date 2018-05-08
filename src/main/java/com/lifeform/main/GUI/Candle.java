@@ -1,4 +1,4 @@
-package com.lifeform.main;
+package com.lifeform.main.GUI;
 
 import com.lifeform.main.adx.ExchangeData;
 import javafx.geometry.Insets;

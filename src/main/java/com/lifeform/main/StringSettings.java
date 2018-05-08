@@ -1,5 +1,8 @@
 package com.lifeform.main;
 
+/**
+ * this enum is for settings that are data (parsed to string) and handled by the god object
+ */
 public enum StringSettings {
     POOL_FEE("poolFee"),
     POOL_STATIC_PPS("poolStaticPPS"),

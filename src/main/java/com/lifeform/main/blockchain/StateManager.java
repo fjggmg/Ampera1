@@ -46,10 +46,10 @@ public class StateManager extends Thread implements IStateManager {
         setName("StateManager");
         ML:
         while (true) {
-            for (String key : deleteMap.keySet()) {
-                if (deleteMap.get(key)) {
-                    connBlocks.remove(key);
-                    deleted.add(key);
+            for (Map.Entry<String, Boolean> key : deleteMap.entrySet()) {
+                if (key.getValue()) {
+                    connBlocks.remove(key.getKey());
+                    deleted.add(key.getKey());
                 }
             }
             for (String d : deleted) {
@@ -60,22 +60,22 @@ public class StateManager extends Thread implements IStateManager {
             if (addHeight.compareTo(ki.getChainMan().currentHeight()) > 0) {
 
                 //ki.debug("State changed, adjusting block chain.");
-                for (String connID : connBlocks.keySet()) {
+                for (Map.Entry<String, ConcurrentMap<BigInteger, Block>> connID : connBlocks.entrySet()) {
                     //TODO works with linear progression, will cause small leak with mitigation
-                    connBlocks.get(connID).remove(ki.getChainMan().currentHeight().subtract(BigInteger.valueOf(100L)));
-                    if (ki.getNetMan().getConnection(connID) == null) {
+                    connID.getValue().remove(ki.getChainMan().currentHeight().subtract(BigInteger.valueOf(100L)));
+                    if (ki.getNetMan().getConnection(connID.getKey()) == null) {
                         ki.debug("Connection: " + connID + " has gone null, removing from list");
-                        deleteMap.put(connID, true);
+                        deleteMap.put(connID.getKey(), true);
                         continue;
                     }
-                    if (!ki.getNetMan().getConnection(connID).isConnected()) {
+                    if (!ki.getNetMan().getConnection(connID.getKey()).isConnected()) {
                         ki.debug("Connection: " + connID + " has disconnected, removing from list");
-                        deleteMap.put(connID, true);
+                        deleteMap.put(connID.getKey(), true);
                         continue;
                     }
 
-                    if (connBlocks.get(connID).get(ki.getChainMan().currentHeight().add(BigInteger.ONE)) != null) {
-                        Block b = connBlocks.get(connID).get(ki.getChainMan().currentHeight().add(BigInteger.ONE));
+                    if (connBlocks.get(connID.getKey()).get(ki.getChainMan().currentHeight().add(BigInteger.ONE)) != null) {
+                        Block b = connBlocks.get(connID.getKey()).get(ki.getChainMan().currentHeight().add(BigInteger.ONE));
                         BlockState bs = ki.getChainMan().addBlock(b);
                         if (!bs.success()) {
                             if (bs.retry()) {
@@ -85,7 +85,7 @@ public class StateManager extends Thread implements IStateManager {
                                             ki.debug("Block verified, broadcasting.");
                                             sendBlock(b);
                                         }
-                                        sentLA.put(connID, false);
+                                        sentLA.put(connID.getKey(), false);
                                         continue ML;
                                     }
                                 }
@@ -96,23 +96,23 @@ public class StateManager extends Thread implements IStateManager {
                                 ki.debug("Block verified, broadcasting.");
                                 sendBlock(b);
                             }
-                            sentLA.put(connID, false);
+                            sentLA.put(connID.getKey(), false);
                             continue ML;
                         }
 
                         if (bs != BlockState.PREVID_MISMATCH) {
                             addHeight = ki.getChainMan().currentHeight();
-                            deleteMap.put(connID, true);
+                            deleteMap.put(connID.getKey(), true);
                             continue ML;
                         }
                     }
 
-                    for (BigInteger height : connBlocks.get(connID).keySet()) {
+                    for (BigInteger height : connBlocks.get(connID.getKey()).keySet()) {
                         if (height.compareTo(ki.getChainMan().currentHeight()) > 0) {
                             if (height.compareTo(ki.getChainMan().currentHeight().add(BigInteger.ONE)) == 0) {
 
                                 BigInteger lowest = BigInteger.ZERO;
-                                for (BigInteger h : connBlocks.get(connID).keySet()) {
+                                for (BigInteger h : connBlocks.get(connID.getKey()).keySet()) {
                                     if (h.compareTo(lowest) < 0 || lowest.compareTo(BigInteger.ZERO) == 0) {
                                         lowest = h;
                                     }
@@ -123,10 +123,10 @@ public class StateManager extends Thread implements IStateManager {
                                     if (lowest.compareTo(ki.getChainMan().currentHeight()) >= 0) {
                                         break;
                                     }
-                                    if (connBlocks.get(connID).get(lowest) == null) {
+                                    if (connBlocks.get(connID.getKey()).get(lowest) == null) {
                                         break;
                                     }
-                                    if (connBlocks.get(connID).get(lowest).ID.equals(ki.getChainMan().getByHeight(lowest).ID)) {
+                                    if (connBlocks.get(connID.getKey()).get(lowest).ID.equals(ki.getChainMan().getByHeight(lowest).ID)) {
                                         lastAgreed = lowest;
                                         lowest = lowest.add(BigInteger.ONE);
                                     } else {
@@ -138,11 +138,11 @@ public class StateManager extends Thread implements IStateManager {
 
                                 if (!foundLastAgreed) {
                                     ki.debug("Failed to find last agreed block");
-                                    if ((sentLA.get(connID) != null && !sentLA.get(connID)) || sentLA.get(connID) == null) {
-                                        sentLA.put(connID, true);
+                                    if ((sentLA.get(connID.getKey()) != null && !sentLA.get(connID.getKey())) || sentLA.get(connID.getKey()) == null) {
+                                        sentLA.put(connID.getKey(), true);
                                         LastAgreedStart las = new LastAgreedStart();
                                         las.height = ki.getChainMan().currentHeight();
-                                        ki.getNetMan().getConnection(connID).sendPacket(las);
+                                        ki.getNetMan().getConnection(connID.getKey()).sendPacket(las);
                                     }
 
                                 } else {
@@ -150,17 +150,17 @@ public class StateManager extends Thread implements IStateManager {
                                     if(lastAgreed.compareTo(BigInteger.ZERO) == 0)
                                     {
                                         ki.debug("Last agreed is 0, discarding");
-                                        deleteMap.put(connID,true);
+                                        deleteMap.put(connID.getKey(), true);
                                         continue ML;
                                     }
-                                    for (BigInteger h : connBlocks.get(connID).keySet()) {
+                                    for (BigInteger h : connBlocks.get(connID.getKey()).keySet()) {
 
-                                        if (connBlocks.get(connID).get(h.subtract(BigInteger.ONE)) != null) {
-                                            ki.debug("PREVID: " + connBlocks.get(connID).get(h).prevID);
-                                            ki.debug("ID: " + connBlocks.get(connID).get(h.subtract(BigInteger.ONE)).ID);
-                                            if (!connBlocks.get(connID).get(h).prevID.equals(connBlocks.get(connID).get(h.subtract(BigInteger.ONE)).ID)) {
+                                        if (connBlocks.get(connID.getKey()).get(h.subtract(BigInteger.ONE)) != null) {
+                                            ki.debug("PREVID: " + connBlocks.get(connID.getKey()).get(h).prevID);
+                                            ki.debug("ID: " + connBlocks.get(connID.getKey()).get(h.subtract(BigInteger.ONE)).ID);
+                                            if (!connBlocks.get(connID.getKey()).get(h).prevID.equals(connBlocks.get(connID.getKey()).get(h.subtract(BigInteger.ONE)).ID)) {
 
-                                                deleteMap.put(connID, true);
+                                                deleteMap.put(connID.getKey(), true);
                                                 ki.debug("Chain is invalid, deleting blocks");
                                                 continue ML;
                                             }
@@ -184,8 +184,8 @@ public class StateManager extends Thread implements IStateManager {
                                     }
 
                                     ki.getChainMan().setHeight(laCarry);
-                                    for (BigInteger h : transMap.keySet()) {
-                                        for (ITrans trans : transMap.get(h)) {
+                                    for (Map.Entry<BigInteger, Set<ITrans>> h : transMap.entrySet()) {
+                                        for (ITrans trans : h.getValue()) {
                                             ki.getTransMan().undoTransaction(trans);
                                         }
                                     }
@@ -195,15 +195,15 @@ public class StateManager extends Thread implements IStateManager {
                                     transMap.clear();
                                     ki.debug("Undid chain and transactions back to last agreed block");
                                     while (!doneMitigating) {
-                                        if (connBlocks.get(connID).get(laCarry) == null) {
+                                        if (connBlocks.get(connID.getKey()).get(laCarry) == null) {
                                             doneMitigating = true;
 
-                                        } else if (!ki.getChainMan().addBlock(connBlocks.get(connID).get(laCarry)).success()) {
+                                        } else if (!ki.getChainMan().addBlock(connBlocks.get(connID.getKey()).get(laCarry)).success()) {
                                             break;
                                         } else {
                                             Set<ITrans> transactions = new HashSet<>();
-                                            for (String key : connBlocks.get(connID).get(laCarry).getTransactionKeys()) {
-                                                transactions.add(connBlocks.get(connID).get(laCarry).getTransaction(key));
+                                            for (String key : connBlocks.get(connID.getKey()).get(laCarry).getTransactionKeys()) {
+                                                transactions.add(connBlocks.get(connID.getKey()).get(laCarry).getTransaction(key));
                                             }
                                             transMap.put(laCarry, transactions);
                                         }
@@ -228,7 +228,7 @@ public class StateManager extends Thread implements IStateManager {
 
                                     } else {
                                         ki.debug("Collision mitigated");
-                                        sentLA.put(connID, false);
+                                        sentLA.put(connID.getKey(), false);
                                         sendFromHeight(laCarry2);
                                     }
                                     ki.getChainMan().stopCache();

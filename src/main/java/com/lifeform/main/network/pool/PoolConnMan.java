@@ -110,7 +110,7 @@ public class PoolConnMan extends IConnectionManager {
 
     @Override
     public long uptime() {
-        return 0;
+        return System.currentTimeMillis() - startTime;
     }
 
     long startTime = 0;

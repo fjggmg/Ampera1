@@ -1,5 +1,6 @@
-package com.lifeform.main;
+package com.lifeform.main.GUI;
 
+import com.lifeform.main.IKi;
 import com.lifeform.main.adx.ExchangeData;
 import javafx.scene.Node;
 import javafx.scene.chart.Axis;

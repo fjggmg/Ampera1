@@ -320,7 +320,7 @@ public class Transaction implements ITrans {
             //not enough left to make fee
             return;
         }
-        Output o = new Output(allInput.subtract(allOutput).subtract(fee), cAdd, Token.ORIGIN, outputs.size() + 1, System.currentTimeMillis(), (byte) 2);
+        Output o = new Output(allInput.subtract(allOutput).subtract(fee), cAdd, Token.ORIGIN, outputs.size() + 1, System.currentTimeMillis(), Output.VERSION);
         outputs.add(o);
 
     }
@@ -345,7 +345,7 @@ public class Transaction implements ITrans {
                     allOutput = allOutput.add(o.getAmount());
             }
 
-            Output o = new Output(allInput.subtract(allOutput), cAdd, t, outputs.size() + 1, System.currentTimeMillis(), (byte) 2);
+            Output o = new Output(allInput.subtract(allOutput), cAdd, t, outputs.size() + 1, System.currentTimeMillis(), Output.VERSION);
             outputs.add(o);
         }
     }

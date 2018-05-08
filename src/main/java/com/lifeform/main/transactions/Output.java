@@ -25,7 +25,7 @@ import java.math.BigInteger;
  * Created by Bryan on 8/8/2017.
  */
 public class Output implements TXIO, IAmpByteSerializable {
-    byte VERSION = 2;
+    public static final byte VERSION = 2;
 
     public Output(BigInteger amount, IAddress receiver, Token token, int index, long timestamp, byte version)
     {

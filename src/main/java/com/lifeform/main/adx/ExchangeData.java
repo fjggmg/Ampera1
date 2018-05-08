@@ -1,11 +1,9 @@
 package com.lifeform.main.adx;
 
-import com.lifeform.main.PriceAmtPair;
+import com.lifeform.main.GUI.PriceAmtPair;
 
 import java.math.BigInteger;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 public class ExchangeData {

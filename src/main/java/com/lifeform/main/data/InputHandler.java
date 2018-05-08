@@ -357,8 +357,8 @@ public class InputHandler extends Thread {
                     }
                     ki.debug("Number of active threads: " + t);
                     ki.debug("Names and amounts:");
-                    for (String name : threads.keySet()) {
-                        ki.debug(name + ":" + threads.get(name));
+                    for (Map.Entry<String, Integer> name : threads.entrySet()) {
+                        ki.debug(name.getKey() + ":" + name.getValue());
                     }
                     if (ManagementFactory.getThreadMXBean().isThreadCpuTimeSupported()) {
                         ki.debug("CPU Times");

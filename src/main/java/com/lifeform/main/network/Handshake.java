@@ -16,7 +16,6 @@ import java.util.ArrayList;
  */
 public class Handshake implements Serializable, Packet {
     public static final String VERSION = NetMan.NET_VER;
-    public static short CHAIN_VER;
     String ID;
     String version;
     BigInteger currentHeight;
@@ -30,7 +29,7 @@ public class Handshake implements Serializable, Packet {
 
 
         pg.startHeight = currentHeight;
-        if (chainVer != Handshake.CHAIN_VER) {
+        if (chainVer != ki.getChainMan().getChainVer()) {
 
             ki.debug("Mismatched chain versions, disconnecting");
             connMan.disconnect();

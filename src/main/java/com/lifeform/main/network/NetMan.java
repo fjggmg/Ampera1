@@ -26,7 +26,7 @@ public class NetMan extends Thread implements INetworkManager {
     //volatile List<Client> clients = new ArrayList<>();
     private volatile List<String> relays = new ArrayList<>();
     private XodusStringMap rList;
-    public static boolean DIFF_SET = false;
+    private boolean DIFF_SET = false;
     private GlobalPacketQueuer gpq = new GlobalPacketQueuer();
     public NetMan(IKi ki,boolean isRelay)
     {
@@ -135,6 +135,16 @@ public class NetMan extends Thread implements INetworkManager {
     @Override
     public GlobalPacketQueuer getGPQ() {
         return gpq;
+    }
+
+    @Override
+    public void diffSet() {
+        DIFF_SET = true;
+    }
+
+    @Override
+    public boolean isDiffSet() {
+        return DIFF_SET;
     }
 
     @Override

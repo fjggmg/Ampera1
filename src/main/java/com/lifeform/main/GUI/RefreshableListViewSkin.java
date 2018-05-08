@@ -1,4 +1,4 @@
-package com.lifeform.main;
+package com.lifeform.main.GUI;
 
 import com.lifeform.main.adx.Order;
 import com.sun.javafx.scene.control.skin.ListViewSkin;
