@@ -2,15 +2,12 @@ package com.lifeform.main.blockchain;
 
 import amp.database.XodusAmpMap;
 import com.lifeform.main.IKi;
-import com.lifeform.main.Ki;
 import com.lifeform.main.Settings;
 import com.lifeform.main.StringSettings;
 import com.lifeform.main.data.EncryptionManager;
-import com.lifeform.main.data.JSONManager;
 import com.lifeform.main.data.Utils;
 import com.lifeform.main.data.XodusStringMap;
 import com.lifeform.main.transactions.*;
-import org.json.simple.JSONObject;
 
 import java.io.File;
 import java.math.BigDecimal;
@@ -25,19 +22,17 @@ import java.util.Map;
  * Created by Bryan on 5/28/2017.
  *
  * Block time = 5m
+ * default diff is 5 0 prefix to 512 bit hash
  *
  */
 public class ChainManager implements IChainMan {
-    //TODO: WE NEED TO ACTUALLY USE THE CHAIN IDS AND ADD A TESTNET!
+
     private IKi ki;
     private boolean canMine = true;
     private Block current;
     private BigInteger currentDifficulty = new BigInteger("00000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF", 16);
     private volatile BigInteger currentHeight = BigInteger.valueOf(-1L);
-    //DB csDB;
-    //DB tmDB;
-    //DB exDB;
-    //DB cmDB;
+
     private XodusStringMap blockHeightMap;
     private XodusStringMap blockIDMap;
     private XodusAmpMap blockHeightAmp;
@@ -45,24 +40,14 @@ public class ChainManager implements IChainMan {
     //===============CHAIN IDS========================\\
     public static final short POW_CHAIN = 0x0001;
     public static final short TEST_NET= 0x1110;
-    private Map<BigInteger,Block> verifyLater = new HashMap<>();
-    /**
-     * stupid way to store the chain for easy access momentarily
-     */
-    Map<String, Block> blockchainMap = new HashMap<>();
-    Map<BigInteger,Block> heightMap = new HashMap<>();
-    XodusStringMap csMap;
-    //ConcurrentMap<String,String> tmMap;
-    //ConcurrentMap<String,String> exMap;
-    //ConcurrentMap<String,String> cmMap;
-    //private String fileName = "block.data";
+    private XodusStringMap csMap;
     private String folderName;
     private short chainID;
     private boolean bDebug;
 
-    public ChainManager(IKi ki, short chainID, String folderName, String csFile, String transFile, String extraFile, String cmFile, Block primer, boolean bDebug)
+    public ChainManager(IKi ki, short chainID, String folderName, String csFile, Block primer, boolean bDebug)
     {
-        this(ki, chainID, folderName, csFile, transFile, extraFile, cmFile, bDebug);
+        this(ki, chainID, folderName, csFile, bDebug);
         primeChain(primer);
 
     }
@@ -79,9 +64,6 @@ public class ChainManager implements IChainMan {
             ki.debug("Priming temp chain with block of height: " + block.height);
         current = block;
         currentHeight = block.height;
-        blockchainMap.put(block.ID, block);
-        heightMap.put(block.height, block);
-
         saveBlock(block);
         csMap.put("current", block.toJSON());
         csMap.put("height", block.height.toString());
@@ -101,12 +83,9 @@ public class ChainManager implements IChainMan {
      * @param chainID which chain we are on (testnet or mainnet)
      * @param folderName folder where blocks are kept
      * @param csFile file name where chainstate vars are kept
-     * @param transFile no longer used
-     * @param extraFile no longer used
-     * @param cmFile no longer used
      * @param bDebug true to debug here, false to not
      */
-    public ChainManager(IKi ki, short chainID, String folderName, String csFile, String transFile, String extraFile, String cmFile, boolean bDebug)
+    public ChainManager(IKi ki, short chainID, String folderName, String csFile, boolean bDebug)
     {
         this.ki = ki;
         this.folderName = chainID + folderName;
@@ -135,13 +114,11 @@ public class ChainManager implements IChainMan {
 
                         ki.debug("Size on map: " + blockHeightAmp.getBytes(b.height.toByteArray()).length);
                         ki.debug("Number of transactions: " + b.getTransactionKeys().size());
-                        //ki.debug("bytes: " + Arrays.toString(blockHeightAmp.getBytes(b.height.toByteArray())));
                         ki.debug("Value on map: " + Block.fromAmplet(blockHeightAmp.get(b.height.toByteArray())).ID);
                     } catch (Exception e) {
                         ki.getMainLog().error("Error reading data back", e);
                         ki.debug("Last block size: " + blockHeightAmp.getBytes(b.height.subtract(BigInteger.ONE).toByteArray()).length);
 
-                        //e.printStackTrace();
                     }
                 }
                 BigInteger fees = BigInteger.ZERO;
@@ -154,12 +131,9 @@ public class ChainManager implements IChainMan {
                     if (!ki.getTransMan().addTransaction(b.getTransaction(t))) {
                         ki.debug("Unable to add transaction from block during conversion. shutting down");
                         ki.close();
-                        //System.exit(1);
                     }
                 }
                 ki.getTransMan().postBlockProcessing(b);
-
-                //csMap.put("height",height.toString());
                 height = height.add(BigInteger.ONE);
             }
             blockHeightMap.clear();
@@ -178,43 +152,27 @@ public class ChainManager implements IChainMan {
     }
 
     public synchronized BlockState addBlock(Block block) {
-        Ki.canClose = false;
-        ki.debug("Block data: ");
-        ki.debug("Solver: " + block.solver);
-        BlockState state = verifyBlock(block);
-        if (!state.success()) {
-            Ki.canClose = true;
-            return state;
-        }
-
-        current = block;
-        currentHeight = block.height;
-        blockchainMap.put(block.ID,block);
-        heightMap.put(block.height,block);
-
-        saveBlock(block);
-        csMap.put("current",block.toJSON());
-        csMap.put("height",block.height.toString());
-        if (block.height.mod(BigInteger.valueOf(1000L)).equals(BigInteger.ZERO) && block.height.compareTo(BigInteger.ZERO) != 0) {
-            if (this.current != null) {
-                recalculateDifficulty();
+        synchronized (ki.getCloseLock()) {
+            ki.debug("Block data: ");
+            ki.debug("Solver: " + block.solver);
+            BlockState state = verifyBlock(block);
+            if (!state.success()) {
+                return state;
             }
+            current = block;
+            currentHeight = block.height;
+            saveBlock(block);
+            csMap.put("current", block.toJSON());
+            csMap.put("height", block.height.toString());
+            if (block.height.mod(BigInteger.valueOf(1000L)).equals(BigInteger.ZERO) && block.height.compareTo(BigInteger.ZERO) != 0) {
+                if (this.current != null) {
+                    recalculateDifficulty();
+                }
+            }
+
         }
-        /*
-        Block b = verifyLater.get(block.height.add(BigInteger.ONE));
-        if(b != null) {
-            addBlock(b);
-            verifyLater.remove(b.height);
-        }
-        */
-        Ki.canClose = true;
         if (ki.getMinerMan() != null && ki.getMinerMan().isMining()) {
             ki.debug("Restarting miners");
-            /* old miner stuff
-             CPUMiner.height = ki.getChainMan().currentHeight().add(BigInteger.ONE);
-             CPUMiner.prevID = ki.getChainMan().getByHeight(ki.getChainMan().currentHeight()).ID;
-             */
-
             ki.getMinerMan().restartMiners();
         }
         if (ki.getOptions().poolRelay) {
@@ -257,7 +215,6 @@ public class ChainManager implements IChainMan {
         {
             return;
         }
-        //ki.getMainLog().info("current height is: " + csMap.get("height"));
         currentHeight = new BigInteger(csMap.get("height"));
         if(getByHeight(currentHeight) == null)
         {
@@ -265,26 +222,12 @@ public class ChainManager implements IChainMan {
             csMap.clear();
 
         }
-        /* old miner
-        CPUMiner.height = currentHeight().add(BigInteger.ONE);
-        if(getByHeight(currentHeight()) != null)
-            CPUMiner.prevID = getByHeight(currentHeight()).ID;
-         */
         if(csMap.get("diff") == null)
         {
             return;
         }
         currentDifficulty = new BigInteger(csMap.get("diff"));
         ki.getTransMan().setCurrentHeight(currentHeight);
-
-
-
-    }
-
-
-    @Override
-    public void saveChain() {
-        //will probably delete soon
     }
 
     @Override
@@ -303,30 +246,7 @@ public class ChainManager implements IChainMan {
 
     @Override
     public void saveBlock(Block b) {
-
-
-        //blockHeightMap.put(b.height.toString(), b.toJSON());
-        //blockIDMap.put(b.ID, b.toJSON());
         blockHeightAmp.put(b.height.toByteArray(), b);
-        /*
-        StringFileHandler fh = new StringFileHandler(ki,folderName + b.height.divide(BigInteger.valueOf(16L)) + fileName);
-        if(fh.getLines() == null || fh.getLines().isEmpty())
-        {
-            for(int i = 0; i < 16;i++)
-            {
-                fh.addLine("");
-            }
-            fh.save();
-        }
-
-        fh.replaceLine(b.height.mod(BigInteger.valueOf(16L)).intValueExact(),b.toJSON());
-        */
-    }
-
-
-    @Override
-    public synchronized Map<String, Block> getChain() {
-        return blockchainMap;
     }
 
     //TODO: removing synchronized on this method as it appears to be locking up sometimes during mining, see what affect this has elsewhere
@@ -425,7 +345,6 @@ public class ChainManager implements IChainMan {
         if (!bvh.verifyTransactions()) return BlockState.BAD_TRANSACTIONS;
         List<String> inputs = new ArrayList<>();
         for(String t: block.getTransactionKeys()) {
-            //if(!ki.getTransMan().verifyTransaction(block.getTransaction(t))) return false;
             for(Input i:block.getTransaction(t).getInputs()) {
                 if (inputs.contains(i.getID())) return BlockState.DOUBLE_SPEND;
                 else inputs.add(i.getID());
@@ -473,12 +392,6 @@ public class ChainManager implements IChainMan {
         }
         return true;
     }
-    private synchronized int getCurrentSegment()
-    {
-        return currentHeight.divide(BigInteger.valueOf(1000L)).intValueExact();
-    }
-
-    private synchronized int getSegment(BigInteger height) {return height.subtract(BigInteger.ONE).divide(BigInteger.valueOf(1000L)).intValueExact(); }
 
     public BlockState verifyBlock(Block block) {
         if (bDebug)
@@ -495,16 +408,10 @@ public class ChainManager implements IChainMan {
         if (!ki.getTransMan().addCoinbase(block.getCoinbase(), block.height, fees))
             return BlockState.FAILED_ADD_COINBASE;
 
-        //IBlockVerificationHelper bvh = new BlockVerificationHelper(ki,block);
-        //if(!bvh.addTransactions()) return false;
-
         for(String key:block.getTransactionKeys())
         {
             if (!ki.getTransMan().addTransactionNoVerify(block.getTransaction(key))) return BlockState.FAILED_ADD_TRANS;
         }
-
-
-        //setHeight(block.height);
 
         if (!ki.getOptions().nogui) {
             if (block.getCoinbase().getOutputs().get(0).getAddress().encodeForChain().equals(ki.getAddMan().getMainAdd().encodeForChain())) {
@@ -569,18 +476,7 @@ public class ChainManager implements IChainMan {
             return null;
         }
 
-        /*
-       StringFileHandler fh = new StringFileHandler(ki,folderName + height.divide(BigInteger.valueOf(16L)) + fileName);
-
-       String line = fh.getLine(height.mod(BigInteger.valueOf(16L)).intValueExact());
-       if(line == null || line.isEmpty())
-       {
-           return null;
-       }
-
-       return Block.fromJSON(line);*/
     }
-
 
     private void recalculateDifficulty()
     {
@@ -630,38 +526,6 @@ public class ChainManager implements IChainMan {
         return BigInteger.valueOf(100L).multiply(BigInteger.valueOf(13934304L).subtract(height).multiply(BigInteger.valueOf(100000000L)).divide(BigInteger.valueOf(13934304L)));
     }
 
-
-
-    private String toJSON()
-    {
-        JSONObject obj = new JSONObject();
-
-        obj.put("segment",currentHeight.divide(BigInteger.valueOf(1000L)).toString());
-        for (Map.Entry<String, Block> ID : blockchainMap.entrySet())
-        {
-            obj.put(ID.getKey(), ID.getValue().toJSON());
-        }
-
-        return obj.toJSONString();
-
-    }
-
-    @Deprecated
-    private Map<BigInteger,Block> fromJSONheightOld(String json)
-    {
-        Map<String,String> map = JSONManager.parseJSONtoMap(json);
-        map.remove("segment");
-        Map<BigInteger,Block> bmap = new HashMap<>();
-        for (Map.Entry<String, String> ID : map.entrySet())
-        {
-            Block b = Block.fromJSON(ID.getValue());
-            bmap.put(b.height,b);
-
-        }
-
-        return bmap;
-    }
-
     @Override
     public synchronized BigInteger getCurrentDifficulty()
     {
@@ -692,13 +556,6 @@ public class ChainManager implements IChainMan {
     @Override
     public void setCanMine(boolean canMine) {
         this.canMine = canMine;
-    }
-
-    @Override
-    public void verifyLater(Block b) {
-
-        verifyLater.put(b.height,b);
-
     }
 
     @Override
@@ -772,44 +629,4 @@ public class ChainManager implements IChainMan {
         cache.clear();
         useCache = false;
     }
-
-
-    @Deprecated
-    private Map<String,Block> fromJSONOld(String json)
-    {
-        Map<String,String> map = JSONManager.parseJSONtoMap(json);
-        map.remove("segment");
-        Map<String,Block> bmap = new HashMap<>();
-        for (Map.Entry<String, String> ID : map.entrySet())
-        {
-            Block b = Block.fromJSON(ID.getValue());
-            bmap.put(ID.getKey(), b);
-
-        }
-
-        return bmap;
-    }
-
-
-    @Deprecated
-    private void fromJSON(String json)
-    {
-        Map<String,String> map = JSONManager.parseJSONtoMap(json);
-        map.remove("segment");
-        for (Map.Entry<String, String> ID : map.entrySet())
-        {
-            Block b = Block.fromJSON(ID.getValue());
-            blockchainMap.put(ID.getKey(), b);
-            heightMap.put(b.height,b);
-            if(currentHeight.compareTo(b.height) < 0)
-            {
-                currentHeight = b.height;
-                current = b;
-            }
-
-        }
-    }
-
-
-
 }

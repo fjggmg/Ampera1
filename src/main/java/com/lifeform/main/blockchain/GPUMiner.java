@@ -29,14 +29,10 @@ public class GPUMiner extends Thread implements IMiner {
 
     private IKi ki;
     private boolean mining = false;
-
     private SHA3Miner miner;
     private DeviceContext jcacq;
     private static List<SHA3Miner> gpuMiners = new ArrayList<>();
     private static List<DeviceContext> jcacqs_;
-    private static volatile boolean autotuneDone = false;
-    private static volatile boolean stopAutotune = false;
-    private static volatile boolean triedNoCPU = false;
     public static volatile ContextMaster platforms;// = new ContextMaster();
     public volatile static boolean initDone = false;
     public static final BigInteger shareDiff = new BigInteger("00000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF", 16);
@@ -89,7 +85,7 @@ public class GPUMiner extends Thread implements IMiner {
     private DecimalFormat format = new DecimalFormat("###,###,###,###");
     //private int threadCount;
     //TODO investigate another way to do this without a public static variable
-    public static double miningIntensity = 100;
+    private double miningIntensity = 100;
     @Override
     public void run() {
         boolean hasPrinted = false;
@@ -271,7 +267,13 @@ public class GPUMiner extends Thread implements IMiner {
         super.interrupt();
     }
 
-    public static void shutdown() {
+    @Override
+    public void shutdown() {
+        interrupt();
+        miner.shutdown();
+    }
+
+    public static void clear() {
         //You have to shut these down when you're done with them.
         for (SHA3Miner m : gpuMiners) {
             //This takes the place of stopAndClear() for putting the SHA3Miner and its SHA3MinerThread object in an unrecoverable state.
@@ -288,6 +290,12 @@ public class GPUMiner extends Thread implements IMiner {
     public long getHashrate() {
         return hashrate;
     }
+
+    @Override
+    public void setIntensity(double intensity) {
+        miningIntensity = intensity;
+    }
+
     private boolean disabled = false;
     private String devName;
     @Override

@@ -1,11 +1,9 @@
 package com.lifeform.main.network;
 
 
-
 import com.lifeform.main.network.logic.Client;
 
 import java.util.List;
-import java.util.Set;
 
 public interface INetworkManager {
 
@@ -45,6 +43,13 @@ public interface INetworkManager {
      * @see INetworkManager#diffSet()
      */
     boolean isDiffSet();
+
+    /**
+     * wrapper for thread
+     *
+     * @return true if interrupted
+     */
+    boolean isInterrupted();
 
 
 }

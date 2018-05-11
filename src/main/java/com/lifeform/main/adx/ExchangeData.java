@@ -50,7 +50,14 @@ public class ExchangeData {
         }
         close = new BigInteger(pair.price.toByteArray());
         data.add(pair);
-        //TODO VWAP
+        BigInteger sum = BigInteger.ZERO;
+        BigInteger total = BigInteger.ZERO;
+        for (PriceAmtPair p : data) {
+            sum = sum.add(p.price.multiply(p.amount));
+            total = total.add(p.amount);
+        }
+        avg = sum.divide(total);
+
     }
 
     public ExchangeData createNew() {

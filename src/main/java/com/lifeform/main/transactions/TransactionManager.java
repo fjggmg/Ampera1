@@ -5,22 +5,24 @@ import amp.database.XodusAmpMap;
 import com.lifeform.main.IKi;
 import com.lifeform.main.blockchain.Block;
 import com.lifeform.main.blockchain.ChainManager;
-import com.lifeform.main.data.*;
-import com.lifeform.main.network.Packet;
+import com.lifeform.main.data.KeyKeyTypePair;
+import com.lifeform.main.data.Utils;
 import engine.binary.Binary;
 import engine.data.WritableMemory;
 
 import java.io.File;
 import java.io.UnsupportedEncodingException;
-import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * Created by Bryan on 8/11/2017.
  */
-public class TransactionManager implements ITransMan {
+public class TransactionManager extends Thread implements ITransMan {
 
 
     private XodusAmpMap utxoAmp;
@@ -37,7 +39,49 @@ public class TransactionManager implements ITransMan {
         }
         utxoAmp = new XodusAmpMap("transactions" + ((ki.getOptions().testNet) ? ChainManager.TEST_NET : ChainManager.POW_CHAIN) + "/utxoAmp.dat");//utxoDB.hashMap("utxoDB", Serializer.STRING, Serializer.STRING).createOrOpen();
         utxoVerMap = new XodusAmpMap("transactions" + ((ki.getOptions().testNet) ? ChainManager.TEST_NET : ChainManager.POW_CHAIN) + "/utxoVer.dat");
-        new Thread() {
+
+
+        if (dump) {
+            /*
+            StringFileHandler fh = new StringFileHandler(ki,"utxoDump.txt");
+            fh.delete();
+            for(String key:utxoMap.keySet())
+            {
+
+                fh.addLine("Address: " + key);
+                List<String> dumpList = JSONManager.parseJSONToList(utxoMap.get(key));
+                for(String value:dumpList)
+                {
+                    fh.addLine(value);
+                }
+
+            }
+            fh.save();
+            fh = new StringFileHandler(ki,"utxoValueDump.txt");
+            fh.delete();
+            for(String key:utxoValueMap.keySet())
+            {
+                fh.addLine(key + " " + utxoValueMap.get(key));
+            }
+            fh.save();
+
+            fh = new StringFileHandler(ki,"utxoSpentDump.txt");
+            fh.delete();
+            for(String key:utxoSpent.keySet())
+            {
+                fh.addLine(key + " " + utxoSpent.get(key));
+            }
+            fh.save();
+            */
+            //old dump does not work
+        }
+    }
+
+    private Thread pbp;
+
+    @Override
+    public void run() {
+        Thread tc = new Thread() {
             public void run() {
                 List<ITrans> toRemove = new ArrayList<>();
                 setName("Transaction Cleanup");
@@ -59,12 +103,14 @@ public class TransactionManager implements ITransMan {
                     try {
                         sleep(3_600_0000);
                     } catch (InterruptedException e) {
-                        e.printStackTrace();
+                        return;
                     }
                 }
             }
-        }.start();
-        new Thread() {
+        };
+        tc.setDaemon(true);
+        tc.start();
+        pbp = new Thread() {
             public void run() {
 
                 setName("Post Block Processing");
@@ -130,7 +176,7 @@ public class TransactionManager implements ITransMan {
                                 else
                                     hpa = HeadlessPrefixedAmplet.create();
 
-                                    hpa.addElement(o.getID());
+                                hpa.addElement(o.getID());
                                 //ki.debug("Putting output: " + o.getID() + " with address: " + o.getAddress().encodeForChain() + " of amount + " + o.getAmount());
 
                                 try {
@@ -148,55 +194,28 @@ public class TransactionManager implements ITransMan {
                         }
                     }
 
-                        synchronized (processLock) {
-                            try {
-                                if (processMap.isEmpty())
-                                    processLock.wait();
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
+                    synchronized (processLock) {
+                        try {
+                            if (processMap.isEmpty())
+                                processLock.wait();
+                        } catch (InterruptedException e) {
+                            tc.interrupt();
+                            return;
                         }
+                    }
 
                 }
             }
-        }.start();
+        };
+        pbp.start();
 
-        if (dump) {
-            /*
-            StringFileHandler fh = new StringFileHandler(ki,"utxoDump.txt");
-            fh.delete();
-            for(String key:utxoMap.keySet())
-            {
-
-                fh.addLine("Address: " + key);
-                List<String> dumpList = JSONManager.parseJSONToList(utxoMap.get(key));
-                for(String value:dumpList)
-                {
-                    fh.addLine(value);
-                }
-
-            }
-            fh.save();
-            fh = new StringFileHandler(ki,"utxoValueDump.txt");
-            fh.delete();
-            for(String key:utxoValueMap.keySet())
-            {
-                fh.addLine(key + " " + utxoValueMap.get(key));
-            }
-            fh.save();
-
-            fh = new StringFileHandler(ki,"utxoSpentDump.txt");
-            fh.delete();
-            for(String key:utxoSpent.keySet())
-            {
-                fh.addLine(key + " " + utxoSpent.get(key));
-            }
-            fh.save();
-            */
-            //old dump does not work
-        }
     }
 
+    @Override
+    public void interrupt() {
+        super.interrupt();
+        pbp.interrupt();
+    }
     @Override
     public boolean verifyTransaction(ITrans transaction) {
 
@@ -444,6 +463,7 @@ public class TransactionManager implements ITransMan {
     public void close() {
         utxoAmp.close();
         utxoVerMap.close();
+        interrupt();
     }
 
     @Override

@@ -10,7 +10,6 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
 import javafx.scene.text.Font;
 
-import java.math.BigInteger;
 import java.text.DecimalFormat;
 
 public class Candle extends Group {
@@ -69,7 +68,7 @@ public class Candle extends Group {
         }
         //System.out.println("candle created");
         TooltipContent tc = (TooltipContent) tooltip.getGraphic();
-        tc.update(data.open.doubleValue() / DIV_CONSTANT, data.close.doubleValue() / DIV_CONSTANT, data.high.doubleValue() / DIV_CONSTANT, data.low.doubleValue() / DIV_CONSTANT);
+        tc.update(data.open.doubleValue() / DIV_CONSTANT, data.close.doubleValue() / DIV_CONSTANT, data.high.doubleValue() / DIV_CONSTANT, data.low.doubleValue() / DIV_CONSTANT, data.avg.doubleValue() / DIV_CONSTANT);
     }
 
     private DecimalFormat format2 = new DecimalFormat("###,###,###,###,###,###,###,###,##0.#########");
@@ -80,24 +79,29 @@ public class Candle extends Group {
         private final Label closeValue = new Label();
         private final Label highValue = new Label();
         private final Label lowValue = new Label();
+        private final Label avgValue = new Label();
 
         private TooltipContent() {
             Label open = new Label("OPEN:");
             Label close = new Label("CLOSE:");
             Label high = new Label("HIGH:");
             Label low = new Label("LOW:");
+            Label avg = new Label("VWAP:");
             open.setFont(Font.font(16));
             close.setFont(Font.font(16));
             high.setFont(Font.font(16));
             low.setFont(Font.font(16));
+            avg.setFont(Font.font(16));
             openValue.setFont(Font.font(16));
             closeValue.setFont(Font.font(16));
             highValue.setFont(Font.font(16));
             lowValue.setFont(Font.font(16));
+            avgValue.setFont(Font.font(16));
             open.getStyleClass().add("candlestick-tooltip-label");
             close.getStyleClass().add("candlestick-tooltip-label");
             high.getStyleClass().add("candlestick-tooltip-label");
             low.getStyleClass().add("candlestick-tooltip-label");
+            avg.getStyleClass().add("candlestick-tooltip-label");
             setConstraints(open, 0, 0);
             setConstraints(openValue, 1, 0);
             setConstraints(close, 0, 1);
@@ -106,15 +110,17 @@ public class Candle extends Group {
             setConstraints(highValue, 1, 2);
             setConstraints(low, 0, 3);
             setConstraints(lowValue, 1, 3);
-            getChildren().addAll(open, openValue, close, closeValue, high, highValue, low, lowValue);
+            setConstraints(avg, 0, 4);
+            setConstraints(avgValue, 1, 4);
+            getChildren().addAll(open, openValue, close, closeValue, high, highValue, low, lowValue, avg, avgValue);
         }
 
-        public void update(double open, double close, double high, double low) {
+        public void update(double open, double close, double high, double low, double avg) {
             openValue.setText(format2.format(open));
             closeValue.setText(format2.format(close));
             highValue.setText(format2.format(high));
             lowValue.setText(format2.format(low));
-
+            avgValue.setText(format2.format(avg));
         }
     }
 }

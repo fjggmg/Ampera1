@@ -1,14 +1,12 @@
 package com.lifeform.main.blockchain;
 
 import java.math.BigInteger;
-import java.util.Map;
 
 /**
  * Created by Bryan on 7/14/2017.
  */
 public interface IChainMan {
     int MAX_TXIOS = 100_000;
-    Map<String,Block> getChain();
 
     BlockState softVerifyBlock(Block b);
 
@@ -18,9 +16,6 @@ public interface IChainMan {
 
     void setHeight(BigInteger height);
     void loadChain();
-
-    @Deprecated
-    void saveChain();
 
     void close();
 
@@ -34,12 +29,9 @@ public interface IChainMan {
 
     BigInteger getCurrentDifficulty();
 
-
     boolean canMine();
 
     void setCanMine(boolean canMine);
-
-    void verifyLater(Block b);
 
     Block formEmptyBlock(BigInteger minFee);
 

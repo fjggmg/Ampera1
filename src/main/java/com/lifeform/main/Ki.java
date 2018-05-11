@@ -50,6 +50,7 @@ import java.util.List;
  */
 public class Ki extends Thread implements IKi {
 
+    private final Object closeLock = new Object();
     private IMinerMan minerMan;
     private Options o;
     private Logger main;
@@ -60,8 +61,6 @@ public class Ki extends Thread implements IKi {
     private IAddMan addMan;
     private INetworkManager poolNet;
     private IKi ki = this;
-    //private boolean run = true;
-    //TODO: need to start saving version number to file for future conversion of files
     public static final String VERSION = "0.18.4-BETA";
     private boolean relay = false;
     private com.lifeform.main.GUI.NewGUI guiHook;
@@ -147,6 +146,7 @@ public class Ki extends Thread implements IKi {
         }
         //endregion
         scriptMan = new ScriptManager(bce8, bce16, this);
+        scriptMan.loadScripts(ScriptManager.SCRIPTS_FOLDER);
         encMan = new EncryptionManager(this);
         EncryptionManager.initStatic();
         try {
@@ -173,12 +173,9 @@ public class Ki extends Thread implements IKi {
             ManagementFactory.getThreadMXBean().setThreadContentionMonitoringEnabled(true);
         }
         JOCLContextAndCommandQueue.setWorkaround(true);
-        //JOCLContextAndCommandQueue.noIntel = true;
         ContextMaster.disableCUDA();
         ih = new InputHandler(this);
 
-
-        //instance = this;
         relay = o.relay;
         if (o.pool) {
             //no trans man
@@ -192,9 +189,9 @@ public class Ki extends Thread implements IKi {
         } else if (o.lite) {
             chainMan = new ChainManagerLite(this, (o.testNet) ? ChainManager.TEST_NET : ChainManager.POW_CHAIN);
         } else {
-            chainMan = new ChainManager(this, (o.testNet) ? ChainManager.TEST_NET : ChainManager.POW_CHAIN, "blocks/", "chain.state", "transaction.meta", "extra.chains", "chain.meta", o.bDebug);
+            chainMan = new ChainManager(this, (o.testNet) ? ChainManager.TEST_NET : ChainManager.POW_CHAIN, "blocks/", "chain.state", o.bDebug);
         }
-        //Handshake.CHAIN_VER = (o.testNet) ? ChainManager.TEST_NET : ChainManager.POW_CHAIN;
+        transMan.start();
         chainMan.loadChain();
         getMainLog().info("Chain loaded. Current height: " + chainMan.currentHeight());
 
@@ -336,29 +333,26 @@ public class Ki extends Thread implements IKi {
     private boolean closing = false;
     public void close()
     {
-        closing = true;
-        while (!canClose) {
-            try {
-                sleep(500);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+        synchronized (closeLock) {
+            closing = true;
+            minerMan.shutdown();
+            chainMan.close();
+
+            if (!getOptions().pool)
+                transMan.close();
+
+            addMan.close();
+            netMan.close();
+            if (ki.getOptions().pool || ki.getOptions().poolRelay)
+                poolNet.close();
+            settings.close();
+            stringSettings.close();
+            exchangeMan.close();
+            stateMan.interrupt();
+            if (!getOptions().nogui)
+                guiHook.close();
+            //System.exit(0);
         }
-        chainMan.close();
-
-        if (!getOptions().pool)
-            transMan.close();
-
-        addMan.close();
-        netMan.close();
-        if (ki.getOptions().pool || ki.getOptions().poolRelay)
-            poolNet.close();
-        settings.close();
-        stringSettings.close();
-        exchangeMan.close();
-        if (!getOptions().nogui)
-            guiHook.close();
-        System.exit(0);
     }
 
     /**
@@ -521,6 +515,12 @@ public class Ki extends Thread implements IKi {
     public void setStartHeight(BigInteger startHeight) {
         this.startHeight = startHeight;
     }
+
+    @Override
+    public Object getCloseLock() {
+        return closeLock;
+    }
+
     @Override
     public void blockTick(Block block)
     {

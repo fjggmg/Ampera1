@@ -6,4 +6,6 @@ public interface IStateManager {
 
     void start();
 
+    void interrupt();
+
 }

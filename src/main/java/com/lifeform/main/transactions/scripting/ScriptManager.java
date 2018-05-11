@@ -29,7 +29,7 @@ public class ScriptManager {
     public static final int GEN_TRADE_CANCEL_FAIL_JUMP = 65;
     public static final byte VERSION = 1;
 
-    private static final String SCRIPTS_FOLDER = "/scripts";
+    public static final String SCRIPTS_FOLDER = "scripts";
     public ScriptManager(ByteCodeEngine bce8, ByteCodeEngine bce16, IKi ki) {
         this.ki = ki;
         /*
@@ -158,8 +158,8 @@ public class ScriptManager {
      * will load scripts that are in bytecode format (i.e. strings of opcodes 1 per line in BCE8, will have support
      * for BCE16 eventually)
      */
-    public void loadScripts() {
-        File folder = new File(SCRIPTS_FOLDER);
+    public void loadScripts(String fName) {
+        File folder = new File(File.separator + fName);
         if (!folder.exists()) {
 
             if (!folder.mkdirs()) {

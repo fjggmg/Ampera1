@@ -1,15 +1,9 @@
 package com.lifeform.main.blockchain;
 
 import java.math.BigInteger;
-import java.util.Map;
 
 public class PoolChainMan implements IChainMan {
     private Block toMine;
-
-    @Override
-    public Map<String, Block> getChain() {
-        return null;
-    }
 
     @Override
     public BlockState softVerifyBlock(Block b) {
@@ -34,11 +28,6 @@ public class PoolChainMan implements IChainMan {
 
     @Override
     public void loadChain() {
-
-    }
-
-    @Override
-    public void saveChain() {
 
     }
 
@@ -79,11 +68,6 @@ public class PoolChainMan implements IChainMan {
 
     @Override
     public void setCanMine(boolean canMine) {
-
-    }
-
-    @Override
-    public void verifyLater(Block b) {
 
     }
 

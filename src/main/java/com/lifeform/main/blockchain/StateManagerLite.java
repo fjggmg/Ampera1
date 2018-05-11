@@ -1,13 +1,10 @@
 package com.lifeform.main.blockchain;
 
 import com.lifeform.main.IKi;
-import com.lifeform.main.network.TransactionDataRequest;
-import com.lifeform.main.transactions.TransactionManager;
-import com.lifeform.main.transactions.TransactionManagerLite;
 
 import java.math.BigInteger;
-import java.util.*;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 public class StateManagerLite extends Thread implements IStateManager {
     private IKi ki;
@@ -46,7 +43,7 @@ public class StateManagerLite extends Thread implements IStateManager {
             try {
                 sleep(10);
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                return;
             }
         }
     }

@@ -2,6 +2,7 @@ package com.lifeform.main.transactions;
 
 import com.lifeform.main.blockchain.Block;
 import engine.binary.Binary;
+
 import java.math.BigInteger;
 import java.util.List;
 
@@ -199,4 +200,14 @@ public interface ITransMan {
      * @param currentHeight currentHeight of chain
      */
     void setCurrentHeight(BigInteger currentHeight);
+
+    /**
+     * Wrapper for threading. This was created to separate thread creation from the constructor
+     */
+    void start();
+
+    /**
+     * wrapper for thread.interrupt
+     */
+    void interrupt();
 }

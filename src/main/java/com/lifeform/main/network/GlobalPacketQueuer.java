@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 public class GlobalPacketQueuer extends Thread {
 
@@ -53,7 +52,7 @@ public class GlobalPacketQueuer extends Thread {
                 try {
                     cmppList.wait();
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    return;
                 }
             }
         }

@@ -172,4 +172,11 @@ public interface IKi {
     ScriptManager getScriptMan();
 
     void setStartHeight(BigInteger startHeight);
+
+    /**
+     * retrieves object to lock on to prevent close
+     *
+     * @return object to use as lock
+     */
+    Object getCloseLock();
 }

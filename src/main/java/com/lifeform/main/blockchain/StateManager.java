@@ -3,7 +3,6 @@ package com.lifeform.main.blockchain;
 import com.lifeform.main.IKi;
 import com.lifeform.main.network.BlockEnd;
 import com.lifeform.main.network.BlockHeader;
-import com.lifeform.main.network.LastAgreedStart;
 import com.lifeform.main.network.TransactionPacket;
 import com.lifeform.main.transactions.ITrans;
 
@@ -140,6 +139,8 @@ public class StateManager extends Thread implements IStateManager {
 
 
                                 if (!foundLastAgreed) {
+                                    //TODO removing this until we start working on mitigation. FIX BY 0.19
+                                    /*
                                     ki.debug("Failed to find last agreed block");
                                     if ((sentLA.get(connID.getKey()) != null && !sentLA.get(connID.getKey())) || sentLA.get(connID.getKey()) == null) {
                                         sentLA.put(connID.getKey(), true);
@@ -147,7 +148,7 @@ public class StateManager extends Thread implements IStateManager {
                                         las.height = ki.getChainMan().currentHeight();
                                         ki.getNetMan().getConnection(connID.getKey()).sendPacket(las);
                                     }
-
+                                    */
                                 } else {
                                     ki.debug("Found last agreed block");
                                     if(lastAgreed.compareTo(BigInteger.ZERO) == 0)
@@ -241,7 +242,7 @@ public class StateManager extends Thread implements IStateManager {
 
                             } else {
                                 /*
-                                //TODO if something fucks up look here first
+
                                 //request blocks here
                                 BlockRequest br = new BlockRequest();
                                 br.fromHeight = ki.getChainMan().currentHeight();
@@ -260,7 +261,7 @@ public class StateManager extends Thread implements IStateManager {
                         sync.wait();
                     ki.debug("State Manager notified");
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    return;
                 }
             }
         }

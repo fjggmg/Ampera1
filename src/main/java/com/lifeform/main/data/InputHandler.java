@@ -10,7 +10,6 @@ import com.lifeform.main.blockchain.GPUMiner;
 import com.lifeform.main.network.IConnectionManager;
 import com.lifeform.main.network.Ping;
 import com.lifeform.main.network.TransactionDataRequest;
-import com.lifeform.main.network.TransactionPacket;
 import com.lifeform.main.transactions.*;
 
 import java.io.BufferedReader;
@@ -23,7 +22,6 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
-import java.text.NumberFormat;
 import java.util.*;
 
 public class InputHandler extends Thread {
@@ -31,6 +29,7 @@ public class InputHandler extends Thread {
     private IKi ki;
 
     public InputHandler(IKi ki) {
+        setDaemon(true);
         this.ki = ki;
     }
 
@@ -360,6 +359,10 @@ public class InputHandler extends Thread {
                     for (Map.Entry<String, Integer> name : threads.entrySet()) {
                         ki.debug(name.getKey() + ":" + name.getValue());
                     }
+                    System.out.println("isDaemon status:");
+                    for (Thread thread : Thread.getAllStackTraces().keySet()) {
+                        System.out.println(thread.getName() + " : " + thread.isDaemon());
+                    }
                     if (ManagementFactory.getThreadMXBean().isThreadCpuTimeSupported()) {
                         ki.debug("CPU Times");
                         for (long id : ManagementFactory.getThreadMXBean().getAllThreadIds()) {
@@ -454,7 +457,7 @@ public class InputHandler extends Thread {
                     }
                 } else if (line.contains("checkPayout")) {
                     if (ki.getOptions().poolRelay) {
-                        ki.getMainLog().info("Estimated next payout at current pps is: " + (double) (ki.getPoolManager().getTotalSharesOfCurrentPayPeriod() * (double) ((double) ki.getPoolManager().getCurrentPayPerShare() / 100_000_000D)));
+                        ki.getMainLog().info("Estimated next payout at current pps is: " + ki.getPoolManager().getTotalSharesOfCurrentPayPeriod() * (double) ki.getPoolManager().getCurrentPayPerShare() / 100_000_000D);
                     } else {
                         ki.getMainLog().info("Not a pool relay");
                     }

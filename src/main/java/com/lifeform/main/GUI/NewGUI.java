@@ -19,6 +19,7 @@ import com.lifeform.main.adx.Pairs;
 import com.lifeform.main.blockchain.Block;
 import com.lifeform.main.blockchain.ChainManager;
 import com.lifeform.main.blockchain.GPUMiner;
+import com.lifeform.main.blockchain.IMiner;
 import com.lifeform.main.data.*;
 import com.lifeform.main.network.IConnectionManager;
 import com.lifeform.main.network.TransactionPacket;
@@ -247,40 +248,42 @@ public class NewGUI {
                         if (close) {
                             try {
                                 ki.close();
+                                Platform.exit();
+                                break;
                             } catch (Exception e) {
                                 ki.getMainLog().error("Could not close correctly ", e);
                             }
                             continue;
-                        }
-                        isFinal = false;
-                        for (Token t : Token.values()) {
-                            tokenValueMap.put(t, BigInteger.ZERO);
-                        }
-                        List<Output> utxos = null;
-                        try {
-                            utxos = ki.getTransMan().getUTXOs(ki.getAddMan().getMainAdd(), false);
+                        } else {
+                            isFinal = false;
+                            for (Token t : Token.values()) {
+                                tokenValueMap.put(t, BigInteger.ZERO);
+                            }
+                            List<Output> utxos = null;
+                            try {
+                                utxos = ki.getTransMan().getUTXOs(ki.getAddMan().getMainAdd(), false);
 
-                        } catch (Exception e) {
-                            //environment inoperative or other issue, ignore for now
-                            ki.getMainLog().error("Error retrieving utxos for wallet", e);
-                        }
+                            } catch (Exception e) {
+                                //environment inoperative or other issue, ignore for now
+                                ki.getMainLog().error("Error retrieving utxos for wallet", e);
+                            }
 
-                        if (utxos != null) {
-                            for (Output o : utxos) {
-                                if (tokenValueMap.get(o.getToken()) == null) {
-                                    tokenValueMap.put(o.getToken(), o.getAmount());
-                                } else {
-                                    tokenValueMap.put(o.getToken(), tokenValueMap.get(o.getToken()).add(o.getAmount()));
+                            if (utxos != null) {
+                                for (Output o : utxos) {
+                                    if (tokenValueMap.get(o.getToken()) == null) {
+                                        tokenValueMap.put(o.getToken(), o.getAmount());
+                                    } else {
+                                        tokenValueMap.put(o.getToken(), tokenValueMap.get(o.getToken()).add(o.getAmount()));
+                                    }
                                 }
                             }
+                            isFinal = true;
                         }
-                        isFinal = true;
-
                         try {
                             sleep(1200);
                             //System.out.println("done sleeping");
                         } catch (InterruptedException e) {
-                            //do nothing as close was called
+                            return;
                         }
 
                     }
@@ -880,7 +883,7 @@ public class NewGUI {
                     BigInteger amount;
                     try {
                         amount = new BigDecimal(amtOnOffer.getText()).multiply(BigDecimal.valueOf(unitMultiplierAmount.doubleValue())).toBigInteger();
-                    } catch (Exception e) {
+                    } catch (NumberFormatException e) {
                         //notification("Invalid Amount");
                         return;
                     }
@@ -894,7 +897,7 @@ public class NewGUI {
                     BigInteger stopPrice = null;
                     try {
                         amount = new BigDecimal(amtOnOffer.getText()).multiply(BigDecimal.valueOf(unitMultiplierAmount.doubleValue())).toBigInteger();
-                    } catch (Exception e) {
+                    } catch (NumberFormatException e) {
                         //notification("Invalid Amount");
                         return;
                     }
@@ -918,7 +921,7 @@ public class NewGUI {
                 BigInteger stopPrice = null;
                 try {
                     amount = new BigDecimal(amtOnOffer.getText()).multiply(BigDecimal.valueOf(unitMultiplierAmount.doubleValue())).toBigInteger();
-                } catch (Exception e) {
+                } catch (NumberFormatException e) {
                     //notification("Invalid Amount");
                     return;
                 }
@@ -1031,7 +1034,9 @@ public class NewGUI {
         miningIntesity.valueProperty().addListener(new ChangeListener<Number>() {
             @Override
             public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
-                GPUMiner.miningIntensity = miningIntesity.getValue();
+                for (IMiner miner : ki.getMinerMan().getMiners()) {
+                    miner.setIntensity(newValue.doubleValue());
+                }
             }
         });
         backToBE.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
@@ -2113,7 +2118,7 @@ public class NewGUI {
             }
         });
 
-        new Thread() {
+        Thread gUp = new Thread() {
             public void run() {
                 setName("GUI-Updater");
                 int i = 0;
@@ -2129,7 +2134,7 @@ public class NewGUI {
                     }
                     if (i % 10 == 0) {
 
-
+                        if (!ki.getOptions().pool)
                         Platform.runLater(new Thread() {
                             public void run() {
                                 setDaemon(true);
@@ -2192,7 +2197,7 @@ public class NewGUI {
                         Platform.runLater(new Thread() {
                             public void run() {
 
-                                setDaemon(true);
+                                //setDaemon(true);
                                 for (XYChart.Series<String, Number> series : hashrateChart.getData()) {
                                     try {
                                         ki.getMinerMan().getHashrate(series.getName());
@@ -2327,14 +2332,15 @@ public class NewGUI {
 
                         }
                     });
-                    Platform.runLater(new Thread() {
-                        public void run() {
+                    if (!ki.getOptions().pool)
+                        Platform.runLater(new Thread() {
+                            public void run() {
 
-                            if (!isFinal) return;
-                            //System.out.println("Setting the shit");
-                            walletAmount.setText(format2.format((double) tokenValueMap.get(Token.byName(tokenBox.getSelectionModel().getSelectedItem().getText())).longValueExact() / 100_000_000));
-                        }
-                    });
+                                if (!isFinal) return;
+                                //System.out.println("Setting the shit");
+                                walletAmount.setText(format2.format((double) tokenValueMap.get(Token.byName(tokenBox.getSelectionModel().getSelectedItem().getText())).longValueExact() / 100_000_000));
+                            }
+                        });
                     try {
                         sleep(100);
                     } catch (InterruptedException e) {
@@ -2342,7 +2348,9 @@ public class NewGUI {
                     }
                 }
             }
-        }.start();
+        };
+        gUp.setDaemon(true);
+        gUp.start();
 
         for (Token t : Token.values()) {
             if (t.getName().contains("TOKEN")) continue;

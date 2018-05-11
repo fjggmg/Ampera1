@@ -4,8 +4,6 @@ import com.lifeform.main.IKi;
 
 import java.io.Serializable;
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public class BlockHeader implements Serializable, Packet {
@@ -27,26 +25,14 @@ public class BlockHeader implements Serializable, Packet {
         ki.debug("Height: " + height);
 
         pg.headerMap.put(ID, this);
-        if (laFlag) {
-            if (ki.getChainMan().getByHeight(height).ID.equals(ID)) {
-                LastAgreedEnd lae = new LastAgreedEnd();
-                lae.height = height;
-                pg.laFlag = false;
-                ki.debug("Found last agreed block: " + height);
-                connMan.sendPacket(lae);
-            } else {
-                LastAgreedContinue lac = new LastAgreedContinue();
-                lac.height = height.subtract(BigInteger.ONE);
-                connMan.sendPacket(lac);
-            }
-        } else {
-            pg.bMap.put(this, new CopyOnWriteArrayList<>());
+
+        pg.bMap.put(this, new CopyOnWriteArrayList<>());
             /*
             if (ki.getNetMan().isRelay() && ki.getChainMan().currentHeight().compareTo(height) < 0) {
                 ki.getNetMan().broadcast(this);
             }
             */
-        }
+
     }
 
     @Override

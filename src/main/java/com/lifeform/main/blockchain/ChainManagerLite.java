@@ -30,11 +30,6 @@ public class ChainManagerLite implements IChainMan {
     }
 
     @Override
-    public Map<String, Block> getChain() {
-        return null;
-    }
-
-    @Override
     public BlockState softVerifyBlock(Block block) {
         Block current = chain.get(block.height.subtract(BigInteger.ONE));
         if (bDebug)
@@ -176,11 +171,6 @@ public class ChainManagerLite implements IChainMan {
     }
 
     @Override
-    public void saveChain() {
-
-    }
-
-    @Override
     public void close() {
 
     }
@@ -218,11 +208,6 @@ public class ChainManagerLite implements IChainMan {
 
     @Override
     public void setCanMine(boolean canMine) {
-
-    }
-
-    @Override
-    public void verifyLater(Block b) {
 
     }
 

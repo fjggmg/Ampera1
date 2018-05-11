@@ -8,7 +8,6 @@ import com.lifeform.main.transactions.InvalidTransactionException;
 import com.lifeform.main.transactions.Transaction;
 
 import java.math.BigInteger;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,14 +21,14 @@ public class PacketGlobal {
     }
 
     //List<Block> addedBlocks = new ArrayList<>();
-    public boolean doneDownloading = false;
-    BigInteger startHeight;
-    boolean laFlag = false;
-    boolean onRightChain = true;
+    boolean doneDownloading = false;
+    //BigInteger startHeight;
+    //boolean laFlag = false;
+    //boolean onRightChain = true;
     Map<BlockHeader, List<ITrans>> bMap = new HashMap<>();
     //Map<BlockHeader, Set<ITrans>> cuMap = new HashMap<>();
     //List<Block> cuBlocks = new ArrayList<>();
-    List<Block> futureBlocks = new ArrayList<>();
+    //List<Block> futureBlocks = new ArrayList<>();
     Map<String, BlockHeader> headerMap = new HashMap<>();
     IConnectionManager connMan;
     IKi ki;
@@ -200,18 +199,5 @@ public class PacketGlobal {
         return bh;
     }
 
-    private void processBlocks() {
-        List<Block> toRemove = new ArrayList<>();
-        for (Block b : futureBlocks) {
-            if (b.height.compareTo(ki.getChainMan().currentHeight().add(BigInteger.ONE)) == 0) {
-                ki.getChainMan().addBlock(b);
-                toRemove.add(b);
-            }
-        }
-        if (!toRemove.isEmpty()) {
-            futureBlocks.removeAll(toRemove);
-            processBlocks();
-        }
-    }
 
 }

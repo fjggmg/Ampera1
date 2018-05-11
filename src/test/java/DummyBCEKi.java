@@ -177,4 +177,9 @@ public class DummyBCEKi implements IKi {
     public void setStartHeight(BigInteger startHeight) {
 
     }
+
+    @Override
+    public Object getCloseLock() {
+        return null;
+    }
 }

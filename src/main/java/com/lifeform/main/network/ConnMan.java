@@ -1,7 +1,6 @@
 package com.lifeform.main.network;
 
 import com.lifeform.main.IKi;
-import com.lifeform.main.Ki;
 import com.lifeform.main.data.EncryptionManager;
 import com.lifeform.main.network.logic.INetworkEndpoint;
 import com.lifeform.main.transactions.TransactionManagerLite;
@@ -26,10 +25,13 @@ public class ConnMan extends IConnectionManager {
         this(ki,isRelay,endpoint);
         this.pp = pp;
     }
-    public ConnMan(IKi ki, boolean isRelay, INetworkEndpoint endpoint)
+
+    public static void init(IKi ki)
     {
-        if (OURID == null)
-            OURID = EncryptionManager.sha224(ki.getEncryptMan().getPublicKeyString(ki.getAddMan().getMainAdd().getKeyType()) + OURSTARTTIME);
+        OURID = EncryptionManager.sha224(ki.getEncryptMan().getPublicKeyString(ki.getAddMan().getMainAdd().getKeyType()) + OURSTARTTIME);
+    }
+
+    public ConnMan(IKi ki, boolean isRelay, INetworkEndpoint endpoint) {
         this.isRelay = isRelay;
         this.ki = ki;
         pp = new PacketProcessor(ki,this);

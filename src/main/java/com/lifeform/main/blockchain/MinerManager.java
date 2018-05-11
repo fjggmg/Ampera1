@@ -11,7 +11,7 @@ import java.util.Map;
 
 import static java.lang.Thread.sleep;
 
-public class MinerManager implements IMinerMan{
+public class MinerManager implements IMinerMan {
 
     private IKi ki;
     private boolean mDebug;
@@ -20,6 +20,7 @@ public class MinerManager implements IMinerMan{
     private Map<String, Long> hashrates = new HashMap<>();
     private boolean setup = false;
     private ContextMaster cm;
+
     public MinerManager(IKi ki, boolean mDebug) {
         this.ki = ki;
         this.mDebug = mDebug;
@@ -30,7 +31,7 @@ public class MinerManager implements IMinerMan{
     public void setup() {
         try {
 
-            GPUMiner.shutdown();
+            GPUMiner.clear();
             ContextMaster platforms = new ContextMaster();
             devNames.clear();
 
@@ -80,6 +81,14 @@ public class MinerManager implements IMinerMan{
     }
 
     @Override
+    public void shutdown() {
+        for (IMiner miner : miners) {
+            miner.shutdown();
+        }
+        GPUMiner.clear();
+    }
+
+    @Override
     public boolean miningCompatible() {
         return miningCompatible;
     }
@@ -88,9 +97,9 @@ public class MinerManager implements IMinerMan{
     private List<IMiner> miners = new ArrayList<>();
     private boolean mining = false;
     private int ocls = 0;
+
     @Override
-    public List<String> getDevNames()
-    {
+    public List<String> getDevNames() {
         return devNames;
     }
 
@@ -122,15 +131,13 @@ public class MinerManager implements IMinerMan{
     }
 
     private boolean isRestarting = false;
+
     /**
      * non blocking
-     *
      */
     @Override
-    public void restartMiners()
-    {
-        while(isRestarting)
-        {
+    public void restartMiners() {
+        while (isRestarting) {
             try {
                 sleep(5L);
             } catch (InterruptedException e) {
@@ -145,15 +152,14 @@ public class MinerManager implements IMinerMan{
         isRestarting = false;
 
     }
+
     @Override
-    public List<IMiner> getMiners()
-    {
+    public List<IMiner> getMiners() {
         return miners;
     }
 
     @Override
-    public boolean isMining()
-    {
+    public boolean isMining() {
         return mining;
     }
 
@@ -169,56 +175,33 @@ public class MinerManager implements IMinerMan{
                 e.printStackTrace();
             }
         }
-        if(ki.getOptions().mining) {
+        if (ki.getOptions().mining) {
             mining = true;
-            /* old miner, OCL miner can use both CPU and GPU now
-            if (useCPU) {
-                CPUMiner.mining = true;
-                CPUMiner.foundBlock = false;
-
-                BigInteger guess = BigInteger.ZERO;
-                for (int i = 0; i < count; i++) {
-                    if (mDebug)
-                        ki.getMainLog().info("Starting miner: " + i);
-                    IMiner miner = new CPUMiner(ki, guess, guess.add(BigInteger.valueOf(1000000L)), mDebug);
-                    miner.setName("Miner" + i);
-                    guess = guess.add(BigInteger.valueOf(1000000L));
-                    miners.add(miner);
-                    miner.start();
+            if (!gpuMiners.isEmpty()) {
+                for (IMiner miner : gpuMiners) {
+                    miner.interrupt();
                 }
-
+                gpuMiners.clear();
             }
-            */
-            //GPUMiner.mining = true;
 
-                if (!gpuMiners.isEmpty()) {
-                    for (IMiner miner : gpuMiners) {
-                        miner.interrupt();
-                    }
-                    gpuMiners.clear();
-                }
-
-                for (int i = 0; i < ocls; i++) {
-                    GPUMiner miner = new GPUMiner(ki, i);
-                    miner.setup(i);
-                    miner.setName("Miner#" + i);
-                    gpuMiners.add(miner);
-                    miner.start();
-                }
+            for (int i = 0; i < ocls; i++) {
+                GPUMiner miner = new GPUMiner(ki, i);
+                miner.setup(i);
+                miner.setName("Miner#" + i);
+                gpuMiners.add(miner);
+                miner.start();
+            }
         }
     }
 
     @Override
     public void stopMiners() {
-        for(IMiner miner:miners)
-        {
+        for (IMiner miner : miners) {
             miner.interrupt();
         }
         for (IMiner miner : gpuMiners) {
             miner.interrupt();
         }
-        //CPUMiner.mining = false; old miner
-        //GPUMiner.mining = false;
         mining = false;
         miners.clear();
         gpuMiners.clear();

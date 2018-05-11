@@ -39,6 +39,7 @@ public class NetMan extends Thread implements INetworkManager {
         if (rList.get("relays") != null) {
             relays = JSONManager.parseJSONToList(rList.get("relays"));
         }
+        ConnMan.init(ki);
 
     }
 
@@ -68,7 +69,8 @@ public class NetMan extends Thread implements INetworkManager {
 
     @Override
     public void close() {
-
+        interrupt();
+        gpq.interrupt();
         rList.close();
         for (IConnectionManager conn : connections) {
             if (conn != null && conn.isConnected())
@@ -134,7 +136,7 @@ public class NetMan extends Thread implements INetworkManager {
         //These are anonymous because java is fucking retarded and won't let you name lambda'd threads
         //they're also anonymous because they do fuck all and aren't worth tracking
         //may possibly track in the future
-        new Thread() {
+        Thread nc = new Thread() {
             public void run() {
                 setName("Network Cleanup");
                 while (true) {
@@ -164,20 +166,23 @@ public class NetMan extends Thread implements INetworkManager {
                     try {
                         sleep(300000);
                     } catch (InterruptedException e) {
-                        e.printStackTrace();
+                        return;
                     }
                 }
             }
-        }.start();
-        if (!isRelay)
-            new Thread() {
+        };
+        nc.setDaemon(true);
+        threads.add(nc);
+        nc.start();
+        if (!isRelay) {
+            Thread t = new Thread() {
                 public void run() {
                     setName("BlockSync");
                     while (true) {
                         try {
                             sleep(300000);
                         } catch (InterruptedException e) {
-                            e.printStackTrace();
+                            return;
                         }
 
                         BlockSyncRequest bsr = new BlockSyncRequest();
@@ -185,28 +190,34 @@ public class NetMan extends Thread implements INetworkManager {
                         broadcast(bsr);
                     }
                 }
-            }.start();
-        setName("Networking-Main");
-        if (!isRelay) {
-            Thread t = new Thread() {
+            };
+            t.setDaemon(true);
+            t.start();
+            threads.add(t);
+
+
+            Thread t2 = new Thread() {
 
                 public void run() {
                     setName("Ping Thread");
                     while (true) {
+                        if (ki.getNetMan().isInterrupted()) return;
                         Ping ping = new Ping();
                         ping.currentTime = System.currentTimeMillis();
                         broadcast(ping);
                         try {
                             sleep(60000);
                         } catch (InterruptedException e) {
-                            e.printStackTrace();
+                            return;
                         }
                     }
                 }
             };
-            threads.add(t);
-            t.start();
+            t2.setDaemon(true);
+            threads.add(t2);
+            t2.start();
         }
+        setName("Networking-Main");
         if (isRelay) {
             Thread t = new Thread() {
 
@@ -233,20 +244,7 @@ public class NetMan extends Thread implements INetworkManager {
             attemptConnect(ip);
             alreadyAttempted.add(ip.replace("/", "").split(":")[0]);
         }
-        /*
-        if (connections.size() < 1) {
 
-
-            if (!relays.isEmpty()) {
-                for (String ip : relays) {
-                    if (ip == null || ip.isEmpty()) continue;
-                    if (alreadyAttempted.contains(ip.replace("/", "").split(":")[0])) continue;
-                    attemptConnect(ip);
-                    alreadyAttempted.add(ip.replace("/", "").split(":")[0]);
-                }
-            }
-        }
-        */
     }
 
     @Override
@@ -282,11 +280,10 @@ public class NetMan extends Thread implements INetworkManager {
             try {
                 sleep(20000);
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                return;
             }
             p++;
         }
-
         int i = 0;
         for(IConnectionManager connMan:connections)
         {

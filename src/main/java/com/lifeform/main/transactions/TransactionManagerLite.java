@@ -13,7 +13,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class TransactionManagerLite implements ITransMan {
+public class TransactionManagerLite extends Thread implements ITransMan {
 
     private IKi ki;
 

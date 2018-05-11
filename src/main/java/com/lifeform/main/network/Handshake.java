@@ -3,7 +3,6 @@ package com.lifeform.main.network;
 import com.lifeform.main.IKi;
 import com.lifeform.main.adx.Order;
 import com.lifeform.main.data.EncryptionManager;
-import com.lifeform.main.network.adx.OrderMatched;
 import com.lifeform.main.network.adx.OrderPacket;
 import com.lifeform.main.transactions.ITrans;
 
@@ -28,7 +27,7 @@ public class Handshake implements Serializable, Packet {
     public void process(IKi ki, IConnectionManager connMan, PacketGlobal pg) {
 
 
-        pg.startHeight = currentHeight;
+        //pg.startHeight = currentHeight;
         if (chainVer != ki.getChainMan().getChainVer()) {
 
             ki.debug("Mismatched chain versions, disconnecting");
@@ -132,12 +131,6 @@ public class Handshake implements Serializable, Packet {
 
                 if (ki.getOptions().pDebug)
                     ki.debug("Relay and Node agree on last block, done downloading");
-            }
-        if (currentHeight.compareTo(BigInteger.valueOf(-1L)) != 0)
-            if (ki.getChainMan().currentHeight().compareTo(currentHeight) > 0) {
-                if (!ki.getChainMan().getByHeight(currentHeight).ID.equals(mostRecentBlock)) {
-                    pg.onRightChain = false;
-                }
             }
         if (ki.getChainMan().currentHeight().compareTo(currentHeight) < 0) {
             ki.debug("Requesting blocks we're missing from the network");

@@ -32,4 +32,6 @@ public interface IMinerMan {
     ContextMaster getContextMaster();
 
     long getHashrate(String dev);
+
+    void shutdown();
 }
