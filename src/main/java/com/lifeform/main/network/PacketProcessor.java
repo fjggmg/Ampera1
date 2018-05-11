@@ -1,6 +1,8 @@
 package com.lifeform.main.network;
 
 import com.lifeform.main.IKi;
+import com.lifeform.main.network.packets.Packet;
+import com.lifeform.main.network.packets.PacketGlobal;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -96,7 +98,6 @@ public class PacketProcessor implements IPacketProcessor{
         //TODO: investigate if we even need this typecheck, afaik netty should break if it receives something that it doesn't recognize
         if (packet instanceof Packet)
         {
-            //TODO we may not even need the packet types? testing will be done here
             ((Packet) packet).process(ki, connMan, pg);
         } else {
             if(ki.getOptions().pDebug)

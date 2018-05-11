@@ -249,7 +249,6 @@ public class ChainManager implements IChainMan {
         blockHeightAmp.put(b.height.toByteArray(), b);
     }
 
-    //TODO: removing synchronized on this method as it appears to be locking up sometimes during mining, see what affect this has elsewhere
     @Override
     public synchronized BlockState softVerifyBlock(Block block) {
 
@@ -279,7 +278,7 @@ public class ChainManager implements IChainMan {
         if (bDebug)
             ki.debug("prev ID is ok");
         if (current != null && block.timestamp < current.timestamp) return BlockState.BACKWARDS_TIMESTAMP;
-        //TODO: check this shit out, timestamps have been fucking us since day 1
+
         if (block.timestamp > System.currentTimeMillis() + 60000L) return BlockState.TIMESTAMP_WRONG;
         if (bDebug)
             ki.debug("timestamp is OK");

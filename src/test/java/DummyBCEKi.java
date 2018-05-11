@@ -10,7 +10,7 @@ import com.lifeform.main.blockchain.IStateManager;
 import com.lifeform.main.data.IEncryptMan;
 import com.lifeform.main.data.Options;
 import com.lifeform.main.network.INetworkManager;
-import com.lifeform.main.network.pool.PoolData;
+import com.lifeform.main.pool.PoolData;
 import com.lifeform.main.transactions.IAddMan;
 import com.lifeform.main.transactions.ITransMan;
 import com.lifeform.main.transactions.scripting.ScriptManager;

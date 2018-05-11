@@ -1,7 +1,6 @@
 package com.lifeform.main.transactions.scripting.word8v1ops;
 
 import amp.ByteTools;
-import amp.HeadlessPrefixedAmplet;
 import com.lifeform.main.data.EncryptionManager;
 import com.lifeform.main.data.KeyKeyTypePair;
 import com.lifeform.main.data.Utils;
@@ -19,7 +18,6 @@ import engine.program.Program;
 
 import java.util.Arrays;
 import java.util.Stack;
-//TODO possibly rename, a rework was done to more directly access sign data from transaction
 
 /**
  * only for transactions since has been reworked, may make another that is generic

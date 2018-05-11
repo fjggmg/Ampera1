@@ -1,9 +1,9 @@
 package com.lifeform.main.blockchain;
 
 import com.lifeform.main.IKi;
-import com.lifeform.main.network.BlockEnd;
-import com.lifeform.main.network.BlockHeader;
-import com.lifeform.main.network.TransactionPacket;
+import com.lifeform.main.network.packets.BlockEnd;
+import com.lifeform.main.network.packets.BlockHeader;
+import com.lifeform.main.network.packets.TransactionPacket;
 import com.lifeform.main.transactions.ITrans;
 
 import java.math.BigInteger;

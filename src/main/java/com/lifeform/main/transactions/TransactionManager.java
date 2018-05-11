@@ -284,7 +284,7 @@ public class TransactionManager extends Thread implements ITransMan {
         }
         if (ki.getOptions().tDebug)
             ki.debug("input to output verifies");
-        if (!transaction.verifyCanSpend()) { //TODO investigate if we still need this as we're checking address congruence above
+        if (!transaction.verifyCanSpend()) {
             if (ki.getOptions().tDebug)
                 ki.getMainLog().warn("this address cannot spend this input");
             return false;

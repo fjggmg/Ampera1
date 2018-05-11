@@ -6,6 +6,7 @@ import com.lifeform.main.network.IConnectionManager;
 import com.lifeform.main.network.INetworkManager;
 import com.lifeform.main.network.logic.Client;
 import com.lifeform.main.network.logic.Server;
+import com.lifeform.main.network.packets.pool.StatUpdate;
 import com.lifeform.main.transactions.Address;
 
 import java.util.ArrayList;

@@ -8,8 +8,7 @@ public class AmpIDs {
     public static final long TRANSACTIONS_CID = ByteTools.amplifyClassID(0);
     public static final GroupID PAYLOAD_GID = new GroupID(1, 1, "Payload");
     public static final GroupID BLOCK_ID_GID = new GroupID(2, 2, "BlockID");
-    //TODO probably don't need the next one
-    public static final GroupID MERKLE_ROOT_GID = new GroupID(3, 3, "MerkleRoot");
+
     public static final GroupID PREV_ID_GID = new GroupID(4, 4, "PrevID");
     public static final GroupID SOLVER_GID = new GroupID(5, 5, "Solver");
     public static final GroupID TIMESTAMP_GID = new GroupID(6, 6, "Timestamp");

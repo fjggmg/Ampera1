@@ -3,7 +3,7 @@ package com.lifeform.main.blockchain;
 import com.lifeform.main.IKi;
 import com.lifeform.main.data.EncryptionManager;
 import com.lifeform.main.data.Utils;
-import com.lifeform.main.network.DifficultyRequest;
+import com.lifeform.main.network.packets.DifficultyRequest;
 import com.lifeform.main.transactions.*;
 
 import java.math.BigInteger;
@@ -57,7 +57,7 @@ public class ChainManagerLite implements IChainMan {
         if (bDebug)
             ki.debug("prev ID is ok");
         if (current != null && block.timestamp < current.timestamp) return BlockState.BACKWARDS_TIMESTAMP;
-        //TODO: check this shit out, timestamps have been fucking us since day 1
+
         if (block.timestamp > System.currentTimeMillis() + 60000L) return BlockState.TIMESTAMP_WRONG;
         if (bDebug)
             ki.debug("timestamp is OK");

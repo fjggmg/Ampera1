@@ -5,6 +5,8 @@ import com.lifeform.main.data.JSONManager;
 import com.lifeform.main.data.XodusStringMap;
 import com.lifeform.main.network.logic.Client;
 import com.lifeform.main.network.logic.Server;
+import com.lifeform.main.network.packets.BlockSyncRequest;
+import com.lifeform.main.network.packets.Ping;
 
 import java.util.ArrayList;
 import java.util.HashMap;

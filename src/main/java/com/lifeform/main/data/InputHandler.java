@@ -8,8 +8,8 @@ import com.lifeform.main.blockchain.BlockState;
 import com.lifeform.main.blockchain.ChainManager;
 import com.lifeform.main.blockchain.GPUMiner;
 import com.lifeform.main.network.IConnectionManager;
-import com.lifeform.main.network.Ping;
-import com.lifeform.main.network.TransactionDataRequest;
+import com.lifeform.main.network.packets.Ping;
+import com.lifeform.main.network.packets.TransactionDataRequest;
 import com.lifeform.main.transactions.*;
 
 import java.io.BufferedReader;

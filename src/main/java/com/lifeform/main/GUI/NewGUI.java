@@ -22,7 +22,7 @@ import com.lifeform.main.blockchain.GPUMiner;
 import com.lifeform.main.blockchain.IMiner;
 import com.lifeform.main.data.*;
 import com.lifeform.main.network.IConnectionManager;
-import com.lifeform.main.network.TransactionPacket;
+import com.lifeform.main.network.packets.TransactionPacket;
 import com.lifeform.main.transactions.*;
 import engine.binary.Binary;
 import engine.data.WritableMemory;

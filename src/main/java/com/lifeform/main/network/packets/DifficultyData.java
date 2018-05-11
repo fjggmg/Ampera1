@@ -1,0 +1,22 @@
+package com.lifeform.main.network.packets;
+
+import com.lifeform.main.IKi;
+import com.lifeform.main.blockchain.ChainManagerLite;
+import com.lifeform.main.network.IConnectionManager;
+
+import java.io.Serializable;
+import java.math.BigInteger;
+
+public class DifficultyData implements Serializable, Packet {
+
+    BigInteger difficulty;
+
+    @Override
+    public void process(IKi ki, IConnectionManager connMan, PacketGlobal pg) {
+        if (ki.getOptions().lite) {
+            ((ChainManagerLite) ki.getChainMan()).setDifficulty(difficulty);
+            ki.getNetMan().diffSet();
+        }
+    }
+
+}

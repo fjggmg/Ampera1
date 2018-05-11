@@ -385,7 +385,6 @@ public class TransactionManagerLite extends Thread implements ITransMan {
         return inputs;
     }
 
-    //TODO possibly implement these
     @Override
     public List<Input> getInputsForToken(IAddress address, Token token) {
         return null;

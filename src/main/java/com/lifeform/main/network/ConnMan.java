@@ -3,6 +3,7 @@ package com.lifeform.main.network;
 import com.lifeform.main.IKi;
 import com.lifeform.main.data.EncryptionManager;
 import com.lifeform.main.network.logic.INetworkEndpoint;
+import com.lifeform.main.network.packets.Handshake;
 import com.lifeform.main.transactions.TransactionManagerLite;
 import io.netty.channel.Channel;
 

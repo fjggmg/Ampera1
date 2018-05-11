@@ -8,7 +8,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.List;
 import java.util.regex.Pattern;
-//TODO: convert whole file to try with resources and java nio
 /**
  * Created by Bryan on 7/17/2017.
  */
@@ -20,12 +19,8 @@ public class StringFileHandler extends FileManager implements IStringFileHandler
     }
     @Override
     public void addLine(String line) {
-        try {
-
-            PrintWriter writer = new PrintWriter(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file, true), StandardCharsets.UTF_8)));
+        try (PrintWriter writer = new PrintWriter(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file, true), StandardCharsets.UTF_8)))) {
             writer.println(line);
-            writer.close();
-
             //Files.write(file.toPath(), (line + "/n").getBytes(), StandardOpenOption.APPEND);
         } catch (IOException e) {
             Ki.getInstance().debug("File manager for: " + file.getName() + " failed on addLine");
@@ -77,19 +72,23 @@ public class StringFileHandler extends FileManager implements IStringFileHandler
 
     @Override
     public void insertLine(String line, int index) {
-        try {
-            List<String> lines = Files.readAllLines(file.toPath(),StandardCharsets.UTF_8);
 
-            lines.add(index,line);
-            if(!file.delete()) throw new IOException("Could not delete file");
-            if(!file.createNewFile()) throw new IOException("Could not create new file");
-            PrintWriter writer = new PrintWriter(new OutputStreamWriter(new FileOutputStream(file),StandardCharsets.UTF_8));
+        List<String> lines;
+        try {
+            lines = Files.readAllLines(file.toPath(), StandardCharsets.UTF_8);
+
+            lines.add(index, line);
+            if (!file.delete()) throw new IOException("Could not delete file");
+            if (!file.createNewFile()) throw new IOException("Could not create new file");
+        } catch (IOException e) {
+            Ki.getInstance().getMainLog().error("Unable to delete and recreate file for SFH", e);
+            return;
+        }
+        try (PrintWriter writer = new PrintWriter(new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8))) {
             for(String l:lines)
             {
                 writer.println(l);
             }
-            writer.close();
-
         } catch (IOException e) {
             Ki.getInstance().debug("File manager for: " + file.getName() + " failed on insertLine");
         }

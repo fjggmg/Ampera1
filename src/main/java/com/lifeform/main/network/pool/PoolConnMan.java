@@ -6,6 +6,7 @@ import com.lifeform.main.network.ConnManPacketPair;
 import com.lifeform.main.network.IConnectionManager;
 import com.lifeform.main.network.IPacketProcessor;
 import com.lifeform.main.network.logic.INetworkEndpoint;
+import com.lifeform.main.network.packets.pool.PoolHandshake;
 import io.netty.channel.Channel;
 
 public class PoolConnMan extends IConnectionManager {

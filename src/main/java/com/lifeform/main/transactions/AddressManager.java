@@ -126,9 +126,9 @@ public class AddressManager implements IAddMan {
                 if (fh2.getLines().size() != 0) {
                     try {
                         JSONObject jo = (JSONObject) new JSONParser().parse(fh2.getLine(0));
-                        for (String add : (Set<String>) jo.keySet()) {
+                        for (Map.Entry<String, String> add : (Set<Map.Entry<String, String>>) jo.entrySet()) {
                             //ki.getMainLog().info("Shit found in the entropy file. it matches this: " + add + " " + jo.get(add));
-                            entropyMap.put(add, (String) jo.get(add));
+                            entropyMap.put(add.getKey(), add.getValue());
                         }
                     } catch (ParseException e) {
                         e.printStackTrace();

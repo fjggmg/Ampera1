@@ -3,7 +3,8 @@ package com.lifeform.main.network.pool;
 import com.lifeform.main.IKi;
 import com.lifeform.main.network.IConnectionManager;
 import com.lifeform.main.network.IPacketProcessor;
-import com.lifeform.main.network.PacketGlobal;
+import com.lifeform.main.network.packets.PacketGlobal;
+import com.lifeform.main.network.packets.pool.PoolPacket;
 
 public class PoolPacketProcessor implements IPacketProcessor {
 

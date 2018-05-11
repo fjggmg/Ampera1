@@ -2,6 +2,7 @@ package com.lifeform.main.transactions;
 
 import com.lifeform.main.data.EncryptionManager;
 import com.lifeform.main.data.Utils;
+
 import java.io.UnsupportedEncodingException;
 
 /**
@@ -159,10 +160,12 @@ public class NewAdd implements IAddress {
         bChecksum[4] = check[check.length - 2];
         bChecksum[5] = check[check.length - 1];
         String checksum = Utils.toBase64(bChecksum);
+        if (checksum == null) return false;
         if (!checksum.equals(this.checksum)) return false;
-        //TODO byte thing here
 
-        return true;
+        IAddress a = NewAdd.fromByteArray(toByteArray());
+        if (a == null) return false;
+        return a.encodeForChain().equals(encodeForChain());
     }
 
     @Override
@@ -176,8 +179,7 @@ public class NewAdd implements IAddress {
         }
         if (!a.getID().equals(ID)) return false;
         if (!a.getChecksum().equals(checksum)) return false;
-        if (a.getVersion() != version) return false;
-        return true;
+        return a.getVersion() == version;
     }
 
 
@@ -330,8 +332,7 @@ public class NewAdd implements IAddress {
         if (!a.getChecksum().equals(checksum)) return false;
         if (a.getVersion() != version) return false;
         if (!a.hasPrefix()) return false;
-        if (!a.getPrefix().equals(getPrefix())) return false;
-        return true;
+        return a.getPrefix().equals(getPrefix());
     }
 
     @Override
