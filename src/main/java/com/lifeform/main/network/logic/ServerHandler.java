@@ -22,7 +22,7 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
         try {
             //if(ki.getOptions().pDebug)
             //ki.debug("Received packet: " + msg.toString());
-
+            if (connMan != null)
             connMan.received(msg);
         }finally{
             ReferenceCountUtil.release(msg);

@@ -305,7 +305,7 @@ public class TransactionManager extends Thread implements ITransMan {
         }
         //endregion
 
-        //TODO what the fuck is going on in the next few lines, we're looking for the same transaction multiple times? Isn't this already prevented from happening?
+        //This is a relatively cheap fix for a possibly bad problem if we end up with duplicates, leaving for now
         List<ITrans> toRemove = new ArrayList<>();
         for (ITrans t : pending) {
             if (t.getID().equals(transaction.getID())) toRemove.add(t);
@@ -440,7 +440,7 @@ public class TransactionManager extends Thread implements ITransMan {
 
 
     @Override
-    public ITrans createSimpleMultiSig(Binary bin, IAddress receiver, BigInteger amount, BigInteger fee, Token token, String message, int multipleOuts) throws InvalidTransactionException {
+    public ITrans createSimpleMultiSig(Binary bin, IAddress receiver, BigInteger amount, BigInteger fee, Token token, String message, int multipleOuts, IAddress changeAddress) throws InvalidTransactionException {
         if (ki.getEncryptMan().getPublicKey(ki.getAddMan().getMainAdd().getKeyType()) != null) {
             if (multipleOuts < 1)
                 throw new InvalidTransactionException("Cannot create transaction with less than 1 output");
@@ -527,7 +527,7 @@ public class TransactionManager extends Thread implements ITransMan {
             keySigMap.put(Utils.toBase64(bin.serializeToAmplet().serializeToBytes()), ksep);
             ITrans trans = new NewTrans(message, outputs, inputs, keySigMap, TransactionType.NEW_TRANS);
             ki.debug("Transaction has: " + trans.getOutputs().size() + " Outputs before finalization");
-            trans.makeChange(fee, ki.getAddMan().getMainAdd()); // TODO this just sends change back to the main address......will need to give option later
+            trans.makeChange(fee, changeAddress);
             //trans.addSig(ki.getEncryptMan().getPublicKeyString(a.getKeyType()), Utils.toBase64(ki.getEncryptMan().sign(trans.toSignBytes(), a.getKeyType())));
             WritableMemory wm = new WritableMemory();
             //TODO magic value because we can't get size of constant memory, and, also, we don't know how many keys are here.....
@@ -560,14 +560,14 @@ public class TransactionManager extends Thread implements ITransMan {
     }
 
     @Override
-    public ITrans createSimple(IAddress receiver, BigInteger amount, BigInteger fee, Token token, String message) throws InvalidTransactionException {
+    public ITrans createSimple(IAddress receiver, BigInteger amount, BigInteger fee, Token token, String message, IAddress changeAddress) throws InvalidTransactionException {
 
-        return createSimple(receiver, amount, fee, token, message, 1);
+        return createSimple(receiver, amount, fee, token, message, 1, changeAddress);
     }
 
 
     @Override
-    public ITrans createSimple(IAddress receiver, BigInteger amount, BigInteger fee, Token token, String message, int multipleOuts) throws InvalidTransactionException {
+    public ITrans createSimple(IAddress receiver, BigInteger amount, BigInteger fee, Token token, String message, int multipleOuts, IAddress changeAddress) throws InvalidTransactionException {
         if (ki.getEncryptMan().getPublicKey(ki.getAddMan().getMainAdd().getKeyType()) != null) {
             if (multipleOuts < 1)
                 throw new InvalidTransactionException("Cannot create transaction with less than 1 output");
@@ -640,7 +640,7 @@ public class TransactionManager extends Thread implements ITransMan {
             keySigMap.put(ki.getEncryptMan().getPublicKeyString(a.getKeyType()), ksep);
             ITrans trans = new NewTrans(message, outputs, inputs, keySigMap, TransactionType.NEW_TRANS);
             ki.debug("Transaction has: " + trans.getOutputs().size() + " Outputs before finalization");
-            trans.makeChange(fee, a); // TODO this just sends change back to the main address......will need to give option later
+            trans.makeChange(fee, changeAddress);
             trans.addSig(ki.getEncryptMan().getPublicKeyString(a.getKeyType()), Utils.toBase64(ki.getEncryptMan().sign(trans.toSignBytes(), a.getKeyType())));
             ki.debug("Transaction has: " + trans.getOutputs().size() + " Outputs after finalization");
             //usedUTXOs.addAll(sIns);

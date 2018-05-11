@@ -234,7 +234,7 @@ public class ExchangeManager {
                 }
                 ITrans funding;
                 try {
-                    funding = ki.getTransMan().createSimple(contractAdd, amount.multiply(stopPrice).divide(BigInteger.valueOf(100_000_000)), BigInteger.TEN, pair.onOffer(), "funding ADX Buy contract", 20);
+                    funding = ki.getTransMan().createSimple(contractAdd, amount.multiply(stopPrice).divide(BigInteger.valueOf(100_000_000)), BigInteger.TEN, pair.onOffer(), "funding ADX Buy contract", 20, ki.getAddMan().getMainAdd());
                 } catch (InvalidTransactionException e) {
 
                     ki.getMainLog().error("Error creating transaction to fund contract", e);
@@ -427,7 +427,7 @@ public class ExchangeManager {
                 }
                 ITrans funding;
                 try {
-                    funding = ki.getTransMan().createSimple(contractAdd, amount, BigInteger.TEN, pair.accepting(), "funding ADX Sell contract", 20);
+                    funding = ki.getTransMan().createSimple(contractAdd, amount, BigInteger.TEN, pair.accepting(), "funding ADX Sell contract", 20, ki.getAddMan().getMainAdd());
                 } catch (InvalidTransactionException e) {
                     e.printStackTrace();
                     return OrderStatus.GENERAL_FAILURE;

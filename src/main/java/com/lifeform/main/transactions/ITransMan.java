@@ -122,10 +122,11 @@ public interface ITransMan {
      * @param token Token to send
      * @param message Message to put on transaction
      * @param multipleOuts Amount of outputs to put on transaction, larger amounts make it easier for other side to send multiple transactions at once, but you will pay a higher fee
+     * @param changeAddress Address to send change back to (overage of inputs)
      * @return created transaction
      * @throws InvalidTransactionException if invalid parameters are given or if there are not funds to cover this transaction, an exception will be thrown
      */
-    ITrans createSimpleMultiSig(Binary bin, IAddress receiver, BigInteger amount, BigInteger fee, Token token, String message, int multipleOuts) throws InvalidTransactionException;
+    ITrans createSimpleMultiSig(Binary bin, IAddress receiver, BigInteger amount, BigInteger fee, Token token, String message, int multipleOuts, IAddress changeAddress) throws InvalidTransactionException;
 
     /**
      * Creates a simple transaction. Calls the other createSimple transaction with multipleOuts set to 1
@@ -134,10 +135,11 @@ public interface ITransMan {
      * @param fee fee to pay to the miner (may be overridden if it is lower than the minimum required for this transaction)
      * @param token Token to send
      * @param message Message to put on transaction
+     * @param changeAddress Address to send change back to (overage of inputs)
      * @return created transaction
      * @throws InvalidTransactionException if invalid parameters are given or if there are not funds to cover this transaction an exception will be thrown
      */
-    ITrans createSimple(IAddress receiver, BigInteger amount, BigInteger fee, Token token, String message) throws InvalidTransactionException;
+    ITrans createSimple(IAddress receiver, BigInteger amount, BigInteger fee, Token token, String message, IAddress changeAddress) throws InvalidTransactionException;
 
     /**
      * Creates a simple transaction. Calls the other createSimple transaction with multipleOuts set to 1
@@ -147,10 +149,11 @@ public interface ITransMan {
      * @param token Token to send
      * @param message Message to put on transaction
      * @param multipleOuts Amount of outputs to put on transaction, larger amounts make it easier for other side to send multiple transactions at once, but you will pay a higher fee
+     * @param changeAddress Address to send change back to (overage of inputs)
      * @return created transaction
      * @throws InvalidTransactionException if invalid parameters are given or if there are not funds to cover this transaction an exception will be thrown
      */
-    ITrans createSimple(IAddress receiver, BigInteger amount, BigInteger fee, Token token, String message, int multipleOuts) throws InvalidTransactionException;
+    ITrans createSimple(IAddress receiver, BigInteger amount, BigInteger fee, Token token, String message, int multipleOuts, IAddress changeAddress) throws InvalidTransactionException;
 
     /**
      * Used to build quick lookup DB for creating transactions. Not implemented in lite version since it receives its

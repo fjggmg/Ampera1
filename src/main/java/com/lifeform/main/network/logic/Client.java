@@ -3,7 +3,10 @@ package com.lifeform.main.network.logic;
 import com.lifeform.main.IKi;
 import com.lifeform.main.network.IConnectionManager;
 import io.netty.bootstrap.Bootstrap;
-import io.netty.channel.*;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelPipeline;
+import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
@@ -13,10 +16,6 @@ import io.netty.handler.codec.serialization.ObjectEncoder;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
-
-import java.util.ArrayList;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 
 public class Client implements INetworkEndpoint{
 
@@ -41,7 +40,7 @@ public class Client implements INetworkEndpoint{
 
     @Override
     public boolean isConnected() {
-        return channel.channel().isActive();
+        return channel != null && channel.channel().isActive();
     }
 
     @Override
@@ -108,6 +107,7 @@ public class Client implements INetworkEndpoint{
     }
     public void sendPacket(Object o)
     {
-        channel.writeAndFlush(o);
+        if (channel != null)
+            channel.writeAndFlush(o);
     }
 }

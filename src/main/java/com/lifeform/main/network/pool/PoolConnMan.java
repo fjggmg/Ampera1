@@ -63,6 +63,10 @@ public class PoolConnMan extends IConnectionManager {
 
         PoolHandshake ph = new PoolHandshake();
         if (ki.getOptions().pool) {
+            if (ki.getPoolData().payTo == null || ki.getPoolData().ID == null) {
+                disconnect();
+                return;
+            }
             ki.getPoolData().ID = EncryptionManager.sha224(ki.getPoolData().payTo.encodeForChain() + System.currentTimeMillis());
             ph.ID = ki.getPoolData().ID;
             ph.address = ki.getPoolData().payTo.encodeForChain();

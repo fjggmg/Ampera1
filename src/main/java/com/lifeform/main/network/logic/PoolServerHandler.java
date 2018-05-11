@@ -1,7 +1,6 @@
 package com.lifeform.main.network.logic;
 
 import com.lifeform.main.IKi;
-import com.lifeform.main.network.ConnMan;
 import com.lifeform.main.network.IConnectionManager;
 import com.lifeform.main.network.pool.PoolConnMan;
 import io.netty.channel.ChannelHandlerContext;
@@ -11,7 +10,7 @@ import io.netty.util.ReferenceCountUtil;
 public class PoolServerHandler extends ChannelInboundHandlerAdapter {
     private IKi ki;
 
-    public PoolServerHandler(IKi ki) {
+    PoolServerHandler(IKi ki) {
         this.ki = ki;
     }
 
@@ -23,7 +22,7 @@ public class PoolServerHandler extends ChannelInboundHandlerAdapter {
         try {
             //if(ki.getOptions().pDebug)
             //ki.debug("Received packet: " + msg.toString());
-
+            if (connMan != null)
             connMan.received(msg);
         } finally {
             ReferenceCountUtil.release(msg);

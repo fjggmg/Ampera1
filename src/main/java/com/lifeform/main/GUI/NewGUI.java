@@ -163,6 +163,8 @@ public class NewGUI {
     public JFXButton loadTransaction;
     public JFXButton copySelectedAdd;
     public Label exchangeTotalPurchase;
+    public JFXCheckBox sendBackToMain;
+    public JFXTextField changeAddress;
     private CandlestickGraph exchangeGraph;
     public VBox passwordVbox;
     public VBox exchangeGraphBox;
@@ -1785,10 +1787,21 @@ public class NewGUI {
                             return; //not enough origin to send this kind of fee
                         }
                         */
+                        IAddress changeAdd;
+                        if (sendBackToMain.isSelected()) {
+                            changeAdd = ki.getAddMan().getMainAdd();
+                        } else {
+                            try {
+                                changeAdd = Address.decodeFromChain(changeAddress.getText());
+                            } catch (Exception e) {
+                                notification("Invalid Change Address");
+                                return;
+                            }
+                        }
                         ITrans trans = null;
 
                         try {
-                            trans = ki.getTransMan().createSimple(receiver, amount, fee, token, messageText.getText());
+                            trans = ki.getTransMan().createSimple(receiver, amount, fee, token, messageText.getText(), changeAdd);
                         } catch (InvalidTransactionException e) {
                             ki.getMainLog().error("Error creating transaction: ", e);
                             return;
@@ -1842,8 +1855,19 @@ public class NewGUI {
                         notification("Do not have script for this address");
                         return;
                     }
+                    IAddress changeAdd;
+                    if (sendBackToMain.isSelected()) {
+                        changeAdd = ki.getAddMan().getMainAdd();
+                    } else {
+                        try {
+                            changeAdd = Address.decodeFromChain(changeAddress.getText());
+                        } catch (Exception e) {
+                            notification("Invalid Change Address");
+                            return;
+                        }
+                    }
                     try {
-                        trans = ki.getTransMan().createSimpleMultiSig(ki.getAddMan().getBinary(ki.getAddMan().getMainAdd()), receiver, amount, fee, token, messageText.getText(), 1);
+                        trans = ki.getTransMan().createSimpleMultiSig(ki.getAddMan().getBinary(ki.getAddMan().getMainAdd()), receiver, amount, fee, token, messageText.getText(), 1, changeAdd);
                     } catch (InvalidTransactionException e) {
                         ki.getMainLog().error("Error creating transaction: ", e);
                         return;
@@ -1870,7 +1894,16 @@ public class NewGUI {
                 }
             }
         });
-
+        sendBackToMain.selectedProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue) {
+                changeAddress.setDisable(true);
+                changeAddress.setVisible(false);
+                changeAddress.setText("");
+            } else {
+                changeAddress.setDisable(false);
+                changeAddress.setVisible(true);
+            }
+        });
         loadTransaction.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {

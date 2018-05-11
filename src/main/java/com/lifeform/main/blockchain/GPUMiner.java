@@ -83,10 +83,7 @@ public class GPUMiner extends Thread implements IMiner {
 
     private long lastPrint = System.currentTimeMillis();
     private DecimalFormat format = new DecimalFormat("###,###,###,###");
-    //private int threadCount;
-    //TODO investigate another way to do this without a public static variable
     private double miningIntensity = 100;
-
     @Override
     public void run() {
         boolean hasPrinted = false;
@@ -140,8 +137,10 @@ public class GPUMiner extends Thread implements IMiner {
             if (ki.getOptions().pool) {
 
                 try {
-                    byte[] extra = ki.getPoolData().ID.getBytes("UTF-8");
-                    miner.resumeMining(message, extra);
+                    if (ki.getPoolData().ID != null) {
+                        byte[] extra = ki.getPoolData().ID.getBytes("UTF-8");
+                        miner.resumeMining(message, extra);
+                    }
                 } catch (UnsupportedEncodingException e) {
                     e.printStackTrace();
                 }
