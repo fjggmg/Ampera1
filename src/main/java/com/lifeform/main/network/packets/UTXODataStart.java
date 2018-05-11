@@ -11,7 +11,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class UTXODataStart implements Packet,Serializable {
-
+    private static final long serialVersionUID = 184L;
     static Set<String> connIDs = new HashSet<>();
     @Override
     public void process(IKi ki, IConnectionManager connMan, PacketGlobal pg) {

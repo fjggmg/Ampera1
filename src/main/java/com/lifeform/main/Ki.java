@@ -68,7 +68,7 @@ public class Ki extends Thread implements IKi {
     public static final String VERSION = "0.18.4-BETA";
     private boolean relay = false;
     private com.lifeform.main.GUI.NewGUI guiHook;
-    public static boolean debug = true;
+    //public static boolean debug = true;
     static IKi instance;
     private InputHandler ih;
     private IStateManager stateMan;
@@ -285,14 +285,10 @@ public class Ki extends Thread implements IKi {
         minerMan = new MinerManager(this, o.mDebug);
         //gui = MainGUI.guiFactory(this);
         debug("Starting GUI");
-        Thread t = new Thread() {
-
-            @Override
-            public void run() {
-                if (!o.nogui)
-                    FXGUI.subLaunch();
-            }
-        };
+        Thread t = new Thread(() -> {
+            if (!o.nogui)
+                FXGUI.subLaunch();
+        });
         t.start();
 
 

@@ -13,6 +13,7 @@ import java.math.BigInteger;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class TransactionPacket implements Serializable, Packet {
+    private static final long serialVersionUID = 184L;
     public byte[] trans;
     public String block;
 

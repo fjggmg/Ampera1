@@ -6,6 +6,7 @@ import com.lifeform.main.network.IConnectionManager;
 import java.io.Serializable;
 
 public class Pong implements Serializable, Packet {
+    private static final long serialVersionUID = 184L;
     long latency;
 
     @Override

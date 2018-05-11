@@ -9,6 +9,7 @@ import java.io.Serializable;
 import java.math.BigInteger;
 
 public class OrderReduced implements Packet, Serializable {
+    private static final long serialVersionUID = 184L;
     public String ID;
     public BigInteger amount;
     public String transaction;

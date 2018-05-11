@@ -11,6 +11,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 
 public class OrderPacket implements Packet, Serializable {
+    private static final long serialVersionUID = 184L;
     public byte[] order;
     public String transaction;
     public boolean matched = false;

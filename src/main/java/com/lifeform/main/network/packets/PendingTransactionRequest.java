@@ -7,6 +7,7 @@ import com.lifeform.main.transactions.ITrans;
 import java.io.Serializable;
 
 public class PendingTransactionRequest implements Serializable, Packet {
+    private static final long serialVersionUID = 184L;
     @Override
     public void process(IKi ki, IConnectionManager connMan, PacketGlobal pg) {
         for (ITrans trans : ki.getTransMan().getPending()) {

@@ -32,17 +32,15 @@ public class GlobalPacketQueuer extends Thread {
                             if (connMan.getID() != null && connThreads.get(connMan.getID()) != null && connThreads.get(connMan.getID()).isAlive())
                                 continue;
                             Object packet = cmppList.get(0).packet;
-                            Thread t = new Thread() {
-                                public void run() {
-                                    setName("PacketProcessingThread");
-                                    try {
-                                        connMan.getPacketProcessor().process(packet);
-                                    } catch (Exception e) {
-                                        //get ki in here for debug
-                                        Ki.getInstance().getMainLog().error("Failed to process packet", e);
-                                    }
+                            Thread t = new Thread(() -> {
+                                setName("PacketProcessingThread");
+                                try {
+                                    connMan.getPacketProcessor().process(packet);
+                                } catch (Exception e) {
+                                    //get ki in here for debug
+                                    Ki.getInstance().getMainLog().error("Failed to process packet", e);
                                 }
-                            };
+                            });
                             connThreads.put(connMan.getID(), t);
                             t.start();
                         }

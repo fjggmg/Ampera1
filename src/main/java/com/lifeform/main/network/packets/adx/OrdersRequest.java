@@ -8,6 +8,7 @@ import com.lifeform.main.network.packets.PacketGlobal;
 import java.io.Serializable;
 
 public class OrdersRequest implements Packet, Serializable {
+    private static final long serialVersionUID = 184L;
     @Override
     public void process(IKi ki, IConnectionManager connMan, PacketGlobal pg) {
         for (String o : ki.getExMan().getOrderIDs()) {

@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class RelayList implements Serializable, Packet {
+    private static final long serialVersionUID = 184L;
     List<String> relays;
 
     @Override

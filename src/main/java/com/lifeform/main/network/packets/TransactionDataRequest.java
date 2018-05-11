@@ -6,9 +6,7 @@ import com.lifeform.main.network.IConnectionManager;
 import java.io.Serializable;
 
 public class TransactionDataRequest implements Serializable, Packet {
-
-
-
+    private static final long serialVersionUID = 184L;
 
     @Override
     public void process(IKi ki, IConnectionManager connMan, PacketGlobal pg) {

@@ -7,6 +7,7 @@ import java.io.Serializable;
 import java.math.BigInteger;
 
 public class BlockRequest implements Serializable, Packet {
+    private static final long serialVersionUID = 184L;
     public BigInteger fromHeight;
     public boolean lite = false;
     @Override

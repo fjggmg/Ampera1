@@ -16,6 +16,7 @@ import java.util.ArrayList;
  * Created by Bryan on 7/25/2017.
  */
 public class Handshake implements Serializable, Packet {
+    private static final long serialVersionUID = 184L;
     public static final String VERSION = NetMan.NET_VER;
     public String ID;
     public String version;

@@ -6,6 +6,7 @@ import com.lifeform.main.network.IConnectionManager;
 import java.io.Serializable;
 
 public class StatUpdate implements Serializable, PoolPacket {
+    private static final long serialVersionUID = 184L;
     public long shares;
     public double currentPPS;
 

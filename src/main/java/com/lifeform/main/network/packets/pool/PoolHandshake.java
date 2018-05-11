@@ -9,6 +9,7 @@ import com.lifeform.main.transactions.Address;
 import java.io.Serializable;
 
 public class PoolHandshake implements Serializable, PoolPacket {
+    private static final long serialVersionUID = 184L;
     public String address;
     public String ID;
     public String version;

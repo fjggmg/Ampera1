@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class PoolBlockHeader implements Serializable, PoolPacket {
+    private static final long serialVersionUID = 184L;
     public String solver;
     public String merkleRoot;
     public String ID;

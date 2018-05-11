@@ -10,7 +10,7 @@ import java.io.UnsupportedEncodingException;
  * Created by Bryan on 8/8/2017.
  */
 public class Address implements Serializable, IAddress {
-
+    private static final long serialVersionUID = 184L;
     public static final byte VERSION = 0X7F;
     public Address(byte version, String ID, String checksum)
     {

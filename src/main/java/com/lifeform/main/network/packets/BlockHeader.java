@@ -8,6 +8,7 @@ import java.math.BigInteger;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public class BlockHeader implements Serializable, Packet {
+    private static final long serialVersionUID = 184L;
     public String solver;
     public String merkleRoot;
     public String ID;

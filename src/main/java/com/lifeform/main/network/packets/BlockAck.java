@@ -8,7 +8,7 @@ import java.io.Serializable;
 import java.math.BigInteger;
 
 public class BlockAck implements Serializable,Packet {
-
+    private static final long serialVersionUID = 184L;
     public BigInteger height;
     public boolean verified;
     @Override

@@ -9,6 +9,7 @@ import java.io.Serializable;
 import java.util.List;
 
 public class BlockEnd implements Serializable, Packet {
+    private static final long serialVersionUID = 184L;
     public String ID;
 
     @Override

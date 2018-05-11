@@ -5,7 +5,7 @@ import java.util.Comparator;
 
 public class OrderComparator implements Comparator<Order>, Serializable {
     private boolean buy;
-
+    private static final long serialVersionUID = 184L;
     public OrderComparator(boolean buy) {
         this.buy = buy;
     }

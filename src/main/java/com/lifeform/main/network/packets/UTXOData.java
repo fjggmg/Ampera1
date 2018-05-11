@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class UTXOData implements Serializable, Packet {
-
+    private static final long serialVersionUID = 184L;
     byte[] utxos;
 
     @Override

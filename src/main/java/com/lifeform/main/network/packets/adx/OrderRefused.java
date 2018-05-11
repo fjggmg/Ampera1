@@ -8,6 +8,7 @@ import com.lifeform.main.network.packets.PacketGlobal;
 import java.io.Serializable;
 
 public class OrderRefused implements Packet, Serializable {
+    private static final long serialVersionUID = 184L;
     String ID;
 
     @Override

@@ -2369,14 +2369,11 @@ public class NewGUI {
 
     private JFXButton buildMainButton(String text, String image, int offset, int graphicOffset, List<Pane> content, Pane show) {
         JFXButton button = buildButton(text, image, offset, graphicOffset);
-        button.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-                for (Pane p : content) {
-                    p.setVisible(false);
-                }
-                show.setVisible(true);
+        button.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
+            for (Pane p : content) {
+                p.setVisible(false);
             }
+            show.setVisible(true);
         });
         return button;
     }
