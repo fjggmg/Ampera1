@@ -53,7 +53,7 @@ public class InputHandler extends Thread {
 
             try {
                 String line = s.readLine();
-
+                if (line == null) continue;
                 if (line.startsWith("exit")) {
                     System.out.println("Exiting program");
                     ki.close();
@@ -198,6 +198,8 @@ public class InputHandler extends Thread {
                                 ki.debug("Output data : " + out.getID() + " Address: " + out.getAddress().encodeForChain() + " Amount: " + out.getAmount());
                             }
                         ki.debug("Done getting UTXOs");
+                    } catch (RuntimeException e) {
+                        throw e;
                     } catch (Exception e) {
                         ki.debug("Invalid address");
                     }
