@@ -543,6 +543,8 @@ public class TransactionManager extends Thread implements ITransMan {
                         ki.debug("Adding signature to transaction with key: " + kktp.getKeyType());
                         wm.setElement(ki.getEncryptMan().sign(trans.toSignBytes(), kktp.getKeyType()), i);
                     }
+                } catch (RuntimeException e) {
+                    throw e;
                 } catch (Exception e) {
                     //fail quietly
                     break;

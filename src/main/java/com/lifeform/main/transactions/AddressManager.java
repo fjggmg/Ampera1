@@ -128,6 +128,8 @@ public class AddressManager implements IAddMan {
                         entropyMap.remove(add.encodeForChain());
                     }
                 }
+            } catch (RuntimeException e) {
+                throw e;
             } catch (Exception e) {
                 ki.getMainLog().warn("Unable to load from old address system, if you did not have any addresses before 18.0, this is not a problem, if you did, report this.", e);
             }

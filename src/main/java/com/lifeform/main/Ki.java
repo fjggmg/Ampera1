@@ -220,6 +220,8 @@ public class Ki extends Thread implements IKi {
             try {
                 miningPool = new Pool(null, new BigInteger("00000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF", 16), 0, ki, new KiEventHandler(this));
                 miningPool.start();
+            } catch (RuntimeException e) {
+                throw e;
             } catch (Exception e) {
                 ki.debug("Mining pool failed to start");
             }

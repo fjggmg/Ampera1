@@ -502,6 +502,8 @@ public class NewGUI {
 
                 guiXAM.putBytes("heightMap", hpa2.serializeToBytes());
             }
+        } catch (RuntimeException e) {
+            throw e;
         } catch (Exception e) {
             ki.getMainLog().warn("Adding a transaction to the table failed. This is not a critical error.", e);
         }
@@ -1344,6 +1346,8 @@ public class NewGUI {
                         sigsRequired.getItems().add(new Label(i + 1 + " of " + keys.size()));
                     }
                     sigsRequired.getSelectionModel().select(selection);
+                } catch (RuntimeException e) {
+                    throw e;
                 } catch (Exception e) {
                     notification("Invalid key");
                 }
@@ -1897,6 +1901,8 @@ public class NewGUI {
                             if (ki.getEncryptMan().getPublicKeyString(kktp.getKeyType()).equals(Utils.toBase64(kktp.getKey()))) {
                                 wm.setElement(ki.getEncryptMan().sign(trans.toSignBytes(), kktp.getKeyType()), i);
                             }
+                        } catch (RuntimeException e) {
+                            throw e;
                         } catch (Exception e) {
                             //fail quietly
                             break;

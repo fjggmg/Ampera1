@@ -188,7 +188,7 @@ public class Output implements TXIO, IAmpByteSerializable {
         hpa.addBytes(receiver.toByteArray());
         if (token == null) {
             Ki.getInstance().getMainLog().fatal("TOKEN IN OUTPUT WAS NULL");
-            return null;
+            return new byte[0];
         }
         hpa.addBytes(ByteTools.deconstructInt(token.getID()));
 

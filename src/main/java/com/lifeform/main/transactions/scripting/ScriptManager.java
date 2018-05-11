@@ -67,6 +67,8 @@ public class ScriptManager {
                     "PI0", "LOATS", "PI3", "LCSK", "VAS", "BRN2", "PI1", "LOATS", "PI3", "LCSK", "VAS", "BRN2",
                     "PI0", "LMSK", "VBS", "BRN2", "CSK", "PI0", "TERM", "CSK", "PI1", "TERM"), bce8);
             genTrade = new Program(gTrade);
+        } catch (RuntimeException e) {
+            throw e;
         } catch (Exception e) {
             ki.getMainLog().error("Exception compiling general trade script", e);
         }

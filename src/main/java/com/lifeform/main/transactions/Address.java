@@ -47,7 +47,7 @@ public class Address implements Serializable, IAddress {
         char[] idChar = check.toCharArray();
         char[] cChar = {idChar[idChar.length - 4], idChar[idChar.length - 3], idChar[idChar.length - 2], idChar[idChar.length - 1]};
         String sum = new String(cChar);
-        return toByteArrayStrict() != null && sum.equals(checksum);
+        return toByteArrayStrict().length != 0 && sum.equals(checksum);
     }
 
     @Override
@@ -119,7 +119,7 @@ public class Address implements Serializable, IAddress {
         try {
             payload = Utils.fromBase64(ID);
         } catch (Exception e) {
-            return null;
+            return new byte[0];
         }
         byte[] array;
         array = new byte[payload.length + 3];
@@ -143,7 +143,7 @@ public class Address implements Serializable, IAddress {
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         }
-        return null;
+        return new byte[0];
         /*
         byte[] payload = {};
         try {

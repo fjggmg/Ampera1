@@ -251,6 +251,7 @@ public class NewAdd implements IAddress {
     }
 
     public static IAddress fromByteArray(byte[] array) {
+        if (array.length == 0) return null;
         byte version = array[0];
         if (version != VERSION && version != PREFIXED_VERSION) return null;
         AddressLength l = AddressLength.byIndicator(array[1]);
