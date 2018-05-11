@@ -37,8 +37,8 @@ public class VerifyRatio implements IOperator {
         BigInteger denominator = new BigInteger(stack.pop().getData());
         BigInteger ratTo = new BigInteger(stack.pop().getData());
         BigInteger ratFrom = new BigInteger(stack.pop().getData());
-        System.out.println("expected ratio:" + numerator.divide(BigInteger.valueOf(100_000_000)) + "/" + denominator.divide(BigInteger.valueOf(100_000_000)));
-        System.out.println("observed ratio: " + ratTo.multiply(numerator).divide(BigInteger.valueOf(100_000_000)) + "/" + (ratFrom.multiply(denominator).divide(BigInteger.valueOf(100_000_000))));
+        //System.out.println("expected ratio:" + numerator.divide(BigInteger.valueOf(100_000_000)) + "/" + denominator.divide(BigInteger.valueOf(100_000_000)));
+        //System.out.println("observed ratio: " + ratTo.multiply(numerator).divide(BigInteger.valueOf(100_000_000)) + "/" + (ratFrom.multiply(denominator).divide(BigInteger.valueOf(100_000_000))));
 
         if (ratTo.multiply(numerator).compareTo(ratFrom.multiply(denominator)) != 0) {
             stack.push(DataElement.create(ByteTools.deconstructInt(0)));

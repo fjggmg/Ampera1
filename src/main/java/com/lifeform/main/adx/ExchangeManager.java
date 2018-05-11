@@ -630,7 +630,7 @@ public class ExchangeManager {
     }
 
     public String txIDforOrderID(String oID) {
-        //TODO wtf is going on here
+        //this is a double check because it may be slightly faster
         if (oIDtoTXID.get(oID) != null)
             return oIDtoTXID.get(oID);
         return orders.get(oID).getTxid();

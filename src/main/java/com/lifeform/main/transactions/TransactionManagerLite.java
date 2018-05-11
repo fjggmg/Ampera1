@@ -54,7 +54,8 @@ public class TransactionManagerLite extends Thread implements ITransMan {
                 }
             }
         }
-
+        if (!ki.getOptions().nogui && ki.getGUIHook() != null)
+            ki.getGUIHook().pbpDone();
         return true;
     }
 
@@ -334,7 +335,7 @@ public class TransactionManagerLite extends Thread implements ITransMan {
             trans.makeChange(fee, changeAddress);
             //trans.addSig(ki.getEncryptMan().getPublicKeyString(a.getKeyType()), Utils.toBase64(ki.getEncryptMan().sign(trans.toSignBytes(), a.getKeyType())));
             WritableMemory wm = new WritableMemory();
-            //TODO magic value because we can't get size of constant memory, and, also, we don't know how many keys are here.....
+            //magic value but works, may update later
             int i = 0;
             for (; i < 32; i++) {
                 try {

@@ -95,7 +95,7 @@ public class PacketProcessor implements IPacketProcessor{
     private PacketGlobal pg;
     @Override
     public void process(Object packet) {
-        //TODO: investigate if we even need this typecheck, afaik netty should break if it receives something that it doesn't recognize
+        //typecheck keeps us sane, and is relatively cheap
         if (packet instanceof Packet)
         {
             ((Packet) packet).process(ki, connMan, pg);

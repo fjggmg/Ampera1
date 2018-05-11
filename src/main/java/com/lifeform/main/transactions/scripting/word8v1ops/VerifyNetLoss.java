@@ -37,7 +37,7 @@ public class VerifyNetLoss implements IOperator {
     public void execute(Stack<DataElement> stack, Binary binary, Program program, ConstantMemory constantMemory, JumpMemory jumpMemory, WritableMemory writableMemory, OPCode opCode, ITrans transaction, byte[] executionAddress) throws Exception {
         BigInteger expected = new BigInteger(stack.pop().getData());
         IAddress address = Address.fromByteArray(executionAddress);
-        System.out.println("Expected: " + expected);
+        //System.out.println("Expected: " + expected);
         BigInteger actual = BigInteger.ZERO;
         List<Token> tokens = new ArrayList<>();
         BigInteger allIn = BigInteger.ZERO;
@@ -62,7 +62,7 @@ public class VerifyNetLoss implements IOperator {
             }
 
         }
-        System.out.println("Actual: " + actual);
+        //System.out.println("Actual: " + actual);
         if (allIn.subtract(actual).compareTo(expected) != 0) {
             stack.push(new DataElement(ByteTools.deconstructInt(0)));
         } else {

@@ -38,7 +38,6 @@ import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.collections.ObservableMap;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
@@ -205,8 +204,8 @@ public class NewGUI {
     private BigInteger unitMultiplierPrice = BigInteger.valueOf(100);
     private BigInteger unitMultiplierAmount = BigInteger.valueOf(100);
     private IKi ki;
-    private ObservableMap<Token, BigInteger> tokenValueMap = FXCollections.observableMap(new HashMap<Token, BigInteger>());
-    private volatile boolean isFinal = false;
+    //private ObservableMap<Token, BigInteger> tokenValueMap = FXCollections.observableMap(new HashMap<Token, BigInteger>());
+    //private volatile boolean isFinal = false;
     private volatile boolean run = true;
     private Map<String, BigInteger> heightMap = new HashMap<>();
     private List<ITrans> sTrans = new CopyOnWriteArrayList<>();
@@ -221,9 +220,11 @@ public class NewGUI {
     public NewGUI() {
         ki = Ki.getInstance();
         transactions = FXCollections.observableArrayList();
+        /*
         for (Token t : Token.values()) {
             tokenValueMap.put(t, BigInteger.ZERO);
         }
+        */
         ki.setGUIHook(this);
         try {
             if (guiXAM.getBytes("blocksFound") != null)
@@ -547,33 +548,9 @@ public class NewGUI {
                                 ki.getMainLog().error("Could not close correctly ", e);
                             }
                             continue;
-                        } else {
-                            isFinal = false;
-                            for (Token t : Token.values()) {
-                                tokenValueMap.put(t, BigInteger.ZERO);
-                            }
-                            List<Output> utxos = null;
-                            try {
-                                utxos = ki.getTransMan().getUTXOs(ki.getAddMan().getMainAdd(), false);
-
-                            } catch (Exception e) {
-                                //environment inoperative or other issue, ignore for now
-                                ki.getMainLog().error("Error retrieving utxos for wallet", e);
-                            }
-
-                            if (utxos != null) {
-                                for (Output o : utxos) {
-                                    if (tokenValueMap.get(o.getToken()) == null) {
-                                        tokenValueMap.put(o.getToken(), o.getAmount());
-                                    } else {
-                                        tokenValueMap.put(o.getToken(), tokenValueMap.get(o.getToken()).add(o.getAmount()));
-                                    }
-                                }
-                            }
-                            isFinal = true;
                         }
                         try {
-                            sleep(1200);
+                            sleep(100);
                             //System.out.println("done sleeping");
                         } catch (InterruptedException e) {
                             return;
@@ -619,7 +596,7 @@ public class NewGUI {
             @Override
             public void changed(ObservableValue<? extends Label> observable, Label oldValue, Label newValue) {
                 tokenLabel.setText(tokenBox.getSelectionModel().getSelectedItem().getText());
-                walletAmount.setText(format2.format((double) tokenValueMap.get(Token.byName(tokenBox.getSelectionModel().getSelectedItem().getText())).longValueExact() / 100_000_000));
+                walletAmount.setText(format2.format((double) ki.getTransMan().getAmountInWallet(ki.getAddMan().getMainAdd(), Token.byName(tokenBox.getSelectionModel().getSelectedItem().getText())).longValueExact() / 100_000_000));
             }
         });
         copyAddress.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
@@ -1074,7 +1051,6 @@ public class NewGUI {
 
                     public void run() {
 
-
                         while (hpa.hasNextElement()) {
                             try {
                                 ITrans t = Transaction.fromAmplet(Amplet.create(hpa.getNextElement()));
@@ -1497,8 +1473,8 @@ public class NewGUI {
         vb.getChildren().add(new Separator());
         if (!ki.getOptions().lite && !ki.getOptions().pool)
             fillMasonry(ki.getChainMan().currentHeight().subtract(BigInteger.valueOf(100)), ki.getChainMan().currentHeight());
-        chainHeight2.setFont(Font.loadFont(getClass().getResourceAsStream("/ADAM.CG PRO.otf"), 10));
-        ch2dec.setFont(Font.loadFont(getClass().getResourceAsStream("/ADAM.CG PRO.otf"), 10));
+        chainHeight2.setFont(acg10);
+        ch2dec.setFont(acg10);
         //chainHeight2.setPrefHeight(80);
         ch2dec.setMinWidth(90);
         ch2dec.setTextAlignment(TextAlignment.CENTER);
@@ -1519,7 +1495,7 @@ public class NewGUI {
             }
         });
 
-        latency.setFont(Font.loadFont(getClass().getResourceAsStream("/ADAM.CG PRO.otf"), 10));
+        latency.setFont(acg10);
         if (!ki.getOptions().pool)
             vb.getChildren().add(latency);
         //vb.setStyle("-fx-background-color:" + ki.getStringSetting(StringSettings.PRIMARY_COLOR));
@@ -2179,7 +2155,8 @@ public class NewGUI {
                         Platform.runLater(new Thread() {
                             public void run() {
                                 setDaemon(true);
-                                ki.getExMan().getOrderBook().sort();
+                                if (!ki.getExMan().getOrderBook().isSorted())
+                                    ki.getExMan().getOrderBook().sort();
 
                                 /*
                                 if (!ki.getExMan().getOrderBook().hasRun()) {
@@ -2375,15 +2352,7 @@ public class NewGUI {
 
                         }
                     });
-                    if (!ki.getOptions().pool)
-                        Platform.runLater(new Thread() {
-                            public void run() {
 
-                                if (!isFinal) return;
-                                //System.out.println("Setting the shit");
-                                walletAmount.setText(format2.format((double) tokenValueMap.get(Token.byName(tokenBox.getSelectionModel().getSelectedItem().getText())).longValueExact() / 100_000_000));
-                            }
-                        });
                     try {
                         sleep(100);
                     } catch (InterruptedException e) {
@@ -2397,11 +2366,7 @@ public class NewGUI {
 
         for (Token t : Token.values()) {
             if (t.getName().contains("TOKEN")) continue;
-            JFXButton button = new JFXButton(t.getName());
-            button.setWrapText(true);
-            button.setMinHeight(60);
-            button.setPrefWidth(1000);
-            button.setBackground(new Background(new BackgroundFill(Color.valueOf(getDefaultColor(new Random().nextInt(12))), CornerRadii.EMPTY, Insets.EMPTY)));
+
             Label l = new Label(t.getName());
             //l.setStyle("-fx-text-fill:BLACK");
             tokenBox.getItems().add(l);
@@ -2421,6 +2386,16 @@ public class NewGUI {
         return button;
     }
 
+    public void pbpDone() {
+        Platform.runLater(new Runnable() {
+            @Override
+            public void run() {
+                walletAmount.setText(format2.format((double) ki.getTransMan().getAmountInWallet(ki.getAddMan().getMainAdd(), Token.byName(tokenBox.getSelectionModel().getSelectedItem().getText())).longValueExact() / 100_000_000));
+            }
+        });
+
+    }
+
     private JFXButton buildButton(String text, String image, int offset, int graphicOffset) {
         for (int i = 0; i < graphicOffset; i++) {
             if (i % 2 != 0)
@@ -2430,7 +2405,7 @@ public class NewGUI {
         }
         JFXButton button = new JFXButton(text);
         button.setRipplerFill(Color.valueOf(getDefaultColor(new Random().nextInt(12))));
-        Image img = new Image(getClass().getResourceAsStream(image));
+        Image img = new Image(NewGUI.class.getResourceAsStream(image));
 
         ImageView iv = new ImageView(img);
         //iv.setTranslateX(-20);
@@ -2468,13 +2443,13 @@ public class NewGUI {
         animation.setDelay(Duration.millis(offset));
         btnAnimations.add(animation);
         btnAnimationsR.add(animation2);
-        button.setFont(Font.loadFont(getClass().getResourceAsStream("/ADAM.CG PRO.otf"), 10));
+        button.setFont(acg10);
 
         return button;
     }
 
     private BigInteger currentBlock = BigInteger.ZERO;
-
+    private Font acg10 = Font.loadFont(NewGUI.class.getResourceAsStream("/ADAM.CG PRO.otf"), 10);
     /**
      * so, this method was built to fill in the block explorer masonry pane because I really liked the effect of
      * the masonry pane. It works, but the masonry effect never became what I actually wanted, mostly because
@@ -2492,6 +2467,7 @@ public class NewGUI {
             return;
         }
         if (bottomRange.compareTo(BigInteger.ZERO) < 0) {
+            if (ki.getChainMan().currentHeight().compareTo(BigInteger.valueOf(100)) < 0) return;
             notification("Invalid range");
             return;
         }
@@ -2510,7 +2486,7 @@ public class NewGUI {
         mp.setMinWidth(beScroll.getWidth());
         mp.setMinHeight(beScroll.getHeight());
         List<Node> children = new ArrayList<>();
-        Font f = Font.loadFont(getClass().getResourceAsStream("/ADAM.CG PRO.otf"), 12);
+        Font f = Font.loadFont(NewGUI.class.getResourceAsStream("/ADAM.CG PRO.otf"), 12);
         mp.setCellWidth(70);
         mp.setCellHeight(20);
         mp.setLayoutMode(JFXMasonryPane.LayoutMode.MASONRY);
@@ -2743,14 +2719,12 @@ public class NewGUI {
     private double currentPPS = 0;
 
     private void prepareOH() {
-        while (!isFinal) {
-            try {
-                Thread.sleep(50);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
+
         ohPortfolio.getData().clear();
+        Map<Token, BigInteger> tokenValueMap = new HashMap<>();
+        for (Token t : Token.values()) {
+            tokenValueMap.put(t, ki.getTransMan().getAmountInWallet(ki.getAddMan().getMainAdd(), t));
+        }
         for (Map.Entry<Token, BigInteger> t : tokenValueMap.entrySet()) {
             if (!t.getKey().getName().contains("TOKEN") && t.getValue().compareTo(BigInteger.ZERO) != 0)
                 ohPortfolio.getData().add(new PieChart.Data(t.getKey().getName(), t.getValue().divide(BigInteger.valueOf(100_000_000)).doubleValue()));

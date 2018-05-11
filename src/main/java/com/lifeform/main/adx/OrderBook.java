@@ -138,7 +138,7 @@ public class OrderBook {
     public boolean addData(BigInteger amount, BigInteger price, long timestamp) {
         if (data.isEmpty()) {
             hasNew = true;
-            ExchangeData data = new ExchangeData(price, timestamp, 5);//TODO possibly create constructor with amount?
+            ExchangeData data = new ExchangeData(price, timestamp, 5);
             data.addData(price, amount);
             this.data.add(data);
         } else if (data.get(data.size() - 1).done(timestamp)) {

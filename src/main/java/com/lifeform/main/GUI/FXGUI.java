@@ -29,10 +29,10 @@ public class FXGUI extends Application {
         pStage.setTitle("Origin");
 
         //NewGUI.stage = pStage;
-        Parent root = FXMLLoader.load(getClass().getResource("/NewGUI.fxml"));
+        Parent root = FXMLLoader.load(FXGUI.class.getResource("/NewGUI.fxml"));
         JFXDecorator decorator = new JFXDecorator(pStage, root);
         //decorator.setCustomMaximize(false);
-        String css = getClass().getResource("/text-style.css").toExternalForm();
+        String css = FXGUI.class.getResource("/text-style.css").toExternalForm();
         decorator.setOnCloseButtonAction(() -> {
             System.out.println("Close requested");
             if (Ki.getInstance().getOptions().pool) {
@@ -50,7 +50,7 @@ public class FXGUI extends Application {
         pStage.setMinHeight(650);
         pStage.setWidth(1156);
         pStage.setHeight(650);
-        pStage.getIcons().add(new Image(getClass().getResourceAsStream("/origin.png")));
+        pStage.getIcons().add(new Image(FXGUI.class.getResourceAsStream("/origin.png")));
         pStage.setScene(scene);
         pStage.show();
         Ki.getInstance().getGUIHook().postInit(this, pStage);

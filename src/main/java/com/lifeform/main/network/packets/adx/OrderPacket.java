@@ -45,7 +45,7 @@ public class OrderPacket implements Packet, Serializable {
             if (matched) {
                 //ki.debug("Matched order, ID: " + order.getID());
                 if (!onChain) {
-                    //TODO possibly put trigger code here
+                    //trigger not needed for matched order
                     ki.getExMan().addMatchPending(transaction, order);
                 } else
                     ki.getExMan().addMatched(order);

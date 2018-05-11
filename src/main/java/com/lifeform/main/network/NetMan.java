@@ -130,7 +130,7 @@ public class NetMan extends Thread implements INetworkManager {
         t.start();
     }
 
-    private List<Thread> threads = new ArrayList<>();
+    private List<Thread> threads = new CopyOnWriteArrayList<>();
     @Override
     public void run()
     {
