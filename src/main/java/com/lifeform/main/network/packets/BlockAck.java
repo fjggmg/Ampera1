@@ -13,6 +13,7 @@ public class BlockAck implements Serializable,Packet {
     public boolean verified;
     @Override
     public void process(IKi ki, IConnectionManager connMan, PacketGlobal pg) {
+        if (height == null) return;
         pg.cancelResend(height);
         if(verified)
         {

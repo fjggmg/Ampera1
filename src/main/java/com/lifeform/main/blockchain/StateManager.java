@@ -36,7 +36,7 @@ public class StateManager extends Thread implements IStateManager {
         ki.debug("Adding block of height: " + block.height);
         synchronized (sync) {
             ki.debug("Notifying State Manager");
-            sync.notify();
+            sync.notifyAll();
         }
 
     }

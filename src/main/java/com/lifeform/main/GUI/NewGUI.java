@@ -240,60 +240,8 @@ public class NewGUI {
         } catch (Exception e) {
             ki.getMainLog().error("Error in GUI data loading: ", e);
         }
-        if (!ki.getOptions().pool) {
-            Thread t = new Thread() {
-                public void run() {
-                    //setDaemon(true);
-                    while (run) {
-                        if (close) {
-                            try {
-                                ki.close();
-                                Platform.exit();
-                                break;
-                            } catch (Exception e) {
-                                ki.getMainLog().error("Could not close correctly ", e);
-                            }
-                            continue;
-                        } else {
-                            isFinal = false;
-                            for (Token t : Token.values()) {
-                                tokenValueMap.put(t, BigInteger.ZERO);
-                            }
-                            List<Output> utxos = null;
-                            try {
-                                utxos = ki.getTransMan().getUTXOs(ki.getAddMan().getMainAdd(), false);
 
-                            } catch (Exception e) {
-                                //environment inoperative or other issue, ignore for now
-                                ki.getMainLog().error("Error retrieving utxos for wallet", e);
-                            }
 
-                            if (utxos != null) {
-                                for (Output o : utxos) {
-                                    if (tokenValueMap.get(o.getToken()) == null) {
-                                        tokenValueMap.put(o.getToken(), o.getAmount());
-                                    } else {
-                                        tokenValueMap.put(o.getToken(), tokenValueMap.get(o.getToken()).add(o.getAmount()));
-                                    }
-                                }
-                            }
-                            isFinal = true;
-                        }
-                        try {
-                            sleep(1200);
-                            //System.out.println("done sleeping");
-                        } catch (InterruptedException e) {
-                            return;
-                        }
-
-                    }
-                }
-            };
-            t.setName("GUI-Backend");
-            t.setDaemon(true);
-            threads.add(t);
-            t.start();
-        }
     }
 
     private List<Thread> threads = new ArrayList<>();
@@ -581,6 +529,60 @@ public class NewGUI {
 
     @FXML
     void initialize() {
+        if (!ki.getOptions().pool) {
+            Thread t = new Thread() {
+                public void run() {
+                    //setDaemon(true);
+                    while (run) {
+                        if (close) {
+                            try {
+                                ki.close();
+                                Platform.exit();
+                                break;
+                            } catch (Exception e) {
+                                ki.getMainLog().error("Could not close correctly ", e);
+                            }
+                            continue;
+                        } else {
+                            isFinal = false;
+                            for (Token t : Token.values()) {
+                                tokenValueMap.put(t, BigInteger.ZERO);
+                            }
+                            List<Output> utxos = null;
+                            try {
+                                utxos = ki.getTransMan().getUTXOs(ki.getAddMan().getMainAdd(), false);
+
+                            } catch (Exception e) {
+                                //environment inoperative or other issue, ignore for now
+                                ki.getMainLog().error("Error retrieving utxos for wallet", e);
+                            }
+
+                            if (utxos != null) {
+                                for (Output o : utxos) {
+                                    if (tokenValueMap.get(o.getToken()) == null) {
+                                        tokenValueMap.put(o.getToken(), o.getAmount());
+                                    } else {
+                                        tokenValueMap.put(o.getToken(), tokenValueMap.get(o.getToken()).add(o.getAmount()));
+                                    }
+                                }
+                            }
+                            isFinal = true;
+                        }
+                        try {
+                            sleep(1200);
+                            //System.out.println("done sleeping");
+                        } catch (InterruptedException e) {
+                            return;
+                        }
+
+                    }
+                }
+            };
+            t.setName("GUI-Backend");
+            t.setDaemon(true);
+            threads.add(t);
+            t.start();
+        }
         if (!ki.getOptions().pool)
             loadHeight = ki.getChainMan().currentHeight();
         highSecurity.setSelected(ki.getSetting(Settings.HIGH_SECURITY));
@@ -803,7 +805,7 @@ public class NewGUI {
                 BigInteger amount;
                 try {
                     amount = new BigDecimal(amtOnOffer.getText()).multiply(BigDecimal.valueOf(unitMultiplierAmount.doubleValue())).toBigInteger();
-                } catch (Exception e) {
+                } catch (NumberFormatException e) {
                     notification("Invalid Amount");
                     return;
                 }
@@ -842,7 +844,7 @@ public class NewGUI {
                 BigInteger amount;
                 try {
                     amount = new BigDecimal(amtOnOffer.getText()).multiply(BigDecimal.valueOf(unitMultiplierAmount.doubleValue())).toBigInteger();
-                } catch (Exception e) {
+                } catch (NumberFormatException e) {
                     notification("Invalid Amount");
                     return;
                 }
@@ -1261,7 +1263,7 @@ public class NewGUI {
                     long pps = (long) (fee * 100_000_000L);
                     ki.setStringSetting(StringSettings.POOL_STATIC_PPS, "" + pps);
                     ki.getPoolManager().updateCurrentPayPerShare(pps);
-                } catch (Exception e) {
+                } catch (NumberFormatException e) {
                     ki.getMainLog().warn("Could not parse static pool fee " + newValue);
                 }
             }
@@ -1523,13 +1525,13 @@ public class NewGUI {
                 int start = 0;
                 try {
                     start = Integer.parseInt(fromBlock.getText());
-                } catch (Exception e) {
+                } catch (NumberFormatException e) {
                     return;
                 }
                 int end = 0;
                 try {
                     end = Integer.parseInt(toBlock.getText());
-                } catch (Exception e) {
+                } catch (NumberFormatException e) {
                     return;
                 }
 
@@ -1890,7 +1892,7 @@ public class NewGUI {
                         try {
                             KeyKeyTypePair kktp = KeyKeyTypePair.fromBytes(bin.getConstantMemory().getElement(i).getData());
                             if (kktp == null) break;
-                            if (kktp.getKey() == null) break;
+                            //if (kktp.getKey() == null) break;
                             if (kktp.getKeyType() == null) break;
                             if (ki.getEncryptMan().getPublicKeyString(kktp.getKeyType()).equals(Utils.toBase64(kktp.getKey()))) {
                                 wm.setElement(ki.getEncryptMan().sign(trans.toSignBytes(), kktp.getKeyType()), i);
@@ -2104,7 +2106,7 @@ public class NewGUI {
                 }
             }
         });
-        obRecentDirection.setCellFactory(param -> new ListCell<Order>() {
+        obRecentDirection.setCellFactory((ListView<Order> param) -> new ListCell<Order>() {
             @Override
             protected void updateItem(Order item, boolean empty) {
                 super.updateItem(item, empty);
@@ -2199,11 +2201,13 @@ public class NewGUI {
 
                                 //setDaemon(true);
                                 for (XYChart.Series<String, Number> series : hashrateChart.getData()) {
+                                    /*
                                     try {
                                         ki.getMinerMan().getHashrate(series.getName());
                                     } catch (Exception e) {
                                         return;
                                     }
+                                    */
                                     if (series.getData().size() > 60) {
                                         series.getData().remove(0);
                                     }

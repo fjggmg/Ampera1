@@ -22,7 +22,7 @@ public class UTXOData implements Serializable, Packet {
             HeadlessPrefixedAmplet hpa = HeadlessPrefixedAmplet.create(utxos);
             while (hpa.hasNextElement()) {
                 Output out = Output.fromBytes(hpa.getNextElement());
-                if (out == null) continue;
+                //if (out == null) continue;
                 ki.debug("Output info: " + out.getID() + " Address " + out.getAddress().encodeForChain());
                 outputs.add(out);
                 //ki.getMainLog().info("Output: " + Output.fromJSON(o).getID());

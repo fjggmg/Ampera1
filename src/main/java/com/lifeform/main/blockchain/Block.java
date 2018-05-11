@@ -163,7 +163,7 @@ public class Block implements IAmpAmpletSerializable {
             return header.getBytes("UTF-8");
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
-            return null;
+            return new byte[0];
         }
     }
     public String toJSON()

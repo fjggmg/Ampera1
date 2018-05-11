@@ -14,6 +14,7 @@ public class BlockRequest implements Serializable, Packet {
     public void process(IKi ki, IConnectionManager connMan, PacketGlobal pg) {
         if(ki.getOptions().pDebug)
         ki.debug("Received block request");
+        if (fromHeight == null) return;
         if (!lite) {
             if (fromHeight.compareTo(ki.getChainMan().currentHeight()) < 0)
                 pg.sendBlock(fromHeight.add(BigInteger.ONE));

@@ -114,14 +114,14 @@ public class ChainManagerLite implements IChainMan {
                 boolean add = false;
                 ITrans transaction = b.getTransaction(trans);
                 for (Output o : transaction.getOutputs()) {
-                    for (IAddress a : ki.getAddMan().getActive()) {
+                    for (IAddress a : ki.getAddMan().getAll()) {
                         if (o.getAddress().encodeForChain().equals(a.encodeForChain())) {
                             add = true;
                         }
                     }
                 }
                 for (Input i : transaction.getInputs()) {
-                    for (IAddress a : ki.getAddMan().getActive()) {
+                    for (IAddress a : ki.getAddMan().getAll()) {
                         if (i.getAddress().encodeForChain().equals(a.encodeForChain())) {
                             add = true;
                         }

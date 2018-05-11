@@ -96,7 +96,7 @@ public class CandlestickGraph extends LineChart<String, Number> {
                 if (itemNode instanceof Candle && item.getYValue() != null) {
                     Candle candle = (Candle) itemNode;
                     ExchangeData data = candle.data;
-                    if (getYAxis().getDisplayPosition(data.open.doubleValue() / DIV_CONSTANT) != y) {
+                    if (Math.abs(getYAxis().getDisplayPosition(data.open.doubleValue() / DIV_CONSTANT) - y) > 0.000001) {
                         y = getYAxis().getDisplayPosition(data.open.doubleValue() / DIV_CONSTANT);
                     }
                     //System.out.println("highData: " + data.high.doubleValue()/DIV_CONSTANT);

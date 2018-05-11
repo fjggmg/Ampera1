@@ -435,7 +435,7 @@ public class EncryptionManager  implements IEncryptMan{
             e.printStackTrace();
             //logger.debug("Could not sign input string: " + toSign);
         }
-        return null;
+        return new byte[0];
     }
 
 

@@ -25,7 +25,6 @@ public class AddressManager implements IAddMan {
     String addFolder = "addresses/";
     private IKi ki;
     private List<IAddress> addresses = new ArrayList<>();
-    private Map<IAddress, Integer> verifyCounter = new HashMap<>();
     private Map<String, String> entropyMap = new ConcurrentHashMap<>();
     private IAddress main;
     private List<IAddress> inactive = new ArrayList<>();
@@ -68,34 +67,6 @@ public class AddressManager implements IAddMan {
         }
 
         return a;
-    }
-
-    @Override
-    public List<IAddress> getActive() {
-        return addresses;
-    }
-
-    @Override
-    public void receivedOn(IAddress address) {
-        if (address.encodeForChain().equals(main.encodeForChain())) return;
-        IAddress toRemove = null;
-        for (IAddress a : inactive) {
-            if (a.encodeForChain().equals(address.encodeForChain())) {
-                addresses.add(address);
-                toRemove = address;
-            }
-        }
-        inactive.remove(toRemove);
-    }
-
-    @Override
-    public void usedEntirely(IAddress address) {
-        //possibly not needed
-    }
-
-    @Override
-    public void verified(IAddress address) {
-        verifyCounter.put(address, 0);
     }
 
     @Override

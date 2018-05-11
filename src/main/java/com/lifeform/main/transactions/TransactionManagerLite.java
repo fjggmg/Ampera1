@@ -341,7 +341,7 @@ public class TransactionManagerLite extends Thread implements ITransMan {
 
                     KeyKeyTypePair kktp = KeyKeyTypePair.fromBytes(bin.getConstantMemory().getElement(i).getData());
                     if (kktp == null) break;
-                    if (kktp.getKey() == null) break;
+                    //if (kktp.getKey() == null) break;
                     if (kktp.getKeyType() == null) break;
                     if (ki.getEncryptMan().getPublicKeyString(kktp.getKeyType()).equals(Utils.toBase64(kktp.getKey()))) {
                         ki.debug("Adding signature to transaction with key: " + kktp.getKeyType());

@@ -33,15 +33,14 @@ public class FXGUI extends Application {
         JFXDecorator decorator = new JFXDecorator(pStage, root);
         //decorator.setCustomMaximize(false);
         String css = getClass().getResource("/text-style.css").toExternalForm();
-        decorator.setOnCloseButtonAction(new Thread(() -> {
+        decorator.setOnCloseButtonAction(() -> {
             System.out.println("Close requested");
             if (Ki.getInstance().getOptions().pool) {
                 Ki.getInstance().close();
                 return;
             }
             NewGUI.close = true;
-
-        }));
+        });
         decorator.setCustomMaximize(true);
 
         decorator.setStyle("-fx-border-width:0");

@@ -28,23 +28,7 @@ public class PoolNetMan extends Thread implements INetworkManager {
 
         this.ki = ki;
 
-        if (ki.getOptions().pool) {
-            new Thread() {
-                public void run() {
-                    while (true) {
-                        setName("ReconnectThread");
-                        if (connections.size() < 1 && ki.getPoolData().poolConn != null && !ki.getPoolData().poolConn.isEmpty()) {
-                            attemptConnect(ki.getPoolData().poolConn);
-                        }
-                        try {
-                            sleep(10000);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }
-            }.start();
-        }
+
     }
 
     @Override
@@ -166,7 +150,23 @@ public class PoolNetMan extends Thread implements INetworkManager {
             };
             threads.add(t);
             t.start();
-
+            if (ki.getOptions().pool) {
+                new Thread() {
+                    public void run() {
+                        while (true) {
+                            setName("ReconnectThread");
+                            if (connections.size() < 1 && ki.getPoolData().poolConn != null && !ki.getPoolData().poolConn.isEmpty()) {
+                                attemptConnect(ki.getPoolData().poolConn);
+                            }
+                            try {
+                                sleep(10000);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }
+                }.start();
+            }
             Thread t2 = new Thread() {
 
                 public void run() {

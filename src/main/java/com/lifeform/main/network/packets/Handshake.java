@@ -29,7 +29,9 @@ public class Handshake implements Serializable, Packet {
     @Override
     public void process(IKi ki, IConnectionManager connMan, PacketGlobal pg) {
 
-
+        if (ID == null) return;
+        if (currentHeight == null) return;
+        if (version == null) return;
         //pg.startHeight = currentHeight;
         if (chainVer != ki.getChainMan().getChainVer()) {
 

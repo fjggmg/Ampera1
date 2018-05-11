@@ -72,7 +72,7 @@ public class ExchangeManager {
                 }
                 System.out.println("Matched, building  buy transaction2");
 
-                List<Input> inputs = new ArrayList<>();
+                List<Input> inputs;// = new ArrayList<>();
                 inputs = ki.getTransMan().getInputsForAmountAndToken(ki.getAddMan().getMainAdd(), amountBuying.multiply(o.unitPrice()).divide(BigInteger.valueOf(100_000_000)), o.pair().onOffer(), true);
                 if (inputs == null) {
                     currentStatus = OrderStatus.BAD_UTXOS_US;
@@ -263,7 +263,7 @@ public class ExchangeManager {
                 }
                 System.out.println("Matched, building transaction2");
 
-                List<Input> inputs = new ArrayList<>();
+                List<Input> inputs;// = new ArrayList<>();
                 inputs = ki.getTransMan().getInputsForAmountAndToken(ki.getAddMan().getMainAdd(), amountSelling, o.pair().accepting(), true);
                 if (inputs == null) {
                     currentStatus = OrderStatus.BAD_UTXOS_US;

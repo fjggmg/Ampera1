@@ -33,9 +33,7 @@ public class StateManagerLite extends Thread implements IStateManager {
                 for (Map.Entry<String, Map<BigInteger, Block>> connID : blockMap.entrySet()) {
                     if (connID.getValue().get(addHeight) != null) {
                         if (addHeight.compareTo(ki.getChainMan().currentHeight()) > 0) {
-                            if (ki.getChainMan().addBlock(connID.getValue().get(addHeight)).success()) {
-
-                            }
+                            ki.getChainMan().addBlock(connID.getValue().get(addHeight));
                         }
                     }
                 }

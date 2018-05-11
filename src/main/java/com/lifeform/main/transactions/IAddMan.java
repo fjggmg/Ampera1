@@ -22,41 +22,6 @@ public interface IAddMan {
     IAddress getNewAdd(KeyType keyType, boolean save);
 
     /**
-     * This is an outdated method and will be removed soon
-     *
-     * @return "Active" address list (addresses which have had funds assigned to them)
-     */
-    @Deprecated
-    List<IAddress> getActive();
-
-    /**
-     * This is an outdated method, is called from the transaction system when an address receives funds
-     *
-     * @param address address that received funds
-     * @see IAddMan#getActive()
-     */
-    @Deprecated
-    void receivedOn(IAddress address);
-
-    /**
-     * Sets an address as fully used, meaning it can be removed from active lists. It is outdated and will be removed
-     *
-     * @param address address that had all of its funds spent
-     * @see IAddMan#getActive()
-     */
-    @Deprecated
-    void usedEntirely(IAddress address);
-
-    /**
-     * Part of the old active address system, will be removed soon
-     *
-     * @param address address which was verified to have funds on it
-     * @see IAddMan#getActive()
-     */
-    @Deprecated
-    void verified(IAddress address);
-
-    /**
      * called when a block comes through, pretty useless now, may be deprecated later
      */
     void blockTick();

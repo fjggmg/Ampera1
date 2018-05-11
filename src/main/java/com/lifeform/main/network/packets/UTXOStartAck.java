@@ -17,6 +17,7 @@ public class UTXOStartAck implements Packet, Serializable {
 
     @Override
     public void process(IKi ki, IConnectionManager connMan, PacketGlobal pg) {
+        if (addresses == null) return;
         for (String address : addresses) {
             List<Output> utxos = new ArrayList<>();
             IAddress a = Address.decodeFromChain(address);

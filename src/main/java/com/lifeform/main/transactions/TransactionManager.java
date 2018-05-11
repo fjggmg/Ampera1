@@ -40,41 +40,6 @@ public class TransactionManager extends Thread implements ITransMan {
         utxoAmp = new XodusAmpMap("transactions" + ((ki.getOptions().testNet) ? ChainManager.TEST_NET : ChainManager.POW_CHAIN) + "/utxoAmp.dat");//utxoDB.hashMap("utxoDB", Serializer.STRING, Serializer.STRING).createOrOpen();
         utxoVerMap = new XodusAmpMap("transactions" + ((ki.getOptions().testNet) ? ChainManager.TEST_NET : ChainManager.POW_CHAIN) + "/utxoVer.dat");
 
-
-        if (dump) {
-            /*
-            StringFileHandler fh = new StringFileHandler(ki,"utxoDump.txt");
-            fh.delete();
-            for(String key:utxoMap.keySet())
-            {
-
-                fh.addLine("Address: " + key);
-                List<String> dumpList = JSONManager.parseJSONToList(utxoMap.get(key));
-                for(String value:dumpList)
-                {
-                    fh.addLine(value);
-                }
-
-            }
-            fh.save();
-            fh = new StringFileHandler(ki,"utxoValueDump.txt");
-            fh.delete();
-            for(String key:utxoValueMap.keySet())
-            {
-                fh.addLine(key + " " + utxoValueMap.get(key));
-            }
-            fh.save();
-
-            fh = new StringFileHandler(ki,"utxoSpentDump.txt");
-            fh.delete();
-            for(String key:utxoSpent.keySet())
-            {
-                fh.addLine(key + " " + utxoSpent.get(key));
-            }
-            fh.save();
-            */
-            //old dump does not work
-        }
     }
 
     private Thread pbp;
@@ -431,7 +396,7 @@ public class TransactionManager extends Thread implements ITransMan {
                 return false;
             }
             utxoVerMap.putBytes(o.getID(), data.serializeToBytes());
-            ki.getAddMan().receivedOn(o.getAddress());
+            //ki.getAddMan().receivedOn(o.getAddress());
         }
 
 
@@ -572,7 +537,7 @@ public class TransactionManager extends Thread implements ITransMan {
 
                     KeyKeyTypePair kktp = KeyKeyTypePair.fromBytes(bin.getConstantMemory().getElement(i).getData());
                     if (kktp == null) break;
-                    if (kktp.getKey() == null) break;
+                    //if (kktp.getKey() == null) break;
                     if (kktp.getKeyType() == null) break;
                     if (ki.getEncryptMan().getPublicKeyString(kktp.getKeyType()).equals(Utils.toBase64(kktp.getKey()))) {
                         ki.debug("Adding signature to transaction with key: " + kktp.getKeyType());
@@ -691,7 +656,7 @@ public class TransactionManager extends Thread implements ITransMan {
 
         processMap.put(block.height, block);
         synchronized (processLock) {
-            processLock.notify();
+            processLock.notifyAll();
         }
         return true;
     }

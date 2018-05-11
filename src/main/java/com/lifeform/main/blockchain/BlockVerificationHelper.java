@@ -84,10 +84,7 @@ public class BlockVerificationHelper implements IBlockVerificationHelper {
         }
 
         if (revert) {
-            for (String trans : block.getTransactionKeys()) {
-                //ki.getTransMan().undoTransaction(block.getTransaction(trans));
 
-            }
             return false;
         }
         ki.debug("Transactions all verified");

@@ -73,7 +73,7 @@ public class Ki extends Thread implements IKi {
     private InputHandler ih;
     private IStateManager stateMan;
     private Pool miningPool;
-    public static volatile boolean canClose = true;
+    //public static volatile boolean canClose = true;
     private PoolData pd;
     private XodusStringBooleanMap settings = new XodusStringBooleanMap("settings");
     private XodusStringMap stringSettings = new XodusStringMap("etc");
@@ -285,19 +285,19 @@ public class Ki extends Thread implements IKi {
         minerMan = new MinerManager(this, o.mDebug);
         //gui = MainGUI.guiFactory(this);
         debug("Starting GUI");
-        Thread t = new Thread(() -> {
+        guiThread = new Thread(() -> {
             if (!o.nogui)
                 FXGUI.subLaunch();
         });
-        t.start();
-
 
     }
 
+    private Thread guiThread;
     boolean setupDone = false;
     @Override
     public void run() {
         ih.start();
+        guiThread.start();
         while (true) {
             if (o.relay || o.poolRelay) return;
             try {

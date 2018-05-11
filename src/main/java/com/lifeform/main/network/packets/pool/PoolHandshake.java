@@ -18,6 +18,7 @@ public class PoolHandshake implements Serializable, PoolPacket {
     public void process(IKi ki, IConnectionManager connMan) {
 
         ki.debug("Received pool handshake: ");
+        if (version == null) return;
         if (!version.equals(PoolNetMan.POOL_NET_VERSION)) {
             ki.debug("Wrong pool net version");
             connMan.disconnect();
