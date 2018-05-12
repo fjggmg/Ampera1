@@ -24,14 +24,10 @@ public class FXGUI extends Application {
     @Override
     public void start(final Stage pStage) throws Exception{
 
-        //pStage.initStyle(StageStyle.UNDECORATED);
-        //pStage.setResizable(false);
         pStage.setTitle("Origin");
 
-        //NewGUI.stage = pStage;
         Parent root = FXMLLoader.load(FXGUI.class.getResource("/NewGUI.fxml"));
         JFXDecorator decorator = new JFXDecorator(pStage, root);
-        //decorator.setCustomMaximize(false);
         String css = FXGUI.class.getResource("/text-style.css").toExternalForm();
         decorator.setOnCloseButtonAction(() -> {
             System.out.println("Close requested");

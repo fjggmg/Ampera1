@@ -22,6 +22,7 @@ public class NetMan extends Thread implements INetworkManager {
     private IKi ki;
     private boolean isRelay;
     private static final int PORT = 29555;
+    private static final int TESTNET_PORT = 29111;
     private boolean live = false;
     private volatile List<IConnectionManager> connections = new CopyOnWriteArrayList<>();
     private volatile Map<String, IConnectionManager> connMap = new ConcurrentHashMap<>();
@@ -103,7 +104,7 @@ public class NetMan extends Thread implements INetworkManager {
             public void run() {
                 setName("client:" + IP);
                 ki.debug("Attempting connection to: " + IP);
-                Client client = new Client(ki, IP, PORT);
+                Client client = new Client(ki, IP, (ki.getOptions().testNet) ? TESTNET_PORT : PORT);
                 IConnectionManager connMan = new ConnMan(ki, isRelay, client);
                 //connections.add(connMan);
                 try {
@@ -214,8 +215,8 @@ public class NetMan extends Thread implements INetworkManager {
             Thread t = new Thread() {
 
                 public void run() {
-                    setName("server:" + PORT);
-                    Server server = new Server(ki, PORT);
+                    setName("server:" + ((ki.getOptions().testNet) ? TESTNET_PORT : PORT));
+                    Server server = new Server(ki, (ki.getOptions().testNet) ? TESTNET_PORT : PORT);
                     try {
                         server.start();
                     } catch (Exception e)

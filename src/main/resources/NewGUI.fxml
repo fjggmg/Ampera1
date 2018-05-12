@@ -386,10 +386,16 @@
                                                                         <JFXButton fx:id="exchangeSell"
                                                                                    prefHeight="30.0" prefWidth="983.0"
                                                                                    text="Sell"/>
-                                                                        <Label fx:id="tOOWallet" text="Token On Offer"
-                                                                               wrapText="true"/>
-                                                                        <Label fx:id="tPWallet" text="Token Paying"
-                                                                               wrapText="true"/>
+                                                                        <VBox prefHeight="77.0" prefWidth="185.0">
+                                                                            <children>
+                                                                                <Label fx:id="tOOWallet"
+                                                                                       text="Token On Offer"
+                                                                                       wrapText="true"/>
+                                                                                <Label fx:id="tPWallet"
+                                                                                       text="Token Paying"
+                                                                                       wrapText="true"/>
+                                                                            </children>
+                                                                        </VBox>
                                                                     </children>
                                                                 </VBox>
                                                                 <VBox prefHeight="5000.0" prefWidth="5000.0">

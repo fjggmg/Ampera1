@@ -23,6 +23,7 @@ public class PackagedBlocks implements Packet, Serializable {
 
             return;
         }
+        ki.debug("====================================Received PackagedBlocks. Size of byte array: " + packagedBlocks.length);
         HeadlessPrefixedAmplet hpa = HeadlessPrefixedAmplet.create(packagedBlocks);
         while (hpa.hasNextElement()) {
             ki.getStateManager().addBlock(Block.fromAmplet(Amplet.create(hpa.getNextElement())), connMan.getID());
@@ -42,7 +43,7 @@ public class PackagedBlocks implements Packet, Serializable {
         HeadlessPrefixedAmplet hpa = HeadlessPrefixedAmplet.create();
         int totalSize = 0;
 
-        while (totalSize < 1_048_576) {
+        while (totalSize < 1_048_576_00) {
             startHeight = startHeight.add(BigInteger.ONE);
             byte[] block = ki.getChainMan().getByHeight(startHeight).serializeToAmplet().serializeToBytes();
             hpa.addBytes(block);
