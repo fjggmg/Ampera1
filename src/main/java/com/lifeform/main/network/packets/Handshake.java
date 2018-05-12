@@ -124,7 +124,7 @@ public class Handshake implements Serializable, Packet {
             op.order = o.serializeToBytes();
             connMan.sendPacket(op);
         }
-
+        pg.startHeight = currentHeight;
         if (ki.getChainMan().currentHeight().compareTo(BigInteger.valueOf(-1L)) != 0)
             if (currentHeight.compareTo(ki.getChainMan().currentHeight()) == 0) {
                 for (ITrans trans : ki.getTransMan().getPending()) {
@@ -140,10 +140,16 @@ public class Handshake implements Serializable, Packet {
         if (ki.getChainMan().currentHeight().compareTo(currentHeight) < 0) {
             ki.debug("Requesting blocks we're missing from the network");
             //pg.doneDownloading = true;
-            BlockRequest br = new BlockRequest();
-            br.lite = ki.getOptions().lite;
-            br.fromHeight = ki.getChainMan().currentHeight();
-            connMan.sendPacket(br);
+            if (ki.getOptions().lite) {
+                BlockRequest br = new BlockRequest();
+                br.lite = ki.getOptions().lite;
+                br.fromHeight = ki.getChainMan().currentHeight();
+                connMan.sendPacket(br);
+            } else {
+                PackagedBlocksRequest pbr = new PackagedBlocksRequest();
+                pbr.fromBlock = ki.getChainMan().currentHeight();
+                connMan.sendPacket(pbr);
+            }
         }
     }
 

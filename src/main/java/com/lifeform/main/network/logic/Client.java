@@ -88,7 +88,7 @@ public class Client implements INetworkEndpoint{
                             }
                             p.addLast(
                                     new ObjectEncoder(),
-                                    new ObjectDecoder(ClassResolvers.cacheDisabled(null)),
+                                    new ObjectDecoder(150_000_000, ClassResolvers.cacheDisabled(null)),
                                     new ClientHandler(ki,connMan,instance));
                             //ch.write("This is a test 2");
 

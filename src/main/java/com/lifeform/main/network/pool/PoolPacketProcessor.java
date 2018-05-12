@@ -23,10 +23,6 @@ public class PoolPacketProcessor implements IPacketProcessor {
         ((PoolPacket) o).process(ki, connMan);
     }
 
-    @Override
-    public void enqueue(Object packet) {
-
-    }
 
     @Override
     public PacketGlobal getPacketGlobal() {

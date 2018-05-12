@@ -2230,17 +2230,11 @@ public class NewGUI {
                             hashrateChart.setMinWidth(miningTab.getWidth());
                             miningIntesity.setMinWidth(miningTab.getWidth() - 20);
                             miLabel.setLayoutX((miningTab.getWidth() / 2) - (miLabel.getWidth() / 2) - 5);
-                            //addressText.setLayoutX(walletPane.getWidth() - (addressText.getWidth() + 5));
-                            //amountText.setLayoutX(walletPane.getWidth() - (amountText.getWidth() + 5));
-                            //messageText.setLayoutX(walletPane.getWidth() - (messageText.getWidth() + 5));
-                            //feeText.setLayoutX(walletPane.getWidth() - (feeText.getWidth() + 5));
                             walletBox.setLayoutX(walletPane.getWidth() - (walletBox.getWidth() + 5));
                             walletAmount.setLayoutX(walletPane.getWidth() - (walletAmount.getWidth() + 15));
                             tokenLabel.setLayoutX(walletAmount.getLayoutX() + 10);
                             transactionTable.setMinWidth(walletPane.getWidth() - (walletBox.getWidth() + 65));
                             transactionTable.setMinHeight(walletPane.getHeight() - 170);
-                            //versionLabel.setLayoutX(helpPane.getWidth() / 2 - (versionLabel.getWidth() / 2));
-                            //helpText.setLayoutX(helpPane.getWidth() / 2 - (helpText.getWidth() / 2));
                             topPane2.setMinWidth(walletPane.getWidth());
                             beScroll.setMinWidth(blockExplorerPane.getWidth());
                             beScroll.setMinHeight(blockExplorerPane.getHeight() - 60);
@@ -2257,15 +2251,11 @@ public class NewGUI {
                             miningDataHbox.setMinWidth(miningTab.getWidth());
 
                             if (startHeight != null && startHeight.compareTo(loadHeight) != 0) {
-                                //System.out.println("================CURRENT SYNC: " + startHeight.subtract(ki.getChainMan().currentHeight()).multiply(BigInteger.valueOf(100)).divide(startHeight.subtract(loadHeight)).doubleValue() / 100);
                                 syncProgress.setProgress(1 - (startHeight.subtract(ki.getChainMan().currentHeight()).multiply(BigInteger.valueOf(100)).divide(startHeight.subtract(loadHeight)).doubleValue() / 100));
                             } else if (startHeight != null && startHeight.compareTo(loadHeight) == 0)
                                 syncProgress.setProgress(1);
                             for (IConnectionManager c : ki.getNetMan().getConnections()) {
-
-                                //ki.debug("Latency - " + c.currentLatency());
                                 latency.setText(" Latency - " + c.currentLatency());
-
                             }
                             startMining.setDisable(!GPUMiner.initDone);
                             if (!GPUMiner.initDone) {
@@ -2409,21 +2399,15 @@ public class NewGUI {
         JFXButton button = new JFXButton(text);
         button.setRipplerFill(Color.valueOf(getDefaultColor(new Random().nextInt(12))));
         Image img = new Image(NewGUI.class.getResourceAsStream(image));
-
         ImageView iv = new ImageView(img);
-        //iv.setTranslateX(-20);
         iv.setFitWidth(20);
         iv.setPreserveRatio(true);
-        //iv.setX(20);
         button.setGraphic(iv);
-        //button.getGraphic().autosize();
-        //button.setBackground(new Background(new BackgroundImage(img, BackgroundRepeat.NO_REPEAT,BackgroundRepeat.NO_REPEAT, BackgroundPosition.CENTER,new BackgroundSize(75,75,true,true,true,false))));
         button.setPrefWidth(Double.MAX_VALUE);
         button.setPrefHeight(50);
         button.setDefaultButton(false);
         button.setGraphicTextGap(5);
         button.setTextAlignment(TextAlignment.LEFT);
-
         button.disarm();
         button.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
             @Override
@@ -2431,9 +2415,7 @@ public class NewGUI {
                 button.setRipplerFill(Color.valueOf(getDefaultColor(new Random().nextInt(12))));
             }
         });
-
         button.setTranslateX(-200);
-        //button.setTranslateY(-200);
         Timeline animation = new Timeline(new KeyFrame(Duration.millis(300),
                 new KeyValue(button.translateXProperty(),
                         0,
@@ -2447,7 +2429,6 @@ public class NewGUI {
         btnAnimations.add(animation);
         btnAnimationsR.add(animation2);
         button.setFont(acg10);
-
         return button;
     }
 

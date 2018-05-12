@@ -23,12 +23,10 @@ public class Address implements Serializable, IAddress {
     private String ID;
     private String checksum;
     private String encoded;
-
     public String encodeForChain()
     {
         return encoded;
     }
-
     public byte getVersion()
     {
         return version;
@@ -56,10 +54,6 @@ public class Address implements Serializable, IAddress {
         if (!keyType.equals(KeyType.BRAINPOOLP512T1)) return false;
         if (p2sh) return false;
         Address a = createNew(keys,entropy);
-        //System.out.println("CAN SPEND DEBUG===================");
-        //System.out.println("Address 1: " + a.encodeForChain());
-        //System.out.println("Address 2: " + encodeForChain());
-        //System.out.println("END OF CAN SPEND DEBUG============");
         return a.encodeForChain().equals(encodeForChain());
     }
 
@@ -136,43 +130,12 @@ public class Address implements Serializable, IAddress {
     }
 
     public byte[] toByteArray() {
-        //System.out.println("Address is: " + encodeForChain());
-        //System.out.println("ID is: " + ID);
         try {
             return encodeForChain().getBytes("UTF-8");
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         }
         return new byte[0];
-        /*
-        byte[] payload = {};
-        try {
-            payload = Utils.fromBase64(ID);
-        } catch (Exception e) {
-            try {
-                payload = ID.getBytes("UTF-8");
-            } catch (UnsupportedEncodingException e1) {
-                return null;
-            }
-        }
-        byte[] array;
-        if (payload.length > 28) {
-            array = new byte[payload.length + 3];
-        } else {
-            array = new byte[31];
-        }
-
-        array[0] = version;
-        int i = 1;
-        for (byte b : payload) {
-            array[i] = b;
-            i++;
-        }
-        byte[] check = Utils.toByteArray(checksum);
-        array[array.length - 2] = check[0];
-        array[array.length - 1] = check[1];
-        return array;
-        */
     }
 
     @Override
@@ -231,34 +194,5 @@ public class Address implements Serializable, IAddress {
             e.printStackTrace();
         }
         return null;
-        /*
-        if (array.length == 31) {
-            byte[] ID = new byte[28];
-            for (int i = 1; i < 29; i++) {
-                ID[i - 1] = array[i];
-            }
-            byte[] check = new byte[2];
-            check[0] = array[29];
-            check[1] = array[30];
-            IAddress a = new Address(array[0], Utils.toBase64(ID), Utils.toHexArray(check));
-            return a;
-        } else {
-            byte[] ID = new byte[array.length - 3];
-            for (int i = 1; i < ID.length + 1; i++) {
-                ID[i - 1] = array[i];
-            }
-
-            byte[] check = new byte[2];
-            check[0] = array[array.length - 2];
-            check[1] = array[array.length - 1];
-            IAddress a = null;
-            try {
-                a = new Address(array[0], new String(ID, "UTF-8"), Utils.toHexArray(check));
-            } catch (UnsupportedEncodingException e) {
-                e.printStackTrace();
-            }
-            return a;
-        }
-        */
     }
 }

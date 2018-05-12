@@ -55,20 +55,13 @@ public class ConnMan extends IConnectionManager {
     @Override
     public void sendPacket(Object o) {
 
-        //if(ki.getOptions().pDebug)
-            //ki.debug("Sending packet: " + o.toString() + " to " + getAddress());
-        //connection.sendTCP(new FrameworkMessage.KeepAlive());
         endpoint.sendPacket(o);
     }
 
-    //private boolean process = true;
     @Override
     public void disconnect() {
-        //pp.getThread().interrupt();
-        //process = false;
         endpoint.disconnect();
         ki.getNetMan().getConnections().remove(this);
-        //pp.getThread().interrupt();
 
     }
 
@@ -81,7 +74,6 @@ public class ConnMan extends IConnectionManager {
             ((TransactionManagerLite)ki.getTransMan()).resetLite();
         }
         ki.debug("Connection established");
-        //sendPacket("This is a test 5");
         Handshake hs = new Handshake();
         hs.isRelay = isRelay;
         hs.startTime = OURSTARTTIME;
@@ -162,7 +154,6 @@ public class ConnMan extends IConnectionManager {
         ConnManPacketPair cmpp = new ConnManPacketPair();
         cmpp.connMan = this;
         cmpp.packet = o;
-        //System.out.println("Received object: " + o);
         ki.getNetMan().getGPQ().enqueue(cmpp);
     }
 }

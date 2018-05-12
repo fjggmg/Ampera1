@@ -100,11 +100,6 @@ public class PoolNetMan extends Thread implements INetworkManager {
         return false;
     }
 
-    @Override
-    public Client getClient(String ID) {
-        return null;
-    }
-
     List<Thread> threads = new ArrayList<>();
 
     @Override

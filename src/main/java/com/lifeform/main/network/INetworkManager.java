@@ -1,8 +1,6 @@
 package com.lifeform.main.network;
 
 
-import com.lifeform.main.network.logic.Client;
-
 import java.util.List;
 
 public interface INetworkManager {
@@ -15,7 +13,6 @@ public interface INetworkManager {
     boolean connectionInit(String ID, IConnectionManager connMan);
     void start();
     boolean isRelay();
-    Client getClient(String ID);
 
     void attemptConnect(String IP);
 

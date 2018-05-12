@@ -23,7 +23,7 @@ public class PacketGlobal {
 
     //List<Block> addedBlocks = new ArrayList<>();
     public boolean doneDownloading = false;
-    //BigInteger startHeight;
+    BigInteger startHeight;
     //boolean laFlag = false;
     //boolean onRightChain = true;
     Map<BlockHeader, List<ITrans>> bMap = new HashMap<>();

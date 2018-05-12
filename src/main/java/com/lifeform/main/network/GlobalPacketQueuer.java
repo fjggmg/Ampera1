@@ -9,7 +9,7 @@ import java.util.Map;
 
 public class GlobalPacketQueuer extends Thread {
 
-    private List<ConnManPacketPair> cmppList = new ArrayList<>();
+    private final List<ConnManPacketPair> cmppList = new ArrayList<>();
 
     public void enqueue(ConnManPacketPair cmpp) {
         synchronized (cmppList) {

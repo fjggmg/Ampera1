@@ -9,7 +9,6 @@ import com.lifeform.main.network.packets.BlockSyncRequest;
 import com.lifeform.main.network.packets.Ping;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -17,17 +16,15 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 public class NetMan extends Thread implements INetworkManager {
 
-    static final String[] testBoot = {"73.108.51.16"};
-    static final String[] bootstrap = {"mimpve.host"};
+    private static final String[] testBoot = {"73.108.51.16"};
+    private static final String[] bootstrap = {"mimpve.host"};
     public static final String NET_VER = "2.1.2";
     private IKi ki;
     private boolean isRelay;
-    public static final int PORT = 29555;
-    public boolean live = false;
-    volatile List<IConnectionManager> connections = new CopyOnWriteArrayList<>();
-    volatile Map<String, IConnectionManager> connMap = new ConcurrentHashMap<>();
-    volatile Map<String, Client> clientMap = new HashMap<>();
-    //volatile List<Client> clients = new ArrayList<>();
+    private static final int PORT = 29555;
+    private boolean live = false;
+    private volatile List<IConnectionManager> connections = new CopyOnWriteArrayList<>();
+    private volatile Map<String, IConnectionManager> connMap = new ConcurrentHashMap<>();
     private volatile List<String> relays = new ArrayList<>();
     private XodusStringMap rList;
     private boolean DIFF_SET = false;
@@ -36,13 +33,11 @@ public class NetMan extends Thread implements INetworkManager {
     {
         this.ki = ki;
         this.isRelay = isRelay;
-        //rList = new StringFileHandler(ki, "relays.json");
         rList = new XodusStringMap("relays");
         if (rList.get("relays") != null) {
             relays = JSONManager.parseJSONToList(rList.get("relays"));
         }
         ConnMan.init(ki);
-
     }
 
     @Override
@@ -99,11 +94,6 @@ public class NetMan extends Thread implements INetworkManager {
     public boolean isRelay()
     {
         return isRelay;
-    }
-
-    @Override
-    public Client getClient(String ID) {
-        return clientMap.get(ID);
     }
 
     @Override
@@ -261,7 +251,7 @@ public class NetMan extends Thread implements INetworkManager {
         return connections;
     }
 
-    List<Integer> nullConns = new ArrayList<>();
+    private List<Integer> nullConns = new ArrayList<>();
     @Override
     public void broadcast(Object o) {
         nullConns.clear();
@@ -289,10 +279,7 @@ public class NetMan extends Thread implements INetworkManager {
         int i = 0;
         for(IConnectionManager connMan:connections)
         {
-            //ki.debug("Attempting broadcast...");
             if (connMan != null) {
-                //if (ki.getOptions().pDebug)
-                //ki.debug("Connection Manager not null");
                 if (connMan.getPacketProcessor().getPacketGlobal().doneDownloading) {
                     connMan.sendPacket(o);
                     if (ki.getOptions().pDebug)
@@ -311,7 +298,6 @@ public class NetMan extends Thread implements INetworkManager {
                 connections.remove(index);
             }
         }
-        //connections.remove(null);
     }
 
     @Override
@@ -327,7 +313,6 @@ public class NetMan extends Thread implements INetworkManager {
                 }
             }
         }
-        //connections.remove(null);
     }
 
     @Override

@@ -4,15 +4,17 @@ import com.lifeform.main.IKi;
 import com.lifeform.main.network.IConnectionManager;
 
 import java.io.Serializable;
+import java.math.BigInteger;
 
-public class ResetRequest implements Serializable, Packet {
+public class PackagedBlocksRequest implements Packet, Serializable {
     private static final long serialVersionUID = 184L;
-    BlockHeader proof;
+    public BigInteger fromBlock;
 
     @Override
     public void process(IKi ki, IConnectionManager connMan, PacketGlobal pg) {
-        ki.debug("Received a reset request");
 
+        if (fromBlock == null) return;
+        PackagedBlocks pb = PackagedBlocks.createPackage(ki, fromBlock);
+        connMan.sendPacket(pb);
     }
-
 }
