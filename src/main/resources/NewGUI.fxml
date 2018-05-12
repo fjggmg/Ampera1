@@ -340,7 +340,7 @@
                                             <children>
                                                 <VBox prefHeight="4000.0" prefWidth="5000.0">
                                                     <children>
-                                                        <HBox prefHeight="5000.0" prefWidth="360.0" spacing="5.0">
+                                                        <HBox prefHeight="5046.0" prefWidth="360.0" spacing="5.0">
                                                             <children>
                                                                 <VBox fx:id="exControlsBox" alignment="TOP_CENTER"
                                                                       prefHeight="5000.0" prefWidth="5000.0"
@@ -381,11 +381,15 @@
                                                                                text="Total -"/>
                                                                         <JFXComboBox fx:id="pairs" prefHeight="30.0"
                                                                                      prefWidth="981.0"/>
-                                                                        <JFXButton fx:id="exchangeBuy" prefHeight="40.0"
+                                                                        <JFXButton fx:id="exchangeBuy" prefHeight="30.0"
                                                                                    prefWidth="980.0" text="Buy"/>
                                                                         <JFXButton fx:id="exchangeSell"
-                                                                                   prefHeight="40.0" prefWidth="983.0"
+                                                                                   prefHeight="30.0" prefWidth="983.0"
                                                                                    text="Sell"/>
+                                                                        <Label fx:id="tOOWallet" text="Token On Offer"
+                                                                               wrapText="true"/>
+                                                                        <Label fx:id="tPWallet" text="Token Paying"
+                                                                               wrapText="true"/>
                                                                     </children>
                                                                 </VBox>
                                                                 <VBox prefHeight="5000.0" prefWidth="5000.0">

@@ -164,6 +164,8 @@ public class NewGUI {
     public Label exchangeTotalPurchase;
     public JFXCheckBox sendBackToMain;
     public JFXTextField changeAddress;
+    public Label tOOWallet;
+    public Label tPWallet;
     private CandlestickGraph exchangeGraph;
     public VBox passwordVbox;
     public VBox exchangeGraphBox;
@@ -751,6 +753,9 @@ public class NewGUI {
                 if (pair != null) {
                     exchangeBuy.setText("Buy (" + pair.accepting().getName() + ")");
                     exchangeSell.setText("Sell (" + pair.accepting().getName() + ")");
+
+                    tOOWallet.setText(pair.onOffer().getName() + "\n" + format2.format((double) ki.getTransMan().getAmountInWallet(ki.getAddMan().getMainAdd(), pair.onOffer()).longValueExact() / 100_000_000));
+                    tPWallet.setText(pair.accepting().getName() + "\n" + format2.format((double) ki.getTransMan().getAmountInWallet(ki.getAddMan().getMainAdd(), pair.accepting()).longValueExact() / 100_000_000));
                 }
             }
         });
@@ -2367,6 +2372,10 @@ public class NewGUI {
             @Override
             public void run() {
                 walletAmount.setText(format2.format((double) ki.getTransMan().getAmountInWallet(ki.getAddMan().getMainAdd(), Token.byName(tokenBox.getSelectionModel().getSelectedItem().getText())).longValueExact() / 100_000_000));
+                Pairs pair = Pairs.byName(pairs.getSelectionModel().getSelectedItem().getText());
+                if (pair == null) return;
+                tOOWallet.setText(pair.onOffer().getName() + "\n" + format2.format((double) ki.getTransMan().getAmountInWallet(ki.getAddMan().getMainAdd(), pair.onOffer()).longValueExact() / 100_000_000));
+                tPWallet.setText(pair.accepting().getName() + "\n" + format2.format((double) ki.getTransMan().getAmountInWallet(ki.getAddMan().getMainAdd(), pair.accepting()).longValueExact() / 100_000_000));
             }
         });
 
