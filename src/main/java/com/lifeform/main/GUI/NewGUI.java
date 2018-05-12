@@ -2126,19 +2126,7 @@ public class NewGUI {
                 }
             }
         });
-        obRecentDirection.setCellFactory((ListView<Order> param) -> new ListCell<Order>() {
-            @Override
-            protected void updateItem(Order item, boolean empty) {
-                super.updateItem(item, empty);
-
-                if (empty || item == null) {
-                    setText(null);
-                } else {
-                    setText((item.buy()) ? "Sell" : "Buy");
-                    setStyle("-fx-text-fill:" + ((item.buy()) ? ("#c84128") : ("#18BC9C")));
-                }
-            }
-        });
+        obRecentDirection.setCellFactory(param -> new SBListCellBuilder());
 
         Thread gUp = new Thread() {
             public void run() {
@@ -2379,6 +2367,20 @@ public class NewGUI {
             }
         });
 
+    }
+
+    static class SBListCellBuilder extends ListCell<Order> {
+        @Override
+        protected void updateItem(Order item, boolean empty) {
+            super.updateItem(item, empty);
+
+            if (empty || item == null) {
+                setText(null);
+            } else {
+                setText((item.buy()) ? "Sell" : "Buy");
+                setStyle("-fx-text-fill:" + ((item.buy()) ? ("#c84128") : ("#18BC9C")));
+            }
+        }
     }
 
     public void dataAdded() {
