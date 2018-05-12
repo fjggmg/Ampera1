@@ -158,6 +158,8 @@ public class OrderBook {
                     //ki.getMainLog().warn("Stack overflow while adding data, caused by more than 2 weeks of no exchange data.: ");
                     return false;
                 }
+                if (ki.getGUIHook() != null)
+                    ki.getGUIHook().dataAdded();
                 return true;
             }
             ed.addData(price, amount);
@@ -165,6 +167,8 @@ public class OrderBook {
         } else {
             data.get(data.size() - 1).addData(price, amount);
         }
+        if (ki.getGUIHook() != null)
+            ki.getGUIHook().dataAdded();
         return true;
     }
 

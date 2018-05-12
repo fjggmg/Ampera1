@@ -2172,33 +2172,8 @@ public class NewGUI {
 
                                 }
                                 */
-                                exchangeGraph.layoutPlotChildren();
-                                exchangeGraph.updateAxisRange();
-                                if (ki.getExMan().getOrderBook().getRecentData() != null) {
-                                    currentOpen.setText("Open - " + ki.getExMan().getOrderBook().getRecentData().open.doubleValue() / unitMultiplierPrice.doubleValue());
-                                    currentClose.setText("Close - " + ki.getExMan().getOrderBook().getRecentData().close.doubleValue() / unitMultiplierPrice.doubleValue());
-                                    currentHigh.setText("High - " + ki.getExMan().getOrderBook().getRecentData().high.doubleValue() / unitMultiplierPrice.doubleValue());
-                                    currentLow.setText("Low - " + ki.getExMan().getOrderBook().getRecentData().low.doubleValue() / unitMultiplierPrice.doubleValue());
-                                    lastTradeAmount.setText(format2.format(ki.getExMan().getOrderBook().getRecentData().close.doubleValue() / unitMultiplierPrice.doubleValue()) + " " + unitSelectorPrice.getSelectionModel().getSelectedItem().getText());
-                                }
 
 
-                                /*
-                                BigInteger sellTotal = BigInteger.ZERO;
-                                obSellTotal.getItems().clear();
-                                for(Order o:ki.getExMan().getOrderBook().sells())
-                                {
-                                    sellTotal = sellTotal.add(o.amountOnOffer());
-                                    obSellTotal.getItems().add(format2.format(sellTotal.doubleValue()/(unitMultiplierPrice.doubleValue())));
-                                }
-                                BigInteger buyTotal = BigInteger.ZERO;
-                                obBuyTotal.getItems().clear();
-                                for(Order o:ki.getExMan().getOrderBook().buys())
-                                {
-                                    buyTotal = buyTotal.add(o.amountOnOffer());
-                                    obBuyTotal.getItems().add(format2.format(buyTotal.doubleValue()/(unitMultiplierPrice.doubleValue())));
-                                }
-                                */
                             }
                         });
                     }
@@ -2206,13 +2181,13 @@ public class NewGUI {
 
                         if (!ki.getMinerMan().isMining()) {
                             mining = false;
-                            Platform.runLater(new Thread() {
+                            Platform.runLater(new Runnable() {
                                 public void run() {
                                     startMining.setText("Start Mining");
                                 }
                             });
                         }
-                        Platform.runLater(new Thread() {
+                        Platform.runLater(new Runnable() {
                             public void run() {
 
                                 //setDaemon(true);
@@ -2357,6 +2332,7 @@ public class NewGUI {
                         sleep(100);
                     } catch (InterruptedException e) {
                         ki.getMainLog().error("GUI update thread interrupted ", e);
+                        return;
                     }
                 }
             }
@@ -2396,6 +2372,22 @@ public class NewGUI {
 
     }
 
+    public void dataAdded() {
+        Platform.runLater(new Runnable() {
+            @Override
+            public void run() {
+                exchangeGraph.layoutPlotChildren();
+                exchangeGraph.updateAxisRange();
+                if (ki.getExMan().getOrderBook().getRecentData() != null) {
+                    currentOpen.setText("Open - " + ki.getExMan().getOrderBook().getRecentData().open.doubleValue() / unitMultiplierPrice.doubleValue());
+                    currentClose.setText("Close - " + ki.getExMan().getOrderBook().getRecentData().close.doubleValue() / unitMultiplierPrice.doubleValue());
+                    currentHigh.setText("High - " + ki.getExMan().getOrderBook().getRecentData().high.doubleValue() / unitMultiplierPrice.doubleValue());
+                    currentLow.setText("Low - " + ki.getExMan().getOrderBook().getRecentData().low.doubleValue() / unitMultiplierPrice.doubleValue());
+                    lastTradeAmount.setText(format2.format(ki.getExMan().getOrderBook().getRecentData().close.doubleValue() / unitMultiplierPrice.doubleValue()) + " " + unitSelectorPrice.getSelectionModel().getSelectedItem().getText());
+                }
+            }
+        });
+    }
     private JFXButton buildButton(String text, String image, int offset, int graphicOffset) {
         for (int i = 0; i < graphicOffset; i++) {
             if (i % 2 != 0)

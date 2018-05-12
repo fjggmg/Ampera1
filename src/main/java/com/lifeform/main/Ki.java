@@ -195,7 +195,7 @@ public class Ki extends Thread implements IKi {
         } else {
             chainMan = new ChainManager(this, (o.testNet) ? ChainManager.TEST_NET : ChainManager.POW_CHAIN, "blocks/", "chain.state", o.bDebug);
         }
-        transMan.start();
+
         chainMan.loadChain();
         getMainLog().info("Chain loaded. Current height: " + chainMan.currentHeight());
 
@@ -219,7 +219,6 @@ public class Ki extends Thread implements IKi {
         if (o.poolRelay) {
             try {
                 miningPool = new Pool(null, new BigInteger("00000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF", 16), 0, ki, new KiEventHandler(this));
-                miningPool.start();
             } catch (RuntimeException e) {
                 throw e;
             } catch (Exception e) {
@@ -254,7 +253,7 @@ public class Ki extends Thread implements IKi {
             getPoolData().tracking.put(b.height, roots);
             getPoolData().currentWork = pbh;
             poolNet = new PoolNetMan(this);
-            poolNet.start();
+
 
         }
         if (!o.pool)
@@ -263,14 +262,14 @@ public class Ki extends Thread implements IKi {
             } else {
                 stateMan = new StateManager(this);
             }
-        if (stateMan != null) stateMan.start();
+
 
         if (o.pool) {
             netMan = new PoolNetMan(this);
             poolNet = netMan;
         } else {
             netMan = new NetMan(this, o.relay);
-            netMan.start();
+
         }
 
         debug("Stateman done");
@@ -298,8 +297,19 @@ public class Ki extends Thread implements IKi {
     boolean setupDone = false;
     @Override
     public void run() {
+        if (!o.pool) {
+            transMan.start();
+        }
+        if (stateMan != null) stateMan.start();
+        if (!o.pool) {
+            netMan.start();
+        }
         ih.start();
         guiThread.start();
+        if (o.poolRelay) {
+            miningPool.start();
+            poolNet.start();
+        }
         while (true) {
             if (o.relay || o.poolRelay) return;
             try {

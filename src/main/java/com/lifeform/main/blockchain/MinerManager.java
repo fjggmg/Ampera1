@@ -77,7 +77,11 @@ public class MinerManager implements IMinerMan {
 
     @Override
     public long getHashrate(String dev) {
-        return hashrates.get(dev);
+        try {
+            return hashrates.get(dev);
+        } catch (NullPointerException e) {
+            return 0;
+        }
     }
 
     @Override
