@@ -44,7 +44,7 @@ public class KeySigEntropyPair implements IKSEP {
     }
 
     @Override
-    public boolean isP2sh() {
+    public boolean isP2SH() {
         return p2sh;
     }
 

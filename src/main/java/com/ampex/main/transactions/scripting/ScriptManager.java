@@ -159,6 +159,7 @@ public class ScriptManager {
     /**
      * will load scripts that are in bytecode format (i.e. strings of opcodes 1 per line in BCE8, will have support
      * for BCE16 eventually)
+     * @param fName folder name to load from
      */
     public void loadScripts(String fName) {
         File folder = new File(File.separator + fName);

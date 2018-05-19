@@ -224,6 +224,8 @@ public class NewAdd implements IAddress {
             case SHA512:
                 hashSize = 64;
                 break;
+            default:
+                hashSize = 28;
         }
         byte[] array;
         if (hasPrefix()) {
@@ -273,6 +275,8 @@ public class NewAdd implements IAddress {
             case SHA512:
                 hashSize = 64;
                 break;
+            default:
+                hashSize = 28;
         }
         byte[] hash = new byte[hashSize];
         String prefix = "";
@@ -377,7 +381,7 @@ public class NewAdd implements IAddress {
             p++;
         }
 
-        byte[] hash = {};
+        byte[] hash;// = {};
         switch (length) {
             case SHA224:
                 hash = EncryptionManager.sha224(keyEnt);
@@ -391,6 +395,8 @@ public class NewAdd implements IAddress {
             case SHA512:
                 hash = EncryptionManager.sha512(keyEnt);
                 break;
+            default:
+                hash = EncryptionManager.sha224(keyEnt);
         }
         byte[] check = EncryptionManager.sha224(hash);
 
@@ -428,7 +434,7 @@ public class NewAdd implements IAddress {
             keyEnt[i] = ent[p];
             p++;
         }
-        byte[] hash = {};
+        byte[] hash;// = {};
         switch (length) {
 
             case SHA224:
@@ -443,6 +449,8 @@ public class NewAdd implements IAddress {
             case SHA512:
                 hash = EncryptionManager.sha512(keyEnt);
                 break;
+            default:
+                hash = EncryptionManager.sha224(keyEnt);
         }
 
         byte[] check = EncryptionManager.sha224(hash);

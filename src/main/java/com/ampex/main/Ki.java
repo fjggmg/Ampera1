@@ -416,6 +416,9 @@ public class Ki extends Thread implements IKi, IKiAPI {
     @Override
     public void setInnerGUIRef(FXGUI ref) {
         guiRef = ref;
+        synchronized (refNotify) {
+            refNotify.notifyAll();
+        }
     }
 
     @Override
@@ -559,7 +562,7 @@ public class Ki extends Thread implements IKi, IKiAPI {
     }
 
     private BigInteger startHeight = BigInteger.ZERO;
-
+    private final Object refNotify = new Object();
     @Override
     public void setStartHeight(BigInteger startHeight) {
 
@@ -567,7 +570,15 @@ public class Ki extends Thread implements IKi, IKiAPI {
 
         if (!o.nogui && !o.lite && startHeight.compareTo(getChainMan().currentHeight()) <= 0) {
             killedSync = true;
-            while (guiRef == null) {
+            if (guiRef == null) {
+                synchronized (refNotify) {
+                    try {
+                        while (guiRef == null)
+                            refNotify.wait();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
             }
             guiRef.loadMain();
         }

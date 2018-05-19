@@ -176,7 +176,7 @@
         <dependency>
             <groupId>com.ampex</groupId>
             <artifactId>mining-pool</artifactId>
-            <version>1.2.64</version>
+            <version>1.2.65</version>
         </dependency>
         <dependency>
             <groupId>com.ampex</groupId>
@@ -186,7 +186,7 @@
         <dependency>
             <groupId>com.ampex</groupId>
             <artifactId>ampex-script-engine</artifactId>
-            <version>1.0.69</version>
+            <version>1.0.70</version>
         </dependency>
         <dependency>
             <groupId>org.fusesource.jansi</groupId>
@@ -217,7 +217,7 @@
         <dependency>
             <groupId>com.ampex</groupId>
             <artifactId>AmperaBase</artifactId>
-            <version>1.0.3</version>
+            <version>1.0.4</version>
         </dependency>
 
     </dependencies>

@@ -166,7 +166,7 @@ public class Block implements IAmpAmpletSerializable, IBlockAPI {
 
     @Override
     public byte[] getPayload() {
-        return payload;
+        return Arrays.copyOf(payload, payload.length);
     }
 
     @Override

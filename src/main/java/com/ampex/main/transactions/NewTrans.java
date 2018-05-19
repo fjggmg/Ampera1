@@ -80,7 +80,7 @@ public class NewTrans implements ITrans {
     @Override
     public boolean verifySigs() {
         for (Map.Entry<String, IKSEP> key : keySigMap.entrySet()) {
-            if (!key.getValue().isP2sh()) {
+            if (!key.getValue().isP2SH()) {
                 if (!EncryptionManager.verifySig(toSignBytes(), com.ampex.main.data.Utils.fromBase64(key.getValue().getSig()), key.getKey(), key.getValue().getKeyType()))
                     return false;
             }
@@ -117,14 +117,14 @@ public class NewTrans implements ITrans {
             }
             String address = inputMap.get(key.getValue().getInputs().get(0)).getAddress().encodeForChain();
             IKSEP ksep = key.getValue();
-            if (!inputMap.get(ksep.getInputs().get(0)).canSpend(key.getKey(), ksep.getEntropy(), ksep.getPrefix(), ksep.isP2sh(), ksep.getKeyType())) {
+            if (!inputMap.get(ksep.getInputs().get(0)).canSpend(key.getKey(), ksep.getEntropy(), ksep.getPrefix(), ksep.isP2SH(), ksep.getKeyType())) {
                 System.out.println("address mismatch, Address expecting: ");
                 System.out.println(inputMap.get(ksep.getInputs().get(0)).getAddress().encodeForChain());
                 System.out.println("Received: ");
                 System.out.println("Entropy: " + ksep.getEntropy());
                 System.out.println("Key: " + key);
                 try {
-                    System.out.println(NewAdd.createNew(key.getKey(), ksep.getEntropy(), AddressLength.byIndicator(inputMap.get(ksep.getInputs().get(0)).getAddress().toByteArray()[1]), ksep.isP2sh(), inputMap.get(ksep.getInputs().get(0)).getAddress().getKeyType()).encodeForChain());
+                    System.out.println(NewAdd.createNew(key.getKey(), ksep.getEntropy(), AddressLength.byIndicator(inputMap.get(ksep.getInputs().get(0)).getAddress().toByteArray()[1]), ksep.isP2SH(), inputMap.get(ksep.getInputs().get(0)).getAddress().getKeyType()).encodeForChain());
                 } catch (InvalidAddressException e) {
                     try {
                         System.out.println(Address.createNew(key.getKey(), ksep.getEntropy()).encodeForChain());
@@ -194,7 +194,7 @@ public class NewTrans implements ITrans {
     public boolean verifySpecial(IKi ki) {
         for (Map.Entry<String, IKSEP> key : keySigMap.entrySet()) {
             IKSEP ksep = key.getValue();
-            if (ksep.isP2sh()) {
+            if (ksep.isP2SH()) {
                 IAddress execAdd = null;
                 for (IInput i : inputs) {
                     if (ksep.getInputs().contains(i.getID()))
