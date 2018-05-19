@@ -600,13 +600,14 @@ public class NewGUI {
         });
 
         blocksFoundLabel.setText("Blocks Found - " + format2.format(blocksFoundInt));
-        tokenBox.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<Label>() {
-            @Override
-            public void changed(ObservableValue<? extends Label> observable, Label oldValue, Label newValue) {
-                tokenLabel.setText(tokenBox.getSelectionModel().getSelectedItem().getText());
-                walletAmount.setText(format2.format((double) ki.getTransMan().getAmountInWallet(ki.getAddMan().getMainAdd(), Token.byName(tokenBox.getSelectionModel().getSelectedItem().getText())).longValueExact() / 100_000_000));
-            }
-        });
+        if (!ki.getOptions().pool)
+            tokenBox.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<Label>() {
+                @Override
+                public void changed(ObservableValue<? extends Label> observable, Label oldValue, Label newValue) {
+                    tokenLabel.setText(tokenBox.getSelectionModel().getSelectedItem().getText());
+                    walletAmount.setText(format2.format((double) ki.getTransMan().getAmountInWallet(ki.getAddMan().getMainAdd(), Token.byName(tokenBox.getSelectionModel().getSelectedItem().getText())).longValueExact() / 100_000_000));
+                }
+            });
         copyAddress.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
@@ -752,19 +753,20 @@ public class NewGUI {
                 }
             }
         });
-        pairs.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<Label>() {
-            @Override
-            public void changed(ObservableValue<? extends Label> observable, Label oldValue, Label newValue) {
-                Pairs pair = Pairs.byName(newValue.getText());
-                if (pair != null) {
-                    exchangeBuy.setText("Buy (" + pair.accepting().getName() + ")");
-                    exchangeSell.setText("Sell (" + pair.accepting().getName() + ")");
+        if (!ki.getOptions().pool)
+            pairs.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<Label>() {
+                @Override
+                public void changed(ObservableValue<? extends Label> observable, Label oldValue, Label newValue) {
+                    Pairs pair = Pairs.byName(newValue.getText());
+                    if (pair != null) {
+                        exchangeBuy.setText("Buy (" + pair.accepting().getName() + ")");
+                        exchangeSell.setText("Sell (" + pair.accepting().getName() + ")");
 
-                    tOOWallet.setText(pair.onOffer().getName() + "\n" + format2.format((double) ki.getTransMan().getAmountInWallet(ki.getAddMan().getMainAdd(), pair.onOffer()).longValueExact() / 100_000_000));
-                    tPWallet.setText(pair.accepting().getName() + "\n" + format2.format((double) ki.getTransMan().getAmountInWallet(ki.getAddMan().getMainAdd(), pair.accepting()).longValueExact() / 100_000_000));
+                        tOOWallet.setText(pair.onOffer().getName() + "\n" + format2.format((double) ki.getTransMan().getAmountInWallet(ki.getAddMan().getMainAdd(), pair.onOffer()).longValueExact() / 100_000_000));
+                        tPWallet.setText(pair.accepting().getName() + "\n" + format2.format((double) ki.getTransMan().getAmountInWallet(ki.getAddMan().getMainAdd(), pair.accepting()).longValueExact() / 100_000_000));
+                    }
                 }
-            }
-        });
+            });
         priceControlsIndex = exControlsBox.getChildren().indexOf(priceHBox);
         limitBuy.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
             @Override

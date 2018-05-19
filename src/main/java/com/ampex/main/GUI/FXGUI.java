@@ -48,17 +48,20 @@ public class FXGUI extends Application {
             NewGUI.close = true;
         });
         decorator.setCustomMaximize(true);
+        Scene scene = new Scene(decorator, 800, 650);
+        String css = FXGUI.class.getResource("/text-style.css").toExternalForm();
+        scene.getStylesheets().add(css);
 
-        pStage.setMinWidth(1156);
-        pStage.setMinHeight(650);
-        pStage.setWidth(1156);
-        pStage.setHeight(650);
+
         decorator.setStyle("-fx-border-width:0");
 
         if (sync)
             loadSync();
         else
             loadMain();
+
+        pStage.setScene(scene);
+
         //Ki.getInstance().getGUIHook().postInit(this, pStage);
     }
 
@@ -70,6 +73,11 @@ public class FXGUI extends Application {
                 @Override
                 public void run() {
                     decorator.setContent(root);
+                    pStage.setMinWidth(1156);
+                    pStage.setMinHeight(650);
+                    pStage.setWidth(1156);
+                    pStage.setHeight(650);
+                    pStage.show();
                 }
             });
 
@@ -81,14 +89,12 @@ public class FXGUI extends Application {
     public void loadSync() {
         try {
             Parent root = FXMLLoader.load(FXGUI.class.getResource("/SyncPage.fxml"));
-            decorator.setContent(root);
-            Scene scene = new Scene(decorator, 800, 650);
-            String css = FXGUI.class.getResource("/text-style.css").toExternalForm();
-            scene.getStylesheets().add(css);
+
             pStage.setMinHeight(650);
             pStage.setMinWidth(800);
-            pStage.hide();
-            pStage.setScene(scene);
+            pStage.setHeight(650);
+            pStage.setWidth(800);
+            decorator.setContent(root);
             pStage.show();
         } catch (IOException e) {
             e.printStackTrace();

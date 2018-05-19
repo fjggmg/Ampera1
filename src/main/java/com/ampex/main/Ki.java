@@ -297,15 +297,7 @@ public class Ki extends Thread implements IKi, IKiAPI {
         }
 
         debug("Stateman done");
-        if (o.lite && !o.pool) {
-            while(netMan.getConnections().size() < 1){}
-            netMan.broadcast(new DifficultyRequest());
-            try {
-                sleep(1000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
+
         if (!o.relay || !o.poolRelay)
         minerMan = new MinerManager(this, o.mDebug);
         //gui = MainGUI.guiFactory(this);
@@ -333,6 +325,16 @@ public class Ki extends Thread implements IKi, IKiAPI {
         }
         ih.start();
         guiThread.start();
+        if (o.lite && !o.pool) {
+            while (netMan.getConnections().size() < 1) {
+            }
+            netMan.broadcast(new DifficultyRequest());
+            try {
+                sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
         if (o.poolRelay) {
             miningPool.start();
             poolNet.start();

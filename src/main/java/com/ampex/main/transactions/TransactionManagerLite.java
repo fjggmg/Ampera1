@@ -391,12 +391,24 @@ public class TransactionManagerLite extends Thread implements ITransMan, ITransM
 
     @Override
     public List<IInput> getInputsForToken(IAddress address, Token token) {
-        return null;
+        List<IOutput> utxos = getUTXOs(address, true);
+        List<IInput> inputs = new ArrayList<>();
+        for (IOutput output : utxos) {
+            if (output.getToken().equals(token)) {
+                inputs.add(Input.fromOutput(output));
+            }
+        }
+        return inputs;
     }
 
     @Override
     public BigInteger getAmountInWallet(IAddress address, Token token) {
-        return null;
+        List<IInput> inputs = getInputsForToken(address, token);
+        BigInteger amount = BigInteger.ZERO;
+        for (IInput input : inputs) {
+            amount = amount.add(input.getAmount());
+        }
+        return amount;
     }
 
     @Override
