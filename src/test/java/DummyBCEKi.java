@@ -1,19 +1,20 @@
-import com.lifeform.main.GUI.NewGUI;
-import com.lifeform.main.IKi;
-import com.lifeform.main.Settings;
-import com.lifeform.main.StringSettings;
-import com.lifeform.main.adx.ExchangeManager;
-import com.lifeform.main.blockchain.Block;
-import com.lifeform.main.blockchain.IChainMan;
-import com.lifeform.main.blockchain.IMinerMan;
-import com.lifeform.main.blockchain.IStateManager;
-import com.lifeform.main.data.IEncryptMan;
-import com.lifeform.main.data.Options;
-import com.lifeform.main.network.INetworkManager;
-import com.lifeform.main.pool.PoolData;
-import com.lifeform.main.transactions.IAddMan;
-import com.lifeform.main.transactions.ITransMan;
-import com.lifeform.main.transactions.scripting.ScriptManager;
+import com.ampex.main.GUI.FXGUI;
+import com.ampex.main.GUI.NewGUI;
+import com.ampex.main.IKi;
+import com.ampex.main.Settings;
+import com.ampex.main.StringSettings;
+import com.ampex.main.adx.ExchangeManager;
+import com.ampex.main.blockchain.Block;
+import com.ampex.main.blockchain.IChainMan;
+import com.ampex.main.blockchain.IMinerMan;
+import com.ampex.main.blockchain.IStateManager;
+import com.ampex.main.data.IEncryptMan;
+import com.ampex.main.data.Options;
+import com.ampex.main.network.INetworkManager;
+import com.ampex.main.pool.PoolData;
+import com.ampex.main.transactions.ITransMan;
+import com.ampex.main.transactions.addresses.IAddMan;
+import com.ampex.main.transactions.scripting.ScriptManager;
 import engine.ByteCodeEngine;
 import mining_pool.Pool;
 import org.apache.logging.log4j.Logger;
@@ -181,5 +182,35 @@ public class DummyBCEKi implements IKi {
     @Override
     public Object getCloseLock() {
         return null;
+    }
+
+    @Override
+    public void downloadedTo(BigInteger height) {
+
+    }
+
+    @Override
+    public BigInteger getLoadHeight() {
+        return null;
+    }
+
+    @Override
+    public BigInteger getDownloadedTo() {
+        return null;
+    }
+
+    @Override
+    public BigInteger getStartHeight() {
+        return null;
+    }
+
+    @Override
+    public String getVersion() {
+        return "TESTING";
+    }
+
+    @Override
+    public void setInnerGUIRef(FXGUI ref) {
+
     }
 }

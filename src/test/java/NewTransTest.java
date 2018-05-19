@@ -1,6 +1,9 @@
 import amp.Amplet;
-import com.lifeform.main.data.EncryptionManager;
-import com.lifeform.main.transactions.*;
+import com.ampex.amperabase.*;
+import com.ampex.main.data.EncryptionManager;
+import com.ampex.main.transactions.*;
+import com.ampex.main.transactions.addresses.InvalidAddressException;
+import com.ampex.main.transactions.addresses.NewAdd;
 import org.junit.Test;
 
 import java.math.BigInteger;
@@ -25,13 +28,13 @@ public class NewTransTest {
             e.printStackTrace();
             return;
         }
-        Output o = new Output(BigInteger.valueOf(10000000L), add, Token.ORIGIN, 0, System.currentTimeMillis(), Output.VERSION);
-        Input i = new Input(o.getID(), 0, BigInteger.valueOf(10000000L), add, Token.ORIGIN, System.currentTimeMillis());
-        List<Output> outputs = new ArrayList<>();
+        IOutput o = new Output(BigInteger.valueOf(10000000L), add, Token.ORIGIN, 0, System.currentTimeMillis(), Output.VERSION);
+        IInput i = new Input(o.getID(), 0, BigInteger.valueOf(10000000L), add, Token.ORIGIN, System.currentTimeMillis(), Input.VERSION);
+        List<IOutput> outputs = new ArrayList<>();
         outputs.add(o);
-        List<Input> inputs = new ArrayList<>();
+        List<IInput> inputs = new ArrayList<>();
         inputs.add(i);
-        Map<String, KeySigEntropyPair> keySigMap = new HashMap<>();
+        Map<String, IKSEP> keySigMap = new HashMap<>();
         List<String> ins = new ArrayList<>();
         ins.add(i.getID());
         keySigMap.put(em.getPublicKeyString(KeyType.BRAINPOOLP512T1), new KeySigEntropyPair("sig", "fake entropy", ins, null, false, KeyType.BRAINPOOLP512T1));

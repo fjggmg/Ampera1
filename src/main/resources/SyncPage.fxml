@@ -2,13 +2,14 @@
 
 <?import com.jfoenix.controls.JFXProgressBar?>
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.*?>
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.Font?>
-<AnchorPane prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8.0.141"
-            xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.lifeform.main.GUI.SyncPage">
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="800.0"
+            prefWidth="1280.0" xmlns="http://javafx.com/javafx/8.0.141" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.ampex.main.GUI.SyncPage">
     <children>
         <StackPane fx:id="syncPane" layoutX="165.0" layoutY="134.0" prefHeight="150.0" prefWidth="200.0"
                    AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
@@ -16,7 +17,7 @@
             <children>
                 <VBox alignment="TOP_CENTER" spacing="20.0">
                     <children>
-                        <Label text="Origin Full Node">
+                        <Label fx:id="mainLabel" text="Ampera Full Node">
                             <font>
                                 <Font name="System Bold" size="24.0"/>
                             </font>
@@ -27,7 +28,11 @@
                             </image>
                         </ImageView>
                         <Label text="Sync Progress:"/>
-                        <JFXProgressBar prefHeight="15.0" prefWidth="350.0"/>
+                        <Label text="Download:"/>
+                        <JFXProgressBar fx:id="downloadProgress" prefHeight="15.0" prefWidth="350.0"/>
+                        <Label text="Verify:"/>
+                        <JFXProgressBar fx:id="verifyProgress" prefHeight="15.0" prefWidth="350.0"/>
+                        <Label fx:id="heightLabel" text="Height:"/>
                         <Label text="You may experience unresponsiveness during this process">
                             <font>
                                 <Font name="System Italic" size="12.0"/>
@@ -35,7 +40,7 @@
                         </Label>
                     </children>
                     <StackPane.margin>
-                        <Insets top="50.0"/>
+                        <Insets top="100.0"/>
                     </StackPane.margin>
                 </VBox>
             </children>

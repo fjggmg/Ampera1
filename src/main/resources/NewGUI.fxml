@@ -10,7 +10,7 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 <AnchorPane prefHeight="600.0" prefWidth="1156.0" xmlns="http://javafx.com/javafx/8.0.141"
-            xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.lifeform.main.GUI.NewGUI">
+            xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.ampex.main.GUI.NewGUI">
     <children>
         <StackPane layoutX="-130.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
             <children>
@@ -53,10 +53,22 @@
                                                                  text="Require Password"/>
                                             </children>
                                         </VBox>
-                                        <JFXPasswordField fx:id="cpCurrent" labelFloat="true" layoutX="14.0" layoutY="120.0" promptText="CurrentPassword" />
-                                        <JFXPasswordField fx:id="cpNew" labelFloat="true" layoutX="14.0" layoutY="162.0" promptText="New Password" />
-                                        <JFXPasswordField fx:id="cpConfirm" labelFloat="true" layoutX="14.0" layoutY="200.0" promptText="Confirm Password" />
-                                        <JFXButton fx:id="changePassword" layoutX="159.0" layoutY="197.0" prefHeight="32.0" prefWidth="112.0" text="Change Password" />
+                                        <HBox alignment="BOTTOM_LEFT" layoutX="14.0" layoutY="120.0" spacing="5.0">
+                                            <children>
+                                                <VBox spacing="15.0">
+                                                    <children>
+                                                        <JFXPasswordField fx:id="cpCurrent" labelFloat="true"
+                                                                          promptText="CurrentPassword"/>
+                                                        <JFXPasswordField fx:id="cpNew" labelFloat="true"
+                                                                          promptText="New Password"/>
+                                                        <JFXPasswordField fx:id="cpConfirm" labelFloat="true"
+                                                                          promptText="Confirm Password"/>
+                                                    </children>
+                                                </VBox>
+                                                <JFXButton fx:id="changePassword" prefHeight="32.0" prefWidth="112.0"
+                                                           text="Change Password"/>
+                                            </children>
+                                        </HBox>
                                         <JFXButton fx:id="resetColors" layoutX="362.0" layoutY="11.0" prefHeight="32.0"
                                                    prefWidth="123.0" text="Reset Colors"/>
                                     </children>
