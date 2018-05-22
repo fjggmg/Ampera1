@@ -2354,7 +2354,7 @@ public class NewGUI {
     }
 
     public void pbpDone() {
-        if (walletAmount != null)
+        if (walletAmount != null && !ki.getOptions().pool)
             Platform.runLater(new Runnable() {
                 @Override
                 public void run() {

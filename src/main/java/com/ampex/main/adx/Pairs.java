@@ -3,7 +3,7 @@ package com.ampex.main.adx;
 import com.ampex.amperabase.Token;
 
 public enum Pairs {
-    BTC_ORA(Token.BITCOIN, Token.ORIGIN, "ORA/BTC");
+    BTC_ORA(Token.BITCOIN, Token.ORIGIN, "AXA/BTC");
 
     private final Token onOffer;
     private final Token accepting;

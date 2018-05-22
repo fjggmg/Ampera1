@@ -60,7 +60,8 @@ public class ConnMan extends IConnectionManager {
 
     @Override
     public void disconnect() {
-        endpoint.disconnect();
+        if (endpoint.isConnected())
+            endpoint.disconnect();
         ki.getNetMan().getConnections().remove(this);
 
     }

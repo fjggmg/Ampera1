@@ -388,8 +388,10 @@ public class Ki extends Thread implements IKi, IKiAPI {
                 poolNet.close();
             settings.close();
             stringSettings.close();
-            exchangeMan.close();
-            stateMan.interrupt();
+            if (!getOptions().pool) {
+                exchangeMan.close();
+                stateMan.interrupt();
+            }
             if (!getOptions().nogui)
                 guiHook.close();
             //System.exit(0);
