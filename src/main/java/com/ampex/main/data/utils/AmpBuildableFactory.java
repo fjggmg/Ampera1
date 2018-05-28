@@ -5,6 +5,8 @@ import amp.ByteTools;
 import amp.HeadlessPrefixedAmplet;
 import com.ampex.main.data.encryption.EncryptionManager;
 import com.ampex.main.network.logic.InvalidCRCException;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 
 import java.nio.charset.Charset;
 
@@ -30,12 +32,13 @@ public class AmpBuildableFactory {
         }
     }
 
-    public static byte[] finalizeBuildAsPacket(AmpBuildable packet) {
+    public static ByteBuf finalizeBuildAsPacket(AmpBuildable packet) {
         HeadlessPrefixedAmplet hpa = HeadlessPrefixedAmplet.create();
         byte[] p = packet.serializeToBytes();
+        System.out.println("Prepping packet for transfer of type: " + packet.getClass().getName());
         hpa.addElement(packet.getClass().getName());
         hpa.addElement(EncryptionManager.getCRCValue(p));
         hpa.addBytes(p);
-        return hpa.serializeToBytes();
+        return Unpooled.wrappedBuffer(hpa.serializeToBytes());
     }
 }

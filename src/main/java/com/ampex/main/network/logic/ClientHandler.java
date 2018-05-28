@@ -30,7 +30,6 @@ public class ClientHandler extends ChannelInboundHandlerAdapter {
         try {
             //if(ki.getOptions().pDebug)
             //ki.debug("Received packet: " + msg.toString());
-
             connMan.received(msg);
         }finally{
             ReferenceCountUtil.release(msg);

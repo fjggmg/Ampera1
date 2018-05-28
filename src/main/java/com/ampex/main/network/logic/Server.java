@@ -60,7 +60,7 @@ public class Server {
                             }
                             p.addLast(
                                     new LengthFieldPrepender(4),
-                                    new PacketDecoder(150_000_000, 0, 4, 0, 4),
+                                    new PacketDecoder(150_000_000, 0, 4, 0, 0),
                                     serverHandler);
 
                         }

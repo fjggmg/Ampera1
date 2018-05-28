@@ -16,6 +16,8 @@ import io.netty.handler.codec.LengthFieldPrepender;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
+import io.netty.util.concurrent.Future;
+import io.netty.util.concurrent.GenericFutureListener;
 
 public class Client implements INetworkEndpoint{
 
@@ -88,7 +90,7 @@ public class Client implements INetworkEndpoint{
                             }
                             p.addLast(
                                     new LengthFieldPrepender(4),
-                                    new PacketDecoder(150_000_000, 0, 4, 0, 4),
+                                    new PacketDecoder(150_000_000, 0, 4, 0, 0),
                                     new ClientHandler(ki,connMan,instance));
                             //ch.write("This is a test 2");
 
@@ -109,7 +111,20 @@ public class Client implements INetworkEndpoint{
     @Override
     public void sendPacket(AmpBuildable o)
     {
-        if (channel != null)
-            channel.writeAndFlush(AmpBuildableFactory.finalizeBuildAsPacket(o));
+        System.out.println("Attempting to write bytes to network");
+        if (channel != null) {
+            System.out.println("Writing bytes to network");
+            channel.writeAndFlush(AmpBuildableFactory.finalizeBuildAsPacket(o)).addListener(new GenericFutureListener<Future<Object>>() {
+                @Override
+                public void operationComplete(Future<Object> future) {
+                    if (!future.isSuccess()) {
+                        ki.getMainLog().error("Data failed to write:");
+                        future.cause().printStackTrace();
+                    }
+                }
+            });
+
+            System.out.println("done writing bytes to network");
+        }
     }
 }
