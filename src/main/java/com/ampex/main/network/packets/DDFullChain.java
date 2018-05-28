@@ -1,12 +1,11 @@
 package com.ampex.main.network.packets;
 
 import com.ampex.main.IKi;
+import com.ampex.main.data.utils.InvalidAmpBuildException;
 import com.ampex.main.network.IConnectionManager;
 
-import java.io.Serializable;
+public class DDFullChain implements Packet {
 
-public class DDFullChain implements Packet, Serializable {
-    private static final long serialVersionUID = 184L;
     @Override
     public void process(IKi ki, IConnectionManager connMan, PacketGlobal pg) {
         PendingTransactionRequest ptr = new PendingTransactionRequest();
@@ -16,4 +15,13 @@ public class DDFullChain implements Packet, Serializable {
         }
     }
 
+    @Override
+    public void build(byte[] serialized) throws InvalidAmpBuildException {
+
+    }
+
+    @Override
+    public byte[] serializeToBytes() {
+        return new byte[0];
+    }
 }

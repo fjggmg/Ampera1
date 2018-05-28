@@ -1,6 +1,6 @@
 import amp.Amplet;
 import com.ampex.amperabase.*;
-import com.ampex.main.data.EncryptionManager;
+import com.ampex.main.data.encryption.EncryptionManager;
 import com.ampex.main.transactions.*;
 import com.ampex.main.transactions.addresses.InvalidAddressException;
 import com.ampex.main.transactions.addresses.NewAdd;

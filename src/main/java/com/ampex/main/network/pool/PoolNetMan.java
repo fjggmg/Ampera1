@@ -1,6 +1,7 @@
 package com.ampex.main.network.pool;
 
 import com.ampex.main.IKi;
+import com.ampex.main.data.utils.AmpBuildable;
 import com.ampex.main.network.GlobalPacketQueuer;
 import com.ampex.main.network.IConnectionManager;
 import com.ampex.main.network.INetworkManager;
@@ -37,7 +38,7 @@ public class PoolNetMan extends Thread implements INetworkManager {
     }
 
     @Override
-    public void broadcast(Object o) {
+    public void broadcast(AmpBuildable o) {
 
         if (ki.getOptions().pool) {
             for (IConnectionManager cm : connections) {
@@ -73,7 +74,7 @@ public class PoolNetMan extends Thread implements INetworkManager {
     }
 
     @Override
-    public void broadcastAllBut(String ID, Object o) {
+    public void broadcastAllBut(String ID, AmpBuildable o) {
         for (IConnectionManager c : connections) {
             if (!c.getID().equals(ID)) c.sendPacket(o);
         }

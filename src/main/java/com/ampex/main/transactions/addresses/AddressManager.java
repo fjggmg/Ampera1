@@ -1,12 +1,12 @@
 package com.ampex.main.transactions.addresses;
 
 import amp.HeadlessPrefixedAmplet;
-import amp.database.XodusAmpMap;
 import com.ampex.amperabase.AddressLength;
 import com.ampex.amperabase.IAddress;
 import com.ampex.amperabase.KeyType;
 import com.ampex.main.IKi;
 import com.ampex.main.data.files.StringFileHandler;
+import database.XodusAmpMap;
 import engine.binary.Binary;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;

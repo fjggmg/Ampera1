@@ -1,17 +1,19 @@
 package com.ampex.main.network.packets.adx;
 
+import amp.ByteTools;
+import amp.HeadlessPrefixedAmplet;
 import com.ampex.main.IKi;
 import com.ampex.main.adx.Order;
+import com.ampex.main.data.utils.InvalidAmpBuildException;
 import com.ampex.main.network.IConnectionManager;
 import com.ampex.main.network.packets.Packet;
 import com.ampex.main.network.packets.PacketGlobal;
 
-import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.nio.charset.Charset;
 
-public class OrderPacket implements Packet, Serializable {
-    private static final long serialVersionUID = 184L;
+public class OrderPacket implements Packet {
     public byte[] order;
     public String transaction;
     public boolean matched = false;
@@ -82,4 +84,27 @@ public class OrderPacket implements Packet, Serializable {
         }
     }
 
+    @Override
+    public void build(byte[] serialized) throws InvalidAmpBuildException {
+        try {
+            HeadlessPrefixedAmplet hpa = HeadlessPrefixedAmplet.create(serialized);
+            order = hpa.getNextElement();
+            matched = ByteTools.buildBoolean(hpa.getNextElement()[0]);
+            if (hpa.hasNextElement()) {
+                transaction = new String(hpa.getNextElement(), Charset.forName("UTF-8"));
+            }
+        } catch (Exception e) {
+            throw new InvalidAmpBuildException("Unable to create OrderPacket from bytes");
+        }
+    }
+
+    @Override
+    public byte[] serializeToBytes() {
+        HeadlessPrefixedAmplet hpa = HeadlessPrefixedAmplet.create();
+        hpa.addBytes(order);
+        hpa.addElement(matched);
+        if (transaction != null)
+            hpa.addElement(transaction);
+        return hpa.serializeToBytes();
+    }
 }

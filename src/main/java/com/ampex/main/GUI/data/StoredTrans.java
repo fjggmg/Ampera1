@@ -1,4 +1,4 @@
-package com.ampex.main.GUI;
+package com.ampex.main.GUI.data;
 
 import com.jfoenix.controls.datamodels.treetable.RecursiveTreeObject;
 import javafx.beans.property.*;
@@ -7,16 +7,16 @@ import javafx.collections.ObservableList;
 
 public class StoredTrans extends RecursiveTreeObject<StoredTrans> {
 
-    StringProperty address;
-    DoubleProperty amount;
-    StringProperty sent;
-    StringProperty message;
-    StringProperty otherAddress;
-    StringProperty timestamp;
-    StringProperty height;
-    ListProperty<String> outputs;
-    DoubleProperty fee;
-    ListProperty<String> inputs;
+    public StringProperty address;
+    public DoubleProperty amount;
+    public StringProperty sent;
+    public StringProperty message;
+    public StringProperty otherAddress;
+    public StringProperty timestamp;
+    public StringProperty height;
+    public ListProperty<String> outputs;
+    public DoubleProperty fee;
+    public ListProperty<String> inputs;
 
     public StoredTrans(String address, Double amount, String sent, String message, String otherAdd, String timestamp, String height, ObservableList<String> outputs, ObservableList<String> inputs, Double fee) {
         this.address = new SimpleStringProperty(address);

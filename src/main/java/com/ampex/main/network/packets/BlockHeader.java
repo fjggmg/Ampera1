@@ -1,14 +1,17 @@
 package com.ampex.main.network.packets;
 
+import amp.HeadlessAmplet;
+import amp.HeadlessPrefixedAmplet;
 import com.ampex.main.IKi;
+import com.ampex.main.data.utils.InvalidAmpBuildException;
 import com.ampex.main.network.IConnectionManager;
 
-import java.io.Serializable;
 import java.math.BigInteger;
+import java.nio.charset.Charset;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-public class BlockHeader implements Serializable, Packet {
-    private static final long serialVersionUID = 184L;
+public class BlockHeader implements Packet {
+
     public String solver;
     public String merkleRoot;
     public String ID;
@@ -33,4 +36,39 @@ public class BlockHeader implements Serializable, Packet {
 
     }
 
+    @Override
+    public void build(byte[] serialized) throws InvalidAmpBuildException {
+        try {
+            HeadlessPrefixedAmplet hpa = HeadlessPrefixedAmplet.create(serialized);
+            HeadlessAmplet ha = hpa.getNextElementAsHeadlessAmplet();
+            timestamp = ha.getNextLong();
+            laFlag = ha.getNextBoolean();
+            solver = new String(hpa.getNextElement(), Charset.forName("UTF-8"));
+            merkleRoot = new String(hpa.getNextElement(), Charset.forName("UTF-8"));
+            ID = new String(hpa.getNextElement(), Charset.forName("UTF-8"));
+            height = new BigInteger(hpa.getNextElement());
+            prevID = new String(hpa.getNextElement(), Charset.forName("UTF-8"));
+            payload = hpa.getNextElement();
+            coinbase = hpa.getNextElement();
+        } catch (Exception e) {
+            throw new InvalidAmpBuildException("Unable to create BlockHeader from bytes");
+        }
+    }
+
+    @Override
+    public byte[] serializeToBytes() {
+        HeadlessAmplet ha = HeadlessAmplet.create();
+        ha.addElement(timestamp);
+        ha.addElement(laFlag);
+        HeadlessPrefixedAmplet hpa = HeadlessPrefixedAmplet.create();
+        hpa.addElement(ha);
+        hpa.addElement(solver);
+        hpa.addElement(merkleRoot);
+        hpa.addElement(ID);
+        hpa.addElement(height);
+        hpa.addElement(prevID);
+        hpa.addBytes(payload);
+        hpa.addBytes(coinbase);
+        return hpa.serializeToBytes();
+    }
 }

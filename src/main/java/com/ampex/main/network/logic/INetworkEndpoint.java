@@ -1,9 +1,10 @@
 package com.ampex.main.network.logic;
 
+import com.ampex.main.data.utils.AmpBuildable;
 import io.netty.channel.ChannelHandlerContext;
 
 public interface INetworkEndpoint {
-    void sendPacket(Object o);
+    void sendPacket(AmpBuildable o);
 
     void setChannel(ChannelHandlerContext c);
 

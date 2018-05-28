@@ -3,17 +3,16 @@ package com.ampex.main.transactions.addresses;
 import com.ampex.amperabase.AddressLength;
 import com.ampex.amperabase.IAddress;
 import com.ampex.amperabase.KeyType;
-import com.ampex.main.data.EncryptionManager;
-import com.ampex.main.data.Utils;
+import com.ampex.main.data.encryption.EncryptionManager;
+import com.ampex.main.data.utils.Utils;
 
-import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 
 /**
  * Created by Bryan on 8/8/2017.
  */
-public class Address implements Serializable, IAddress {
-    private static final long serialVersionUID = 184L;
+public class Address implements IAddress {
+
     public static final byte VERSION = 0X7F;
     public Address(byte version, String ID, String checksum)
     {

@@ -1,4 +1,4 @@
-package com.ampex.main.data;
+package com.ampex.main.data.encryption;
 
 import com.ampex.amperabase.IEncryptManAPI;
 import com.ampex.amperabase.KeyType;

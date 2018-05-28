@@ -1,4 +1,4 @@
-package com.ampex.main.data;
+package com.ampex.main.data.Input;
 
 import com.ampex.amperabase.IAddress;
 import com.ampex.amperabase.IInput;
@@ -10,7 +10,8 @@ import com.ampex.main.StringSettings;
 import com.ampex.main.blockchain.Block;
 import com.ampex.main.blockchain.BlockState;
 import com.ampex.main.blockchain.ChainManager;
-import com.ampex.main.blockchain.GPUMiner;
+import com.ampex.main.blockchain.mining.GPUMiner;
+import com.ampex.main.data.encryption.EncryptionManager;
 import com.ampex.main.network.IConnectionManager;
 import com.ampex.main.network.packets.Ping;
 import com.ampex.main.network.packets.TransactionDataRequest;

@@ -3,8 +3,8 @@ package com.ampex.main.transactions.addresses;
 import com.ampex.amperabase.AddressLength;
 import com.ampex.amperabase.IAddress;
 import com.ampex.amperabase.KeyType;
-import com.ampex.main.data.EncryptionManager;
-import com.ampex.main.data.Utils;
+import com.ampex.main.data.encryption.EncryptionManager;
+import com.ampex.main.data.utils.Utils;
 
 import java.io.UnsupportedEncodingException;
 
@@ -79,7 +79,7 @@ public class NewAdd implements IAddress {
         kt[0] = eChar[5];
         kt[1] = eChar[6];
         KeyType type = KeyType.byValue(Utils.hexToByte(new String(kt)));
-        //System.out.println("Decoded key code: " + Utils.hexToByte(new String(kt)));
+        //System.out.println("Decoded key code: " + utils.hexToByte(new String(kt)));
         //System.out.println("Decoded key type: " + type);
         if (l == null) return null;
         boolean p2sh = (eChar[7] == '1');

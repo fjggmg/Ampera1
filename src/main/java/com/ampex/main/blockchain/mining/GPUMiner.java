@@ -1,11 +1,13 @@
-package com.ampex.main.blockchain;
+package com.ampex.main.blockchain.mining;
 
 import amp.Amplet;
 import com.ampex.amperabase.TransactionFeeCalculator;
 import com.ampex.main.IKi;
 import com.ampex.main.Settings;
-import com.ampex.main.data.EncryptionManager;
-import com.ampex.main.data.Utils;
+import com.ampex.main.blockchain.Block;
+import com.ampex.main.blockchain.BlockState;
+import com.ampex.main.data.encryption.EncryptionManager;
+import com.ampex.main.data.utils.Utils;
 import com.ampex.main.network.packets.BlockEnd;
 import com.ampex.main.network.packets.BlockHeader;
 import com.ampex.main.network.packets.TransactionPacket;

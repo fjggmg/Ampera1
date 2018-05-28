@@ -1,4 +1,4 @@
-package com.ampex.main.data;
+package com.ampex.main.data.utils;
 
 import java.io.*;
 import java.math.BigInteger;

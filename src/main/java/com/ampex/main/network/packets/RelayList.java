@@ -1,14 +1,16 @@
 package com.ampex.main.network.packets;
 
+import amp.HeadlessPrefixedAmplet;
 import com.ampex.main.IKi;
+import com.ampex.main.data.utils.InvalidAmpBuildException;
 import com.ampex.main.network.IConnectionManager;
 
-import java.io.Serializable;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
-public class RelayList implements Serializable, Packet {
-    private static final long serialVersionUID = 184L;
+public class RelayList implements Packet {
+
     List<String> relays;
 
     @Override
@@ -34,4 +36,27 @@ public class RelayList implements Serializable, Packet {
 
     }
 
+    @Override
+    public void build(byte[] serialized) throws InvalidAmpBuildException {
+        try {
+            HeadlessPrefixedAmplet hpa = HeadlessPrefixedAmplet.create(serialized);
+            relays = new ArrayList<>();
+            while (hpa.hasNextElement()) {
+                relays.add(new String(hpa.getNextElement(), Charset.forName("UTF-8")));
+            }
+        } catch (Exception e) {
+            throw new InvalidAmpBuildException("Unable to create RelayList from bytes");
+        }
+    }
+
+    @Override
+    public byte[] serializeToBytes() {
+
+        HeadlessPrefixedAmplet hpa = HeadlessPrefixedAmplet.create();
+        if (relays != null)
+            for (String relay : relays) {
+                hpa.addElement(relay);
+            }
+        return hpa.serializeToBytes();
+    }
 }

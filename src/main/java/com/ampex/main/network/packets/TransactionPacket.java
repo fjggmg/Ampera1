@@ -1,19 +1,21 @@
 package com.ampex.main.network.packets;
 
 import amp.Amplet;
+import amp.HeadlessPrefixedAmplet;
 import com.ampex.amperabase.IInput;
 import com.ampex.main.IKi;
+import com.ampex.main.data.utils.InvalidAmpBuildException;
 import com.ampex.main.network.IConnectionManager;
 import com.ampex.main.transactions.ITrans;
 import com.ampex.main.transactions.InvalidTransactionException;
 import com.ampex.main.transactions.Transaction;
 
-import java.io.Serializable;
 import java.math.BigInteger;
+import java.nio.charset.Charset;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class TransactionPacket implements Serializable, Packet {
-    private static final long serialVersionUID = 184L;
+public class TransactionPacket implements Packet {
+
     public byte[] trans;
     public String block;
 
@@ -107,4 +109,25 @@ public class TransactionPacket implements Serializable, Packet {
         }
     }
 
+    @Override
+    public void build(byte[] serialized) throws InvalidAmpBuildException {
+        try {
+            HeadlessPrefixedAmplet hpa = HeadlessPrefixedAmplet.create(serialized);
+            trans = hpa.getNextElement();
+            if (hpa.hasNextElement()) {
+                block = new String(hpa.getNextElement(), Charset.forName("UTF-8"));
+            }
+        } catch (Exception e) {
+            throw new InvalidAmpBuildException("Unable to create TransactionPacket from bytes");
+        }
+    }
+
+    @Override
+    public byte[] serializeToBytes() {
+        HeadlessPrefixedAmplet hpa = HeadlessPrefixedAmplet.create();
+        hpa.addBytes(trans);
+        if (block != null)
+            hpa.addElement(block);
+        return hpa.serializeToBytes();
+    }
 }

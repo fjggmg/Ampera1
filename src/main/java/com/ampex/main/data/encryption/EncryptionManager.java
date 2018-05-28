@@ -1,9 +1,10 @@
-package com.ampex.main.data;
+package com.ampex.main.data.encryption;
 
 import com.ampex.amperabase.IEncryptManAPI;
 import com.ampex.amperabase.KeyType;
 import com.ampex.main.IKi;
 import com.ampex.main.data.files.StringFileHandler;
+import com.ampex.main.data.utils.Utils;
 import net.i2p.crypto.eddsa.EdDSAEngine;
 import net.i2p.crypto.eddsa.EdDSASecurityProvider;
 import net.i2p.crypto.eddsa.spec.EdDSAGenParameterSpec;

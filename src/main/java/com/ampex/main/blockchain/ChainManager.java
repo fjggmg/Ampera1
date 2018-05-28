@@ -1,14 +1,15 @@
 package com.ampex.main.blockchain;
 
-import amp.database.XodusAmpMap;
 import com.ampex.amperabase.*;
 import com.ampex.main.IKi;
 import com.ampex.main.Settings;
 import com.ampex.main.StringSettings;
-import com.ampex.main.data.EncryptionManager;
-import com.ampex.main.data.Utils;
-import com.ampex.main.data.XodusStringMap;
+import com.ampex.main.blockchain.mining.GPUMiner;
+import com.ampex.main.data.encryption.EncryptionManager;
+import com.ampex.main.data.utils.Utils;
+import com.ampex.main.data.xodus.XodusStringMap;
 import com.ampex.main.transactions.*;
+import database.XodusAmpMap;
 
 import java.io.File;
 import java.math.BigDecimal;
@@ -312,7 +313,7 @@ public class ChainManager implements IChainMan {
         }
         int mostSignificantByte = byteDiff[mostSignificant0Digits] & 0x0000ff;
 
-        byte[] byteHash = com.ampex.main.data.Utils.fromBase64(hash);
+        byte[] byteHash = Utils.fromBase64(hash);
 
         int precedingZeroes = 0;
         for (int i = 0; i < mostSignificant0Digits; i++) {
@@ -375,7 +376,7 @@ public class ChainManager implements IChainMan {
         }
         int mostSignificantByte = byteDiff[mostSignificant0Digits] & 0x0000ff;
 
-        byte[] byteHash = com.ampex.main.data.Utils.fromBase64(hash);
+        byte[] byteHash = Utils.fromBase64(hash);
 
         int precedingZeroes = 0;
         for (int i = 0; i < mostSignificant0Digits; i++) {
@@ -490,7 +491,7 @@ public class ChainManager implements IChainMan {
         csMap.put("diff",currentDifficulty.toString());
 
         //currentDifficulty = currentDifficulty.multiply((BigInteger.valueOf(System.currentTimeMillis() - (currentHeight.intValueExact() * 300000L)).multiply(BigInteger.valueOf(100L))).divide(BigInteger.valueOf(GENESIS_DAY))).divide(BigInteger.valueOf(100L));
-        ki.getMainLog().info("New Difficulty: " + com.ampex.main.data.Utils.toHexArray(currentDifficulty.toByteArray()));
+        ki.getMainLog().info("New Difficulty: " + Utils.toHexArray(currentDifficulty.toByteArray()));
         if (ki.getMinerMan() != null && ki.getMinerMan().miningCompatible() && ki.getOptions().mining) {
             boolean isMining = false;
             if (ki.getMinerMan().isMining()) {

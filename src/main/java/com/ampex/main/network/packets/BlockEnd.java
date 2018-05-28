@@ -2,14 +2,15 @@ package com.ampex.main.network.packets;
 
 import com.ampex.main.IKi;
 import com.ampex.main.blockchain.Block;
+import com.ampex.main.data.utils.InvalidAmpBuildException;
 import com.ampex.main.network.IConnectionManager;
 import com.ampex.main.transactions.ITrans;
 
-import java.io.Serializable;
+import java.nio.charset.Charset;
 import java.util.List;
 
-public class BlockEnd implements Serializable, Packet {
-    private static final long serialVersionUID = 184L;
+public class BlockEnd implements Packet {
+
     public String ID;
 
     @Override
@@ -40,4 +41,17 @@ public class BlockEnd implements Serializable, Packet {
 
     }
 
+    @Override
+    public void build(byte[] serialized) throws InvalidAmpBuildException {
+        try {
+            ID = new String(serialized, Charset.forName("UTF-8"));
+        } catch (Exception e) {
+            throw new InvalidAmpBuildException("Unable to create BLockEnd from bytes");
+        }
+    }
+
+    @Override
+    public byte[] serializeToBytes() {
+        return ID.getBytes(Charset.forName("UTF-8"));
+    }
 }

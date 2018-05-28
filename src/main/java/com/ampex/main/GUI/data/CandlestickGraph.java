@@ -1,4 +1,4 @@
-package com.ampex.main.GUI;
+package com.ampex.main.GUI.data;
 
 import com.ampex.main.IKi;
 import com.ampex.main.adx.ExchangeData;
@@ -72,7 +72,7 @@ public class CandlestickGraph extends LineChart<String, Number> {
     private double low;
 
     @Override
-    protected void layoutPlotChildren() {
+    public void layoutPlotChildren() {
 
         if (getData() == null) {
             return;
@@ -153,7 +153,7 @@ public class CandlestickGraph extends LineChart<String, Number> {
     }
 
     @Override
-    protected void updateAxisRange() {
+    public void updateAxisRange() {
         if (getPlotChildren().isEmpty()) return;
         // For candle stick chart we need to override this method as we need to let the axis know that they need to be able
         // to cover the whole area occupied by the high to low range not just its center data value

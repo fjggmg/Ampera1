@@ -4,8 +4,10 @@ import amp.Amplet;
 import amp.ByteTools;
 import amp.HeadlessAmplet;
 import amp.HeadlessPrefixedAmplet;
-import amp.database.XodusAmpMap;
 import com.ampex.amperabase.*;
+import com.ampex.main.GUI.data.CandlestickGraph;
+import com.ampex.main.GUI.data.RefreshableListViewSkin;
+import com.ampex.main.GUI.data.StoredTrans;
 import com.ampex.main.IKi;
 import com.ampex.main.Ki;
 import com.ampex.main.Settings;
@@ -15,10 +17,13 @@ import com.ampex.main.adx.OrderStatus;
 import com.ampex.main.adx.Pairs;
 import com.ampex.main.blockchain.Block;
 import com.ampex.main.blockchain.ChainManager;
-import com.ampex.main.blockchain.GPUMiner;
-import com.ampex.main.blockchain.IMiner;
-import com.ampex.main.data.*;
-import com.ampex.main.data.Utils;
+import com.ampex.main.blockchain.mining.GPUMiner;
+import com.ampex.main.blockchain.mining.IMiner;
+import com.ampex.main.data.buckets.BinALPreBucket;
+import com.ampex.main.data.buckets.KeyKeyTypePair;
+import com.ampex.main.data.encryption.EncryptionManager;
+import com.ampex.main.data.utils.Utils;
+import com.ampex.main.data.xodus.XodusStringMap;
 import com.ampex.main.network.IConnectionManager;
 import com.ampex.main.network.packets.TransactionPacket;
 import com.ampex.main.transactions.ITrans;
@@ -30,6 +35,7 @@ import com.jfoenix.controls.*;
 import com.jfoenix.controls.datamodels.treetable.RecursiveTreeObject;
 import com.jfoenix.transitions.hamburger.HamburgerSlideCloseTransition;
 import com.jfoenix.validation.RequiredFieldValidator;
+import database.XodusAmpMap;
 import engine.binary.Binary;
 import engine.data.WritableMemory;
 import javafx.animation.KeyFrame;
@@ -1385,7 +1391,7 @@ public class NewGUI {
                         bin.getProgram().seal();
                         if (prefixField.getText() == null || prefixField.getText().isEmpty()) {
 
-                            a = ki.getAddMan().createNew(com.ampex.main.data.Utils.toBase64(bin.serializeToAmplet().serializeToBytes()), entropyField.getText(), null, AddressLength.valueOf(addressLength.getSelectionModel().getSelectedItem().getText()), true, KeyType.NONE);
+                            a = ki.getAddMan().createNew(Utils.toBase64(bin.serializeToAmplet().serializeToBytes()), entropyField.getText(), null, AddressLength.valueOf(addressLength.getSelectionModel().getSelectedItem().getText()), true, KeyType.NONE);
                         } else {
                             if (prefixField.getText().length() != 5) {
                                 notification("Prefixes must be exactly 5 characters long");
@@ -1395,7 +1401,7 @@ public class NewGUI {
                                 notification("Prefixes cannot contain spaces");
                                 return;
                             }
-                            a = ki.getAddMan().createNew(com.ampex.main.data.Utils.toBase64(bin.serializeToAmplet().serializeToBytes()), entropyField.getText(), prefixField.getText(), AddressLength.valueOf(addressLength.getSelectionModel().getSelectedItem().getText()), true, KeyType.NONE);
+                            a = ki.getAddMan().createNew(Utils.toBase64(bin.serializeToAmplet().serializeToBytes()), entropyField.getText(), prefixField.getText(), AddressLength.valueOf(addressLength.getSelectionModel().getSelectedItem().getText()), true, KeyType.NONE);
 
                         }
                         ki.getAddMan().associateBinary(a, bin);
@@ -1432,8 +1438,8 @@ public class NewGUI {
                     BinALPreBucket bucket = BinALPreBucket.fromBytes(Files.readAllBytes(path));
                     for (int i = 0; i < 32; i++) {
                         KeyKeyTypePair kktp = KeyKeyTypePair.fromBytes(bucket.getBin().getConstantMemory().getElement(i).getData());
-                        if (ki.getEncryptMan().getPublicKeyString(kktp.getKeyType()).equals(com.ampex.main.data.Utils.toBase64(kktp.getKey()))) {
-                            IAddress a = ki.getAddMan().createNew(com.ampex.main.data.Utils.toBase64(bucket.getBin().serializeToAmplet().serializeToBytes()), new String(bucket.getBin().getEntropy(), "UTF-8"), bucket.getPrefix(), bucket.getAl(), true, KeyType.NONE);
+                        if (ki.getEncryptMan().getPublicKeyString(kktp.getKeyType()).equals(Utils.toBase64(kktp.getKey()))) {
+                            IAddress a = ki.getAddMan().createNew(Utils.toBase64(bucket.getBin().serializeToAmplet().serializeToBytes()), new String(bucket.getBin().getEntropy(), "UTF-8"), bucket.getPrefix(), bucket.getAl(), true, KeyType.NONE);
                             ki.getAddMan().associateBinary(a, bucket.getBin());
                             addressList.getItems().add(a.encodeForChain());
 
@@ -1683,7 +1689,7 @@ public class NewGUI {
             public void handle(MouseEvent event) {
                 if (multiSigTransCache != null) {
 
-                    multiSigTransCache.addSig(com.ampex.main.data.Utils.toBase64(multiSigBinaryCache.serializeToAmplet().serializeToBytes()), com.ampex.main.data.Utils.toBase64(multiSigWMCache.serializeToBytes()));
+                    multiSigTransCache.addSig(Utils.toBase64(multiSigBinaryCache.serializeToAmplet().serializeToBytes()), Utils.toBase64(multiSigWMCache.serializeToBytes()));
 
                     if (ki.getTransMan().verifyTransaction(multiSigTransCache)) {
                         ki.getTransMan().getPending().add(multiSigTransCache);
@@ -1911,7 +1917,7 @@ public class NewGUI {
                         notification("Do not have script for the address in this transaction");
                         return;
                     }
-                    WritableMemory wm = WritableMemory.deserializeFromBytes(com.ampex.main.data.Utils.fromBase64(trans.getSig(com.ampex.main.data.Utils.toBase64(bin.serializeToAmplet().serializeToBytes()))));
+                    WritableMemory wm = WritableMemory.deserializeFromBytes(Utils.fromBase64(trans.getSig(Utils.toBase64(bin.serializeToAmplet().serializeToBytes()))));
 
                     int i = 0;
                     for (; i < 32; i++) {
@@ -1920,7 +1926,7 @@ public class NewGUI {
                             if (kktp == null) break;
                             //if (kktp.getKey() == null) break;
                             if (kktp.getKeyType() == null) break;
-                            if (ki.getEncryptMan().getPublicKeyString(kktp.getKeyType()).equals(com.ampex.main.data.Utils.toBase64(kktp.getKey()))) {
+                            if (ki.getEncryptMan().getPublicKeyString(kktp.getKeyType()).equals(Utils.toBase64(kktp.getKey()))) {
                                 wm.setElement(ki.getEncryptMan().sign(trans.toSignBytes(), kktp.getKeyType()), i);
                             }
                         } catch (RuntimeException e) {
@@ -1943,7 +1949,7 @@ public class NewGUI {
                     messageText.setText(trans.getMessage());
                     amountText.setText("" + (amount.doubleValue() / 100_000_000D));
 
-                    //trans.addSig(Utils.toBase64(bin.serializeToAmplet().serializeToBytes()),Utils.toBase64(wm.serializeToBytes()));
+                    //trans.addSig(utils.toBase64(bin.serializeToAmplet().serializeToBytes()),utils.toBase64(wm.serializeToBytes()));
 
                 } catch (IOException e) {
                     ki.getMainLog().error("Could not load transaction from file Transaction.amp", e);
@@ -2523,7 +2529,7 @@ public class NewGUI {
     private void setupBlockPane(BigInteger height) {
         Block b = ki.getChainMan().getByHeight(height);
         blockHeight.setText("Height - " + b.height);
-        blockID.setText("ID - " + com.ampex.main.data.Utils.toHexArray(Utils.fromBase64(b.ID)));
+        blockID.setText("ID - " + Utils.toHexArray(Utils.fromBase64(b.ID)));
         solver.setText("Solver - " + b.solver);
         numberOfTransactions.setText("Number of Transactions - " + b.getTransactionKeys().size());
         blockTimestamp.setText(sdf2.format(new Date(b.timestamp)));

@@ -2,8 +2,8 @@ package com.ampex.main.transactions.scripting.word8v1ops;
 
 import com.ampex.amperabase.ITransAPI;
 import com.ampex.amperabase.KeyType;
-import com.ampex.main.data.EncryptionManager;
-import com.ampex.main.data.Utils;
+import com.ampex.main.data.encryption.EncryptionManager;
+import com.ampex.main.data.utils.Utils;
 import com.ampex.main.transactions.scripting.Opcodes;
 import engine.binary.Binary;
 import engine.data.ConstantMemory;

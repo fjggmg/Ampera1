@@ -4,8 +4,8 @@ import amp.Amplet;
 import amp.HeadlessPrefixedAmplet;
 import amp.serialization.IAmpByteSerializable;
 import com.ampex.amperabase.IAddress;
-import com.ampex.main.data.EncryptionManager;
-import com.ampex.main.data.Utils;
+import com.ampex.main.data.encryption.EncryptionManager;
+import com.ampex.main.data.utils.Utils;
 import com.ampex.main.transactions.addresses.Address;
 import engine.binary.Binary;
 

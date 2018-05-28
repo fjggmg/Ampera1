@@ -1,14 +1,16 @@
 package com.ampex.main.network.packets;
 
+import amp.ByteTools;
+import amp.HeadlessPrefixedAmplet;
 import com.ampex.main.IKi;
+import com.ampex.main.data.utils.InvalidAmpBuildException;
 import com.ampex.main.network.IConnectionManager;
 import com.ampex.main.transactions.ITrans;
 
-import java.io.Serializable;
 import java.math.BigInteger;
 
-public class BlockAck implements Serializable,Packet {
-    private static final long serialVersionUID = 184L;
+public class BlockAck implements Packet {
+
     public BigInteger height;
     public boolean verified;
     @Override
@@ -38,4 +40,22 @@ public class BlockAck implements Serializable,Packet {
         }
     }
 
+    @Override
+    public void build(byte[] serialized) throws InvalidAmpBuildException {
+        try {
+            HeadlessPrefixedAmplet hpa = HeadlessPrefixedAmplet.create(serialized);
+            height = new BigInteger(hpa.getNextElement());
+            verified = ByteTools.buildBoolean(hpa.getNextElement()[0]);
+        } catch (Exception e) {
+            throw new InvalidAmpBuildException("unable to build BlockAck packet from bytes");
+        }
+    }
+
+    @Override
+    public byte[] serializeToBytes() {
+        HeadlessPrefixedAmplet hpa = HeadlessPrefixedAmplet.create();
+        hpa.addElement(height);
+        hpa.addElement(verified);
+        return hpa.serializeToBytes();
+    }
 }

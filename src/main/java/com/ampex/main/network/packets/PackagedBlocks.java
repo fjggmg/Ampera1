@@ -1,17 +1,18 @@
 package com.ampex.main.network.packets;
 
 import amp.Amplet;
+import amp.ByteTools;
 import amp.HeadlessPrefixedAmplet;
 import com.ampex.main.IKi;
 import com.ampex.main.blockchain.Block;
-import com.ampex.main.data.EncryptionManager;
+import com.ampex.main.data.encryption.EncryptionManager;
+import com.ampex.main.data.utils.InvalidAmpBuildException;
 import com.ampex.main.network.IConnectionManager;
 
-import java.io.Serializable;
 import java.math.BigInteger;
 
-public class PackagedBlocks implements Packet, Serializable {
-    private static final long serialVersionUID = 184L;
+public class PackagedBlocks implements Packet {
+
 
     private byte[] packagedBlocks;
     private BigInteger lastBlock;
@@ -42,6 +43,20 @@ public class PackagedBlocks implements Packet, Serializable {
         }
     }
 
+    @Override
+    public void build(byte[] serialized) throws InvalidAmpBuildException {
+        try {
+            HeadlessPrefixedAmplet hpa = HeadlessPrefixedAmplet.create(serialized);
+            packagedBlocks = hpa.getNextElement();
+            lastBlock = new BigInteger(hpa.getNextElement());
+            byte[] crcArray = hpa.getNextElement();
+            crc = ByteTools.buildLong(crcArray[0], crcArray[1], crcArray[2], crcArray[3], crcArray[4], crcArray[5], crcArray[6], crcArray[7]);
+        } catch (Exception e) {
+            throw new InvalidAmpBuildException("Unable to create PackagedBlocks from bytes");
+        }
+
+    }
+
     public static PackagedBlocks createPackage(IKi ki, BigInteger startHeight) {
         PackagedBlocks pb = new PackagedBlocks();
 
@@ -61,5 +76,15 @@ public class PackagedBlocks implements Packet, Serializable {
         pb.packagedBlocks = hpa.serializeToBytes();
         pb.crc = EncryptionManager.getCRCValue(pb.packagedBlocks);
         return pb;
+    }
+
+    @Override
+    public byte[] serializeToBytes() {
+        HeadlessPrefixedAmplet hpa = HeadlessPrefixedAmplet.create();
+        hpa.ensureCapacity(1_048_676_00);
+        hpa.addBytes(packagedBlocks);
+        hpa.addElement(lastBlock);
+        hpa.addElement(crc);
+        return hpa.serializeToBytes();
     }
 }

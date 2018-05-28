@@ -1,12 +1,11 @@
 package com.ampex.main.network.packets;
 
 import com.ampex.main.IKi;
+import com.ampex.main.data.utils.InvalidAmpBuildException;
 import com.ampex.main.network.IConnectionManager;
 
-import java.io.Serializable;
+public class DisconnectRequest implements Packet {
 
-public class DisconnectRequest implements Serializable, Packet {
-    private static final long serialVersionUID = 184L;
     @Override
     public void process(IKi ki, IConnectionManager connMan, PacketGlobal pg) {
         if (pg.relays != null) {
@@ -17,4 +16,13 @@ public class DisconnectRequest implements Serializable, Packet {
         }
     }
 
+    @Override
+    public void build(byte[] serialized) throws InvalidAmpBuildException {
+
+    }
+
+    @Override
+    public byte[] serializeToBytes() {
+        return new byte[0];
+    }
 }

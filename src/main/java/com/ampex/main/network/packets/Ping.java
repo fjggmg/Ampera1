@@ -1,12 +1,12 @@
 package com.ampex.main.network.packets;
 
+import amp.HeadlessAmplet;
 import com.ampex.main.IKi;
+import com.ampex.main.data.utils.InvalidAmpBuildException;
 import com.ampex.main.network.IConnectionManager;
 
-import java.io.Serializable;
+public class Ping implements Packet {
 
-public class Ping implements Serializable, Packet {
-    private static final long serialVersionUID = 184L;
     public long currentTime;
     @Override
     public void process(IKi ki, IConnectionManager connMan, PacketGlobal pg) {
@@ -15,4 +15,20 @@ public class Ping implements Serializable, Packet {
         connMan.sendPacket(pong);
     }
 
+    @Override
+    public void build(byte[] serialized) throws InvalidAmpBuildException {
+        try {
+            HeadlessAmplet ha = HeadlessAmplet.create(serialized);
+            currentTime = ha.getNextLong();
+        } catch (Exception e) {
+            throw new InvalidAmpBuildException("Unable to create Ping from bytes");
+        }
+    }
+
+    @Override
+    public byte[] serializeToBytes() {
+        HeadlessAmplet ha = HeadlessAmplet.create();
+        ha.addElement(currentTime);
+        return ha.serializeToBytes();
+    }
 }

@@ -8,9 +8,9 @@ import amp.classification.classes.AC_SingleElement;
 import com.ampex.amperabase.*;
 import com.ampex.main.IKi;
 import com.ampex.main.blockchain.IChainMan;
-import com.ampex.main.data.AmpIDs;
-import com.ampex.main.data.EncryptionManager;
-import com.ampex.main.data.Utils;
+import com.ampex.main.data.buckets.AmpIDs;
+import com.ampex.main.data.encryption.EncryptionManager;
+import com.ampex.main.data.utils.Utils;
 import com.ampex.main.transactions.addresses.Address;
 import com.ampex.main.transactions.addresses.InvalidAddressException;
 import com.ampex.main.transactions.addresses.NewAdd;
@@ -61,7 +61,7 @@ public class NewTrans implements ITrans {
             return ID;
         } else {
             //System.out.println("ID was null, creating");
-            ID = com.ampex.main.data.Utils.toBase64(EncryptionManager.sha3256(serializeToAmplet().serializeToBytes()));
+            ID = Utils.toBase64(EncryptionManager.sha3256(serializeToAmplet().serializeToBytes()));
             //System.out.println("ID is: " + ID);
             return ID;
         }
@@ -81,7 +81,7 @@ public class NewTrans implements ITrans {
     public boolean verifySigs() {
         for (Map.Entry<String, IKSEP> key : keySigMap.entrySet()) {
             if (!key.getValue().isP2SH()) {
-                if (!EncryptionManager.verifySig(toSignBytes(), com.ampex.main.data.Utils.fromBase64(key.getValue().getSig()), key.getKey(), key.getValue().getKeyType()))
+                if (!EncryptionManager.verifySig(toSignBytes(), Utils.fromBase64(key.getValue().getSig()), key.getKey(), key.getValue().getKeyType()))
                     return false;
             }
 
@@ -202,7 +202,7 @@ public class NewTrans implements ITrans {
                 }
                 if (execAdd == null) return false;
                 try {
-                    ArrayList<DataElement> result = ki.getBCE8().executeProgram(Binary.deserializeFromAmplet(Amplet.create(com.ampex.main.data.Utils.fromBase64(key.getKey()))), WritableMemory.deserializeFromBytes(Utils.fromBase64(ksep.getSig())), this, execAdd.toByteArray(), false);
+                    ArrayList<DataElement> result = ki.getBCE8().executeProgram(Binary.deserializeFromAmplet(Amplet.create(Utils.fromBase64(key.getKey()))), WritableMemory.deserializeFromBytes(Utils.fromBase64(ksep.getSig())), this, execAdd.toByteArray(), false);
                     if (result.get(0).getDataAsInt() != 0) return false;
                 } catch (Exception e) {
                     e.printStackTrace();

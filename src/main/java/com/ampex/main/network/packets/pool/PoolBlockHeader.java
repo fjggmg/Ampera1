@@ -1,5 +1,7 @@
 package com.ampex.main.network.packets.pool;
 
+import amp.HeadlessAmplet;
+import amp.HeadlessPrefixedAmplet;
 import com.ampex.amperabase.IBlockAPI;
 import com.ampex.amperabase.TransactionFeeCalculator;
 import com.ampex.main.IKi;
@@ -7,18 +9,19 @@ import com.ampex.main.Settings;
 import com.ampex.main.StringSettings;
 import com.ampex.main.blockchain.Block;
 import com.ampex.main.blockchain.ChainManager;
+import com.ampex.main.data.utils.InvalidAmpBuildException;
 import com.ampex.main.network.IConnectionManager;
 import com.ampex.main.network.packets.BlockEnd;
 import com.ampex.main.network.packets.BlockHeader;
 import com.ampex.main.network.packets.TransactionPacket;
 
-import java.io.Serializable;
 import java.math.BigInteger;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
-public class PoolBlockHeader implements Serializable, PoolPacket {
-    private static final long serialVersionUID = 184L;
+public class PoolBlockHeader implements PoolPacket {
+
     public String solver;
     public String merkleRoot;
     public String ID;
@@ -36,8 +39,8 @@ public class PoolBlockHeader implements Serializable, PoolPacket {
         Block b;// = new Block();
         if (!ki.getOptions().poolRelay) {
             /*
-            solver = Utils.toBase64(ki.getPoolData().payTo.toByteArray());
-            b.solver = Utils.toBase64(ki.getPoolData().payTo.toByteArray());
+            solver = utils.toBase64(ki.getPoolData().payTo.toByteArray());
+            b.solver = utils.toBase64(ki.getPoolData().payTo.toByteArray());
             b.merkleRoot = merkleRoot;
             ki.debug("merkle root: " + merkleRoot);
             b.ID = ID;
@@ -158,5 +161,43 @@ public class PoolBlockHeader implements Serializable, PoolPacket {
         bh.height = b.height;
         bh.coinbase = b.getCoinbase().serializeToAmplet().serializeToBytes();
         return bh;
+    }
+
+    @Override
+    public void build(byte[] serialized) throws InvalidAmpBuildException {
+        try {
+            HeadlessPrefixedAmplet hpa = HeadlessPrefixedAmplet.create(serialized);
+            HeadlessAmplet ha = hpa.getNextElementAsHeadlessAmplet();
+            timestamp = ha.getNextLong();
+            pplns = ha.getNextBoolean();
+            currentHR = ha.getNextLong();
+            solver = new String(hpa.getNextElement(), Charset.forName("UTF-8"));
+            merkleRoot = new String(hpa.getNextElement(), Charset.forName("UTF-8"));
+            ID = new String(hpa.getNextElement(), Charset.forName("UTF-8"));
+            height = new BigInteger(hpa.getNextElement());
+            prevID = new String(hpa.getNextElement(), Charset.forName("UTF-8"));
+            payload = hpa.getNextElement();
+            coinbase = hpa.getNextElement();
+        } catch (Exception e) {
+            throw new InvalidAmpBuildException("Unable to create PoolBlockHeader from bytes");
+        }
+    }
+
+    @Override
+    public byte[] serializeToBytes() {
+        HeadlessAmplet ha = HeadlessAmplet.create();
+        ha.addElement(timestamp);
+        ha.addElement(pplns);
+        ha.addElement(currentHR);
+        HeadlessPrefixedAmplet hpa = HeadlessPrefixedAmplet.create();
+        hpa.addElement(ha);
+        hpa.addElement(solver);
+        hpa.addElement(merkleRoot);
+        hpa.addElement(ID);
+        hpa.addElement(height);
+        hpa.addElement(prevID);
+        hpa.addBytes(payload);
+        hpa.addBytes(coinbase);
+        return hpa.serializeToBytes();
     }
 }

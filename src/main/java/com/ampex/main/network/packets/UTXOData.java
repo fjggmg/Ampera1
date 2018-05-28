@@ -3,16 +3,17 @@ package com.ampex.main.network.packets;
 import amp.HeadlessPrefixedAmplet;
 import com.ampex.amperabase.IOutput;
 import com.ampex.main.IKi;
+import com.ampex.main.data.utils.InvalidAmpBuildException;
 import com.ampex.main.network.IConnectionManager;
 import com.ampex.main.transactions.Output;
 import com.ampex.main.transactions.TransactionManagerLite;
 
-import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
-public class UTXOData implements Serializable, Packet {
-    private static final long serialVersionUID = 184L;
+public class UTXOData implements Packet {
+
     byte[] utxos;
 
     @Override
@@ -33,4 +34,13 @@ public class UTXOData implements Serializable, Packet {
         }
     }
 
+    @Override
+    public void build(byte[] serialized) throws InvalidAmpBuildException {
+        utxos = Arrays.copyOf(serialized, serialized.length);
+    }
+
+    @Override
+    public byte[] serializeToBytes() {
+        return Arrays.copyOf(utxos, utxos.length);
+    }
 }

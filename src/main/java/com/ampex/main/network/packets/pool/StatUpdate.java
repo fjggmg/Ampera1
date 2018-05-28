@@ -1,12 +1,12 @@
 package com.ampex.main.network.packets.pool;
 
+import amp.HeadlessAmplet;
 import com.ampex.main.IKi;
+import com.ampex.main.data.utils.InvalidAmpBuildException;
 import com.ampex.main.network.IConnectionManager;
 
-import java.io.Serializable;
+public class StatUpdate implements PoolPacket {
 
-public class StatUpdate implements Serializable, PoolPacket {
-    private static final long serialVersionUID = 184L;
     public long shares;
     public double currentPPS;
 
@@ -16,5 +16,24 @@ public class StatUpdate implements Serializable, PoolPacket {
         ki.debug("shares: " + shares);
         ki.debug("pps: " + currentPPS);
         ki.getGUIHook().updatePoolStats(shares, currentPPS);
+    }
+
+    @Override
+    public void build(byte[] serialized) throws InvalidAmpBuildException {
+        try {
+            HeadlessAmplet ha = HeadlessAmplet.create(serialized);
+            shares = ha.getNextLong();
+            currentPPS = ha.getNextDouble();
+        } catch (Exception e) {
+            throw new InvalidAmpBuildException("Unable to create StatUpdate from bytes");
+        }
+    }
+
+    @Override
+    public byte[] serializeToBytes() {
+        HeadlessAmplet ha = HeadlessAmplet.create();
+        ha.addElement(shares);
+        ha.addElement(currentPPS);
+        return ha.serializeToBytes();
     }
 }

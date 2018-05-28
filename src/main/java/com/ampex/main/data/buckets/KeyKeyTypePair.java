@@ -1,4 +1,4 @@
-package com.ampex.main.data;
+package com.ampex.main.data.buckets;
 
 import amp.HeadlessPrefixedAmplet;
 import amp.serialization.IAmpByteSerializable;

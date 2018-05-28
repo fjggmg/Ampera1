@@ -1,13 +1,15 @@
 package com.ampex.main.network.packets;
 
+import amp.ByteTools;
+import amp.HeadlessPrefixedAmplet;
 import com.ampex.main.IKi;
+import com.ampex.main.data.utils.InvalidAmpBuildException;
 import com.ampex.main.network.IConnectionManager;
 
-import java.io.Serializable;
 import java.math.BigInteger;
 
-public class BlockRequest implements Serializable, Packet {
-    private static final long serialVersionUID = 184L;
+public class BlockRequest implements Packet {
+
     public BigInteger fromHeight;
     public boolean lite = false;
     @Override
@@ -24,4 +26,23 @@ public class BlockRequest implements Serializable, Packet {
 
     }
 
+    @Override
+    public void build(byte[] serialized) throws InvalidAmpBuildException {
+        try {
+            HeadlessPrefixedAmplet hpa = HeadlessPrefixedAmplet.create(serialized);
+            fromHeight = new BigInteger(hpa.getNextElement());
+            lite = ByteTools.buildBoolean(hpa.getNextElement()[0]);
+        } catch (Exception e) {
+            throw new InvalidAmpBuildException("Unable to build BlockRequest from bytes");
+        }
+    }
+
+    @Override
+    public byte[] serializeToBytes() {
+        HeadlessPrefixedAmplet hpa = HeadlessPrefixedAmplet.create();
+        hpa.addElement(fromHeight);
+        hpa.addElement(lite);
+        return hpa.serializeToBytes();
+
+    }
 }

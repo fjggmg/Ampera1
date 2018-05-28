@@ -1,10 +1,10 @@
 package com.ampex.main.adx;
 
 import amp.HeadlessPrefixedAmplet;
-import amp.database.XodusAmpMap;
 import com.ampex.amperabase.IAddress;
 import com.ampex.main.IKi;
 import com.ampex.main.Ki;
+import database.XodusAmpMap;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;

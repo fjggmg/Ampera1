@@ -1,5 +1,6 @@
 package com.ampex.main.network;
 
+import com.ampex.main.data.utils.AmpBuildable;
 import io.netty.channel.Channel;
 
 import java.util.ArrayList;
@@ -9,23 +10,26 @@ public abstract class IConnectionManager{
 
     public abstract boolean isRelay();
     public abstract String getID();
-    public abstract void sendPacket(Object o);
+
+    public abstract void sendPacket(AmpBuildable o);
     public abstract void disconnect();
     public abstract void received(Object o);
     public abstract void setID(String ID);
     public abstract void connected();
     public abstract IPacketProcessor getPacketProcessor();
     public abstract String getAddress();
-    private List<Object> queue = new ArrayList<>();
+
+    private List<AmpBuildable> queue = new ArrayList<>();
 
     public abstract boolean isConnected();
-    public void queueUntilDone(Object packet)
+
+    public void queueUntilDone(AmpBuildable packet)
     {
         queue.add(packet);
     }
     public void doneDownloading()
     {
-        for(Object p:queue)
+        for (AmpBuildable p : queue)
         {
             sendPacket(p);
         }

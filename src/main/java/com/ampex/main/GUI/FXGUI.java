@@ -30,7 +30,6 @@ public class FXGUI extends Application {
     private JFXDecorator decorator;
     private Stage pStage;
     private Parent root = new Pane();
-    private Parent root2 = new Pane();
 
     @Override
     public void start(final Stage pStage) throws Exception {
@@ -48,7 +47,7 @@ public class FXGUI extends Application {
             NewGUI.close = true;
         });
         decorator.setCustomMaximize(true);
-        Scene scene = new Scene(decorator, 800, 650);
+        Scene scene = new Scene(decorator, 1156, 650);
         String css = FXGUI.class.getResource("/text-style.css").toExternalForm();
         scene.getStylesheets().add(css);
 
@@ -64,7 +63,6 @@ public class FXGUI extends Application {
 
         //Ki.getInstance().getGUIHook().postInit(this, pStage);
     }
-
 
     public void loadMain() {
         try {
@@ -90,10 +88,10 @@ public class FXGUI extends Application {
         try {
             Parent root = FXMLLoader.load(FXGUI.class.getResource("/SyncPage.fxml"));
 
+            pStage.setMinWidth(1156);
             pStage.setMinHeight(650);
-            pStage.setMinWidth(800);
+            pStage.setWidth(1156);
             pStage.setHeight(650);
-            pStage.setWidth(800);
             decorator.setContent(root);
             pStage.show();
         } catch (IOException e) {

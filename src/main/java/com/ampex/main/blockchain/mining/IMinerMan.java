@@ -1,4 +1,4 @@
-package com.ampex.main.blockchain;
+package com.ampex.main.blockchain.mining;
 
 import gpuminer.miner.context.ContextMaster;
 

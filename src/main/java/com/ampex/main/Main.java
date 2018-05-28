@@ -1,6 +1,6 @@
 package com.ampex.main;
 
-import com.ampex.main.data.Options;
+import com.ampex.main.data.buckets.Options;
 
 /**
  * Created by Bryan on 4/7/2017.

@@ -1,4 +1,4 @@
-package com.ampex.main.data;
+package com.ampex.main.data.xodus;
 
 /**
  * this is supposed to be a generics interface for the other maps but the fucking library doesn't use generics it uses strongly typed

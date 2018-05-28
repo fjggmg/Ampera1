@@ -1,6 +1,6 @@
 package com.ampex.main.adx;
 
-import com.ampex.main.GUI.PriceAmtPair;
+import com.ampex.main.GUI.data.PriceAmtPair;
 
 import java.math.BigInteger;
 import java.util.ArrayList;

@@ -1,9 +1,10 @@
 package com.ampex.main.network.packets;
 
 import com.ampex.main.IKi;
+import com.ampex.main.data.utils.AmpBuildable;
 import com.ampex.main.network.IConnectionManager;
 
-public interface Packet {
+public interface Packet extends AmpBuildable {
 
     /**
      * Generic process method, takes the god object to give access to whatever subsystem this may need, As much as I'd like

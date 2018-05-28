@@ -3,8 +3,8 @@ package com.ampex.main.adx;
 import amp.ByteTools;
 import com.ampex.amperabase.*;
 import com.ampex.main.IKi;
-import com.ampex.main.data.EncryptionManager;
-import com.ampex.main.data.Utils;
+import com.ampex.main.data.encryption.EncryptionManager;
+import com.ampex.main.data.utils.Utils;
 import com.ampex.main.network.packets.TransactionPacket;
 import com.ampex.main.network.packets.adx.OrderCancelled;
 import com.ampex.main.network.packets.adx.OrderMatched;
@@ -141,8 +141,8 @@ public class ExchangeManager {
                     associatedThem.add(i.getID());
                 }
                 System.out.println("Matched, building  buy transaction7");
-                IKSEP ksepThem = new KeySigEntropyPair(com.ampex.main.data.Utils.toBase64(new WritableMemory().serializeToBytes()), com.ampex.main.data.Utils.toBase64(o.bin().getEntropy()), associatedThem, o.contractAdd().getPrefix(), true, KeyType.NONE);
-                keySigMap.put(com.ampex.main.data.Utils.toBase64(o.bin().serializeToAmplet().serializeToBytes()), ksepThem);
+                IKSEP ksepThem = new KeySigEntropyPair(Utils.toBase64(new WritableMemory().serializeToBytes()), Utils.toBase64(o.bin().getEntropy()), associatedThem, o.contractAdd().getPrefix(), true, KeyType.NONE);
+                keySigMap.put(Utils.toBase64(o.bin().serializeToAmplet().serializeToBytes()), ksepThem);
                 List<IOutput> outputs = new ArrayList<>();
                 outputs.add(btcPaying);
                 outputs.add(originToUs);
@@ -156,7 +156,7 @@ public class ExchangeManager {
                 System.out.println("Matched, building  buy transaction8");
                 try {
                     ITrans trans = new NewTrans("ADX transaction", outputs, inputs, keySigMap, TransactionType.NEW_TRANS);
-                    trans.addSig(ki.getEncryptMan().getPublicKeyString(ki.getAddMan().getMainAdd().getKeyType()), com.ampex.main.data.Utils.toBase64(ki.getEncryptMan().sign(trans.toSignBytes(), ki.getAddMan().getMainAdd().getKeyType())));
+                    trans.addSig(ki.getEncryptMan().getPublicKeyString(ki.getAddMan().getMainAdd().getKeyType()), Utils.toBase64(ki.getEncryptMan().sign(trans.toSignBytes(), ki.getAddMan().getMainAdd().getKeyType())));
                     if (!ki.getTransMan().verifyTransaction(trans)) {
                         currentStatus = OrderStatus.TRANSACTION_FAILURE;
                         break;
@@ -221,17 +221,17 @@ public class ExchangeManager {
                 }
                 byte[] ent = new byte[64];
                 entRand.nextBytes(ent);
-                String entropy = com.ampex.main.data.Utils.toBase64(ent);
+                String entropy = Utils.toBase64(ent);
                 Binary program = null;
                 try {
-                    program = new Binary(ki.getScriptMan().genericTrade(), constMem, jMem, true, ScriptManager.VERSION, ent, System.currentTimeMillis(), com.ampex.main.data.Utils.fromBase64(ki.getEncryptMan().getPublicKeyString(ki.getAddMan().getMainAdd().getKeyType())), ki.getAddMan().getMainAdd().getKeyType(), null, 0);
+                    program = new Binary(ki.getScriptMan().genericTrade(), constMem, jMem, true, ScriptManager.VERSION, ent, System.currentTimeMillis(), Utils.fromBase64(ki.getEncryptMan().getPublicKeyString(ki.getAddMan().getMainAdd().getKeyType())), ki.getAddMan().getMainAdd().getKeyType(), null, 0);
                 } catch (Exception e) {
                     e.printStackTrace();
                     return OrderStatus.GENERAL_FAILURE;
                 }
                 IAddress contractAdd;
                 try {
-                    contractAdd = NewAdd.createNew(com.ampex.main.data.Utils.toBase64(program.serializeToAmplet().serializeToBytes()), entropy, AddressLength.SHA256, true, KeyType.NONE);
+                    contractAdd = NewAdd.createNew(Utils.toBase64(program.serializeToAmplet().serializeToBytes()), entropy, AddressLength.SHA256, true, KeyType.NONE);
                 } catch (InvalidAddressException e) {
                     e.printStackTrace();
                     return OrderStatus.GENERAL_FAILURE;
@@ -338,8 +338,8 @@ public class ExchangeManager {
                     associatedThem.add(i.getID());
                 }
                 System.out.println("Matched, building transaction9");
-                IKSEP ksepThem = new KeySigEntropyPair(com.ampex.main.data.Utils.toBase64(new WritableMemory().serializeToBytes()), com.ampex.main.data.Utils.toBase64(o.bin().getEntropy()), associatedThem, o.contractAdd().getPrefix(), true, KeyType.NONE);
-                keySigMap.put(com.ampex.main.data.Utils.toBase64(o.bin().serializeToAmplet().serializeToBytes()), ksepThem);
+                IKSEP ksepThem = new KeySigEntropyPair(Utils.toBase64(new WritableMemory().serializeToBytes()), Utils.toBase64(o.bin().getEntropy()), associatedThem, o.contractAdd().getPrefix(), true, KeyType.NONE);
+                keySigMap.put(Utils.toBase64(o.bin().serializeToAmplet().serializeToBytes()), ksepThem);
                 List<IOutput> outputs = new ArrayList<>();
                 outputs.add(originOut);
                 outputs.add(btcOut);
@@ -352,7 +352,7 @@ public class ExchangeManager {
                 }
                 try {
                     ITrans trans = new NewTrans("ADX transaction", outputs, inputs, keySigMap, TransactionType.NEW_TRANS);
-                    trans.addSig(ki.getEncryptMan().getPublicKeyString(ki.getAddMan().getMainAdd().getKeyType()), com.ampex.main.data.Utils.toBase64(ki.getEncryptMan().sign(trans.toSignBytes(), ki.getAddMan().getMainAdd().getKeyType())));
+                    trans.addSig(ki.getEncryptMan().getPublicKeyString(ki.getAddMan().getMainAdd().getKeyType()), Utils.toBase64(ki.getEncryptMan().sign(trans.toSignBytes(), ki.getAddMan().getMainAdd().getKeyType())));
                     if (!ki.getTransMan().verifyTransaction(trans)) {
                         currentStatus = OrderStatus.TRANSACTION_FAILURE;
                         break;
@@ -414,17 +414,17 @@ public class ExchangeManager {
                 }
                 byte[] ent = new byte[64];
                 entRand.nextBytes(ent);
-                String entropy = com.ampex.main.data.Utils.toBase64(ent);
+                String entropy = Utils.toBase64(ent);
                 Binary program = null;
                 try {
-                    program = new Binary(ki.getScriptMan().genericTrade(), constMem, jMem, true, ScriptManager.VERSION, ent, System.currentTimeMillis(), com.ampex.main.data.Utils.fromBase64(ki.getEncryptMan().getPublicKeyString(ki.getAddMan().getMainAdd().getKeyType())), ki.getAddMan().getMainAdd().getKeyType(), null, 0);
+                    program = new Binary(ki.getScriptMan().genericTrade(), constMem, jMem, true, ScriptManager.VERSION, ent, System.currentTimeMillis(), Utils.fromBase64(ki.getEncryptMan().getPublicKeyString(ki.getAddMan().getMainAdd().getKeyType())), ki.getAddMan().getMainAdd().getKeyType(), null, 0);
                 } catch (Exception e) {
                     e.printStackTrace();
                     return OrderStatus.GENERAL_FAILURE;
                 }
                 IAddress contractAdd;
                 try {
-                    contractAdd = NewAdd.createNew(com.ampex.main.data.Utils.toBase64(program.serializeToAmplet().serializeToBytes()), entropy, AddressLength.SHA256, true, KeyType.NONE);
+                    contractAdd = NewAdd.createNew(Utils.toBase64(program.serializeToAmplet().serializeToBytes()), entropy, AddressLength.SHA256, true, KeyType.NONE);
                 } catch (InvalidAddressException e) {
                     e.printStackTrace();
                     return OrderStatus.GENERAL_FAILURE;
@@ -546,8 +546,8 @@ public class ExchangeManager {
                     for (IInput i : cIns) {
                         associatedContract.add(i.getID());
                     }
-                    IKSEP cKSEP = new KeySigEntropyPair(null, com.ampex.main.data.Utils.toBase64(o.bin().getEntropy()), associatedContract, o.contractAdd().getPrefix(), true, KeyType.NONE);
-                    keySigMap.put(com.ampex.main.data.Utils.toBase64(o.bin().serializeToAmplet().serializeToBytes()), cKSEP);
+                    IKSEP cKSEP = new KeySigEntropyPair(null, Utils.toBase64(o.bin().getEntropy()), associatedContract, o.contractAdd().getPrefix(), true, KeyType.NONE);
+                    keySigMap.put(Utils.toBase64(o.bin().serializeToAmplet().serializeToBytes()), cKSEP);
                     IKSEP fKESP = new KeySigEntropyPair(null, ki.getAddMan().getEntropyForAdd(o.address()), associatedFee, o.address().getPrefix(), o.address().isP2SH(), ki.getAddMan().getMainAdd().getKeyType());
                     keySigMap.put(ki.getEncryptMan().getPublicKeyString(ki.getAddMan().getMainAdd().getKeyType()), fKESP);
                     try {
@@ -555,8 +555,8 @@ public class ExchangeManager {
                         WritableMemory wm = new WritableMemory();
                         wm.setElement(ki.getEncryptMan().sign(trans.toSignBytes(), ki.getAddMan().getMainAdd().getKeyType()), 0);
                         //wm.setElement(new DataElement(new byte[]{o.address().getKeyType().getValue()}), 1);
-                        trans.addSig(com.ampex.main.data.Utils.toBase64(o.bin().serializeToAmplet().serializeToBytes()), com.ampex.main.data.Utils.toBase64(wm.serializeToBytes()));
-                        trans.addSig(ki.getEncryptMan().getPublicKeyString(ki.getAddMan().getMainAdd().getKeyType()), com.ampex.main.data.Utils.toBase64(ki.getEncryptMan().sign(trans.toSignBytes(), ki.getAddMan().getMainAdd().getKeyType())));
+                        trans.addSig(Utils.toBase64(o.bin().serializeToAmplet().serializeToBytes()), Utils.toBase64(wm.serializeToBytes()));
+                        trans.addSig(ki.getEncryptMan().getPublicKeyString(ki.getAddMan().getMainAdd().getKeyType()), Utils.toBase64(ki.getEncryptMan().sign(trans.toSignBytes(), ki.getAddMan().getMainAdd().getKeyType())));
                         TransactionPacket tp = new TransactionPacket();
                         if (ki.getTransMan().verifyTransaction(trans)) {
                             ki.getTransMan().getPending().add(trans);

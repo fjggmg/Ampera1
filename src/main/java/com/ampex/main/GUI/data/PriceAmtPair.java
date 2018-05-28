@@ -1,4 +1,4 @@
-package com.ampex.main.GUI;
+package com.ampex.main.GUI.data;
 
 import java.math.BigInteger;
 

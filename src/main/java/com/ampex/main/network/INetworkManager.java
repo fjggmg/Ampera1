@@ -1,13 +1,17 @@
 package com.ampex.main.network;
 
 
+import com.ampex.main.data.utils.AmpBuildable;
+
 import java.util.List;
 
 public interface INetworkManager {
 
     List<IConnectionManager> getConnections();
-    void broadcast(Object o);
-    void broadcastAllBut(String ID,Object o);
+
+    void broadcast(AmpBuildable o);
+
+    void broadcastAllBut(String ID, AmpBuildable o);
     IConnectionManager getConnection(String ID);
 
     boolean connectionInit(String ID, IConnectionManager connMan);

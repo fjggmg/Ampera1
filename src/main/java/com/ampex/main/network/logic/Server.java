@@ -6,9 +6,7 @@ import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
-import io.netty.handler.codec.serialization.ClassResolvers;
-import io.netty.handler.codec.serialization.ObjectDecoder;
-import io.netty.handler.codec.serialization.ObjectEncoder;
+import io.netty.handler.codec.LengthFieldPrepender;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
 import io.netty.handler.ssl.SslContext;
@@ -61,8 +59,8 @@ public class Server {
                                 p.addLast(sslCtx.newHandler(ch.alloc()));
                             }
                             p.addLast(
-                                    new ObjectEncoder(),
-                                    new ObjectDecoder(150_000_000, ClassResolvers.cacheDisabled(null)),
+                                    new LengthFieldPrepender(4),
+                                    new PacketDecoder(150_000_000, 0, 4, 0, 4),
                                     serverHandler);
 
                         }

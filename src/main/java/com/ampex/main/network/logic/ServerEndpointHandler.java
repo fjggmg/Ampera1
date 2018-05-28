@@ -1,13 +1,15 @@
 package com.ampex.main.network.logic;
 
+import com.ampex.main.data.utils.AmpBuildable;
+import com.ampex.main.data.utils.AmpBuildableFactory;
 import io.netty.channel.ChannelHandlerContext;
 
 public class ServerEndpointHandler implements INetworkEndpoint{
 
     private ChannelHandlerContext channel;
     @Override
-    public void sendPacket(Object o) {
-        channel.writeAndFlush(o);
+    public void sendPacket(AmpBuildable o) {
+        channel.writeAndFlush(AmpBuildableFactory.finalizeBuildAsPacket(o));
     }
 
     @Override

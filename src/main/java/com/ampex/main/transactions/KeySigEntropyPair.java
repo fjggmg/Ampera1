@@ -6,7 +6,7 @@ import amp.classification.classes.AC_ClassInstanceIDIsIndex;
 import amp.group_primitives.UnpackedGroup;
 import com.ampex.amperabase.IKSEP;
 import com.ampex.amperabase.KeyType;
-import com.ampex.main.data.AmpIDs;
+import com.ampex.main.data.buckets.AmpIDs;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.UnsupportedEncodingException;

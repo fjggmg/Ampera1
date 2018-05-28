@@ -1,4 +1,4 @@
-package com.ampex.main.data;
+package com.ampex.main.data.utils;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
+ * Prefer Amp over JSON. This is included to help with old data formats. Will be attempting to remove this in the
+ * future.
  * Created by Bryan on 7/17/2017.
  */
 public class JSONManager {

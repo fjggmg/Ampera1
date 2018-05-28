@@ -1,22 +1,25 @@
 package com.ampex.main.network.packets;
 
+import amp.HeadlessAmplet;
+import amp.HeadlessPrefixedAmplet;
 import com.ampex.main.IKi;
 import com.ampex.main.adx.Order;
-import com.ampex.main.data.EncryptionManager;
+import com.ampex.main.data.encryption.EncryptionManager;
+import com.ampex.main.data.utils.InvalidAmpBuildException;
 import com.ampex.main.network.IConnectionManager;
 import com.ampex.main.network.NetMan;
 import com.ampex.main.network.packets.adx.OrderPacket;
 import com.ampex.main.transactions.ITrans;
 
-import java.io.Serializable;
 import java.math.BigInteger;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 
 /**
  * Created by Bryan on 7/25/2017.
  */
-public class Handshake implements Serializable, Packet {
-    private static final long serialVersionUID = 184L;
+public class Handshake implements Packet {
+
     public static final String VERSION = NetMan.NET_VER;
     public String ID;
     public String version;
@@ -153,4 +156,36 @@ public class Handshake implements Serializable, Packet {
         }
     }
 
+    @Override
+    public void build(byte[] serialized) throws InvalidAmpBuildException {
+        try {
+            HeadlessPrefixedAmplet hpa = HeadlessPrefixedAmplet.create(serialized);
+            ID = new String(hpa.getNextElement(), Charset.forName("UTF-8"));
+            version = new String(hpa.getNextElement(), Charset.forName("UTF-8"));
+            currentHeight = new BigInteger(hpa.getNextElement());
+            mostRecentBlock = new String(hpa.getNextElement(), Charset.forName("UTF-8"));
+            HeadlessAmplet ha = hpa.getNextElementAsHeadlessAmplet();
+            chainVer = ha.getNextShort();
+            isRelay = ha.getNextBoolean();
+            startTime = ha.getNextLong();
+        } catch (Exception e) {
+            throw new InvalidAmpBuildException("Unable to create handshake from bytes");
+        }
+    }
+
+    @Override
+    public byte[] serializeToBytes() {
+        HeadlessPrefixedAmplet hpa = HeadlessPrefixedAmplet.create();
+
+        hpa.addElement(ID);
+        hpa.addElement(version);
+        hpa.addElement(currentHeight);
+        hpa.addElement(mostRecentBlock);
+        HeadlessAmplet ha = HeadlessAmplet.create();
+        ha.addElement(chainVer);
+        ha.addElement(isRelay);
+        ha.addElement(startTime);
+        hpa.addElement(ha);
+        return hpa.serializeToBytes();
+    }
 }

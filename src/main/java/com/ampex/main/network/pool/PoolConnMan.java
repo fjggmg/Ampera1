@@ -1,7 +1,8 @@
 package com.ampex.main.network.pool;
 
 import com.ampex.main.IKi;
-import com.ampex.main.data.EncryptionManager;
+import com.ampex.main.data.encryption.EncryptionManager;
+import com.ampex.main.data.utils.AmpBuildable;
 import com.ampex.main.network.ConnManPacketPair;
 import com.ampex.main.network.IConnectionManager;
 import com.ampex.main.network.IPacketProcessor;
@@ -34,7 +35,7 @@ public class PoolConnMan extends IConnectionManager {
     }
 
     @Override
-    public void sendPacket(Object o) {
+    public void sendPacket(AmpBuildable o) {
         endpoint.sendPacket(o);
     }
 

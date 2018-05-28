@@ -2,8 +2,8 @@ package com.ampex.main.blockchain;
 
 import com.ampex.amperabase.*;
 import com.ampex.main.IKi;
-import com.ampex.main.data.EncryptionManager;
-import com.ampex.main.data.Utils;
+import com.ampex.main.data.encryption.EncryptionManager;
+import com.ampex.main.data.utils.Utils;
 import com.ampex.main.network.packets.DifficultyRequest;
 import com.ampex.main.transactions.*;
 
@@ -66,7 +66,7 @@ public class ChainManagerLite implements IChainMan {
         if (!block.ID.equals(hash)) return BlockState.ID_MISMATCH;
         if (bDebug)
             ki.debug("ID is ok");
-        if (new BigInteger(com.ampex.main.data.Utils.fromBase64(hash)).abs().compareTo(currentDifficulty) > 0)
+        if (new BigInteger(Utils.fromBase64(hash)).abs().compareTo(currentDifficulty) > 0)
             return BlockState.NO_SOLVE;
         if (bDebug)
             ki.debug("Solves for difficulty");

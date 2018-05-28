@@ -1,4 +1,4 @@
-package com.ampex.main.GUI;
+package com.ampex.main.GUI.data;
 
 import com.ampex.main.adx.ExchangeData;
 import javafx.geometry.Insets;

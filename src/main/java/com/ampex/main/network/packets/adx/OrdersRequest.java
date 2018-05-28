@@ -1,14 +1,12 @@
 package com.ampex.main.network.packets.adx;
 
 import com.ampex.main.IKi;
+import com.ampex.main.data.utils.InvalidAmpBuildException;
 import com.ampex.main.network.IConnectionManager;
 import com.ampex.main.network.packets.Packet;
 import com.ampex.main.network.packets.PacketGlobal;
 
-import java.io.Serializable;
-
-public class OrdersRequest implements Packet, Serializable {
-    private static final long serialVersionUID = 184L;
+public class OrdersRequest implements Packet {
     @Override
     public void process(IKi ki, IConnectionManager connMan, PacketGlobal pg) {
         for (String o : ki.getExMan().getOrderIDs()) {
@@ -20,4 +18,13 @@ public class OrdersRequest implements Packet, Serializable {
         }
     }
 
+    @Override
+    public void build(byte[] serialized) throws InvalidAmpBuildException {
+
+    }
+
+    @Override
+    public byte[] serializeToBytes() {
+        return new byte[0];
+    }
 }

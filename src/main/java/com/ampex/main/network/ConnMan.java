@@ -1,7 +1,8 @@
 package com.ampex.main.network;
 
 import com.ampex.main.IKi;
-import com.ampex.main.data.EncryptionManager;
+import com.ampex.main.data.encryption.EncryptionManager;
+import com.ampex.main.data.utils.AmpBuildable;
 import com.ampex.main.network.logic.INetworkEndpoint;
 import com.ampex.main.network.packets.Handshake;
 import com.ampex.main.transactions.TransactionManagerLite;
@@ -53,7 +54,7 @@ public class ConnMan extends IConnectionManager {
         this.ID = ID;
     }
     @Override
-    public void sendPacket(Object o) {
+    public void sendPacket(AmpBuildable o) {
 
         endpoint.sendPacket(o);
     }

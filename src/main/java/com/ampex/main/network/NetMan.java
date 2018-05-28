@@ -1,8 +1,9 @@
 package com.ampex.main.network;
 
 import com.ampex.main.IKi;
-import com.ampex.main.data.JSONManager;
-import com.ampex.main.data.XodusStringMap;
+import com.ampex.main.data.utils.AmpBuildable;
+import com.ampex.main.data.utils.JSONManager;
+import com.ampex.main.data.xodus.XodusStringMap;
 import com.ampex.main.network.logic.Client;
 import com.ampex.main.network.logic.Server;
 import com.ampex.main.network.packets.BlockSyncRequest;
@@ -254,7 +255,7 @@ public class NetMan extends Thread implements INetworkManager {
 
     private List<Integer> nullConns = new ArrayList<>();
     @Override
-    public void broadcast(Object o) {
+    public void broadcast(AmpBuildable o) {
         nullConns.clear();
         if (ki.getOptions().pDebug)
             ki.debug("Beginning broadcast");
@@ -302,7 +303,7 @@ public class NetMan extends Thread implements INetworkManager {
     }
 
     @Override
-    public void broadcastAllBut(String ID, Object o) {
+    public void broadcastAllBut(String ID, AmpBuildable o) {
         for(IConnectionManager connMan:connections)
         {
             if (connMan != null && ID != null && connMan.getID() != null) {

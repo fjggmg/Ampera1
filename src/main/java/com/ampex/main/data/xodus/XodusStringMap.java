@@ -1,4 +1,4 @@
-package com.ampex.main.data;
+package com.ampex.main.data.xodus;
 
 import jetbrains.exodus.ByteIterable;
 import jetbrains.exodus.bindings.StringBinding;

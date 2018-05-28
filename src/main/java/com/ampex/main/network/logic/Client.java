@@ -1,6 +1,8 @@
 package com.ampex.main.network.logic;
 
 import com.ampex.main.IKi;
+import com.ampex.main.data.utils.AmpBuildable;
+import com.ampex.main.data.utils.AmpBuildableFactory;
 import com.ampex.main.network.IConnectionManager;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.ChannelHandlerContext;
@@ -10,9 +12,7 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
-import io.netty.handler.codec.serialization.ClassResolvers;
-import io.netty.handler.codec.serialization.ObjectDecoder;
-import io.netty.handler.codec.serialization.ObjectEncoder;
+import io.netty.handler.codec.LengthFieldPrepender;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
@@ -87,8 +87,8 @@ public class Client implements INetworkEndpoint{
                                 p.addLast(sslCtx.newHandler(ch.alloc(), host,port));
                             }
                             p.addLast(
-                                    new ObjectEncoder(),
-                                    new ObjectDecoder(150_000_000, ClassResolvers.cacheDisabled(null)),
+                                    new LengthFieldPrepender(4),
+                                    new PacketDecoder(150_000_000, 0, 4, 0, 4),
                                     new ClientHandler(ki,connMan,instance));
                             //ch.write("This is a test 2");
 
@@ -105,9 +105,11 @@ public class Client implements INetworkEndpoint{
             connMan.disconnect();
         }
     }
-    public void sendPacket(Object o)
+
+    @Override
+    public void sendPacket(AmpBuildable o)
     {
         if (channel != null)
-            channel.writeAndFlush(o);
+            channel.writeAndFlush(AmpBuildableFactory.finalizeBuildAsPacket(o));
     }
 }

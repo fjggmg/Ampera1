@@ -8,7 +8,15 @@ import com.ampex.main.GUI.FXGUI;
 import com.ampex.main.GUI.NewGUI;
 import com.ampex.main.adx.ExchangeManager;
 import com.ampex.main.blockchain.*;
-import com.ampex.main.data.*;
+import com.ampex.main.blockchain.mining.GPUMiner;
+import com.ampex.main.blockchain.mining.IMinerMan;
+import com.ampex.main.blockchain.mining.MinerManager;
+import com.ampex.main.data.Input.InputHandler;
+import com.ampex.main.data.buckets.Options;
+import com.ampex.main.data.encryption.EncryptionManager;
+import com.ampex.main.data.encryption.IEncryptMan;
+import com.ampex.main.data.xodus.XodusStringBooleanMap;
+import com.ampex.main.data.xodus.XodusStringMap;
 import com.ampex.main.network.INetworkManager;
 import com.ampex.main.network.NetMan;
 import com.ampex.main.network.packets.BlockRequest;
@@ -29,6 +37,7 @@ import engine.ByteCodeEngine;
 import gpuminer.GPULogging;
 import gpuminer.JOCL.context.JOCLContextAndCommandQueue;
 import gpuminer.miner.context.ContextMaster;
+import logging.AmpexLogger;
 import mining_pool.Pool;
 import mining_pool.PoolLogging;
 import org.apache.logging.log4j.LogManager;
@@ -106,11 +115,12 @@ public class Ki extends Thread implements IKi, IKiAPI {
 
         }
         this.o = o;
+
         System.setProperty("log4j.configurationFile", "log4j.xml");
-        AmpLogging.startLogging();
-        PoolLogging.startLogging();
-        GPULogging.startLogging();
-        ASELogging.startLogging();
+        AmpLogging.startLogging(new AmpexLogger("Amp"));
+        PoolLogging.startLogging(new AmpexLogger("Pool"));
+        GPULogging.startLogging(new AmpexLogger("GPU"));
+        ASELogging.startLogging(new AmpexLogger("ASE"));
         main = LogManager.getLogger("Origin");
         main.info("Origin starting up");
         //region settings shit

@@ -9,10 +9,10 @@ import com.ampex.amperabase.*;
 import com.ampex.main.IKi;
 import com.ampex.main.Ki;
 import com.ampex.main.blockchain.IChainMan;
-import com.ampex.main.data.AmpIDs;
-import com.ampex.main.data.EncryptionManager;
-import com.ampex.main.data.JSONManager;
-import com.ampex.main.data.Utils;
+import com.ampex.main.data.buckets.AmpIDs;
+import com.ampex.main.data.encryption.EncryptionManager;
+import com.ampex.main.data.utils.JSONManager;
+import com.ampex.main.data.utils.Utils;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -352,7 +352,7 @@ public class Transaction implements ITrans {
             if (type.equals(TransactionType.STANDARD))
                 if (EncryptionManager.verifySig(toSign(), key.getValue(), key.getKey(), KeyType.BRAINPOOLP512T1))
                     vCount++;
-                else if (EncryptionManager.verifySig(toSignBytes(), com.ampex.main.data.Utils.fromBase64(key.getValue()), key.getKey(), KeyType.BRAINPOOLP512T1))
+                else if (EncryptionManager.verifySig(toSignBytes(), Utils.fromBase64(key.getValue()), key.getKey(), KeyType.BRAINPOOLP512T1))
                     vCount++;
             if(vCount >= sigsRequired)
             {
@@ -397,14 +397,14 @@ public class Transaction implements ITrans {
 
         AC_SingleElement keySigMap;
         try {
-            keySigMap = AC_SingleElement.create(AmpIDs.KEY_SIG_MAP_GID, com.ampex.main.data.Utils.mapToByteArray(this.keySigMap));
+            keySigMap = AC_SingleElement.create(AmpIDs.KEY_SIG_MAP_GID, Utils.mapToByteArray(this.keySigMap));
         } catch (IOException e) {
             e.printStackTrace();
             return null;
         }
         AC_SingleElement entropyMap;
         try {
-            entropyMap = AC_SingleElement.create(AmpIDs.ENTROPY_MAP_GID, com.ampex.main.data.Utils.mapToByteArray(this.entropyMap));
+            entropyMap = AC_SingleElement.create(AmpIDs.ENTROPY_MAP_GID, Utils.mapToByteArray(this.entropyMap));
         } catch (IOException e) {
             e.printStackTrace();
             return null;
@@ -439,7 +439,7 @@ public class Transaction implements ITrans {
         UnpackedGroup eMap = amp.unpackGroup(AmpIDs.ENTROPY_MAP_GID);
         Map<String, String> entropyMap;
         try {
-            entropyMap = com.ampex.main.data.Utils.toObject(eMap.getElement(0));
+            entropyMap = Utils.toObject(eMap.getElement(0));
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
             return null;

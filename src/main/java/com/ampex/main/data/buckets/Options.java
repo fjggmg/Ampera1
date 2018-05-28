@@ -1,4 +1,4 @@
-package com.ampex.main.data;
+package com.ampex.main.data.buckets;
 
 /**
  * Created by Bryan on 5/10/2017.

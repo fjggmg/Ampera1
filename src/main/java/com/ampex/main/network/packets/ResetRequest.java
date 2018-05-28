@@ -1,12 +1,12 @@
 package com.ampex.main.network.packets;
 
 import com.ampex.main.IKi;
+import com.ampex.main.data.utils.InvalidAmpBuildException;
 import com.ampex.main.network.IConnectionManager;
 
-import java.io.Serializable;
+@Deprecated
+public class ResetRequest implements Packet {
 
-public class ResetRequest implements Serializable, Packet {
-    private static final long serialVersionUID = 184L;
     BlockHeader proof;
 
     @Override
@@ -15,4 +15,13 @@ public class ResetRequest implements Serializable, Packet {
 
     }
 
+    @Override
+    public void build(byte[] serialized) throws InvalidAmpBuildException {
+
+    }
+
+    @Override
+    public byte[] serializeToBytes() {
+        return new byte[0];
+    }
 }

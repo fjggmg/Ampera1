@@ -3,8 +3,8 @@ package com.ampex.main.transactions;
 import com.ampex.amperabase.*;
 import com.ampex.main.IKi;
 import com.ampex.main.blockchain.Block;
-import com.ampex.main.data.KeyKeyTypePair;
-import com.ampex.main.data.Utils;
+import com.ampex.main.data.buckets.KeyKeyTypePair;
+import com.ampex.main.data.utils.Utils;
 import engine.binary.Binary;
 import engine.data.WritableMemory;
 
@@ -235,7 +235,7 @@ public class TransactionManagerLite extends Thread implements ITransMan, ITransM
             ITrans trans = new NewTrans(message, outputs, inputs, keySigMap, TransactionType.NEW_TRANS);
             ki.debug("Transaction has: " + trans.getOutputs().size() + " Outputs before finalization");
             trans.makeChange(fee, changeAddress);
-            trans.addSig(ki.getEncryptMan().getPublicKeyString(a.getKeyType()), com.ampex.main.data.Utils.toBase64(ki.getEncryptMan().sign(trans.toSignBytes(), a.getKeyType())));
+            trans.addSig(ki.getEncryptMan().getPublicKeyString(a.getKeyType()), Utils.toBase64(ki.getEncryptMan().sign(trans.toSignBytes(), a.getKeyType())));
             ki.debug("Transaction has: " + trans.getOutputs().size() + " Outputs after finalization");
             //usedUTXOs.addAll(sIns);
             return trans;
@@ -330,11 +330,11 @@ public class TransactionManagerLite extends Thread implements ITransMan, ITransM
 
             Map<String, IKSEP> keySigMap = new HashMap<>();
             IKSEP ksep = new KeySigEntropyPair(null, ki.getAddMan().getEntropyForAdd(ki.getAddMan().getMainAdd()), sIns, ki.getAddMan().getMainAdd().getPrefix(), true, a.getKeyType());
-            keySigMap.put(com.ampex.main.data.Utils.toBase64(bin.serializeToAmplet().serializeToBytes()), ksep);
+            keySigMap.put(Utils.toBase64(bin.serializeToAmplet().serializeToBytes()), ksep);
             ITrans trans = new NewTrans(message, outputs, inputs, keySigMap, TransactionType.NEW_TRANS);
             ki.debug("Transaction has: " + trans.getOutputs().size() + " Outputs before finalization");
             trans.makeChange(fee, changeAddress);
-            //trans.addSig(ki.getEncryptMan().getPublicKeyString(a.getKeyType()), Utils.toBase64(ki.getEncryptMan().sign(trans.toSignBytes(), a.getKeyType())));
+            //trans.addSig(ki.getEncryptMan().getPublicKeyString(a.getKeyType()), utils.toBase64(ki.getEncryptMan().sign(trans.toSignBytes(), a.getKeyType())));
             WritableMemory wm = new WritableMemory();
             //magic value but works, may update later
             int i = 0;
@@ -345,7 +345,7 @@ public class TransactionManagerLite extends Thread implements ITransMan, ITransM
                     if (kktp == null) break;
                     //if (kktp.getKey() == null) break;
                     if (kktp.getKeyType() == null) break;
-                    if (ki.getEncryptMan().getPublicKeyString(kktp.getKeyType()).equals(com.ampex.main.data.Utils.toBase64(kktp.getKey()))) {
+                    if (ki.getEncryptMan().getPublicKeyString(kktp.getKeyType()).equals(Utils.toBase64(kktp.getKey()))) {
                         ki.debug("Adding signature to transaction with key: " + kktp.getKeyType());
                         wm.setElement(ki.getEncryptMan().sign(trans.toSignBytes(), kktp.getKeyType()), i);
                     }
@@ -356,7 +356,7 @@ public class TransactionManagerLite extends Thread implements ITransMan, ITransM
                     break;
                 }
             }
-            trans.addSig(com.ampex.main.data.Utils.toBase64(bin.serializeToAmplet().serializeToBytes()), Utils.toBase64(wm.serializeToBytes()));
+            trans.addSig(Utils.toBase64(bin.serializeToAmplet().serializeToBytes()), Utils.toBase64(wm.serializeToBytes()));
             ki.debug("Transaction has: " + trans.getOutputs().size() + "Outputs after finalization");
             usedUTXO.addAll(sIns);
             return trans;

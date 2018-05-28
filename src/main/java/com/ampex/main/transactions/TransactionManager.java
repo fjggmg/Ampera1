@@ -1,13 +1,13 @@
 package com.ampex.main.transactions;
 
 import amp.HeadlessPrefixedAmplet;
-import amp.database.XodusAmpMap;
 import com.ampex.amperabase.*;
 import com.ampex.main.IKi;
 import com.ampex.main.blockchain.Block;
 import com.ampex.main.blockchain.ChainManager;
-import com.ampex.main.data.KeyKeyTypePair;
-import com.ampex.main.data.Utils;
+import com.ampex.main.data.buckets.KeyKeyTypePair;
+import com.ampex.main.data.utils.Utils;
+import database.XodusAmpMap;
 import engine.binary.Binary;
 import engine.data.WritableMemory;
 
@@ -526,7 +526,7 @@ public class TransactionManager extends Thread implements ITransMan, ITransManAP
             ITrans trans = new NewTrans(message, outputs, inputs, keySigMap, TransactionType.NEW_TRANS);
             ki.debug("Transaction has: " + trans.getOutputs().size() + " Outputs before finalization");
             trans.makeChange(fee, changeAddress);
-            //trans.addSig(ki.getEncryptMan().getPublicKeyString(a.getKeyType()), Utils.toBase64(ki.getEncryptMan().sign(trans.toSignBytes(), a.getKeyType())));
+            //trans.addSig(ki.getEncryptMan().getPublicKeyString(a.getKeyType()), utils.toBase64(ki.getEncryptMan().sign(trans.toSignBytes(), a.getKeyType())));
             WritableMemory wm = new WritableMemory();
             //magic value but works may update later
             int i = 0;
