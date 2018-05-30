@@ -111,9 +111,9 @@ public class Client implements INetworkEndpoint{
     @Override
     public void sendPacket(AmpBuildable o)
     {
-        System.out.println("Attempting to write bytes to network");
+        //System.out.println("Attempting to write bytes to network");
         if (channel != null) {
-            System.out.println("Writing bytes to network");
+            //System.out.println("Writing bytes to network");
             channel.writeAndFlush(AmpBuildableFactory.finalizeBuildAsPacket(o)).addListener(new GenericFutureListener<Future<Object>>() {
                 @Override
                 public void operationComplete(Future<Object> future) {
@@ -124,7 +124,7 @@ public class Client implements INetworkEndpoint{
                 }
             });
 
-            System.out.println("done writing bytes to network");
+            //System.out.println("done writing bytes to network");
         }
     }
 }

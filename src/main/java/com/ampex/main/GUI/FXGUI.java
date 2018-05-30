@@ -5,10 +5,12 @@ import com.jfoenix.controls.JFXDecorator;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
-import javafx.scene.layout.Pane;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 import java.io.IOException;
@@ -29,15 +31,24 @@ public class FXGUI extends Application {
     private static boolean sync = false;
     private JFXDecorator decorator;
     private Stage pStage;
-    private Parent root = new Pane();
+    private StackPane root = new StackPane();
 
     @Override
     public void start(final Stage pStage) throws Exception {
         Ki.getInstance().setInnerGUIRef(this);
         this.pStage = pStage;
-        pStage.setTitle("Origin");
+        VBox.setVgrow(root, Priority.ALWAYS);
+        pStage.setTitle("Ampera");
         pStage.getIcons().add(new Image(FXGUI.class.getResourceAsStream("/origin.png")));
+        pStage.setMinWidth(1156);
+        pStage.setMinHeight(650);
+        pStage.setWidth(1156);
+        pStage.setHeight(650);
+        //root.setPrefWidth(1156);
+        //root.setPrefHeight(650);
+
         decorator = new JFXDecorator(pStage, root);
+
         decorator.setOnCloseButtonAction(() -> {
             System.out.println("Close requested");
             if (Ki.getInstance().getOptions().pool) {
@@ -48,52 +59,51 @@ public class FXGUI extends Application {
         });
         decorator.setCustomMaximize(true);
         Scene scene = new Scene(decorator, 1156, 650);
+
         String css = FXGUI.class.getResource("/text-style.css").toExternalForm();
         scene.getStylesheets().add(css);
 
-
         decorator.setStyle("-fx-border-width:0");
-
+        pStage.setScene(scene);
+        pStage.show();
+        this.app = this;
         if (sync)
             loadSync();
         else
             loadMain();
 
-        pStage.setScene(scene);
 
-        //Ki.getInstance().getGUIHook().postInit(this, pStage);
     }
 
+    private Application app;
     public void loadMain() {
-        try {
-            Parent root = FXMLLoader.load(FXGUI.class.getResource("/NewGUI.fxml"));
-            Platform.runLater(new Runnable() {
-                @Override
-                public void run() {
-                    decorator.setContent(root);
-                    pStage.setMinWidth(1156);
-                    pStage.setMinHeight(650);
-                    pStage.setWidth(1156);
-                    pStage.setHeight(650);
-                    pStage.show();
-                }
-            });
 
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        Platform.runLater(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    AnchorPane parent = FXMLLoader.load(FXGUI.class.getResource("/NewGUI.fxml"));
+                    Ki.getInstance().getGUIHook().postInit(app, pStage);
+                    root.getChildren().clear();
+                    root.getChildren().add(parent);
+                    parent.setMinHeight(0);
+                    parent.setMinWidth(0);
+                    //pStage.show();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
     }
 
     public void loadSync() {
         try {
-            Parent root = FXMLLoader.load(FXGUI.class.getResource("/SyncPage.fxml"));
-
-            pStage.setMinWidth(1156);
-            pStage.setMinHeight(650);
-            pStage.setWidth(1156);
-            pStage.setHeight(650);
-            decorator.setContent(root);
-            pStage.show();
+            AnchorPane parent = FXMLLoader.load(FXGUI.class.getResource("/SyncPage.fxml"));
+            parent.setMinHeight(0);
+            parent.setMinWidth(0);
+            root.getChildren().clear();
+            root.getChildren().add(parent);
+            //pStage.show();
         } catch (IOException e) {
             e.printStackTrace();
         }

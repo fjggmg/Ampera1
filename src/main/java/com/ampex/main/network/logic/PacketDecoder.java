@@ -12,7 +12,7 @@ public class PacketDecoder extends LengthFieldBasedFrameDecoder {
 
     @Override
     protected Object decode(ChannelHandlerContext ctx, ByteBuf buf) throws Exception {
-        System.out.println("=========================Received bytes from network, working on decode");
+        //System.out.println("=========================Received bytes from network, working on decode");
         ByteBuf frame = (ByteBuf) super.decode(ctx, buf);
         if (frame == null) {
             return null;
@@ -21,7 +21,7 @@ public class PacketDecoder extends LengthFieldBasedFrameDecoder {
         frame.skipBytes(4);
         byte[] data = new byte[size];
         frame.readBytes(data);
-        System.out.println("Frame not null, length: " + size);
+        //System.out.println("Frame not null, length: " + size);
         return AmpBuildableFactory.buildPacket(data);
     }
 }

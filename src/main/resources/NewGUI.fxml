@@ -9,10 +9,11 @@
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
-<AnchorPane prefHeight="600.0" prefWidth="1156.0" xmlns="http://javafx.com/javafx/8.0.141"
+<AnchorPane fx:id="anchor" prefHeight="600.0" prefWidth="1156.0" xmlns="http://javafx.com/javafx/8.0.141"
             xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.ampex.main.GUI.NewGUI">
     <children>
-        <StackPane layoutX="-130.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+        <StackPane AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
+                   AnchorPane.topAnchor="0.0">
             <children>
                 <BorderPane fx:id="borderPane" prefHeight="200.0" prefWidth="200.0" style="-fx-background-color: Gray;">
                     <left>

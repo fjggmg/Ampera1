@@ -178,6 +178,7 @@ public class NewGUI {
     public JFXTextField changeAddress;
     public Label tOOWallet;
     public Label tPWallet;
+    public AnchorPane anchor;
     private CandlestickGraph exchangeGraph;
     public VBox passwordVbox;
     public VBox exchangeGraphBox;
@@ -2240,6 +2241,9 @@ public class NewGUI {
 
                     Platform.runLater(new Thread() {
                         public void run() {
+                            //ki.debug("Current height of anchor: " + anchor.getHeight());
+                            //ki.debug("Current height of sp above anchor: " + ((StackPane)anchor.getParent()).getHeight());
+                            //ki.debug("Parent of Parent of anchor: " + anchor.getParent().getParent().getClass());
                             startMining.setLayoutX((miningTab.getWidth() / 2) - (startMining.getWidth() / 2) - 5);
                             hashrateChart.setMinWidth(miningTab.getWidth());
                             miningIntesity.setMinWidth(miningTab.getWidth() - 20);
@@ -2718,7 +2722,6 @@ public class NewGUI {
     private double currentPPS = 0;
 
     private void prepareOH() {
-
         ohPortfolio.getData().clear();
         Map<Token, BigInteger> tokenValueMap = new HashMap<>();
         for (Token t : Token.values()) {

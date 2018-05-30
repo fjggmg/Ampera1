@@ -35,7 +35,7 @@ public class AmpBuildableFactory {
     public static ByteBuf finalizeBuildAsPacket(AmpBuildable packet) {
         HeadlessPrefixedAmplet hpa = HeadlessPrefixedAmplet.create();
         byte[] p = packet.serializeToBytes();
-        System.out.println("Prepping packet for transfer of type: " + packet.getClass().getName());
+        //System.out.println("Prepping packet for transfer of type: " + packet.getClass().getName());
         hpa.addElement(packet.getClass().getName());
         hpa.addElement(EncryptionManager.getCRCValue(p));
         hpa.addBytes(p);
