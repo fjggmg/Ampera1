@@ -1,16 +1,17 @@
 package com.ampex.main.network.pool;
 
+import com.ampex.amperabase.AmpBuildable;
+import com.ampex.amperabase.ConnManPacketPair;
+import com.ampex.amperabase.IConnectionManager;
+import com.ampex.amperabase.IPacketProcessor;
 import com.ampex.main.IKi;
 import com.ampex.main.data.encryption.EncryptionManager;
-import com.ampex.main.data.utils.AmpBuildable;
-import com.ampex.main.network.ConnManPacketPair;
-import com.ampex.main.network.IConnectionManager;
-import com.ampex.main.network.IPacketProcessor;
+import com.ampex.main.network.ChannelHandler;
 import com.ampex.main.network.logic.INetworkEndpoint;
 import com.ampex.main.network.packets.pool.PoolHandshake;
 import io.netty.channel.Channel;
 
-public class PoolConnMan extends IConnectionManager {
+public class PoolConnMan extends IConnectionManager implements ChannelHandler {
 
 
     public PoolConnMan(IKi ki, INetworkEndpoint endpoint) {

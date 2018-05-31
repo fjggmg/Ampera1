@@ -6,14 +6,11 @@ import com.ampex.amperabase.KeyType;
 import com.ampex.main.data.encryption.EncryptionManager;
 import com.ampex.main.data.utils.Utils;
 import com.ampex.main.transactions.scripting.Opcodes;
-import engine.binary.Binary;
-import engine.data.ConstantMemory;
-import engine.data.DataElement;
-import engine.data.JumpMemory;
-import engine.data.WritableMemory;
+import engine.binary.IBinary;
+import engine.data.*;
 import engine.operators.IOperator;
-import engine.program.OPCode;
-import engine.program.Program;
+import engine.program.IOPCode;
+import engine.program.IProgram;
 
 import java.util.Stack;
 
@@ -34,7 +31,7 @@ public class VSigBin implements IOperator {
     }
 
     @Override
-    public void execute(Stack<DataElement> stack, Binary binary, Program program, ConstantMemory constantMemory, JumpMemory jumpMemory, WritableMemory writableMemory, OPCode opCode, ITransAPI transaction, byte[] executionAddress) throws Exception {
+    public void execute(Stack<IDataElement> stack, IBinary binary, IProgram program, IConstantMemory constantMemory, IJumpMemory jumpMemory, IWritableMemory writableMemory, IOPCode opCode, ITransAPI transaction, byte[] executionAddress) throws Exception {
         byte[] sig = stack.pop().getData();
         KeyType keyType = binary.getPublicKeyType();
         byte[] key = binary.getPublicKey();

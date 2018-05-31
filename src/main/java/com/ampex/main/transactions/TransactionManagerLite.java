@@ -1,11 +1,11 @@
 package com.ampex.main.transactions;
 
+import amp.Amplet;
 import com.ampex.amperabase.*;
 import com.ampex.main.IKi;
-import com.ampex.main.blockchain.Block;
 import com.ampex.main.data.buckets.KeyKeyTypePair;
 import com.ampex.main.data.utils.Utils;
-import engine.binary.Binary;
+import engine.binary.IBinary;
 import engine.data.WritableMemory;
 
 import java.math.BigInteger;
@@ -14,7 +14,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class TransactionManagerLite extends Thread implements ITransMan, ITransManAPI {
+public class TransactionManagerLite extends Thread implements ITransMan {
 
     private IKi ki;
 
@@ -29,8 +29,14 @@ public class TransactionManagerLite extends Thread implements ITransMan, ITransM
     public void resetLite() {
         utxoMap.clear();
     }
+
     @Override
-    public boolean verifyTransaction(ITrans transaction) {
+    public ITransAPI deserializeTransaction(Amplet amplet) throws InvalidTransactionException {
+        return Transaction.fromAmplet(amplet);
+    }
+
+    @Override
+    public boolean verifyTransaction(ITransAPI transaction) {
 
 
         return true;
@@ -38,7 +44,7 @@ public class TransactionManagerLite extends Thread implements ITransMan, ITransM
     }
 
     @Override
-    public boolean addTransaction(ITrans transaction) {
+    public boolean addTransaction(ITransAPI transaction) {
 
         pending.remove(transaction);
         for (IOutput output : transaction.getOutputs()) {
@@ -61,7 +67,7 @@ public class TransactionManagerLite extends Thread implements ITransMan, ITransM
     }
 
     @Override
-    public boolean addTransactionNoVerify(ITrans transaction) {
+    public boolean addTransactionNoVerify(ITransAPI transaction) {
         for (IOutput output : transaction.getOutputs()) {
             for (IAddress a : ki.getAddMan().getAll()) {
                 if (output.getAddress().encodeForChain().equals(a.encodeForChain())) {
@@ -97,19 +103,19 @@ public class TransactionManagerLite extends Thread implements ITransMan, ITransM
     }
 
     @Override
-    public boolean verifyCoinbase(ITrans transaction, BigInteger blockHeight, BigInteger fees) {
+    public boolean verifyCoinbase(ITransAPI transaction, BigInteger blockHeight, BigInteger fees) {
         return true;
     }
 
     @Override
-    public boolean addCoinbase(ITrans transaction, BigInteger blockHeight, BigInteger fees) {
+    public boolean addCoinbase(ITransAPI transaction, BigInteger blockHeight, BigInteger fees) {
         return true;
     }
 
-    List<ITrans> pending = new ArrayList<>();
+    List<ITransAPI> pending = new ArrayList<>();
 
     @Override
-    public List<ITrans> getPending() {
+    public List<ITransAPI> getPending() {
         return pending;
     }
 
@@ -120,7 +126,7 @@ public class TransactionManagerLite extends Thread implements ITransMan, ITransM
     }
 
     @Override
-    public void undoTransaction(ITrans transaction) {
+    public void undoTransaction(ITransAPI transaction) {
         for (IOutput output : transaction.getOutputs()) {
             for (IAddress a : ki.getAddMan().getAll()) {
                 if (output.getAddress().encodeForChain().equals(a.encodeForChain())) {
@@ -246,7 +252,7 @@ public class TransactionManagerLite extends Thread implements ITransMan, ITransM
     }
 
     @Override
-    public ITrans createSimpleMultiSig(Binary bin, IAddress receiver, BigInteger amount, BigInteger fee, Token token, String message, int multipleOuts, IAddress changeAddress) throws InvalidTransactionException {
+    public ITrans createSimpleMultiSig(IBinary bin, IAddress receiver, BigInteger amount, BigInteger fee, Token token, String message, int multipleOuts, IAddress changeAddress) throws InvalidTransactionException {
         if (ki.getEncryptMan().getPublicKey(ki.getAddMan().getMainAdd().getKeyType()) != null) {
             if (multipleOuts < 1)
                 throw new InvalidTransactionException("Cannot create transaction with less than 1 output");
@@ -366,7 +372,7 @@ public class TransactionManagerLite extends Thread implements ITransMan, ITransM
     }
     //no pbp because lite doesn't verify transactions, it just accepts them
     @Override
-    public boolean postBlockProcessing(Block block) {
+    public boolean postBlockProcessing(IBlockAPI block) {
         return true;
     }
 
@@ -441,5 +447,10 @@ public class TransactionManagerLite extends Thread implements ITransMan, ITransM
     @Override
     public IOutput createOutput(BigInteger amount, IAddress receiver, Token token, int index, long timestamp) {
         return new Output(amount, receiver, token, index, timestamp, Output.VERSION);
+    }
+
+    @Override
+    public IOutput deserializeOutput(byte[] bytes) {
+        return Output.fromBytes(bytes);
     }
 }

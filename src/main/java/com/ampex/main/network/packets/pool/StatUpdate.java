@@ -1,9 +1,9 @@
 package com.ampex.main.network.packets.pool;
 
 import amp.HeadlessAmplet;
+import com.ampex.amperabase.IConnectionManager;
+import com.ampex.amperabase.InvalidAmpBuildException;
 import com.ampex.main.IKi;
-import com.ampex.main.data.utils.InvalidAmpBuildException;
-import com.ampex.main.network.IConnectionManager;
 
 public class StatUpdate implements PoolPacket {
 

@@ -1,9 +1,9 @@
 package com.ampex.main.network.pool;
 
+import com.ampex.amperabase.AmpBuildable;
+import com.ampex.amperabase.IConnectionManager;
 import com.ampex.main.IKi;
-import com.ampex.main.data.utils.AmpBuildable;
 import com.ampex.main.network.GlobalPacketQueuer;
-import com.ampex.main.network.IConnectionManager;
 import com.ampex.main.network.INetworkManager;
 import com.ampex.main.network.logic.Client;
 import com.ampex.main.network.logic.Server;
@@ -253,5 +253,10 @@ public class PoolNetMan extends Thread implements INetworkManager {
     @Override
     public boolean isDiffSet() {
         return false;
+    }
+
+    @Override
+    public void sendOrders(IConnectionManager iConnectionManager) {
+        // not implemented
     }
 }

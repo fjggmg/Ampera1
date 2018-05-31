@@ -1,16 +1,20 @@
 package com.ampex.main.network;
 
+import com.ampex.amperabase.AmpBuildable;
+import com.ampex.amperabase.ConnManPacketPair;
+import com.ampex.amperabase.IConnectionManager;
+import com.ampex.amperabase.IPacketProcessor;
+import com.ampex.amperanet.packets.*;
 import com.ampex.main.IKi;
 import com.ampex.main.data.encryption.EncryptionManager;
-import com.ampex.main.data.utils.AmpBuildable;
 import com.ampex.main.network.logic.INetworkEndpoint;
-import com.ampex.main.network.packets.Handshake;
-import com.ampex.main.transactions.TransactionManagerLite;
 import io.netty.channel.Channel;
 
 import java.math.BigInteger;
+import java.util.Arrays;
+import java.util.List;
 
-public class ConnMan extends IConnectionManager {
+public class ConnMan extends IConnectionManager implements ChannelHandler {
 
     private IPacketProcessor pp;
     private boolean isRelay;
@@ -22,6 +26,16 @@ public class ConnMan extends IConnectionManager {
     private static long OURSTARTTIME = System.currentTimeMillis();
     private static String OURID;
     private volatile boolean gotHS = false;
+    private static final List<String> PASSIVE_WHITELIST = Arrays.asList(
+            UTXOData.class.getName(),
+            UTXODataEnd.class.getName(),
+            UTXODataStart.class.getName(),
+            UTXOStartAck.class.getName(),
+            Ping.class.getName(),
+            Pong.class.getName(),
+            Handshake.class.getName()
+
+    );
     public ConnMan(IKi ki, boolean isRelay, INetworkEndpoint endpoint, IPacketProcessor pp)
     {
         this(ki,isRelay,endpoint);
@@ -56,6 +70,9 @@ public class ConnMan extends IConnectionManager {
     @Override
     public void sendPacket(AmpBuildable o) {
 
+        if (getPacketProcessor().getPacketGlobal().passiveConnection()) {
+            if (!PASSIVE_WHITELIST.contains(o.getClass().getName())) return;
+        }
         endpoint.sendPacket(o);
     }
 
@@ -73,7 +90,7 @@ public class ConnMan extends IConnectionManager {
         if(ki.getOptions().lite)
         {
             while(ki.getTransMan() == null) {}
-            ((TransactionManagerLite)ki.getTransMan()).resetLite();
+            ki.getTransMan().resetLite();
         }
         ki.debug("Connection established");
         Handshake hs = new Handshake();
@@ -81,8 +98,9 @@ public class ConnMan extends IConnectionManager {
         hs.startTime = OURSTARTTIME;
         hs.currentHeight = ki.getChainMan().currentHeight();
         hs.ID = OURID;
+        hs.passive = Handshake.usPassive;
         if(ki.getChainMan().currentHeight().compareTo(BigInteger.ZERO) > 0)
-            hs.mostRecentBlock = ki.getChainMan().getByHeight(ki.getChainMan().currentHeight()).ID;
+            hs.mostRecentBlock = ki.getChainMan().getByHeight(ki.getChainMan().currentHeight()).getID();
         else
             hs.mostRecentBlock = "";
         hs.version = Handshake.VERSION;

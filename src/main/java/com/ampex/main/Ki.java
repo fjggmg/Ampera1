@@ -1,9 +1,10 @@
 package com.ampex.main;
 
 import amp.AmpLogging;
-import com.ampex.amperabase.IKiAPI;
-import com.ampex.amperabase.KeyType;
-import com.ampex.amperabase.TransactionFeeCalculator;
+import com.ampex.amperabase.*;
+import com.ampex.amperanet.packets.BlockRequest;
+import com.ampex.amperanet.packets.DifficultyRequest;
+import com.ampex.amperanet.packets.TransactionDataRequest;
 import com.ampex.main.GUI.FXGUI;
 import com.ampex.main.GUI.NewGUI;
 import com.ampex.main.adx.ExchangeManager;
@@ -12,16 +13,12 @@ import com.ampex.main.blockchain.mining.GPUMiner;
 import com.ampex.main.blockchain.mining.IMinerMan;
 import com.ampex.main.blockchain.mining.MinerManager;
 import com.ampex.main.data.Input.InputHandler;
-import com.ampex.main.data.buckets.Options;
 import com.ampex.main.data.encryption.EncryptionManager;
 import com.ampex.main.data.encryption.IEncryptMan;
 import com.ampex.main.data.xodus.XodusStringBooleanMap;
 import com.ampex.main.data.xodus.XodusStringMap;
 import com.ampex.main.network.INetworkManager;
 import com.ampex.main.network.NetMan;
-import com.ampex.main.network.packets.BlockRequest;
-import com.ampex.main.network.packets.DifficultyRequest;
-import com.ampex.main.network.packets.TransactionDataRequest;
 import com.ampex.main.network.packets.pool.PoolBlockHeader;
 import com.ampex.main.network.pool.PoolNetMan;
 import com.ampex.main.pool.KiEventHandler;
@@ -238,7 +235,7 @@ public class Ki extends Thread implements IKi, IKiAPI {
             pd = new PoolData();
         }
         if (o.rebuild) {
-            List<Block> blocksToRebuild = new ArrayList<>();
+            List<IBlockAPI> blocksToRebuild = new ArrayList<>();
             BigInteger b = BigInteger.ONE;
             while (b.compareTo(chainMan.currentHeight()) <= 0) {
                 blocksToRebuild.add(chainMan.getByHeight(b));
@@ -246,7 +243,7 @@ public class Ki extends Thread implements IKi, IKiAPI {
             }
             chainMan.clearFile();
             transMan.clear();
-            for (Block block : blocksToRebuild) {
+            for (IBlockAPI block : blocksToRebuild) {
                 chainMan.addBlock(block);
             }
         }
@@ -622,12 +619,12 @@ public class Ki extends Thread implements IKi, IKiAPI {
 
     private boolean killedSync = false;
     @Override
-    public void blockTick(Block block)
+    public void blockTick(IBlockAPI block)
     {
         if (getOptions().poolRelay) {
 
             miningPool.updateCurrentHeight(ki.getChainMan().currentHeight());
-            if (block.height.compareTo(startHeight) >= 0) {
+            if (block.getHeight().compareTo(startHeight) >= 0) {
                 Block b = getChainMan().formEmptyBlock(TransactionFeeCalculator.MIN_FEE);
                 PoolBlockHeader pbh = new PoolBlockHeader();
                 pbh.coinbase = b.getCoinbase().serializeToAmplet().serializeToBytes();
@@ -654,7 +651,7 @@ public class Ki extends Thread implements IKi, IKiAPI {
             }
         }
         if (!o.nogui && !o.lite && !killedSync) {
-            if (block.height.compareTo(startHeight) >= 0) {
+            if (block.getHeight().compareTo(startHeight) >= 0) {
                 killedSync = true;
                 guiRef.loadMain();
             }

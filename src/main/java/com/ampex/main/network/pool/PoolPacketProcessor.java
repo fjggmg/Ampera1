@@ -1,9 +1,9 @@
 package com.ampex.main.network.pool;
 
+import com.ampex.amperabase.IConnectionManager;
+import com.ampex.amperabase.IPacketProcessor;
+import com.ampex.amperanet.packets.PacketGlobal;
 import com.ampex.main.IKi;
-import com.ampex.main.network.IConnectionManager;
-import com.ampex.main.network.IPacketProcessor;
-import com.ampex.main.network.packets.PacketGlobal;
 import com.ampex.main.network.packets.pool.PoolPacket;
 
 public class PoolPacketProcessor implements IPacketProcessor {

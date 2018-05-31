@@ -1,6 +1,6 @@
 package com.ampex.main.network.logic;
 
-import com.ampex.main.data.utils.AmpBuildable;
+import com.ampex.amperabase.AmpBuildable;
 import com.ampex.main.data.utils.AmpBuildableFactory;
 import io.netty.channel.ChannelHandlerContext;
 

@@ -1,20 +1,14 @@
 package com.ampex.main.data.Input;
 
-import com.ampex.amperabase.IAddress;
-import com.ampex.amperabase.IInput;
-import com.ampex.amperabase.IOutput;
-import com.ampex.amperabase.Token;
+import com.ampex.amperabase.*;
+import com.ampex.amperanet.packets.Ping;
+import com.ampex.amperanet.packets.TransactionDataRequest;
 import com.ampex.main.IKi;
 import com.ampex.main.Settings;
 import com.ampex.main.StringSettings;
-import com.ampex.main.blockchain.Block;
-import com.ampex.main.blockchain.BlockState;
 import com.ampex.main.blockchain.ChainManager;
 import com.ampex.main.blockchain.mining.GPUMiner;
 import com.ampex.main.data.encryption.EncryptionManager;
-import com.ampex.main.network.IConnectionManager;
-import com.ampex.main.network.packets.Ping;
-import com.ampex.main.network.packets.TransactionDataRequest;
 import com.ampex.main.transactions.addresses.Address;
 
 import java.io.BufferedReader;
@@ -142,16 +136,16 @@ public class InputHandler extends Thread {
                     } catch (Exception e) {
                         continue;
                     }
-                    Block b = ki.getChainMan().getByHeight(height);
+                    IBlockAPI b = ki.getChainMan().getByHeight(height);
                     if (b == null) {
                         ki.debug("Block is null");
                         continue;
                     }
 
-                    ki.debug("Timestamp: " + new Date(ki.getChainMan().getByHeight(height).timestamp).toString());
+                    ki.debug("Timestamp: " + new Date(ki.getChainMan().getByHeight(height).getTimestamp()).toString());
                     ki.debug("Block header: " + b.header());
                     ki.debug("Solver: " + b.getCoinbase().getOutputs().get(0).getAddress().encodeForChain());
-                    ki.debug("Block ID: " + b.ID);
+                    ki.debug("Block ID: " + b.getID());
                     ki.debug("Block hash: " + EncryptionManager.sha512(b.header()));
                     ki.debug("Transactions: " + b.getTransactionKeys().size());
                     ki.debug("TransactionIDs: ");
@@ -159,7 +153,7 @@ public class InputHandler extends Thread {
                         ki.debug("ID: " + key);
                     }
 
-                    ki.debug("Block PrevID: " + b.prevID);
+                    ki.debug("Block PrevID: " + b.getPrevID());
 
                 } else if (line.startsWith("setHeight")) {
                     String[] args = line.split(" ");

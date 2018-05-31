@@ -1,10 +1,12 @@
 package com.ampex.main.network;
 
+import com.ampex.amperabase.IConnectionManager;
+import com.ampex.amperabase.IPacketProcessor;
+import com.ampex.amperanet.packets.Packet;
+import com.ampex.amperanet.packets.PacketGlobal;
 import com.ampex.main.IKi;
-import com.ampex.main.network.packets.Packet;
-import com.ampex.main.network.packets.PacketGlobal;
 
-public class PacketProcessor implements IPacketProcessor{
+public class PacketProcessor implements IPacketProcessor {
 
     private IKi ki;
 

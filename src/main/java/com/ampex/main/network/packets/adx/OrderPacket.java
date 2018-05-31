@@ -2,12 +2,13 @@ package com.ampex.main.network.packets.adx;
 
 import amp.ByteTools;
 import amp.HeadlessPrefixedAmplet;
+import com.ampex.amperabase.IConnectionManager;
+import com.ampex.amperabase.IKiAPI;
+import com.ampex.amperabase.InvalidAmpBuildException;
+import com.ampex.amperanet.packets.Packet;
+import com.ampex.amperanet.packets.PacketGlobal;
 import com.ampex.main.IKi;
 import com.ampex.main.adx.Order;
-import com.ampex.main.data.utils.InvalidAmpBuildException;
-import com.ampex.main.network.IConnectionManager;
-import com.ampex.main.network.packets.Packet;
-import com.ampex.main.network.packets.PacketGlobal;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -19,12 +20,12 @@ public class OrderPacket implements Packet {
     public boolean matched = false;
 
     @Override
-    public void process(IKi ki, IConnectionManager connMan, PacketGlobal pg) {
+    public void process(IKiAPI ki, IConnectionManager connMan, PacketGlobal pg) {
         //if (ki.getOptions().pDebug)
         //ki.debug("Received Order Packet");
         Order order = Order.fromByteArray(this.order);
         if (order == null) {
-            ki.getMainLog().warn("Received order packet with null order");
+            ((IKi) ki).getMainLog().warn("Received order packet with null order");
             return;
         }
 
@@ -48,21 +49,21 @@ public class OrderPacket implements Packet {
                 //ki.debug("Matched order, ID: " + order.getID());
                 if (!onChain) {
                     //trigger not needed for matched order
-                    ki.getExMan().addMatchPending(transaction, order);
+                    ((IKi) ki).getExMan().addMatchPending(transaction, order);
                 } else
-                    ki.getExMan().addMatched(order);
+                    ((IKi) ki).getExMan().addMatched(order);
             } else {
                 if (!onChain) {
 
-                    if (order.buy() && !ki.getExMan().getOrderBook().sells().isEmpty()) {
-                        if (ki.getExMan().getOrderBook().sells().get(0).unitPrice().compareTo(order.unitPrice()) <= 0) {
+                    if (order.buy() && !((IKi) ki).getExMan().getOrderBook().sells().isEmpty()) {
+                        if (((IKi) ki).getExMan().getOrderBook().sells().get(0).unitPrice().compareTo(order.unitPrice()) <= 0) {
                             OrderRefused or = new OrderRefused();
                             or.ID = order.getID();
                             connMan.sendPacket(or);
                             return;
                         }
-                    } else if (!ki.getExMan().getOrderBook().buys().isEmpty()) {
-                        if (ki.getExMan().getOrderBook().buys().get(0).unitPrice().compareTo(order.unitPrice()) >= 0) {
+                    } else if (!((IKi) ki).getExMan().getOrderBook().buys().isEmpty()) {
+                        if (((IKi) ki).getExMan().getOrderBook().buys().get(0).unitPrice().compareTo(order.unitPrice()) >= 0) {
                             OrderRefused or = new OrderRefused();
                             or.ID = order.getID();
                             connMan.sendPacket(or);
@@ -72,9 +73,9 @@ public class OrderPacket implements Packet {
                     OrderAccepted oa = new OrderAccepted();
                     oa.ID = order.getID();
                     connMan.sendPacket(oa);
-                    ki.getExMan().addPending(transaction, order);
+                    ((IKi) ki).getExMan().addPending(transaction, order);
                 } else
-                    ki.getExMan().addOrder(order);
+                    ((IKi) ki).getExMan().addOrder(order);
             }
             if (ki.getNetMan().isRelay()) {
                 if (ki.getOptions().pDebug)

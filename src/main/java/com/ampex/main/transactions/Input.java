@@ -8,7 +8,6 @@ import amp.classification.AmpClassCollection;
 import amp.classification.classes.AC_SingleElement;
 import amp.group_primitives.UnpackedGroup;
 import com.ampex.amperabase.*;
-import com.ampex.main.data.buckets.AmpIDs;
 import com.ampex.main.transactions.addresses.Address;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;

@@ -1,10 +1,11 @@
 package com.ampex.main.network.packets.adx;
 
+import com.ampex.amperabase.IConnectionManager;
+import com.ampex.amperabase.IKiAPI;
+import com.ampex.amperabase.InvalidAmpBuildException;
+import com.ampex.amperanet.packets.Packet;
+import com.ampex.amperanet.packets.PacketGlobal;
 import com.ampex.main.IKi;
-import com.ampex.main.data.utils.InvalidAmpBuildException;
-import com.ampex.main.network.IConnectionManager;
-import com.ampex.main.network.packets.Packet;
-import com.ampex.main.network.packets.PacketGlobal;
 
 import java.nio.charset.Charset;
 
@@ -12,12 +13,12 @@ public class OrderRefused implements Packet {
     String ID;
 
     @Override
-    public void process(IKi ki, IConnectionManager connMan, PacketGlobal pg) {
+    public void process(IKiAPI ki, IConnectionManager connMan, PacketGlobal pg) {
         ki.debug("Received OrderRefused packet for Order: " + ID);
 
-        if (ki.getExMan().getOrder(ID) != null) {
-            ki.getExMan().removeOrder(ID);
-            ki.getExMan().orderRejected(ID);
+        if (((IKi) ki).getExMan().getOrder(ID) != null) {
+            ((IKi) ki).getExMan().removeOrder(ID);
+            ((IKi) ki).getExMan().orderRejected(ID);
             OrdersRequest or = new OrdersRequest();
             connMan.sendPacket(or);
         }

@@ -1,11 +1,12 @@
 package com.ampex.main.network.packets.adx;
 
 import amp.HeadlessPrefixedAmplet;
+import com.ampex.amperabase.IConnectionManager;
+import com.ampex.amperabase.IKiAPI;
+import com.ampex.amperabase.InvalidAmpBuildException;
+import com.ampex.amperanet.packets.Packet;
+import com.ampex.amperanet.packets.PacketGlobal;
 import com.ampex.main.IKi;
-import com.ampex.main.data.utils.InvalidAmpBuildException;
-import com.ampex.main.network.IConnectionManager;
-import com.ampex.main.network.packets.Packet;
-import com.ampex.main.network.packets.PacketGlobal;
 
 import java.nio.charset.Charset;
 
@@ -14,8 +15,8 @@ public class OrderCancelled implements Packet {
     public byte[] sig;
 
     @Override
-    public void process(IKi ki, IConnectionManager connMan, PacketGlobal pg) {
-        ki.getExMan().cancelRequest(ID, sig);
+    public void process(IKiAPI ki, IConnectionManager connMan, PacketGlobal pg) {
+        ((IKi) ki).getExMan().cancelRequest(ID, sig);
         if (ki.getNetMan().isRelay()) {
             ki.getNetMan().broadcastAllBut(connMan.getID(), this);
         }

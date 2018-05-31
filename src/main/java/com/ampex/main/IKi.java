@@ -4,9 +4,11 @@ import com.ampex.amperabase.IKiAPI;
 import com.ampex.main.GUI.FXGUI;
 import com.ampex.main.GUI.NewGUI;
 import com.ampex.main.adx.ExchangeManager;
-import com.ampex.main.blockchain.*;
+import com.ampex.main.blockchain.ChainManager;
+import com.ampex.main.blockchain.ChainManagerLite;
+import com.ampex.main.blockchain.IChainMan;
+import com.ampex.main.blockchain.PoolChainMan;
 import com.ampex.main.blockchain.mining.IMinerMan;
-import com.ampex.main.data.buckets.Options;
 import com.ampex.main.data.encryption.EncryptionManager;
 import com.ampex.main.data.encryption.IEncryptMan;
 import com.ampex.main.network.INetworkManager;
@@ -19,7 +21,6 @@ import com.ampex.main.transactions.addresses.AddressManager;
 import com.ampex.main.transactions.addresses.IAddMan;
 import com.ampex.main.transactions.scripting.ScriptManager;
 import engine.ByteCodeEngine;
-import mining_pool.Pool;
 import org.apache.logging.log4j.Logger;
 
 import java.math.BigInteger;
@@ -47,13 +48,6 @@ public interface IKi extends IKiAPI {
      */
     void start();
 
-    /**
-     * Gets options the program was started with (i.e. -md for miner debug)
-     *
-     * @return Options object created from start of program
-     * @see Options
-     */
-    Options getOptions();
 
     /**
      * Gets chain manager for this instance. Full version is the default ChainManager, lite version is ChainManagerLite instance
@@ -130,14 +124,6 @@ public interface IKi extends IKiAPI {
     void setRelayer(String relayer);
 
     /**
-     * Used for doing processing after we get a block. Used currently for pool server processing (creating new workloads).
-     * This method is called from the {@link ChainManager} normally
-     *
-     * @param block Block that we received and added to the chain.
-     */
-    void blockTick(Block block);
-
-    /**
      * Gets {@link IAddMan} implementation for this instance. Currently only {@link AddressManager} implements this
      * @return IAddMan for this instance
      */
@@ -145,16 +131,10 @@ public interface IKi extends IKiAPI {
 
     void debug(String s);
 
-    NewGUI getGUIHook();
-
     void setGUIHook(NewGUI guiHook);
     IMinerMan getMinerMan();
 
-    IStateManager getStateManager();
-
     void resetLite();
-
-    Pool getPoolManager();
 
     boolean getSetting(Settings setting);
 
@@ -176,7 +156,6 @@ public interface IKi extends IKiAPI {
 
     ScriptManager getScriptMan();
 
-    void setStartHeight(BigInteger startHeight);
 
     /**
      * retrieves object to lock on to prevent close

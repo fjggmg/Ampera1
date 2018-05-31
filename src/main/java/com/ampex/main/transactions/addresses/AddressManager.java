@@ -8,6 +8,7 @@ import com.ampex.main.IKi;
 import com.ampex.main.data.files.StringFileHandler;
 import database.XodusAmpMap;
 import engine.binary.Binary;
+import engine.binary.IBinary;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -263,7 +264,7 @@ public class AddressManager implements IAddMan {
     }
 
     @Override
-    public void associateBinary(IAddress address, Binary bin) {
+    public void associateBinary(IAddress address, IBinary bin) {
         //ki.debug("Saving binary to: " + "binary" + address.encodeForChain());
         //ki.debug("Binary shit: " + Arrays.toString(bin.serializeToAmplet().serializeToBytes()));
         addressBinMap.put("binary" + address.encodeForChain(), bin);
@@ -277,7 +278,7 @@ public class AddressManager implements IAddMan {
     }
 
     @Override
-    public Binary getBinary(IAddress address) {
+    public IBinary getBinary(IAddress address) {
         //ki.debug("Loading binary from: " + "binary" + address.encodeForChain());
         //ki.debug("Binary shit from map: " + Arrays.toString(addressBinMap.getBytes("binary" + address.encodeForChain())));
         try {

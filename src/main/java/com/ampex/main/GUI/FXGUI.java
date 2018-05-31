@@ -71,8 +71,6 @@ public class FXGUI extends Application {
             loadSync();
         else
             loadMain();
-
-
     }
 
     private Application app;

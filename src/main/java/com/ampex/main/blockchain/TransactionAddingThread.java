@@ -1,14 +1,14 @@
 package com.ampex.main.blockchain;
 
-import com.ampex.main.transactions.ITrans;
+import com.ampex.amperabase.ITransAPI;
 import com.ampex.main.transactions.ITransMan;
 
 public class TransactionAddingThread extends Thread {
     private TransactionVerifierThread.VerificationState state = TransactionVerifierThread.VerificationState.WORKING;
-    private ITrans trans;
+    private ITransAPI trans;
     private ITransMan transMan;
 
-    public TransactionAddingThread(ITransMan transMan, ITrans trans) {
+    public TransactionAddingThread(ITransMan transMan, ITransAPI trans) {
         this.trans = trans;
         this.transMan = transMan;
     }

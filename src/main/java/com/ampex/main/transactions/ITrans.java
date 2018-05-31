@@ -3,7 +3,6 @@ package com.ampex.main.transactions;
 import amp.serialization.IAmpAmpletSerializable;
 import com.ampex.amperabase.IAddress;
 import com.ampex.amperabase.ITransAPI;
-import com.ampex.main.IKi;
 
 import java.math.BigInteger;
 import java.util.Arrays;
@@ -26,12 +25,6 @@ public interface ITrans extends IAmpAmpletSerializable, ITransAPI {
     String getID();
 
     /**
-     * Verifies all P2PK address sigs on this transaction
-     * @return true if signatures verify
-     */
-    boolean verifySigs();
-
-    /**
      * DO NOT USE! THIS METHOD HAS A SECURITY FLAW AND IS NOT IMPLEMENTED IN THE NEW TRANSACTION SYSTEM ANYWAY!
      * THIS IS ONLY HERE TO ALLOW OLD TRANSACTIONS TO VERIFY
      *
@@ -40,25 +33,6 @@ public interface ITrans extends IAmpAmpletSerializable, ITransAPI {
     @Deprecated
     String toSign();
 
-    /**
-     * Verifies that all inputs are assigned to the addresses trying to spend them.
-     * @return true if the address(es) in this transaction can spend the inputs
-     */
-    boolean verifyCanSpend();
-
-    /**
-     * Verifies that the input amount is the same as the output amount (except for Origin tokens, where it only verifies
-     * that the input is less than the output, since fees are paid from un-assigned funds)
-     * @return true if input amount and output amount follow rules
-     */
-    boolean verifyInputToOutput();
-
-    /**
-     * Used currently for P2SH address contract verification
-     * @param ki god object reference (to get a reference to the ByteCodeEngine in here)
-     * @return true if contract(s) verify
-     */
-    boolean verifySpecial(IKi ki);
     /**
      *
      * @return fee calculated by taking all unassigned inputs
@@ -84,12 +58,6 @@ public interface ITrans extends IAmpAmpletSerializable, ITransAPI {
      */
     @Deprecated
     String toJSON();
-
-    /**
-     * gets message on this transaction. Transaction messages are currently limited to 256 bytes
-     * @return Message on this transaction
-     */
-    String getMessage();
 
     /**
      * Adds a sig to a particular key. Also used to add writable memory to a P2SH binary. This is used after creating

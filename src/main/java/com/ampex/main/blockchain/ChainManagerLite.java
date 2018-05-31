@@ -1,11 +1,14 @@
 package com.ampex.main.blockchain;
 
+import amp.Amplet;
 import com.ampex.amperabase.*;
+import com.ampex.amperanet.packets.DifficultyRequest;
 import com.ampex.main.IKi;
 import com.ampex.main.data.encryption.EncryptionManager;
 import com.ampex.main.data.utils.Utils;
-import com.ampex.main.network.packets.DifficultyRequest;
-import com.ampex.main.transactions.*;
+import com.ampex.main.transactions.ITrans;
+import com.ampex.main.transactions.NewTrans;
+import com.ampex.main.transactions.Output;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -15,13 +18,13 @@ import java.util.Map;
 
 public class ChainManagerLite implements IChainMan {
 
-    private Block mostRecent;
+    private IBlockAPI mostRecent;
     private BigInteger currentHeight = BigInteger.valueOf(-1L);
     private BigInteger currentDifficulty = new BigInteger("00000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF", 16);
     private IKi ki;
     private Block temp;
     private short chainID;
-    private Map<BigInteger, Block> chain = new HashMap<>();
+    private Map<BigInteger, IBlockAPI> chain = new HashMap<>();
     private boolean bDebug = false;
 
     public ChainManagerLite(IKi ki, short chainID) {
@@ -31,11 +34,11 @@ public class ChainManagerLite implements IChainMan {
     }
 
     @Override
-    public BlockState softVerifyBlock(Block block) {
-        Block current = chain.get(block.height.subtract(BigInteger.ONE));
+    public BlockState softVerifyBlock(IBlockAPI block) {
+        IBlockAPI current = chain.get(block.getHeight().subtract(BigInteger.ONE));
         if (bDebug)
             ki.debug("verifying block...");
-        if (block.height.compareTo(currentHeight()) < 0) {
+        if (block.getHeight().compareTo(currentHeight()) < 0) {
             //this is a "replacement" for an older block, we need the rest of the chain to verify this is actually part of it
             return BlockState.WRONG_HEIGHT;
         }
@@ -44,7 +47,7 @@ public class ChainManagerLite implements IChainMan {
 
 
         if (current == null) {
-            if (block.height.compareTo(BigInteger.ZERO) != 0) {
+            if (block.getHeight().compareTo(BigInteger.ZERO) != 0) {
                 ki.debug("Height is not 0 and current block is null, bad block");
                 return BlockState.NO_PREVIOUS;
             }
@@ -53,17 +56,17 @@ public class ChainManagerLite implements IChainMan {
 
         if (bDebug)
             ki.debug("Height check 2 is ok");
-        if (current != null && !block.prevID.equalsIgnoreCase(current.ID)) return BlockState.PREVID_MISMATCH;
+        if (current != null && !block.getPrevID().equalsIgnoreCase(current.getID())) return BlockState.PREVID_MISMATCH;
 
         if (bDebug)
             ki.debug("prev ID is ok");
-        if (current != null && block.timestamp < current.timestamp) return BlockState.BACKWARDS_TIMESTAMP;
+        if (current != null && block.getTimestamp() < current.getTimestamp()) return BlockState.BACKWARDS_TIMESTAMP;
 
-        if (block.timestamp > System.currentTimeMillis() + 60000L) return BlockState.TIMESTAMP_WRONG;
+        if (block.getTimestamp() > System.currentTimeMillis() + 60000L) return BlockState.TIMESTAMP_WRONG;
         if (bDebug)
             ki.debug("timestamp is OK");
         String hash = EncryptionManager.sha512(block.header());
-        if (!block.ID.equals(hash)) return BlockState.ID_MISMATCH;
+        if (!block.getID().equals(hash)) return BlockState.ID_MISMATCH;
         if (bDebug)
             ki.debug("ID is ok");
         if (new BigInteger(Utils.fromBase64(hash)).abs().compareTo(currentDifficulty) > 0)
@@ -79,7 +82,8 @@ public class ChainManagerLite implements IChainMan {
             fees = fees.add(block.getTransaction(t).getFee());
         }
 
-        if (!ki.getTransMan().verifyCoinbase(block.getCoinbase(), block.height, fees)) return BlockState.BAD_COINBASE;
+        if (!ki.getTransMan().verifyCoinbase(block.getCoinbase(), block.getHeight(), fees))
+            return BlockState.BAD_COINBASE;
         if (bDebug)
             ki.debug("Coinbase verifies ok");
         BlockVerificationHelper bvh = new BlockVerificationHelper(ki, block);
@@ -98,15 +102,15 @@ public class ChainManagerLite implements IChainMan {
     }
 
     @Override
-    public BlockState verifyBlock(Block b) {
-        return null;
+    public BlockState verifyBlock(IBlockAPI b) {
+        return BlockState.SUCCESS;
     }
 
     @Override
-    public BlockState addBlock(Block b) {
-        if (mostRecent == null || (b.height.compareTo(mostRecent.height) > 0)) {
+    public BlockState addBlock(IBlockAPI b) {
+        if (mostRecent == null || (b.getHeight().compareTo(mostRecent.getHeight()) > 0)) {
             mostRecent = b;
-            chain.put(b.height, b);
+            chain.put(b.getHeight(), b);
 
             if (b.getCoinbase().getOutputs().get(0).getAddress().encodeForChain().equals(ki.getAddMan().getMainAdd().encodeForChain())) {
                 if (ki.getGUIHook() != null)
@@ -114,7 +118,7 @@ public class ChainManagerLite implements IChainMan {
             }
             for (String trans : b.getTransactionKeys()) {
                 boolean add = false;
-                ITrans transaction = b.getTransaction(trans);
+                ITransAPI transaction = b.getTransaction(trans);
                 for (IOutput o : transaction.getOutputs()) {
                     for (IAddress a : ki.getAddMan().getAll()) {
                         if (o.getAddress().encodeForChain().equals(a.encodeForChain())) {
@@ -131,13 +135,13 @@ public class ChainManagerLite implements IChainMan {
                 }
                 if (add) {
                     if (ki.getGUIHook() != null)
-                        ki.getGUIHook().addTransaction(transaction, b.height);
+                        ki.getGUIHook().addTransaction(transaction, b.getHeight());
                 }
             }
             mostRecent = b;
-            chain.put(b.height, b);
+            chain.put(b.getHeight(), b);
             ki.getTransMan().addTransaction(b.getCoinbase());
-            currentHeight = b.height;
+            currentHeight = b.getHeight();
             for (String trans : b.getTransactionKeys()) {
                 ki.getTransMan().addTransaction(b.getTransaction(trans));
             }
@@ -183,17 +187,12 @@ public class ChainManagerLite implements IChainMan {
     }
 
     @Override
-    public void saveBlock(Block b) {
-
-    }
-
-    @Override
     public BigInteger currentHeight() {
         return currentHeight;
     }
 
     @Override
-    public Block getByHeight(BigInteger height) {
+    public IBlockAPI getByHeight(BigInteger height) {
         return chain.get(height);
     }
 
@@ -222,8 +221,8 @@ public class ChainManagerLite implements IChainMan {
         b.solver = Utils.toBase64(ki.getAddMan().getMainAdd().toByteArray());
         b.timestamp = System.currentTimeMillis();
 
-        Map<String, ITrans> transactions = new HashMap<>();
-        for (ITrans trans : ki.getTransMan().getPending()) {
+        Map<String, ITransAPI> transactions = new HashMap<>();
+        for (ITransAPI trans : ki.getTransMan().getPending()) {
             if (trans.getFee().compareTo(minFee) >= 0 && trans.getFee().compareTo(TransactionFeeCalculator.calculateMinFee(trans)) >= 0)
                 transactions.put(trans.getID(), trans);
         }
@@ -235,13 +234,13 @@ public class ChainManagerLite implements IChainMan {
             if (mostRecent == null) {
                 ki.getMainLog().info("Current is null");
             } else {
-                b.prevID = mostRecent.ID;
+                b.prevID = mostRecent.getID();
             }
         } else
             b.prevID = "0";
 
         BigInteger fees = BigInteger.ZERO;
-        for (Map.Entry<String, ITrans> t : transactions.entrySet()) {
+        for (Map.Entry<String, ITransAPI> t : transactions.entrySet()) {
             fees = fees.add(t.getValue().getFee());
         }
         Output o = new Output(ChainManager.blockRewardForHeight(currentHeight().add(BigInteger.ONE)).add(fees), ki.getAddMan().getMainAdd(), Token.ORIGIN, 0, System.currentTimeMillis(), Output.VERSION);
@@ -296,6 +295,29 @@ public class ChainManagerLite implements IChainMan {
     }
 
     @Override
+    public IBlockAPI formBlock(BigInteger height, String ID, String merkleRoot, byte[] payload, String prevID, String solver, long timestamp, byte[] coinbase) {
+        Block block = new Block();
+        block.height = height;
+        block.ID = ID;
+        block.merkleRoot = merkleRoot;
+        block.payload = payload;
+        block.prevID = prevID;
+        block.solver = solver;
+        block.timestamp = timestamp;
+        try {
+            block.setCoinbase(ki.getTransMan().deserializeTransaction(Amplet.create(coinbase)));
+        } catch (InvalidTransactionException e) {
+            e.printStackTrace();
+        }
+        return block;
+    }
+
+    @Override
+    public IBlockAPI formBlock(Amplet amplet) {
+        return Block.fromAmplet(amplet);
+    }
+
+    @Override
     public void setTemp(Block b) {
         this.temp = b;
     }
@@ -307,6 +329,6 @@ public class ChainManagerLite implements IChainMan {
 
     @Override
     public void setDiff(BigInteger diff) {
-
+        currentDifficulty = diff;
     }
 }

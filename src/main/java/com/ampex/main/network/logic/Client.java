@@ -1,9 +1,9 @@
 package com.ampex.main.network.logic;
 
+import com.ampex.amperabase.AmpBuildable;
+import com.ampex.amperabase.IConnectionManager;
 import com.ampex.main.IKi;
-import com.ampex.main.data.utils.AmpBuildable;
 import com.ampex.main.data.utils.AmpBuildableFactory;
-import com.ampex.main.network.IConnectionManager;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInitializer;

@@ -3,6 +3,8 @@ package com.ampex.main.data.utils;
 
 import amp.ByteTools;
 import amp.HeadlessPrefixedAmplet;
+import com.ampex.amperabase.AmpBuildable;
+import com.ampex.amperabase.InvalidAmpBuildException;
 import com.ampex.main.data.encryption.EncryptionManager;
 import com.ampex.main.network.logic.InvalidCRCException;
 import io.netty.buffer.ByteBuf;

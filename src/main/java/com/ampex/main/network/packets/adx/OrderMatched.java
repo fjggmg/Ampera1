@@ -1,10 +1,11 @@
 package com.ampex.main.network.packets.adx;
 
+import com.ampex.amperabase.IConnectionManager;
+import com.ampex.amperabase.IKiAPI;
+import com.ampex.amperabase.InvalidAmpBuildException;
+import com.ampex.amperanet.packets.Packet;
+import com.ampex.amperanet.packets.PacketGlobal;
 import com.ampex.main.IKi;
-import com.ampex.main.data.utils.InvalidAmpBuildException;
-import com.ampex.main.network.IConnectionManager;
-import com.ampex.main.network.packets.Packet;
-import com.ampex.main.network.packets.PacketGlobal;
 
 import java.nio.charset.Charset;
 
@@ -12,8 +13,8 @@ public class OrderMatched implements Packet {
     public String ID;
 
     @Override
-    public void process(IKi ki, IConnectionManager connMan, PacketGlobal pg) {
-        ki.getExMan().matchOrder(ID);
+    public void process(IKiAPI ki, IConnectionManager connMan, PacketGlobal pg) {
+        ((IKi) ki).getExMan().matchOrder(ID);
         if (ki.getNetMan().isRelay()) {
             ki.getNetMan().broadcastAllBut(connMan.getID(), this);
         }

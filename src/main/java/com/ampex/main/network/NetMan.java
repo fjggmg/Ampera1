@@ -1,13 +1,16 @@
 package com.ampex.main.network;
 
+import com.ampex.amperabase.AmpBuildable;
+import com.ampex.amperabase.IConnectionManager;
+import com.ampex.amperanet.packets.BlockSyncRequest;
+import com.ampex.amperanet.packets.Ping;
 import com.ampex.main.IKi;
-import com.ampex.main.data.utils.AmpBuildable;
+import com.ampex.main.adx.Order;
 import com.ampex.main.data.utils.JSONManager;
 import com.ampex.main.data.xodus.XodusStringMap;
 import com.ampex.main.network.logic.Client;
 import com.ampex.main.network.logic.Server;
-import com.ampex.main.network.packets.BlockSyncRequest;
-import com.ampex.main.network.packets.Ping;
+import com.ampex.main.network.packets.adx.OrderPacket;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,7 +22,7 @@ public class NetMan extends Thread implements INetworkManager {
 
     private static final String[] testBoot = {"73.108.51.16"};
     private static final String[] bootstrap = {"mimpve.host"};
-    public static final String NET_VER = "3.0.0";
+
     private IKi ki;
     private boolean isRelay;
     private static final int PORT = 29555;
@@ -90,6 +93,30 @@ public class NetMan extends Thread implements INetworkManager {
     @Override
     public boolean isDiffSet() {
         return DIFF_SET;
+    }
+
+    @Override
+    public void sendOrders(com.ampex.amperabase.IConnectionManager connMan) {
+        for (Order o : ki.getExMan().getOrderBook().buys()) {
+            OrderPacket op = new OrderPacket();
+            op.order = o.serializeToBytes();
+            op.transaction = ki.getExMan().txIDforOrderID(o.getID());
+            connMan.sendPacket(op);
+        }
+        for (Order o : ki.getExMan().getOrderBook().sells()) {
+            OrderPacket op = new OrderPacket();
+            op.order = o.serializeToBytes();
+            op.transaction = ki.getExMan().txIDforOrderID(o.getID());
+            connMan.sendPacket(op);
+        }
+
+        for (Order o : ki.getExMan().getOrderBook().matched()) {
+            OrderPacket op = new OrderPacket();
+            op.transaction = o.getTxid();
+            op.matched = true;
+            op.order = o.serializeToBytes();
+            connMan.sendPacket(op);
+        }
     }
 
     @Override
@@ -282,7 +309,7 @@ public class NetMan extends Thread implements INetworkManager {
         for(IConnectionManager connMan:connections)
         {
             if (connMan != null) {
-                if (connMan.getPacketProcessor().getPacketGlobal().doneDownloading) {
+                if (connMan.getPacketProcessor().getPacketGlobal().doneDownloading() || connMan.getPacketProcessor().getPacketGlobal().passiveConnection()) {
                     connMan.sendPacket(o);
                     if (ki.getOptions().pDebug)
                         ki.debug("Broadcasting packet: " + o.toString() + " to " + connMan.getAddress());
@@ -308,7 +335,7 @@ public class NetMan extends Thread implements INetworkManager {
         {
             if (connMan != null && ID != null && connMan.getID() != null) {
                 if (!connMan.getID().equals(ID)) {
-                    if(connMan.getPacketProcessor().getPacketGlobal().doneDownloading)
+                    if (connMan.getPacketProcessor().getPacketGlobal().doneDownloading())
                         connMan.sendPacket(o);
                     else
                         connMan.queueUntilDone(o);

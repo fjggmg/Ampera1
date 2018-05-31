@@ -6,10 +6,8 @@ import amp.classification.classes.AC_ClassInstanceIDIsIndex;
 import amp.classification.classes.AC_SingleElement;
 import amp.group_primitives.UnpackedGroup;
 import com.ampex.amperabase.*;
-import com.ampex.main.IKi;
 import com.ampex.main.Ki;
 import com.ampex.main.blockchain.IChainMan;
-import com.ampex.main.data.buckets.AmpIDs;
 import com.ampex.main.data.encryption.EncryptionManager;
 import com.ampex.main.data.utils.JSONManager;
 import com.ampex.main.data.utils.Utils;
@@ -266,7 +264,7 @@ public class Transaction implements ITrans {
     }
 
     @Override
-    public boolean verifySpecial(IKi ki) {
+    public boolean verifySpecial(IKiAPI ki) {
         if (type.equals(TransactionType.STANDARD))
             return true;
         else if (type.equals(TransactionType.NEW_TRANS))

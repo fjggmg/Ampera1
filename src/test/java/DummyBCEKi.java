@@ -1,14 +1,14 @@
+import com.ampex.amperabase.IBlockAPI;
+import com.ampex.amperabase.IStateManager;
+import com.ampex.amperabase.Options;
 import com.ampex.main.GUI.FXGUI;
 import com.ampex.main.GUI.NewGUI;
 import com.ampex.main.IKi;
 import com.ampex.main.Settings;
 import com.ampex.main.StringSettings;
 import com.ampex.main.adx.ExchangeManager;
-import com.ampex.main.blockchain.Block;
 import com.ampex.main.blockchain.IChainMan;
-import com.ampex.main.blockchain.IStateManager;
 import com.ampex.main.blockchain.mining.IMinerMan;
-import com.ampex.main.data.buckets.Options;
 import com.ampex.main.data.encryption.IEncryptMan;
 import com.ampex.main.network.INetworkManager;
 import com.ampex.main.pool.PoolData;
@@ -76,11 +76,6 @@ public class DummyBCEKi implements IKi {
 
     @Override
     public void setRelayer(String relayer) {
-
-    }
-
-    @Override
-    public void blockTick(Block block) {
 
     }
 
@@ -186,6 +181,11 @@ public class DummyBCEKi implements IKi {
 
     @Override
     public void downloadedTo(BigInteger height) {
+
+    }
+
+    @Override
+    public void blockTick(IBlockAPI iBlockAPI) {
 
     }
 

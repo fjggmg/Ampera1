@@ -1,8 +1,7 @@
 package com.ampex.main.transactions;
 
 import com.ampex.amperabase.*;
-import com.ampex.main.blockchain.Block;
-import engine.binary.Binary;
+import engine.binary.IBinary;
 
 import java.math.BigInteger;
 import java.util.List;
@@ -15,33 +14,8 @@ import java.util.List;
  */
 public interface ITransMan extends ITransManAPI {
 
-    /**
-     * Verifies a transaction against current transaction state from the chain
-     *
-     * @param transaction Transaction to verify
-     * @return true if transaction verifies
-     */
-    boolean verifyTransaction(ITrans transaction);
 
-    /**
-     * Verifies a transaction and then adds it to the DB if it verifies
-     * @param transaction transaction to verify and add
-     * @return true if transaction verifies and is successfully added
-     */
-    boolean addTransaction(ITrans transaction);
 
-    /**
-     * Used to portion out transaction verification and adding to the DB so we can parallelize the task more easily.
-     * This nets quite a nice speedup as it allows for many transactions to be thrown on threads to be verified. Since
-     * the DB library we're using is transactional and allows for semi-parallel read access but cannot allow for parallel
-     * write (transactions have a before-after pattern, therefore to log changes correctly one must wait for another to
-     * complete) we can run the verification (read from DB) all at once and then do the slower part (serial addition to the DB)
-     * afterward using this method. THIS METHOD IS DANGEROUS! DO NOT USE UNLESS THE TRANSACTION YOU HAVE IS DEFINITELY
-     * VALID.
-     * @param transaction Transaction to add to DB
-     * @return true if succeeds
-     */
-    boolean addTransactionNoVerify(ITrans transaction);
 
     /**
      * Gets a list of un-used outputs for the address given. The "safe" option is for certain implementations that may
@@ -55,44 +29,6 @@ public interface ITransMan extends ITransManAPI {
      * @return a List of Outputs that are unspent and assigned to the given address
      */
     List<IOutput> getUTXOs(IAddress address, boolean safe);
-
-    /**
-     * Verifies coinbase transactions. Coinbase transactions are given special privileges but are also very closely
-     * monitored, this method is very sensitive to the rules and will only allow a completely valid coinbase through.
-     * @param transaction coinbase transaction from block
-     * @param blockHeight BigInteger height of the block
-     * @param fees all transaction fees in the block added
-     * @return true if valid coinbase
-     */
-    boolean verifyCoinbase(ITrans transaction, BigInteger blockHeight, BigInteger fees);
-
-    /**
-     * Verifies a coinbase transaction and adds it to the DB if it is valid
-     * @param transaction coinbase transaction to verify
-     * @param blockHeight BigInteger height of the block
-     * @param fees all transaction fees in the block
-     * @return true if valid coinbase and was able to add to DB
-     */
-    boolean addCoinbase(ITrans transaction, BigInteger blockHeight, BigInteger fees);
-
-    /**
-     * Pending transactions are kept in a list here (similar to BTC's mempool)
-     * @return List of pending transactions
-     */
-    List<ITrans> getPending();
-
-    /**
-     * Method used to keep track of UTXOs that have already been used to create transactions recently. IDs are removed
-     * from this list when they go on the chain
-     * @return List of UTXO IDs that have already been used
-     */
-    List<String> getUsedUTXOs();
-
-    /**
-     * Undoes a transaction. Used for mitigation to rebuild previous chain state
-     * @param trans Transaction to undo
-     */
-    void undoTransaction(ITrans trans);
 
     /**
      * Returns if the UTXOs for an address have changed since they were last checked. Not used in current implementations
@@ -127,7 +63,7 @@ public interface ITransMan extends ITransManAPI {
      * @return created transaction
      * @throws InvalidTransactionException if invalid parameters are given or if there are not funds to cover this transaction, an exception will be thrown
      */
-    ITrans createSimpleMultiSig(Binary bin, IAddress receiver, BigInteger amount, BigInteger fee, Token token, String message, int multipleOuts, IAddress changeAddress) throws InvalidTransactionException;
+    ITrans createSimpleMultiSig(IBinary bin, IAddress receiver, BigInteger amount, BigInteger fee, Token token, String message, int multipleOuts, IAddress changeAddress) throws InvalidTransactionException;
 
     /**
      * Creates a simple transaction. Calls the other createSimple transaction with multipleOuts set to 1
@@ -156,14 +92,6 @@ public interface ITransMan extends ITransManAPI {
      */
     ITrans createSimple(IAddress receiver, BigInteger amount, BigInteger fee, Token token, String message, int multipleOuts, IAddress changeAddress) throws InvalidTransactionException;
 
-    /**
-     * Used to build quick lookup DB for creating transactions. Not implemented in lite version since it receives its
-     * UTXOs from the relay. This method does not actually do the processing in the current implementation. It adds
-     * the block to a list and notifies a thread to begin working on it, so as to not slow down block verification.
-     * @param block Block to build new state on the DB from
-     * @return true if able to process
-     */
-    boolean postBlockProcessing(Block block);
 
     /**
      * Built to ease creation of transactions by putting some common logic in a new method. This method is built

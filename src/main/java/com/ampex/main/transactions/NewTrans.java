@@ -6,16 +6,14 @@ import amp.classification.AmpClassCollection;
 import amp.classification.classes.AC_ClassInstanceIDIsIndex;
 import amp.classification.classes.AC_SingleElement;
 import com.ampex.amperabase.*;
-import com.ampex.main.IKi;
 import com.ampex.main.blockchain.IChainMan;
-import com.ampex.main.data.buckets.AmpIDs;
 import com.ampex.main.data.encryption.EncryptionManager;
 import com.ampex.main.data.utils.Utils;
 import com.ampex.main.transactions.addresses.Address;
 import com.ampex.main.transactions.addresses.InvalidAddressException;
 import com.ampex.main.transactions.addresses.NewAdd;
 import engine.binary.Binary;
-import engine.data.DataElement;
+import engine.data.IDataElement;
 import engine.data.WritableMemory;
 
 import java.io.UnsupportedEncodingException;
@@ -191,7 +189,7 @@ public class NewTrans implements ITrans {
     }
 
     @Override
-    public boolean verifySpecial(IKi ki) {
+    public boolean verifySpecial(IKiAPI ki) {
         for (Map.Entry<String, IKSEP> key : keySigMap.entrySet()) {
             IKSEP ksep = key.getValue();
             if (ksep.isP2SH()) {
@@ -202,7 +200,7 @@ public class NewTrans implements ITrans {
                 }
                 if (execAdd == null) return false;
                 try {
-                    ArrayList<DataElement> result = ki.getBCE8().executeProgram(Binary.deserializeFromAmplet(Amplet.create(Utils.fromBase64(key.getKey()))), WritableMemory.deserializeFromBytes(Utils.fromBase64(ksep.getSig())), this, execAdd.toByteArray(), false);
+                    ArrayList<IDataElement> result = ki.getBCE8().executeProgram(Binary.deserializeFromAmplet(Amplet.create(Utils.fromBase64(key.getKey()))), WritableMemory.deserializeFromBytes(Utils.fromBase64(ksep.getSig())), this, execAdd.toByteArray(), false);
                     if (result.get(0).getDataAsInt() != 0) return false;
                 } catch (Exception e) {
                     e.printStackTrace();

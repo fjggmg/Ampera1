@@ -1,16 +1,16 @@
 package com.ampex.main.blockchain.mining;
 
 import amp.Amplet;
+import com.ampex.amperabase.BlockState;
 import com.ampex.amperabase.TransactionFeeCalculator;
+import com.ampex.amperanet.packets.BlockEnd;
+import com.ampex.amperanet.packets.BlockHeader;
+import com.ampex.amperanet.packets.TransactionPacket;
 import com.ampex.main.IKi;
 import com.ampex.main.Settings;
 import com.ampex.main.blockchain.Block;
-import com.ampex.main.blockchain.BlockState;
 import com.ampex.main.data.encryption.EncryptionManager;
 import com.ampex.main.data.utils.Utils;
-import com.ampex.main.network.packets.BlockEnd;
-import com.ampex.main.network.packets.BlockHeader;
-import com.ampex.main.network.packets.TransactionPacket;
 import com.ampex.main.network.packets.pool.PoolBlockHeader;
 import com.ampex.main.transactions.NewTrans;
 import gpuminer.miner.SHA3.SHA3Miner;

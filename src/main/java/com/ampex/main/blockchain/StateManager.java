@@ -1,10 +1,13 @@
 package com.ampex.main.blockchain;
 
+import com.ampex.amperabase.BlockState;
+import com.ampex.amperabase.IBlockAPI;
+import com.ampex.amperabase.IStateManager;
+import com.ampex.amperabase.ITransAPI;
+import com.ampex.amperanet.packets.BlockEnd;
+import com.ampex.amperanet.packets.BlockHeader;
+import com.ampex.amperanet.packets.TransactionPacket;
 import com.ampex.main.IKi;
-import com.ampex.main.network.packets.BlockEnd;
-import com.ampex.main.network.packets.BlockHeader;
-import com.ampex.main.network.packets.TransactionPacket;
-import com.ampex.main.transactions.ITrans;
 
 import java.math.BigInteger;
 import java.util.*;
@@ -12,7 +15,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 public class StateManager extends Thread implements IStateManager {
-    private volatile ConcurrentMap<String, ConcurrentMap<BigInteger, Block>> connBlocks = new ConcurrentHashMap<>();
+    private volatile ConcurrentMap<String, ConcurrentMap<BigInteger, IBlockAPI>> connBlocks = new ConcurrentHashMap<>();
     private IKi ki;
     private final Object sync = new Object();
     public StateManager(IKi ki) {
@@ -22,16 +25,16 @@ public class StateManager extends Thread implements IStateManager {
 
     private BigInteger addHeight = BigInteger.valueOf(-1L);
     @Override
-    public void addBlock(Block block, String connID) {
+    public void addBlock(IBlockAPI block, String connID) {
         if (connBlocks.get(connID) != null) {
-            connBlocks.get(connID).put(block.height, block);
+            connBlocks.get(connID).put(block.getHeight(), block);
         } else {
-            ConcurrentMap<BigInteger, Block> map = new ConcurrentHashMap<>();
-            map.put(block.height, block);
+            ConcurrentMap<BigInteger, IBlockAPI> map = new ConcurrentHashMap<>();
+            map.put(block.getHeight(), block);
             connBlocks.put(connID, map);
         }
-        if (block.height.compareTo(addHeight) > 0) {
-            addHeight = block.height;
+        if (block.getHeight().compareTo(addHeight) > 0) {
+            addHeight = block.getHeight();
         }
         //ki.debug("Adding block of height: " + block.height);
         synchronized (sync) {
@@ -62,7 +65,7 @@ public class StateManager extends Thread implements IStateManager {
             if (addHeight.compareTo(ki.getChainMan().currentHeight()) > 0) {
 
                 //ki.debug("State changed, adjusting block chain.");
-                for (Map.Entry<String, ConcurrentMap<BigInteger, Block>> connID : connBlocks.entrySet()) {
+                for (Map.Entry<String, ConcurrentMap<BigInteger, IBlockAPI>> connID : connBlocks.entrySet()) {
                     //TODO works with linear progression, will cause small leak with mitigation
                     connID.getValue().remove(ki.getChainMan().currentHeight().subtract(BigInteger.valueOf(100L)));
                     if (ki.getNetMan().getConnection(connID.getKey()) == null) {
@@ -77,7 +80,7 @@ public class StateManager extends Thread implements IStateManager {
                     }
 
                     if (connBlocks.get(connID.getKey()).get(ki.getChainMan().currentHeight().add(BigInteger.ONE)) != null) {
-                        Block b = connBlocks.get(connID.getKey()).get(ki.getChainMan().currentHeight().add(BigInteger.ONE));
+                        IBlockAPI b = connBlocks.get(connID.getKey()).get(ki.getChainMan().currentHeight().add(BigInteger.ONE));
                         BlockState bs = ki.getChainMan().addBlock(b);
                         if (!bs.success()) {
                             if (bs.retry()) {
@@ -128,7 +131,7 @@ public class StateManager extends Thread implements IStateManager {
                                     if (connBlocks.get(connID.getKey()).get(lowest) == null) {
                                         break;
                                     }
-                                    if (connBlocks.get(connID.getKey()).get(lowest).ID.equals(ki.getChainMan().getByHeight(lowest).ID)) {
+                                    if (connBlocks.get(connID.getKey()).get(lowest).getID().equals(ki.getChainMan().getByHeight(lowest).getID())) {
                                         lastAgreed = lowest;
                                         lowest = lowest.add(BigInteger.ONE);
                                     } else {
@@ -160,9 +163,9 @@ public class StateManager extends Thread implements IStateManager {
                                     for (BigInteger h : connBlocks.get(connID.getKey()).keySet()) {
 
                                         if (connBlocks.get(connID.getKey()).get(h.subtract(BigInteger.ONE)) != null) {
-                                            ki.debug("PREVID: " + connBlocks.get(connID.getKey()).get(h).prevID);
-                                            ki.debug("ID: " + connBlocks.get(connID.getKey()).get(h.subtract(BigInteger.ONE)).ID);
-                                            if (!connBlocks.get(connID.getKey()).get(h).prevID.equals(connBlocks.get(connID.getKey()).get(h.subtract(BigInteger.ONE)).ID)) {
+                                            ki.debug("PREVID: " + connBlocks.get(connID.getKey()).get(h).getPrevID());
+                                            ki.debug("ID: " + connBlocks.get(connID.getKey()).get(h.subtract(BigInteger.ONE)).getID());
+                                            if (!connBlocks.get(connID.getKey()).get(h).getPrevID().equals(connBlocks.get(connID.getKey()).get(h.subtract(BigInteger.ONE)).getID())) {
 
                                                 deleteMap.put(connID.getKey(), true);
                                                 ki.debug("Chain is invalid, deleting blocks");
@@ -172,13 +175,13 @@ public class StateManager extends Thread implements IStateManager {
                                     }
                                     ki.getChainMan().startCache(lastAgreed);
                                     ki.debug("Mitigating collision");
-                                    Map<BigInteger, Set<ITrans>> transMap = new HashMap<>();
+                                    Map<BigInteger, Set<ITransAPI>> transMap = new HashMap<>();
                                     BigInteger laCarry = new BigInteger(lastAgreed.toByteArray());
-                                    Map<BigInteger, Block> archive = new HashMap<>();
+                                    Map<BigInteger, IBlockAPI> archive = new HashMap<>();
                                     BigInteger archiveHeight = new BigInteger(ki.getChainMan().currentHeight().toByteArray());
                                     for (; lastAgreed.compareTo(ki.getChainMan().currentHeight()) <= 0; lastAgreed = lastAgreed.add(BigInteger.ONE)) {
                                         archive.put(lastAgreed, ki.getChainMan().getByHeight(lastAgreed));
-                                        Set<ITrans> transactions = new HashSet<>();
+                                        Set<ITransAPI> transactions = new HashSet<>();
                                         for (String trans : ki.getChainMan().getByHeight(lastAgreed).getTransactionKeys()) {
 
                                             transactions.add(ki.getChainMan().getByHeight(lastAgreed).getTransaction(trans));
@@ -188,8 +191,8 @@ public class StateManager extends Thread implements IStateManager {
                                     }
 
                                     ki.getChainMan().setHeight(laCarry);
-                                    for (Map.Entry<BigInteger, Set<ITrans>> h : transMap.entrySet()) {
-                                        for (ITrans trans : h.getValue()) {
+                                    for (Map.Entry<BigInteger, Set<ITransAPI>> h : transMap.entrySet()) {
+                                        for (ITransAPI trans : h.getValue()) {
                                             ki.getTransMan().undoTransaction(trans);
                                         }
                                     }
@@ -205,7 +208,7 @@ public class StateManager extends Thread implements IStateManager {
                                         } else if (!ki.getChainMan().addBlock(connBlocks.get(connID.getKey()).get(laCarry)).success()) {
                                             break;
                                         } else {
-                                            Set<ITrans> transactions = new HashSet<>();
+                                            Set<ITransAPI> transactions = new HashSet<>();
                                             for (String key : connBlocks.get(connID.getKey()).get(laCarry).getTransactionKeys()) {
                                                 transactions.add(connBlocks.get(connID.getKey()).get(laCarry).getTransaction(key));
                                             }
@@ -216,8 +219,8 @@ public class StateManager extends Thread implements IStateManager {
 
                                     if (!doneMitigating) {
 
-                                        for (Map.Entry<BigInteger, Set<ITrans>> h : transMap.entrySet()) {
-                                            for (ITrans t : h.getValue()) {
+                                        for (Map.Entry<BigInteger, Set<ITransAPI>> h : transMap.entrySet()) {
+                                            for (ITransAPI t : h.getValue()) {
                                                 ki.getTransMan().undoTransaction(t);
                                             }
                                         }
@@ -267,31 +270,31 @@ public class StateManager extends Thread implements IStateManager {
         }
     }
 
-    private void sendBlock(Block b) {
+    private void sendBlock(IBlockAPI b) {
         BlockHeader bh2 = formHeader(b);
         ki.getNetMan().broadcast(bh2);
 
 
         for (String key : b.getTransactionKeys()) {
             TransactionPacket tp = new TransactionPacket();
-            tp.block = b.ID;
+            tp.block = b.getID();
             tp.trans = b.getTransaction(key).serializeToAmplet().serializeToBytes();
             ki.getNetMan().broadcast(tp);
         }
         BlockEnd be = new BlockEnd();
-        be.ID = b.ID;
+        be.ID = b.getID();
         ki.getNetMan().broadcast(be);
     }
 
-    private BlockHeader formHeader(Block b) {
+    private BlockHeader formHeader(IBlockAPI b) {
         BlockHeader bh = new BlockHeader();
-        bh.timestamp = b.timestamp;
-        bh.solver = b.solver;
-        bh.prevID = b.prevID;
-        bh.payload = b.payload;
-        bh.merkleRoot = b.merkleRoot;
-        bh.ID = b.ID;
-        bh.height = b.height;
+        bh.timestamp = b.getTimestamp();
+        bh.solver = b.getSolver();
+        bh.prevID = b.getPrevID();
+        bh.payload = b.getPayload();
+        bh.merkleRoot = b.getMerkleRoot();
+        bh.ID = b.getID();
+        bh.height = b.getHeight();
         bh.coinbase = b.getCoinbase().serializeToAmplet().serializeToBytes();
         return bh;
     }

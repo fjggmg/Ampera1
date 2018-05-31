@@ -7,13 +7,14 @@ import amp.classification.classes.AC_ClassInstanceIDIsIndex;
 import amp.classification.classes.AC_SingleElement;
 import amp.group_primitives.UnpackedGroup;
 import amp.serialization.IAmpAmpletSerializable;
+import com.ampex.amperabase.AmpIDs;
 import com.ampex.amperabase.IBlockAPI;
-import com.ampex.main.data.buckets.AmpIDs;
+import com.ampex.amperabase.ITransAPI;
+import com.ampex.amperabase.InvalidTransactionException;
 import com.ampex.main.data.encryption.EncryptionManager;
 import com.ampex.main.data.utils.JSONManager;
 import com.ampex.main.data.utils.Utils;
 import com.ampex.main.transactions.ITrans;
-import com.ampex.main.transactions.InvalidTransactionException;
 import com.ampex.main.transactions.Transaction;
 import org.json.simple.JSONObject;
 
@@ -36,28 +37,28 @@ public class Block implements IAmpAmpletSerializable, IBlockAPI {
 
     public byte[] payload = {};
 
-    private ITrans coinbase;
+    private ITransAPI coinbase;
 
-    public void setCoinbase(ITrans coinbase)
+    public void setCoinbase(ITransAPI coinbase)
     {
         this.coinbase = coinbase;
     }
 
     @Override
-    public ITrans getCoinbase() {
+    public ITransAPI getCoinbase() {
         return coinbase;
     }
 
-    private Map<String,ITrans> transactions = new HashMap<>();
+    private Map<String, ITransAPI> transactions = new HashMap<>();
 
-    public void addTransaction(ITrans trans)
+    public void addTransaction(ITransAPI trans)
     {
         merkleRoot = null;
         transactions.put(trans.getID(),trans);
     }
 
     @Override
-    public ITrans getTransaction(String ID) {
+    public ITransAPI getTransaction(String ID) {
         return transactions.get(ID);
     }
 
@@ -66,10 +67,10 @@ public class Block implements IAmpAmpletSerializable, IBlockAPI {
         return transactions.keySet();
     }
 
-    public void addAll(Map<String,ITrans> transes)
+    public void addAll(Map<String, ITransAPI> transes)
     {
         merkleRoot = null;
-        for (Map.Entry<String, ITrans> trans : transes.entrySet())
+        for (Map.Entry<String, ITransAPI> trans : transes.entrySet())
         {
             //System.out.println("Adding transaction: " + trans);
             transactions.put(trans.getKey(), trans.getValue());
@@ -209,12 +210,12 @@ public class Block implements IAmpAmpletSerializable, IBlockAPI {
         obj.put("timestamp",timestamp.toString());
         obj.put("payload", Utils.toBase64(payload));
         JSONObject obj2 = new JSONObject();
-        for (Map.Entry<String, ITrans> trans : transactions.entrySet())
+        for (Map.Entry<String, ITransAPI> trans : transactions.entrySet())
         {
-            obj2.put(trans.getKey(), trans.getValue().toJSON());
+            obj2.put(trans.getKey(), ((ITrans) trans.getValue()).toJSON());
         }
         obj.put("transactions",obj2.toJSONString());
-        obj.put("coinbase",coinbase.toJSON());
+        obj.put("coinbase", ((ITrans) coinbase).toJSON());
         return obj.toJSONString();
     }
 
@@ -266,7 +267,7 @@ public class Block implements IAmpAmpletSerializable, IBlockAPI {
         AC_SingleElement coinbase = AC_SingleElement.create(AmpIDs.COINBASE_GID, this.coinbase);
         AC_ClassInstanceIDIsIndex transactions = AC_ClassInstanceIDIsIndex.create(AmpIDs.TRANSACTIONS_CID, "Transactions");
 
-        for (Map.Entry<String, ITrans> tid : this.transactions.entrySet()) {
+        for (Map.Entry<String, ITransAPI> tid : this.transactions.entrySet()) {
             transactions.addElement(tid.getValue());
         }
         AmpClassCollection acc = new AmpClassCollection();
@@ -306,7 +307,7 @@ public class Block implements IAmpAmpletSerializable, IBlockAPI {
             e.printStackTrace();
         }
 
-        Map<String, ITrans> transactions = new HashMap<>();
+        Map<String, ITransAPI> transactions = new HashMap<>();
         if (amp.unpackClass(AmpIDs.TRANSACTIONS_CID) != null)
             for (UnpackedGroup p : amp.unpackClass(AmpIDs.TRANSACTIONS_CID)) {
                 ITrans t = null;

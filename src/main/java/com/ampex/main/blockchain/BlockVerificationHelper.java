@@ -1,5 +1,6 @@
 package com.ampex.main.blockchain;
 
+import com.ampex.amperabase.IBlockAPI;
 import com.ampex.main.IKi;
 
 import java.util.ArrayList;
@@ -7,10 +8,10 @@ import java.util.List;
 
 public class BlockVerificationHelper implements IBlockVerificationHelper {
 
-    private Block block;
+    private IBlockAPI block;
     private IKi ki;
 
-    public BlockVerificationHelper(IKi ki, Block block) {
+    public BlockVerificationHelper(IKi ki, IBlockAPI block) {
         this.block = block;
         this.ki = ki;
     }

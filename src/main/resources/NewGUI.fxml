@@ -198,7 +198,14 @@
                                         <HBox layoutX="14.0" layoutY="13.0" prefHeight="528.0" prefWidth="1045.0"
                                               spacing="10.0">
                                             <children>
-                                                <JFXListView fx:id="addressList" prefHeight="528.0" prefWidth="732.0"/>
+                                                <VBox alignment="TOP_CENTER">
+                                                    <children>
+                                                        <JFXListView fx:id="addressList" prefHeight="528.0"
+                                                                     prefWidth="732.0"/>
+                                                        <ImageView fx:id="qrCodeView" fitHeight="201.0" fitWidth="235.0"
+                                                                   pickOnBounds="true" preserveRatio="true"/>
+                                                    </children>
+                                                </VBox>
                                                 <VBox prefHeight="528.0" prefWidth="302.0">
                                                     <children>
                                                         <VBox fx:id="addressControls" prefHeight="202.0"

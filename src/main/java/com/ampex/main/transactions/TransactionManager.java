@@ -1,14 +1,14 @@
 package com.ampex.main.transactions;
 
+import amp.Amplet;
 import amp.HeadlessPrefixedAmplet;
 import com.ampex.amperabase.*;
 import com.ampex.main.IKi;
-import com.ampex.main.blockchain.Block;
 import com.ampex.main.blockchain.ChainManager;
 import com.ampex.main.data.buckets.KeyKeyTypePair;
 import com.ampex.main.data.utils.Utils;
 import database.XodusAmpMap;
-import engine.binary.Binary;
+import engine.binary.IBinary;
 import engine.data.WritableMemory;
 
 import java.io.File;
@@ -23,13 +23,13 @@ import java.util.concurrent.CopyOnWriteArrayList;
 /**
  * Created by Bryan on 8/11/2017.
  */
-public class TransactionManager extends Thread implements ITransMan, ITransManAPI {
+public class TransactionManager extends Thread implements ITransMan {
 
 
     private XodusAmpMap utxoAmp;
     private XodusAmpMap utxoVerMap;
     private IKi ki;
-    private List<ITrans> pending = new CopyOnWriteArrayList<>();
+    private List<ITransAPI> pending = new CopyOnWriteArrayList<>();
     private List<String> usedUTXOs = new ArrayList<>();
     private BigInteger currentHeight = BigInteger.valueOf(-1);
     private final Object processLock = new Object();
@@ -49,17 +49,17 @@ public class TransactionManager extends Thread implements ITransMan, ITransManAP
     public void run() {
         Thread tc = new Thread() {
             public void run() {
-                List<ITrans> toRemove = new ArrayList<>();
+                List<ITransAPI> toRemove = new ArrayList<>();
                 setName("Transaction Cleanup");
                 while (true) {
                     ki.debug("Running transaction cleanup");
-                    for (ITrans t : pending) {
+                    for (ITransAPI t : pending) {
                         if (t.getOutputs().get(0).getTimestamp() < System.currentTimeMillis() - 3_600_000) {
                             toRemove.add(t);
                         }
                     }
                     if (!toRemove.isEmpty()) {
-                        for (ITrans t : toRemove) {
+                        for (ITransAPI t : toRemove) {
                             unUseUTXOs(t.getInputs());
                         }
                         pending.removeAll(toRemove);
@@ -82,10 +82,10 @@ public class TransactionManager extends Thread implements ITransMan, ITransManAP
                 setName("Post Block Processing");
                 while (true) {
                     ki.debug("Post block processing on #" + currentHeight);
-                    Block b = processMap.remove(currentHeight);
+                    IBlockAPI b = processMap.remove(currentHeight);
                     currentHeight = currentHeight.add(BigInteger.ONE);
                     if (b != null) {
-                        ITrans coinbase = b.getCoinbase();
+                        ITransAPI coinbase = b.getCoinbase();
                         for (IOutput o : coinbase.getOutputs()) {
                             HeadlessPrefixedAmplet hpa;
                             if (utxoAmp.getBytes(o.getAddress().toByteArray()) != null)
@@ -106,7 +106,7 @@ public class TransactionManager extends Thread implements ITransMan, ITransManAP
                         }
                         for (String trans : b.getTransactionKeys()) {
 
-                            ITrans t = b.getTransaction(trans);
+                            ITransAPI t = b.getTransaction(trans);
                             for (IInput i : t.getInputs()) {
                                 getUsedUTXOs().remove(i.getID());
                                 HeadlessPrefixedAmplet hpa;
@@ -182,7 +182,7 @@ public class TransactionManager extends Thread implements ITransMan, ITransManAP
         pbp.interrupt();
     }
     @Override
-    public boolean verifyTransaction(ITrans transaction) {
+    public boolean verifyTransaction(ITransAPI transaction) {
 
         if (ki.getOptions().tDebug)
             ki.debug("Verifying transaction: " + transaction.getID());
@@ -274,7 +274,7 @@ public class TransactionManager extends Thread implements ITransMan, ITransManAP
     }
 
     @Override
-    public boolean addTransaction(ITrans transaction) {
+    public boolean addTransaction(ITransAPI transaction) {
         return verifyTransaction(transaction) && addTransactionNoVerify(transaction);
     }
 
@@ -285,7 +285,7 @@ public class TransactionManager extends Thread implements ITransMan, ITransManAP
      * @return true if successful
      */
     @Override
-    public boolean addTransactionNoVerify(ITrans transaction) {
+    public boolean addTransactionNoVerify(ITransAPI transaction) {
         if (ki.getOptions().tDebug)
             ki.debug("Saving transaction to disk");
         //region verification saving
@@ -306,8 +306,8 @@ public class TransactionManager extends Thread implements ITransMan, ITransManAP
         //endregion
 
         //This is a relatively cheap fix for a possibly bad problem if we end up with duplicates, leaving for now
-        List<ITrans> toRemove = new ArrayList<>();
-        for (ITrans t : pending) {
+        List<ITransAPI> toRemove = new ArrayList<>();
+        for (ITransAPI t : pending) {
             if (t.getID().equals(transaction.getID())) toRemove.add(t);
         }
         pending.removeAll(toRemove);
@@ -359,7 +359,7 @@ public class TransactionManager extends Thread implements ITransMan, ITransManAP
     }
 
     @Override
-    public boolean verifyCoinbase(ITrans transaction, BigInteger blockHeight, BigInteger fees) {
+    public boolean verifyCoinbase(ITransAPI transaction, BigInteger blockHeight, BigInteger fees) {
         if (ki.getOptions().tDebug) {
             ki.debug("Verifying coinbase transaction");
             ki.debug("It has: " + transaction.getOutputs().size() + " outputs");
@@ -376,7 +376,7 @@ public class TransactionManager extends Thread implements ITransMan, ITransManAP
     }
 
     @Override
-    public boolean addCoinbase(ITrans transaction, BigInteger blockHeight, BigInteger fees) {
+    public boolean addCoinbase(ITransAPI transaction, BigInteger blockHeight, BigInteger fees) {
 
         if (!verifyCoinbase(transaction, blockHeight, fees)) return false;
         for (IOutput o : transaction.getOutputs()) {
@@ -402,8 +402,23 @@ public class TransactionManager extends Thread implements ITransMan, ITransManAP
     }
 
     @Override
-    public List<ITrans> getPending() {
+    public void resetLite() {
+        //not implemented
+    }
+
+    @Override
+    public ITransAPI deserializeTransaction(Amplet amplet) throws InvalidTransactionException {
+        return Transaction.fromAmplet(amplet);
+    }
+
+    @Override
+    public List<ITransAPI> getPending() {
         return pending;
+    }
+
+    @Override
+    public void addUTXOs(List<IOutput> list) {
+        //not implemented
     }
 
     @Override
@@ -412,7 +427,7 @@ public class TransactionManager extends Thread implements ITransMan, ITransManAP
     }
 
     @Override
-    public void undoTransaction(ITrans transaction) {
+    public void undoTransaction(ITransAPI transaction) {
 
     }
 
@@ -438,7 +453,7 @@ public class TransactionManager extends Thread implements ITransMan, ITransManAP
 
 
     @Override
-    public ITrans createSimpleMultiSig(Binary bin, IAddress receiver, BigInteger amount, BigInteger fee, Token token, String message, int multipleOuts, IAddress changeAddress) throws InvalidTransactionException {
+    public ITrans createSimpleMultiSig(IBinary bin, IAddress receiver, BigInteger amount, BigInteger fee, Token token, String message, int multipleOuts, IAddress changeAddress) throws InvalidTransactionException {
         if (ki.getEncryptMan().getPublicKey(ki.getAddMan().getMainAdd().getKeyType()) != null) {
             if (multipleOuts < 1)
                 throw new InvalidTransactionException("Cannot create transaction with less than 1 output");
@@ -649,12 +664,12 @@ public class TransactionManager extends Thread implements ITransMan, ITransManAP
         throw new InvalidTransactionException("Public key null");
     }
 
-    Map<BigInteger, Block> processMap = new HashMap<>();
+    Map<BigInteger, IBlockAPI> processMap = new HashMap<>();
 
     @Override
-    public boolean postBlockProcessing(Block block) {
+    public boolean postBlockProcessing(IBlockAPI block) {
 
-        processMap.put(block.height, block);
+        processMap.put(block.getHeight(), block);
         synchronized (processLock) {
             processLock.notifyAll();
         }
@@ -732,6 +747,11 @@ public class TransactionManager extends Thread implements ITransMan, ITransManAP
     @Override
     public IOutput createOutput(BigInteger amount, IAddress receiver, Token token, int index, long timestamp) {
         return new Output(amount, receiver, token, index, timestamp, Output.VERSION);
+    }
+
+    @Override
+    public IOutput deserializeOutput(byte[] bytes) {
+        return Output.fromBytes(bytes);
     }
 
     @Override

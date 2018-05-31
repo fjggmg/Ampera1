@@ -3,6 +3,7 @@ package com.ampex.main.transactions.addresses;
 import com.ampex.amperabase.IAddManAPI;
 import com.ampex.amperabase.IAddress;
 import engine.binary.Binary;
+import engine.binary.IBinary;
 
 /**
  * Created by Bryan on 8/8/2017.
@@ -51,16 +52,16 @@ public interface IAddMan extends IAddManAPI {
      * @param address {@link IAddress} to associate with the binary
      * @param bin     {@link Binary} to be associated
      */
-    void associateBinary(IAddress address, Binary bin);
+    void associateBinary(IAddress address, IBinary bin);
 
     /**
      * Gets associated binary for this address
      *
      * @param address {@link IAddress} to get binary for (note, if this is not a P2SH address you're probably using this incorrectly)
      * @return {@link Binary} associated with this address
-     * @see IAddMan#associateBinary(IAddress, Binary)
+     * @see IAddMan#associateBinary(IAddress, IBinary)
      */
-    Binary getBinary(IAddress address);
+    IBinary getBinary(IAddress address);
 
     /**
      * Closes all threads and DBs, shuts down system

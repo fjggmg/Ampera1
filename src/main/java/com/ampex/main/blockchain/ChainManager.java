@@ -1,5 +1,6 @@
 package com.ampex.main.blockchain;
 
+import amp.Amplet;
 import com.ampex.amperabase.*;
 import com.ampex.main.IKi;
 import com.ampex.main.Settings;
@@ -8,7 +9,9 @@ import com.ampex.main.blockchain.mining.GPUMiner;
 import com.ampex.main.data.encryption.EncryptionManager;
 import com.ampex.main.data.utils.Utils;
 import com.ampex.main.data.xodus.XodusStringMap;
-import com.ampex.main.transactions.*;
+import com.ampex.main.transactions.ITrans;
+import com.ampex.main.transactions.NewTrans;
+import com.ampex.main.transactions.Output;
 import database.XodusAmpMap;
 
 import java.io.File;
@@ -31,7 +34,7 @@ public class ChainManager implements IChainMan {
 
     private IKi ki;
     private boolean canMine = true;
-    private Block current;
+    private IBlockAPI current;
     private BigInteger currentDifficulty = new BigInteger("00000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF", 16);
     private volatile BigInteger currentHeight = BigInteger.valueOf(-1L);
 
@@ -153,20 +156,19 @@ public class ChainManager implements IChainMan {
         blockHeightAmp.close();
     }
 
-    public synchronized BlockState addBlock(Block block) {
+    public synchronized BlockState addBlock(IBlockAPI block) {
         synchronized (ki.getCloseLock()) {
             ki.debug("Block data: ");
-            ki.debug("Solver: " + block.solver);
+            ki.debug("Solver: " + block.getSolver());
             BlockState state = verifyBlock(block);
             if (!state.success()) {
                 return state;
             }
             current = block;
-            currentHeight = block.height;
+            currentHeight = block.getHeight();
             saveBlock(block);
-            csMap.put("current", block.toJSON());
-            csMap.put("height", block.height.toString());
-            if (block.height.mod(BigInteger.valueOf(1000L)).equals(BigInteger.ZERO) && block.height.compareTo(BigInteger.ZERO) != 0) {
+            csMap.put("height", block.getHeight().toString());
+            if (block.getHeight().mod(BigInteger.valueOf(1000L)).equals(BigInteger.ZERO) && block.getHeight().compareTo(BigInteger.ZERO) != 0) {
                 if (this.current != null) {
                     recalculateDifficulty();
                 }
@@ -245,19 +247,17 @@ public class ChainManager implements IChainMan {
         csMap.clear();
     }
 
-
-    @Override
-    public void saveBlock(Block b) {
-        blockHeightAmp.put(b.height.toByteArray(), b);
+    private void saveBlock(IBlockAPI b) {
+        blockHeightAmp.put(b.getHeight().toByteArray(), b);
     }
 
     @Override
-    public synchronized BlockState softVerifyBlock(Block block) {
+    public synchronized BlockState softVerifyBlock(IBlockAPI block) {
 
-        Block current = getByHeight(block.height.subtract(BigInteger.ONE));
+        Block current = getByHeight(block.getHeight().subtract(BigInteger.ONE));
         if (bDebug)
             ki.debug("verifying block...");
-        if(block.height.compareTo(currentHeight()) < 0) {
+        if (block.getHeight().compareTo(currentHeight()) < 0) {
             //this is a "replacement" for an older block, we need the rest of the chain to verify this is actually part of it
             return BlockState.WRONG_HEIGHT;
         }
@@ -266,7 +266,7 @@ public class ChainManager implements IChainMan {
 
 
         if (current == null) {
-            if (block.height.compareTo(BigInteger.ZERO) != 0) {
+            if (block.getHeight().compareTo(BigInteger.ZERO) != 0) {
                 ki.debug("Height is not 0 and current block is null, bad block");
                 return BlockState.NO_PREVIOUS;
             }
@@ -275,17 +275,17 @@ public class ChainManager implements IChainMan {
 
         if (bDebug)
             ki.debug("Height check 2 is ok");
-        if (current != null && !block.prevID.equalsIgnoreCase(current.ID)) return BlockState.PREVID_MISMATCH;
+        if (current != null && !block.getPrevID().equalsIgnoreCase(current.ID)) return BlockState.PREVID_MISMATCH;
 
         if (bDebug)
             ki.debug("prev ID is ok");
-        if (current != null && block.timestamp < current.timestamp) return BlockState.BACKWARDS_TIMESTAMP;
+        if (current != null && block.getTimestamp() < current.timestamp) return BlockState.BACKWARDS_TIMESTAMP;
 
-        if (block.timestamp > System.currentTimeMillis() + 60000L) return BlockState.TIMESTAMP_WRONG;
+        if (block.getTimestamp() > System.currentTimeMillis() + 60000L) return BlockState.TIMESTAMP_WRONG;
         if (bDebug)
             ki.debug("timestamp is OK");
         String hash = EncryptionManager.sha512(block.header());
-        if (!block.ID.equals(hash)) return BlockState.ID_MISMATCH;
+        if (!block.getID().equals(hash)) return BlockState.ID_MISMATCH;
         if (bDebug)
             ki.debug("ID is ok");
         int txios = 0;
@@ -319,7 +319,7 @@ public class ChainManager implements IChainMan {
         for (int i = 0; i < mostSignificant0Digits; i++) {
             precedingZeroes = (precedingZeroes | byteHash[i]) & 0x00ff;
         }
-        if (block.height.compareTo(BigInteger.valueOf(32910L)) < 0) {
+        if (block.getHeight().compareTo(BigInteger.valueOf(32910L)) < 0) {
             if (!(precedingZeroes == 0 && byteHash[mostSignificant0Digits] <= mostSignificantByte)) {
                 return BlockState.NO_SOLVE;
             }
@@ -339,7 +339,8 @@ public class ChainManager implements IChainMan {
             fees = fees.add(block.getTransaction(t).getFee());
         }
 
-        if (!ki.getTransMan().verifyCoinbase(block.getCoinbase(), block.height, fees)) return BlockState.BAD_COINBASE;
+        if (!ki.getTransMan().verifyCoinbase(block.getCoinbase(), block.getHeight(), fees))
+            return BlockState.BAD_COINBASE;
         if (bDebug)
             ki.debug("Coinbase verifies ok");
         BlockVerificationHelper bvh = new BlockVerificationHelper(ki, block);
@@ -394,7 +395,7 @@ public class ChainManager implements IChainMan {
         return true;
     }
 
-    public BlockState verifyBlock(Block block) {
+    public BlockState verifyBlock(IBlockAPI block) {
         if (bDebug)
             ki.debug("Block has: " + block.getTransactionKeys().size() + " transactions");
         BlockState state = softVerifyBlock(block);
@@ -406,7 +407,7 @@ public class ChainManager implements IChainMan {
             fees = fees.add(block.getTransaction(t).getFee());
         }
 
-        if (!ki.getTransMan().addCoinbase(block.getCoinbase(), block.height, fees))
+        if (!ki.getTransMan().addCoinbase(block.getCoinbase(), block.getHeight(), fees))
             return BlockState.FAILED_ADD_COINBASE;
         ki.debug("Added coinbase");
         for(String key:block.getTransactionKeys())
@@ -422,7 +423,7 @@ public class ChainManager implements IChainMan {
             }
             for (String trans : block.getTransactionKeys()) {
                 boolean add = false;
-                ITrans transaction = block.getTransaction(trans);
+                ITransAPI transaction = block.getTransaction(trans);
                 for (IOutput o : transaction.getOutputs()) {
                     for (IAddress a : ki.getAddMan().getAll()) {
                         if (o.getAddress().encodeForChain().equals(a.encodeForChain())) {
@@ -439,7 +440,7 @@ public class ChainManager implements IChainMan {
                 }
                 if (add) {
                     try {
-                        ki.getGUIHook().addTransaction(transaction, block.height);
+                        ki.getGUIHook().addTransaction(transaction, block.getHeight());
                     } catch (Exception e) {
                         ki.getMainLog().warn("Issue adding transaction to list for GUI.", e);
                     }
@@ -448,6 +449,11 @@ public class ChainManager implements IChainMan {
         }
 
         return BlockState.SUCCESS;
+    }
+
+    @Override
+    public void setDifficulty(BigInteger bigInteger) {
+        //not implemented
     }
 
     public BigInteger currentHeight()
@@ -565,8 +571,8 @@ public class ChainManager implements IChainMan {
         b.solver = Utils.toBase64(ki.getAddMan().getMainAdd().toByteArray());
         b.timestamp = System.currentTimeMillis();
 
-        Map<String,ITrans> transactions = new HashMap<>();
-        for(ITrans trans:ki.getTransMan().getPending())
+        Map<String, ITransAPI> transactions = new HashMap<>();
+        for (ITransAPI trans : ki.getTransMan().getPending())
         {
             if (trans.getFee().compareTo(minFee) >= 0 && trans.getFee().compareTo(TransactionFeeCalculator.calculateMinFee(trans)) >= 0)
                 transactions.put(trans.getID(),trans);
@@ -582,7 +588,7 @@ public class ChainManager implements IChainMan {
             b.prevID = "0";
 
         BigInteger fees = BigInteger.ZERO;
-        for (Map.Entry<String, ITrans> t : transactions.entrySet())
+        for (Map.Entry<String, ITransAPI> t : transactions.entrySet())
         {
             fees = fees.add(t.getValue().getFee());
         }
@@ -629,5 +635,28 @@ public class ChainManager implements IChainMan {
     public synchronized void stopCache() {
         cache.clear();
         useCache = false;
+    }
+
+    @Override
+    public IBlockAPI formBlock(BigInteger height, String ID, String merkleRoot, byte[] payload, String prevID, String solver, long timestamp, byte[] coinbase) {
+        Block block = new Block();
+        block.height = height;
+        block.ID = ID;
+        block.merkleRoot = merkleRoot;
+        block.payload = payload;
+        block.prevID = prevID;
+        block.solver = solver;
+        block.timestamp = timestamp;
+        try {
+            block.setCoinbase(ki.getTransMan().deserializeTransaction(Amplet.create(coinbase)));
+        } catch (InvalidTransactionException e) {
+            e.printStackTrace();
+        }
+        return block;
+    }
+
+    @Override
+    public IBlockAPI formBlock(Amplet amplet) {
+        return Block.fromAmplet(amplet);
     }
 }

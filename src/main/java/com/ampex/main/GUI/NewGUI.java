@@ -5,6 +5,7 @@ import amp.ByteTools;
 import amp.HeadlessAmplet;
 import amp.HeadlessPrefixedAmplet;
 import com.ampex.amperabase.*;
+import com.ampex.amperanet.packets.TransactionPacket;
 import com.ampex.main.GUI.data.CandlestickGraph;
 import com.ampex.main.GUI.data.RefreshableListViewSkin;
 import com.ampex.main.GUI.data.StoredTrans;
@@ -15,7 +16,6 @@ import com.ampex.main.StringSettings;
 import com.ampex.main.adx.Order;
 import com.ampex.main.adx.OrderStatus;
 import com.ampex.main.adx.Pairs;
-import com.ampex.main.blockchain.Block;
 import com.ampex.main.blockchain.ChainManager;
 import com.ampex.main.blockchain.mining.GPUMiner;
 import com.ampex.main.blockchain.mining.IMiner;
@@ -24,10 +24,7 @@ import com.ampex.main.data.buckets.KeyKeyTypePair;
 import com.ampex.main.data.encryption.EncryptionManager;
 import com.ampex.main.data.utils.Utils;
 import com.ampex.main.data.xodus.XodusStringMap;
-import com.ampex.main.network.IConnectionManager;
-import com.ampex.main.network.packets.TransactionPacket;
 import com.ampex.main.transactions.ITrans;
-import com.ampex.main.transactions.InvalidTransactionException;
 import com.ampex.main.transactions.NewTrans;
 import com.ampex.main.transactions.Transaction;
 import com.ampex.main.transactions.addresses.Address;
@@ -37,6 +34,8 @@ import com.jfoenix.transitions.hamburger.HamburgerSlideCloseTransition;
 import com.jfoenix.validation.RequiredFieldValidator;
 import database.XodusAmpMap;
 import engine.binary.Binary;
+import engine.binary.IBinary;
+import engine.data.IWritableMemory;
 import engine.data.WritableMemory;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
@@ -68,13 +67,13 @@ import javafx.scene.text.Font;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+import net.glxn.qrgen.core.image.ImageType;
+import net.glxn.qrgen.javase.QRCode;
 
 import java.awt.*;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
@@ -97,7 +96,7 @@ import static javafx.animation.Interpolator.EASE_BOTH;
  * This file is horribly written. JavaFX is a complex and not an easy API to work with. I've discovered better ways to
  * write this but I'm not going to update this for quite a while.
  */
-public class NewGUI {
+public class NewGUI implements GUIHook {
     //region javafx horsesh
     static boolean close = false;
     public JFXTextField entropyField;
@@ -179,6 +178,7 @@ public class NewGUI {
     public Label tOOWallet;
     public Label tPWallet;
     public AnchorPane anchor;
+    public ImageView qrCodeView;
     private CandlestickGraph exchangeGraph;
     public VBox passwordVbox;
     public VBox exchangeGraphBox;
@@ -223,13 +223,13 @@ public class NewGUI {
     //private volatile boolean isFinal = false;
     private volatile boolean run = true;
     private Map<String, BigInteger> heightMap = new HashMap<>();
-    private List<ITrans> sTrans = new CopyOnWriteArrayList<>();
+    private List<ITransAPI> sTrans = new CopyOnWriteArrayList<>();
     private boolean createMultiSig = false;
 
     //region multisig shit
     private ITrans multiSigTransCache = null;
-    private Binary multiSigBinaryCache = null;
-    private WritableMemory multiSigWMCache = null;
+    private IBinary multiSigBinaryCache = null;
+    private IWritableMemory multiSigWMCache = null;
 
     //endregion
     public NewGUI() {
@@ -423,7 +423,8 @@ public class NewGUI {
         return superHash.toString();
     }
 
-    public synchronized void addTransaction(ITrans trans, BigInteger height) {
+    @Override
+    public synchronized void addTransaction(ITransAPI trans, BigInteger height) {
         if (ki.getOptions().pool) return;
         try {
             BigInteger allout = BigInteger.ZERO;
@@ -505,7 +506,7 @@ public class NewGUI {
             if (!sTrans.contains(trans)) {
                 sTrans.add(trans);
                 HeadlessPrefixedAmplet hpa = HeadlessPrefixedAmplet.create();
-                for (ITrans t : sTrans) {
+                for (ITransAPI t : sTrans) {
                     hpa.addElement(t.serializeToAmplet());
                 }
                 guiXAM.putBytes("transactions", hpa.serializeToBytes());
@@ -525,8 +526,6 @@ public class NewGUI {
         } catch (Exception e) {
             ki.getMainLog().warn("Adding a transaction to the table failed. This is not a critical error.", e);
         }
-
-
     }
 
     private long maxH = 0;
@@ -1321,6 +1320,10 @@ public class NewGUI {
             @Override
             public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
                 entropyLabel.setText("Entropy of Selection: \n" + ki.getAddMan().getEntropyForAdd(Address.decodeFromChain(addressList.getSelectionModel().getSelectedItem())));
+                ByteArrayOutputStream out = QRCode.from(newValue + "," + "NONE" + "," + " ").to(ImageType.PNG).stream();
+                ByteArrayInputStream in = new ByteArrayInputStream(out.toByteArray());
+                qrCodeView.setImage(new Image(in));
+
             }
         });
         Map<String, Byte> keys = new HashMap<>();
@@ -1907,7 +1910,7 @@ public class NewGUI {
                 Path path = Paths.get("Transaction.amp");
                 try {
                     ITrans trans = NewTrans.fromAmplet(Amplet.create(Files.readAllBytes(path)));
-                    Binary bin = null;
+                    IBinary bin = null;
 
                     for (IAddress a : ki.getAddMan().getAll()) {
                         if (trans.getInputs().get(0).getAddress().encodeForChain().equals(a.encodeForChain()) && a.isP2SH()) {
@@ -1918,7 +1921,7 @@ public class NewGUI {
                         notification("Do not have script for the address in this transaction");
                         return;
                     }
-                    WritableMemory wm = WritableMemory.deserializeFromBytes(Utils.fromBase64(trans.getSig(Utils.toBase64(bin.serializeToAmplet().serializeToBytes()))));
+                    IWritableMemory wm = WritableMemory.deserializeFromBytes(Utils.fromBase64(trans.getSig(Utils.toBase64(bin.serializeToAmplet().serializeToBytes()))));
 
                     int i = 0;
                     for (; i < 32; i++) {
@@ -2495,13 +2498,13 @@ public class NewGUI {
         mp.setLayoutMode(JFXMasonryPane.LayoutMode.MASONRY);
 
         for (int i = 0; i < i2; i++) {
-            Block b = ki.getChainMan().getByHeight(topRange.subtract(BigInteger.valueOf(i)));
+            IBlockAPI b = ki.getChainMan().getByHeight(topRange.subtract(BigInteger.valueOf(i)));
 
-            JFXButton btn = new JFXButton("Block\n" + b.height);
+            JFXButton btn = new JFXButton("Block\n" + b.getHeight());
             btn.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
                 @Override
                 public void handle(MouseEvent event) {
-                    setupBlockPane(b.height);
+                    setupBlockPane(b.getHeight());
                 }
             });
             Color c = Color.valueOf(getDefaultColor(new Random().nextInt(12)));
@@ -2531,20 +2534,20 @@ public class NewGUI {
     private SimpleDateFormat sdf3 = new SimpleDateFormat("MM/dd hh:mm:ss a");
 
     private void setupBlockPane(BigInteger height) {
-        Block b = ki.getChainMan().getByHeight(height);
-        blockHeight.setText("Height - " + b.height);
-        blockID.setText("ID - " + Utils.toHexArray(Utils.fromBase64(b.ID)));
-        solver.setText("Solver - " + b.solver);
+        IBlockAPI b = ki.getChainMan().getByHeight(height);
+        blockHeight.setText("Height - " + b.getHeight());
+        blockID.setText("ID - " + Utils.toHexArray(Utils.fromBase64(b.getID())));
+        solver.setText("Solver - " + b.getSolver());
         numberOfTransactions.setText("Number of Transactions - " + b.getTransactionKeys().size());
-        blockTimestamp.setText(sdf2.format(new Date(b.timestamp)));
-        currentBlock = b.height;
+        blockTimestamp.setText(sdf2.format(new Date(b.getTimestamp())));
+        currentBlock = b.getHeight();
         blockExplorerPane.setVisible(false);
         blockPane.setVisible(true);
     }
 
     private int localShare = 0;
 
-    public void bindScrolls(JFXListView list1, JFXListView list2) {
+    private void bindScrolls(JFXListView list1, JFXListView list2) {
         Node n1 = list1.lookup(".scroll-bar");
         if (n1 instanceof ScrollBar) {
             ScrollBar sb1 = (ScrollBar) n1;
@@ -2819,7 +2822,7 @@ public class NewGUI {
         ohCancel.getItems().add(cancelButton);
     }
 
-    void postInit(Application app, Stage stage) {
+    public void postInit(Application app, Stage stage) {
         Platform.runLater(new Thread() {
             public void run() {
                 setDaemon(true);

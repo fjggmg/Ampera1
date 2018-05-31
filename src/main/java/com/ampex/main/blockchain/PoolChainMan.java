@@ -1,22 +1,33 @@
 package com.ampex.main.blockchain;
 
+import amp.Amplet;
+import com.ampex.amperabase.BlockState;
+import com.ampex.amperabase.IBlockAPI;
+import com.ampex.amperabase.InvalidTransactionException;
+import com.ampex.main.Ki;
+
 import java.math.BigInteger;
 
 public class PoolChainMan implements IChainMan {
-    private Block toMine;
+    private IBlockAPI toMine;
 
     @Override
-    public BlockState softVerifyBlock(Block b) {
+    public BlockState softVerifyBlock(IBlockAPI b) {
         return null;
     }
 
     @Override
-    public BlockState verifyBlock(Block b) {
+    public BlockState verifyBlock(IBlockAPI b) {
         return null;
     }
 
     @Override
-    public BlockState addBlock(Block b) {
+    public void setDifficulty(BigInteger bigInteger) {
+
+    }
+
+    @Override
+    public BlockState addBlock(IBlockAPI b) {
         toMine = b;
         return BlockState.SUCCESS;
     }
@@ -38,11 +49,6 @@ public class PoolChainMan implements IChainMan {
 
     @Override
     public void clearFile() {
-
-    }
-
-    @Override
-    public void saveBlock(Block b) {
 
     }
 
@@ -71,9 +77,10 @@ public class PoolChainMan implements IChainMan {
 
     }
 
+    //TODO casting to implementation here, check this later
     @Override
     public Block formEmptyBlock(BigInteger minFee) {
-        return toMine;
+        return (Block) toMine;
     }
 
     @Override
@@ -99,6 +106,29 @@ public class PoolChainMan implements IChainMan {
     @Override
     public Block getTemp() {
         return null;
+    }
+
+    @Override
+    public IBlockAPI formBlock(BigInteger height, String ID, String merkleRoot, byte[] payload, String prevID, String solver, long timestamp, byte[] coinbase) {
+        Block block = new Block();
+        block.height = height;
+        block.ID = ID;
+        block.merkleRoot = merkleRoot;
+        block.payload = payload;
+        block.prevID = prevID;
+        block.solver = solver;
+        block.timestamp = timestamp;
+        try {
+            block.setCoinbase(Ki.getInstance().getTransMan().deserializeTransaction(Amplet.create(coinbase)));
+        } catch (InvalidTransactionException e) {
+            e.printStackTrace();
+        }
+        return block;
+    }
+
+    @Override
+    public IBlockAPI formBlock(Amplet amplet) {
+        return Block.fromAmplet(amplet);
     }
 
     @Override

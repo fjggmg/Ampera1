@@ -2,11 +2,11 @@ package com.ampex.main.pool;
 
 import com.ampex.amperabase.IOutput;
 import com.ampex.amperabase.ITransAPI;
+import com.ampex.amperanet.packets.TransactionPacket;
 import com.ampex.main.IKi;
-import com.ampex.main.network.packets.TransactionPacket;
 import com.ampex.main.transactions.ITrans;
 import com.ampex.main.transactions.NewTrans;
-import mining_pool.Pool;
+import mining_pool.IPool;
 import mining_pool.SafeTransactionGenerator;
 import mining_pool.events.IPoolEventHandler;
 import mining_pool.events.PoolEventType;
@@ -19,7 +19,7 @@ public class KiEventHandler implements IPoolEventHandler {
     }
 
     @Override
-    public void handle(Pool pool, PoolEventType poolEventType) throws Exception {
+    public void handle(IPool pool, PoolEventType poolEventType) throws Exception {
         switch (poolEventType) {
             case NEW_HEIGHT:
 

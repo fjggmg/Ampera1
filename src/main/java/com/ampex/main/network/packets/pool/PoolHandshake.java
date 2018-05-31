@@ -1,10 +1,10 @@
 package com.ampex.main.network.packets.pool;
 
 import amp.HeadlessPrefixedAmplet;
+import com.ampex.amperabase.IConnectionManager;
+import com.ampex.amperabase.InvalidAmpBuildException;
 import com.ampex.main.IKi;
 import com.ampex.main.Settings;
-import com.ampex.main.data.utils.InvalidAmpBuildException;
-import com.ampex.main.network.IConnectionManager;
 import com.ampex.main.network.pool.PoolNetMan;
 import com.ampex.main.transactions.addresses.Address;
 

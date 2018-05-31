@@ -1,5 +1,8 @@
 package com.ampex.main.network;
 
+import com.ampex.amperabase.ConnManPacketPair;
+import com.ampex.amperabase.IConnectionManager;
+import com.ampex.amperabase.IGlobalPacketQueuer;
 import com.ampex.main.Ki;
 
 import java.util.ArrayList;
@@ -7,10 +10,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class GlobalPacketQueuer extends Thread {
+public class GlobalPacketQueuer extends Thread implements IGlobalPacketQueuer {
 
     private final List<ConnManPacketPair> cmppList = new ArrayList<>();
 
+    @Override
     public void enqueue(ConnManPacketPair cmpp) {
         synchronized (cmppList) {
             cmppList.add(cmpp);

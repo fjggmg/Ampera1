@@ -8,6 +8,7 @@ import com.ampex.main.data.encryption.EncryptionManager;
 import com.ampex.main.data.utils.Utils;
 import com.ampex.main.transactions.addresses.Address;
 import engine.binary.Binary;
+import engine.binary.IBinary;
 
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
@@ -20,15 +21,15 @@ public class Order implements IAmpByteSerializable {
     private BigInteger amountOnOffer;
     private boolean buy;
     private BigInteger timestamp;
-    private Binary bin;
+    private IBinary bin;
     private OrderMeta om = new OrderMeta();
     private String txid;
 
-    public Order(Pairs pair, BigInteger unitPrice, IAddress address, IAddress contractAdd, BigInteger amountOnOffer, Binary bin, boolean buy, String txid) throws InvalidOrderException {
+    public Order(Pairs pair, BigInteger unitPrice, IAddress address, IAddress contractAdd, BigInteger amountOnOffer, IBinary bin, boolean buy, String txid) throws InvalidOrderException {
         this(pair, unitPrice, address, contractAdd, amountOnOffer, bin, buy, BigInteger.valueOf(System.currentTimeMillis()), txid);
     }
 
-    public Order(Pairs pair, BigInteger unitPrice, IAddress address, IAddress contractAdd, BigInteger amountOnOffer, Binary bin, boolean buy, BigInteger timestamp, String txid) throws InvalidOrderException {
+    public Order(Pairs pair, BigInteger unitPrice, IAddress address, IAddress contractAdd, BigInteger amountOnOffer, IBinary bin, boolean buy, BigInteger timestamp, String txid) throws InvalidOrderException {
         this.timestamp = timestamp;
         if (!contractAdd.isP2SH()) throw new InvalidOrderException("contract address is not P2SH");
         if (unitPrice.compareTo(BigInteger.ZERO) <= 0) throw new InvalidOrderException("Unit price <= 0");
@@ -88,7 +89,7 @@ public class Order implements IAmpByteSerializable {
         return contractAdd;
     }
 
-    public Binary bin() {
+    public IBinary bin() {
         return bin;
     }
 
@@ -119,7 +120,7 @@ public class Order implements IAmpByteSerializable {
 
     public static Order fromByteArray(byte[] array) {
         HeadlessPrefixedAmplet hpa = HeadlessPrefixedAmplet.create(array);
-        Binary bin = Binary.deserializeFromAmplet(Amplet.create(hpa.getNextElement()));
+        IBinary bin = Binary.deserializeFromAmplet(Amplet.create(hpa.getNextElement()));
         Pairs pair;
         try {
             pair = Pairs.valueOf(new String(hpa.getNextElement(), "UTF-8"));

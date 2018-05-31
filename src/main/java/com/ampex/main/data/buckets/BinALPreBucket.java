@@ -5,19 +5,20 @@ import amp.HeadlessPrefixedAmplet;
 import amp.serialization.IAmpByteSerializable;
 import com.ampex.amperabase.AddressLength;
 import engine.binary.Binary;
+import engine.binary.IBinary;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.UnsupportedEncodingException;
 
 public class BinALPreBucket implements IAmpByteSerializable {
 
-    public BinALPreBucket(@NotNull Binary bin, @NotNull AddressLength al, String prefix) {
+    public BinALPreBucket(@NotNull IBinary bin, @NotNull AddressLength al, String prefix) {
         this.bin = bin;
         this.al = al;
         this.prefix = prefix;
     }
 
-    private Binary bin;
+    private IBinary bin;
     private AddressLength al;
     private String prefix;
 
@@ -33,7 +34,7 @@ public class BinALPreBucket implements IAmpByteSerializable {
 
     public static BinALPreBucket fromBytes(byte[] bytes) {
         HeadlessPrefixedAmplet hpa = HeadlessPrefixedAmplet.create(bytes);
-        Binary bin = Binary.deserializeFromAmplet(Amplet.create(hpa.getNextElement()));
+        IBinary bin = Binary.deserializeFromAmplet(Amplet.create(hpa.getNextElement()));
         AddressLength al = AddressLength.byIndicator(hpa.getNextElement()[0]);
         if (al == null) return null;
         String prefix = null;
@@ -47,7 +48,7 @@ public class BinALPreBucket implements IAmpByteSerializable {
         return new BinALPreBucket(bin, al, prefix);
     }
 
-    public Binary getBin() {
+    public IBinary getBin() {
         return bin;
     }
 
