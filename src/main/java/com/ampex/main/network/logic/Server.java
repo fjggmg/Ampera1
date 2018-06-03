@@ -26,6 +26,7 @@ public class Server {
         this.port = port;
     }
 
+    ChannelFuture future;
     public void start() throws Exception {
         // Configure SSL.
         final SslContext sslCtx;
@@ -67,13 +68,18 @@ public class Server {
                     }).childOption(ChannelOption.SO_KEEPALIVE,true);
 
             // Bind and start to accept incoming connections.
-            b.bind(port).sync().channel().closeFuture().sync();
+            future = b.bind(port).sync();
+            future.channel().closeFuture().sync();
         } catch (Exception e) {
             ki.debug("Connection closed unexpectedly with message: " + e.getMessage());
         } finally {
             bossGroup.shutdownGracefully();
             workerGroup.shutdownGracefully();
         }
+    }
+
+    public void close() {
+        future.channel().close();
     }
 
 

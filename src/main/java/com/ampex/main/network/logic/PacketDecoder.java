@@ -21,6 +21,9 @@ public class PacketDecoder extends LengthFieldBasedFrameDecoder {
         frame.skipBytes(4);
         byte[] data = new byte[size];
         frame.readBytes(data);
+        frame.release();
+        //buf.release();
+        //ReferenceCountUtil.release(frame);
         //System.out.println("Frame not null, length: " + size);
         return AmpBuildableFactory.buildPacket(data);
     }

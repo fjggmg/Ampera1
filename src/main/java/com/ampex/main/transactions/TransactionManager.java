@@ -664,7 +664,7 @@ public class TransactionManager extends Thread implements ITransMan {
         throw new InvalidTransactionException("Public key null");
     }
 
-    Map<BigInteger, IBlockAPI> processMap = new HashMap<>();
+    private Map<BigInteger, IBlockAPI> processMap = new HashMap<>();
 
     @Override
     public boolean postBlockProcessing(IBlockAPI block) {

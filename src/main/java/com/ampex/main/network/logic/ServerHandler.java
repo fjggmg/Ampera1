@@ -50,4 +50,5 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
         ki.getMainLog().error("Error caught on server connection: ", cause);
         ctx.close();
     }
+
 }

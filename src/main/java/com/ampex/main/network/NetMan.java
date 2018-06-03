@@ -78,6 +78,10 @@ public class NetMan extends Thread implements INetworkManager {
             if (conn != null && conn.isConnected())
                 conn.disconnect();
         }
+
+        if (isRelay) {
+            server.close();
+        }
     }
 
     @Override
@@ -244,7 +248,7 @@ public class NetMan extends Thread implements INetworkManager {
 
                 public void run() {
                     setName("server:" + ((ki.getOptions().testNet) ? TESTNET_PORT : PORT));
-                    Server server = new Server(ki, (ki.getOptions().testNet) ? TESTNET_PORT : PORT);
+                    server = new Server(ki, (ki.getOptions().testNet) ? TESTNET_PORT : PORT);
                     try {
                         server.start();
                     } catch (Exception e)
@@ -268,6 +272,7 @@ public class NetMan extends Thread implements INetworkManager {
 
     }
 
+    private Server server;
     @Override
     public void interrupt() {
         for (Thread t : threads) {
