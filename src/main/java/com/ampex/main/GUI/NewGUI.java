@@ -65,6 +65,8 @@ import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.TextAlignment;
+import javafx.scene.web.WebEngine;
+import javafx.scene.web.WebView;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import net.glxn.qrgen.core.image.ImageType;
@@ -93,11 +95,11 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import static javafx.animation.Interpolator.EASE_BOTH;
 
 /**
- * This file is horribly written. JavaFX is a complex and not an easy API to work with. I've discovered better ways to
+ * This file is horribly written. JavaFX is complex and not an easy API to work with. I've discovered better ways to
  * write this but I'm not going to update this for quite a while.
  */
 public class NewGUI implements GUIHook {
-    //region javafx horsesh
+    //region javafx horseshit
     static boolean close = false;
     public JFXTextField entropyField;
     public Label blocksFoundLabel;
@@ -179,6 +181,9 @@ public class NewGUI implements GUIHook {
     public Label tPWallet;
     public AnchorPane anchor;
     public ImageView qrCodeView;
+    public Pane axcPane;
+    public WebView axcWeb;
+    public JFXListView<String> beTransactions;
     private CandlestickGraph exchangeGraph;
     public VBox passwordVbox;
     public VBox exchangeGraphBox;
@@ -219,8 +224,6 @@ public class NewGUI implements GUIHook {
     private BigInteger unitMultiplierPrice = BigInteger.valueOf(100);
     private BigInteger unitMultiplierAmount = BigInteger.valueOf(100);
     private IKi ki;
-    //private ObservableMap<Token, BigInteger> tokenValueMap = FXCollections.observableMap(new HashMap<Token, BigInteger>());
-    //private volatile boolean isFinal = false;
     private volatile boolean run = true;
     private Map<String, BigInteger> heightMap = new HashMap<>();
     private List<ITransAPI> sTrans = new CopyOnWriteArrayList<>();
@@ -235,11 +238,6 @@ public class NewGUI implements GUIHook {
     public NewGUI() {
         ki = Ki.getInstance();
         transactions = FXCollections.observableArrayList();
-        /*
-        for (Token t : Token.values()) {
-            tokenValueMap.put(t, BigInteger.ZERO);
-        }
-        */
         ki.setGUIHook(this);
         try {
             if (guiXAM.getBytes("blocksFound") != null)
@@ -279,7 +277,6 @@ public class NewGUI implements GUIHook {
     public Pane topPane;
     @FXML
     public Pane walletPane;
-    //public volatile static Stage stage;
     @FXML
     public BorderPane borderPane;
     public JFXColorPicker colorPicker;
@@ -319,7 +316,6 @@ public class NewGUI implements GUIHook {
     public JFXButton createAddress;
     public JFXListView<String> addressList;
     public JFXToggleButton highSecurity;
-    public JFXProgressBar syncProgress;
     public JFXToggleButton requirePassword;
     public JFXPasswordField passwordField;
     public JFXButton submitPassword;
@@ -329,14 +325,13 @@ public class NewGUI implements GUIHook {
     public JFXPasswordField cpNew;
     public JFXPasswordField cpConfirm;
     public JFXButton changePassword;
-    //endregion
     private List<Timeline> btnAnimations = new ArrayList<>();
     private List<Timeline> btnAnimationsR = new ArrayList<>();
     private Label ch2dec = new Label(" Chain Height");
     private Label chainHeight2 = new Label(" 26554");
     private Label latency = new Label(" Latency - 125ms");
+    //endregion
     private XodusStringMap pmap = new XodusStringMap("security");
-    //private List<Order> activeOrders = new ArrayList<>();
     private boolean frg = true;
     private int priceControlsIndex;
 
@@ -532,10 +527,12 @@ public class NewGUI implements GUIHook {
     private long minH = Long.MAX_VALUE;
     private DecimalFormat format2 = new DecimalFormat("###,###,###,###,###,###,###,###,##0.#########");
     private boolean mining = false;
-    private BigInteger loadHeight;
     private SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
     private ObservableList<StoredTrans> transactions;
     private volatile boolean limit = true;
+    //MAIN VBOX FOR BUTTONS -- MAIN LIST FOR CONTENT PANES
+    private VBox vb;
+    private List<Pane> content;
 
     private void expandTreeView(TreeItem<?> item) {
         if (item != null && !item.isLeaf()) {
@@ -548,577 +545,15 @@ public class NewGUI implements GUIHook {
 
     @FXML
     void initialize() {
-        if (!ki.getOptions().pool) {
-            Thread t = new Thread() {
-                public void run() {
-                    //setDaemon(true);
-                    while (run) {
-                        if (close) {
-                            try {
-                                ki.close();
-                                Platform.exit();
-                                break;
-                            } catch (Exception e) {
-                                ki.getMainLog().error("Could not close correctly ", e);
-                            }
-                            continue;
-                        }
-                        try {
-                            sleep(100);
-                            //System.out.println("done sleeping");
-                        } catch (InterruptedException e) {
-                            return;
-                        }
 
-                    }
-                }
-            };
-            t.setName("GUI-Backend");
-            t.setDaemon(true);
-            threads.add(t);
-            t.start();
-        }
-        if (!ki.getOptions().pool)
-            loadHeight = ki.getChainMan().currentHeight();
-        highSecurity.setSelected(ki.getSetting(Settings.HIGH_SECURITY));
-        requirePassword.setSelected(ki.getSetting(Settings.REQUIRE_PASSWORD));
-        debugMode.setSelected(ki.getSetting(Settings.DEBUG_MODE));
-        if (requirePassword.isSelected()) {
-            lockPane.setVisible(true);
-        }
-        highSecurity.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-                ki.setSetting(Settings.HIGH_SECURITY, highSecurity.isSelected());
-            }
-        });
-        requirePassword.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-                ki.setSetting(Settings.REQUIRE_PASSWORD, requirePassword.isSelected());
-            }
-        });
-        debugMode.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-                ki.setSetting(Settings.DEBUG_MODE, debugMode.isSelected());
-            }
-        });
-
-        blocksFoundLabel.setText("Blocks Found - " + format2.format(blocksFoundInt));
-        if (!ki.getOptions().pool)
-            tokenBox.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<Label>() {
-                @Override
-                public void changed(ObservableValue<? extends Label> observable, Label oldValue, Label newValue) {
-                    tokenLabel.setText(tokenBox.getSelectionModel().getSelectedItem().getText());
-                    walletAmount.setText(format2.format((double) ki.getTransMan().getAmountInWallet(ki.getAddMan().getMainAdd(), Token.byName(tokenBox.getSelectionModel().getSelectedItem().getText())).longValueExact() / 100_000_000));
-                }
-            });
-        copyAddress.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-                StringSelection stringSelection = new StringSelection(ki.getAddMan().getMainAdd().encodeForChain());
-                Clipboard clpbrd = Toolkit.getDefaultToolkit().getSystemClipboard();
-                clpbrd.setContents(stringSelection, null);
-            }
-        });
-        copySelectedAdd.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-                StringSelection stringSelection = new StringSelection(addressList.getSelectionModel().getSelectedItem());
-                Clipboard clpbrd = Toolkit.getDefaultToolkit().getSystemClipboard();
-                clpbrd.setContents(stringSelection, null);
-            }
-        });
-        copyPublicKey.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-                StringSelection stringSelection = new StringSelection(ki.getEncryptMan().getPublicKeyString(KeyType.valueOf(keyType.getSelectionModel().getSelectedItem().getText())));
-                Clipboard clpbrd = Toolkit.getDefaultToolkit().getSystemClipboard();
-                clpbrd.setContents(stringSelection, null);
-            }
-        });
-        startMining.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-                if (ki.getOptions().mining) {
-                    if (ki.getNetMan().getConnections().size() == 0) return;
-                    if (ki.getOptions().pool && ki.getPoolData().currentWork == null) return;
-                    if (!mining) {
-                        ki.getMinerMan().startMiners();
-                        startMining.setText("Stop Mining");
-                        mining = true;
-                        hashrateChart.getData().clear();
-                        //List<XYChart.Series<String, Number>> devs = new ArrayList<>();
-                        for (String dev : ki.getMinerMan().getDevNames()) {
-                            XYChart.Series<String, Number> series = new XYChart.Series<>();
-                            hashrateChart.getData().add(series);
-                            series.setName(dev);
-                        }
-                    } else {
-                        ki.getMinerMan().stopMiners();
-                        startMining.setText("Start Mining");
-                        mining = false;
-                    }
-                }
-            }
-        });
-
-        obSellSize.setSkin(new RefreshableListViewSkin(obSellSize));
-        obSellPrice.setSkin(new RefreshableListViewSkin(obSellPrice));
-        obSellTotal.setSkin(new RefreshableListViewSkin(obSellTotal));
-        obBuyPrice.setSkin(new RefreshableListViewSkin(obBuyPrice));
-        obBuySize.setSkin(new RefreshableListViewSkin(obBuySize));
-        obBuyTotal.setSkin(new RefreshableListViewSkin(obBuyTotal));
-        obRecentPrice.setSkin(new RefreshableListViewSkin(obRecentPrice));
-        obRecentAmount.setSkin(new RefreshableListViewSkin(obRecentAmount));
-        obRecentDirection.setSkin(new RefreshableListViewSkin(obRecentDirection));
-        activePrice.setSkin(new RefreshableListViewSkin(activePrice));
-        activeAmount.setSkin(new RefreshableListViewSkin(activeAmount));
-        unitSelectorPrice.getItems().add(new Label("BTC"));
-        unitSelectorPrice.getItems().add(new Label("mBTC"));
-        unitSelectorPrice.getItems().add(new Label("µBTC"));
-        unitSelectorPrice.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<Label>() {
-            @Override
-            public void changed(ObservableValue<? extends Label> observable, Label oldValue, Label newValue) {
-                if (newValue.getText().equals("µBTC")) {
-                    unitMultiplierPrice = BigInteger.valueOf(100);
-                } else if (newValue.getText().equals("mBTC")) {
-                    unitMultiplierPrice = BigInteger.valueOf(100_000);
-                } else if (newValue.getText().equals("BTC")) {
-                    unitMultiplierPrice = BigInteger.valueOf(100_000_000);
-                }
-                tokenPrice.setText(newValue.getText());
-                ((RefreshableListViewSkin) obSellSize.getSkin()).refresh();
-                ((RefreshableListViewSkin) obSellPrice.getSkin()).refresh();
-                ((RefreshableListViewSkin) obSellTotal.getSkin()).refresh();
-                ((RefreshableListViewSkin) obBuySize.getSkin()).refresh();
-                ((RefreshableListViewSkin) obBuyPrice.getSkin()).refresh();
-                ((RefreshableListViewSkin) obBuyTotal.getSkin()).refresh();
-                ((RefreshableListViewSkin) obRecentAmount.getSkin()).refresh();
-                ((RefreshableListViewSkin) obRecentDirection.getSkin()).refresh();
-                ((RefreshableListViewSkin) obRecentPrice.getSkin()).refresh();
-                ((RefreshableListViewSkin) activeAmount.getSkin()).refresh();
-                ((RefreshableListViewSkin) activePrice.getSkin()).refresh();
-
-            }
-        });
-        unitSelectorPrice.getSelectionModel().select(0);
-        unitSelectorAmount.getItems().add(new Label("ORA"));
-        unitSelectorAmount.getItems().add(new Label("mORA"));
-        unitSelectorAmount.getItems().add(new Label("µORA"));
-        unitSelectorAmount.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<Label>() {
-            @Override
-            public void changed(ObservableValue<? extends Label> observable, Label oldValue, Label newValue) {
-                if (newValue.getText().equals("µORA")) {
-                    unitMultiplierAmount = BigInteger.valueOf(100);
-                } else if (newValue.getText().equals("mORA")) {
-                    unitMultiplierAmount = BigInteger.valueOf(100_000);
-                } else if (newValue.getText().equals("ORA")) {
-                    unitMultiplierAmount = BigInteger.valueOf(100_000_000);
-                }
-                tokenAmount.setText(newValue.getText());
-                ((RefreshableListViewSkin) obSellSize.getSkin()).refresh();
-                ((RefreshableListViewSkin) obSellPrice.getSkin()).refresh();
-                ((RefreshableListViewSkin) obSellTotal.getSkin()).refresh();
-                ((RefreshableListViewSkin) obBuySize.getSkin()).refresh();
-                ((RefreshableListViewSkin) obBuyPrice.getSkin()).refresh();
-                ((RefreshableListViewSkin) obBuyTotal.getSkin()).refresh();
-                ((RefreshableListViewSkin) obRecentAmount.getSkin()).refresh();
-                ((RefreshableListViewSkin) obRecentDirection.getSkin()).refresh();
-                ((RefreshableListViewSkin) obRecentPrice.getSkin()).refresh();
-                ((RefreshableListViewSkin) activeAmount.getSkin()).refresh();
-                ((RefreshableListViewSkin) activePrice.getSkin()).refresh();
-
-            }
-        });
-        unitSelectorAmount.getSelectionModel().select(0);
-        NumberAxis priceAxis = new NumberAxis();
-        CategoryAxis timeAxis = new CategoryAxis();
-        exchangeGraph = new CandlestickGraph(timeAxis, priceAxis, ki);
-        exchangeGraphBox.getChildren().add(exchangeGraph);
-        exchangeGraph.setLegendVisible(false);
-        changePassword.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-                if (cpNew.getText().equals(cpConfirm.getText())) {
-                    if (cpNew.getText().isEmpty()) {
-                        notification("Password cannot be empty");
-                        return;
-                    }
-                    if (verifyPassword(cpCurrent.getText())) {
-                        deleteOldPassword(cpCurrent.getText());
-
-                        createNewPassword(cpNew.getText());
-                        notification("Password Changed");
-                    } else {
-                        notification("Wrong password");
-                    }
-                } else {
-                    notification("Passwords don't match");
-                }
-            }
-        });
-        if (!ki.getOptions().pool)
-            pairs.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<Label>() {
-                @Override
-                public void changed(ObservableValue<? extends Label> observable, Label oldValue, Label newValue) {
-                    Pairs pair = Pairs.byName(newValue.getText());
-                    if (pair != null) {
-                        exchangeBuy.setText("Buy (" + pair.accepting().getName() + ")");
-                        exchangeSell.setText("Sell (" + pair.accepting().getName() + ")");
-
-                        tOOWallet.setText(pair.onOffer().getName() + "\n" + format2.format((double) ki.getTransMan().getAmountInWallet(ki.getAddMan().getMainAdd(), pair.onOffer()).longValueExact() / 100_000_000));
-                        tPWallet.setText(pair.accepting().getName() + "\n" + format2.format((double) ki.getTransMan().getAmountInWallet(ki.getAddMan().getMainAdd(), pair.accepting()).longValueExact() / 100_000_000));
-                    }
-                }
-            });
-        priceControlsIndex = exControlsBox.getChildren().indexOf(priceHBox);
-        limitBuy.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-                exPrice.setText("");
-                limit = true;
-                if (!exControlsBox.getChildren().contains(priceHBox)) {
-                    exControlsBox.getChildren().add(priceControlsIndex, priceHBox);
-                }
-            }
-        });
-        marketBuy.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-                exPrice.setText("");
-                limit = false;
-                if (exControlsBox.getChildren().contains(priceHBox)) {
-                    exControlsBox.getChildren().remove(priceControlsIndex);
-                }
-            }
-        });
-        for (Pairs pair : Pairs.values()) {
-            Label label = new Label(pair.getName());
-            pairs.getItems().add(label);
-        }
-        pairs.getSelectionModel().select(0);
-        exchangeBuy.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-                BigInteger amount;
-                try {
-                    amount = new BigDecimal(amtOnOffer.getText()).multiply(BigDecimal.valueOf(unitMultiplierAmount.doubleValue())).toBigInteger();
-                } catch (NumberFormatException e) {
-                    notification("Invalid Amount");
-                    return;
-                }
-                BigInteger stopPrice = null;
-                if (!ki.getExMan().getOrderBook().isSorted()) {
-                    ki.getExMan().getOrderBook().sort();
-                }
-                if (!ki.getExMan().getOrderBook().sells().isEmpty())
-                    stopPrice = ki.getExMan().getOrderBook().sells().get(0).unitPrice();
-                else if (!limit) {
-                    notification("No order to market buy from");
-                    return;
-                }
-                if (limit) {
-                    try {
-                        stopPrice = new BigDecimal(exPrice.getText()).multiply(BigDecimal.valueOf(unitMultiplierPrice.doubleValue())).toBigInteger();
-                        if (stopPrice.compareTo(BigInteger.valueOf(500)) < 0) throw new Exception();
-                    } catch (Exception e) {
-                        notification("Invalid Price");
-                        return;
-                    }
-                }
-
-                OrderStatus status = ki.getExMan().placeOrder(true, amount, stopPrice, Pairs.byName(pairs.getSelectionModel().getSelectedItem().getText()), limit);
-                if (!status.succeeded()) {
-                    if (!status.partial()) notification("Order not completed");
-                    else notification("Order partially completed");
-                } else {
-                    notification("Order complete!");
-                }
-            }
-        });
-        exchangeSell.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-                BigInteger amount;
-                try {
-                    amount = new BigDecimal(amtOnOffer.getText()).multiply(BigDecimal.valueOf(unitMultiplierAmount.doubleValue())).toBigInteger();
-                } catch (NumberFormatException e) {
-                    notification("Invalid Amount");
-                    return;
-                }
-                BigInteger stopPrice = null;
-                if (!ki.getExMan().getOrderBook().isSorted()) {
-                    ki.getExMan().getOrderBook().sort();
-                }
-                if (!ki.getExMan().getOrderBook().buys().isEmpty())
-                    stopPrice = ki.getExMan().getOrderBook().buys().get(0).unitPrice();
-                else if (!limit) {
-                    notification("No order to market sell to");
-                    return;
-                }
-                if (limit) {
-                    try {
-                        stopPrice = new BigDecimal(exPrice.getText()).multiply(BigDecimal.valueOf(unitMultiplierPrice.doubleValue())).toBigInteger();
-                        if (stopPrice.compareTo(BigInteger.valueOf(500)) < 0) throw new Exception();
-                    } catch (Exception e) {
-                        notification("Invalid Price");
-                        return;
-                    }
-                }
-                OrderStatus status = ki.getExMan().placeOrder(false, amount, stopPrice, Pairs.byName(pairs.getSelectionModel().getSelectedItem().getText()), limit);
-                if (!status.succeeded()) {
-                    if (!status.partial()) notification("Order not completed");
-                    else notification("Order partially completed");
-                } else {
-                    notification("Order complete!");
-                }
-            }
-        });
-
-
-        amtOnOffer.textProperty().addListener(new ChangeListener<String>() {
-            @Override
-            public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
-                if (!limit) {
-                    BigInteger amount;
-                    try {
-                        amount = new BigDecimal(amtOnOffer.getText()).multiply(BigDecimal.valueOf(unitMultiplierAmount.doubleValue())).toBigInteger();
-                    } catch (NumberFormatException e) {
-                        //notification("Invalid Amount");
-                        return;
-                    }
-                    BigInteger priceSell = ki.getExMan().getOrderBook().buys().get(0).unitPrice();
-                    BigInteger priceBuy = ki.getExMan().getOrderBook().sells().get(0).unitPrice();
-                    double totalBuy = (priceBuy.doubleValue() / 100_000_000D) * amount.doubleValue();
-                    double totalSell = (priceSell.doubleValue() / 100_000_000D) * amount.doubleValue();
-                    exchangeTotalPurchase.setText("Totals -" + "\n" + "Buy: " + format2.format(totalBuy / unitMultiplierPrice.doubleValue()) + unitSelectorPrice.getSelectionModel().getSelectedItem().getText() + "\n" + "Sell: " + format2.format(totalSell / unitMultiplierPrice.doubleValue()) + unitSelectorPrice.getSelectionModel().getSelectedItem().getText());
-                } else {
-                    BigInteger amount;
-                    BigInteger stopPrice = null;
-                    try {
-                        amount = new BigDecimal(amtOnOffer.getText()).multiply(BigDecimal.valueOf(unitMultiplierAmount.doubleValue())).toBigInteger();
-                    } catch (NumberFormatException e) {
-                        //notification("Invalid Amount");
-                        return;
-                    }
-                    try {
-                        stopPrice = new BigDecimal(exPrice.getText()).multiply(BigDecimal.valueOf(unitMultiplierPrice.doubleValue())).toBigInteger();
-                        if (stopPrice.compareTo(BigInteger.valueOf(500)) < 0) throw new Exception();
-                    } catch (Exception e) {
-                        //notification("Invalid Price");
-                        return;
-                    }
-                    double total = (stopPrice.doubleValue() / 100_000_000) * amount.doubleValue();
-                    exchangeTotalPurchase.setText("Total - " + format2.format(total / unitMultiplierPrice.doubleValue()) + unitSelectorPrice.getSelectionModel().getSelectedItem().getText());
-                }
-            }
-        });
-
-        exPrice.textProperty().addListener(new ChangeListener<String>() {
-            @Override
-            public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
-                BigInteger amount;
-                BigInteger stopPrice = null;
-                try {
-                    amount = new BigDecimal(amtOnOffer.getText()).multiply(BigDecimal.valueOf(unitMultiplierAmount.doubleValue())).toBigInteger();
-                } catch (NumberFormatException e) {
-                    //notification("Invalid Amount");
-                    return;
-                }
-                try {
-                    stopPrice = new BigDecimal(exPrice.getText()).multiply(BigDecimal.valueOf(unitMultiplierPrice.doubleValue())).toBigInteger();
-                    if (stopPrice.compareTo(BigInteger.valueOf(500)) < 0) throw new Exception();
-                } catch (Exception e) {
-                    //notification("Invalid Price");
-                    return;
-                }
-                double total = (stopPrice.doubleValue() / 100_000_000) * amount.doubleValue();
-                exchangeTotalPurchase.setText("Total - " + format2.format(total / unitMultiplierPrice.doubleValue()) + unitSelectorPrice.getSelectionModel().getSelectedItem().getText());
-            }
-        });
-
-
-        JFXTreeTableColumn<StoredTrans, String> oaColumn = new JFXTreeTableColumn<>("Sender");
-        oaColumn.setPrefWidth(150);
-        oaColumn.setCellValueFactory((TreeTableColumn.CellDataFeatures<StoredTrans, String> param) -> {
-            if (oaColumn.validateValue(param)) return param.getValue().getValue().otherAddress;
-            else return oaColumn.getComputedValue(param);
-        });
-
-        JFXTreeTableColumn<StoredTrans, Double> amtColumn = new JFXTreeTableColumn<>("Amount");
-        amtColumn.setPrefWidth(150);
-
-        amtColumn.setCellValueFactory((TreeTableColumn.CellDataFeatures<StoredTrans, Double> param) -> {
-            if (amtColumn.validateValue(param)) {
-                return param.getValue().getValue().amount.asObject();
-            } else return amtColumn.getComputedValue(param);
-        });
-        JFXTreeTableColumn<StoredTrans, String> sentColumn = new JFXTreeTableColumn<>("Direction");
-        sentColumn.setPrefWidth(100);
-        sentColumn.setCellValueFactory((TreeTableColumn.CellDataFeatures<StoredTrans, String> param) -> {
-            if (sentColumn.validateValue(param)) return param.getValue().getValue().sent;
-            else return sentColumn.getComputedValue(param);
-        });
-        JFXTreeTableColumn<StoredTrans, String> msgColumn = new JFXTreeTableColumn<>("Message");
-        msgColumn.setPrefWidth(150);
-        msgColumn.setCellValueFactory((TreeTableColumn.CellDataFeatures<StoredTrans, String> param) -> {
-            if (msgColumn.validateValue(param)) return param.getValue().getValue().message;
-            else return msgColumn.getComputedValue(param);
-        });
-
-        JFXTreeTableColumn<StoredTrans, String> tsColumn = new JFXTreeTableColumn<>("Timestamp");
-        tsColumn.setPrefWidth(150);
-        tsColumn.setCellValueFactory((TreeTableColumn.CellDataFeatures<StoredTrans, String> param) -> {
-            if (tsColumn.validateValue(param)) return param.getValue().getValue().timestamp;
-            else return tsColumn.getComputedValue(param);
-        });
-
-        JFXTreeTableColumn<StoredTrans, String> addColumn = new JFXTreeTableColumn<>("Address");
-        addColumn.setPrefWidth(150);
-        addColumn.setCellValueFactory((TreeTableColumn.CellDataFeatures<StoredTrans, String> param) -> {
-            if (addColumn.validateValue(param)) return param.getValue().getValue().address;
-            else return addColumn.getComputedValue(param);
-        });
-
-        JFXTreeTableColumn<StoredTrans, String> hColumn = new JFXTreeTableColumn<>("Height");
-        hColumn.setPrefWidth(150);
-        hColumn.setCellValueFactory((TreeTableColumn.CellDataFeatures<StoredTrans, String> param) -> {
-            if (hColumn.validateValue(param)) return param.getValue().getValue().height;
-            else return hColumn.getComputedValue(param);
-        });
-        JFXTreeTableColumn<StoredTrans, ObservableList<String>> outColumn = new JFXTreeTableColumn<>("Outputs");
-        outColumn.setPrefWidth(400);
-        outColumn.setCellValueFactory((TreeTableColumn.CellDataFeatures<StoredTrans, ObservableList<String>> param) -> {
-            if (outColumn.validateValue(param)) return param.getValue().getValue().outputs;
-            else return outColumn.getComputedValue(param);
-        });
-        JFXTreeTableColumn<StoredTrans, ObservableList<String>> inColumn = new JFXTreeTableColumn<>("Inputs");
-        inColumn.setPrefWidth(400);
-        inColumn.setCellValueFactory((TreeTableColumn.CellDataFeatures<StoredTrans, ObservableList<String>> param) -> {
-            if (inColumn.validateValue(param)) return param.getValue().getValue().inputs;
-            else return inColumn.getComputedValue(param);
-        });
-
-        JFXTreeTableColumn<StoredTrans, Double> feeColumn = new JFXTreeTableColumn<>("Fee");
-        feeColumn.setPrefWidth(150);
-        feeColumn.setCellValueFactory((TreeTableColumn.CellDataFeatures<StoredTrans, Double> param) -> {
-            if (feeColumn.validateValue(param)) return param.getValue().getValue().fee.asObject();
-            else return feeColumn.getComputedValue(param);
-        });
-        final TreeItem<StoredTrans> root = new RecursiveTreeItem<StoredTrans>(transactions, RecursiveTreeObject::getChildren);
-
-        transactionTable.setRoot(root);
-        transactionTable.setShowRoot(false);
-        transactionTable.setEditable(false);
-        transactionTable.getColumns().setAll(addColumn, oaColumn, amtColumn, sentColumn, msgColumn, outColumn, inColumn, feeColumn, tsColumn);
-        transactionTable.group(addColumn);
-
-
-        searchBox.textProperty().addListener((o, oldVal, newVal) -> {
-            transactionTable.setPredicate(transFilter -> transFilter.getValue().address.get().contains(newVal)
-                    || transFilter.getValue().timestamp.get().contains(newVal)
-                    || transFilter.getValue().sent.get().contains(newVal)
-                    || transFilter.getValue().amount.toString().contains(newVal)
-                    || transFilter.getValue().otherAddress.get().contains(newVal)
-                    || transFilter.getValue().message.get().contains(newVal));
-
-        });
-        transactionTable.currentItemsCountProperty().addListener(new ChangeListener<Number>() {
-            @Override
-            public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
-                expandTreeView(transactionTable.getRoot());
-            }
-        });
-        amountOfTransactions.textProperty().bind(Bindings.createStringBinding(() -> transactionTable.getCurrentItemsCount() + "",
-                transactionTable.currentItemsCountProperty()));
-        miningIntesity.valueProperty().addListener(new ChangeListener<Number>() {
-            @Override
-            public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
-                for (IMiner miner : ki.getMinerMan().getMiners()) {
-                    miner.setIntensity(newValue.doubleValue());
-                }
-            }
-        });
-        backToBE.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-                blockPane.setVisible(false);
-                blockExplorerPane.setVisible(true);
-            }
-        });
-        previousBlock.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-                if (currentBlock.subtract(BigInteger.ONE).compareTo(BigInteger.ZERO) > 0)
-                    setupBlockPane(currentBlock.subtract(BigInteger.ONE));
-            }
-        });
-        nextBlock.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-                if (currentBlock.add(BigInteger.ONE).compareTo(ki.getChainMan().currentHeight()) <= 0)
-                    setupBlockPane(currentBlock.add(BigInteger.ONE));
-            }
-        });
-        try {
-            if (guiXAM.getBytes("transactions") != null) {
-                HeadlessPrefixedAmplet hpa = HeadlessPrefixedAmplet.create(guiXAM.getBytes("transactions"));
-
-                new Thread() {
-
-                    public void run() {
-
-                        while (hpa.hasNextElement()) {
-                            try {
-                                ITrans t = Transaction.fromAmplet(Amplet.create(hpa.getNextElement()));
-                                if (t == null) continue;
-                                sTrans.add(t);
-                                addTransaction(t, (heightMap.get(t.getID()) == null) ? ki.getChainMan().currentHeight() : heightMap.get(t.getID()));
-                            } catch (Exception e) {
-                                ki.getMainLog().error("Error loading saved transactions for GUI: ", e);
-                            }
-                        }
-                    }
-                }.start();
-
-            }
-        } catch (Exception e) {
-            ki.getMainLog().error("Error loading saved transactions for GUI: ", e);
-        }
-        addressControls.getChildren().remove(multiSigVbox);
-        singleSig.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-                if (createMultiSig) {
-                    createMultiSig = false;
-                    addressControls.getChildren().remove(multiSigVbox);
-                }
-            }
-        });
-        multiSig.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-                if (!createMultiSig) {
-                    createMultiSig = true;
-                    addressControls.getChildren().add(multiSigVbox);
-                }
-            }
-        });
-        miningDataHbox.setSpacing(10);
-        addressLabel.setText("Address - " + ki.getAddMan().getMainAdd().encodeForChain());
-        syncProgress.setProgress(0);
         submitPassword.setBackground(new Background(new BackgroundFill(Color.valueOf(ki.getStringSetting(StringSettings.PRIMARY_COLOR)), CornerRadii.EMPTY, Insets.EMPTY)));
         passwordField.setLabelFloat(true);
-
         confirmPassword.setLabelFloat(true);
         if (pmap.get("fr") != null) {
             passwordVbox.getChildren().remove(confirmPassword);
             confirmPassword.setDisable(true);
         }
         RequiredFieldValidator validator = new RequiredFieldValidator();
-        //validator.setMessage("Input Required");
         passwordField.getValidators().add(validator);
         confirmPassword.getValidators().add(validator);
         passwordField.focusedProperty().addListener((o, oldVal, newVal) -> {
@@ -1127,9 +562,7 @@ public class NewGUI implements GUIHook {
         confirmPassword.focusedProperty().addListener((o, oldVal, newVal) -> {
             if (!newVal) confirmPassword.validate();
         });
-        tokenLabel.setMinWidth(walletAmount.getWidth());
-        //tokenLabel.setPrefWidth(walletAmount.getWidth());
-        //tokenLabel.setMaxWidth(walletAmount.getWidth());
+
         lockAnimation = new Timeline(new KeyFrame(Duration.millis(500), new KeyValue(lockPane.layoutYProperty(), 500, EASE_BOTH)), new KeyFrame(Duration.millis(500), new KeyValue(lockPane.opacityProperty(), 0, EASE_BOTH)));
         submitPassword.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
             @Override
@@ -1137,33 +570,8 @@ public class NewGUI implements GUIHook {
                 handlePassword();
             }
         });
-        versionLabel.setText("Version - " + ki.getVersion());
-        /*
-        stage.setOnCloseRequest(new EventHandler<WindowEvent>() {
-            @Override
-            public void handle(WindowEvent event) {
-                System.out.println("Close requested");
-                close = true;
-            }
-        });
-        */
-        deleteAddress.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-                if (ki.getAddMan().getMainAdd().encodeForChain().equals(addressList.getSelectionModel().getSelectedItem())) {
-                    notification("Cannot delete main address");
-                    return;
-                }
-                ki.getAddMan().deleteAddress(Address.decodeFromChain(addressList.getSelectionModel().getSelectedItem()));
-                addressList.getItems().remove(addressList.getSelectionModel().getSelectedIndex());
-            }
-        });
-        if (ki.getStringSetting(StringSettings.POOL_PAYTO) != null && !ki.getStringSetting(StringSettings.POOL_PAYTO).isEmpty())
-            paytoAddress.setText(ki.getStringSetting(StringSettings.POOL_PAYTO));
-        if (ki.getStringSetting(StringSettings.POOL_SERVER) != null && !ki.getStringSetting(StringSettings.POOL_SERVER).isEmpty())
-            ipField.setText(ki.getStringSetting(StringSettings.POOL_SERVER));
-        addressList.setBackground(new Background(new BackgroundFill(Color.GRAY, CornerRadii.EMPTY, Insets.EMPTY)));
-        List<Pane> content = new ArrayList<>();
+
+        content = new ArrayList<>();
         content.add(settingsPane);
         content.add(walletPane);
         content.add(miningTab);
@@ -1175,6 +583,7 @@ public class NewGUI implements GUIHook {
         content.add(poolRelay);
         content.add(exchangePane);
         content.add(ohPane);
+        content.add(axcPane);
         Label pc = new Label("Primary Color");
         Label sc = new Label("Secondary Color");
         Label pt = new Label("Primary Text Color");
@@ -1200,358 +609,49 @@ public class NewGUI implements GUIHook {
                         EASE_BOTH)));
         animation.setDelay(Duration.millis(500));
         animation.play();
-        transactionTable.setStyle("-fx-background-color:DIMGRAY");
-        debugMode.setTextFill(Color.WHITE);
-        requirePassword.setTextFill(Color.WHITE);
-        highSecurity.setTextFill(Color.WHITE);
-        poolDynamicFee.setTextFill(Color.WHITE);
-        autoMine.setTextFill(Color.WHITE);
-        autoMine.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-                ki.setSetting(Settings.AUTO_MINE, autoMine.isSelected());
-            }
-        });
-        pplnsClient.setSelected(ki.getSetting(Settings.PPLNS_CLIENT));
-        pplnsServer.setSelected(ki.getSetting(Settings.PPLNS_SERVER));
-        pplnsClient.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-                ki.setSetting(Settings.PPLNS_CLIENT, pplnsClient.isSelected());
-            }
-        });
-        pplnsServer.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-                ki.setSetting(Settings.PPLNS_SERVER, pplnsServer.isSelected());
-            }
-        });
-        poolDynamicFee.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-                if (poolDynamicFee.isSelected()) {
-                    poolDynamicFeeSlider.setDisable(false);
-                    poolStaticFee.setDisable(true);
-                    BigDecimal sd = new BigDecimal(GPUMiner.shareDiff);
-                    BigDecimal cd = new BigDecimal(ki.getChainMan().getCurrentDifficulty());
-                    long pps = (long) (((cd.divide(sd, 9, RoundingMode.HALF_DOWN).doubleValue() * ChainManager.blockRewardForHeight(ki.getChainMan().currentHeight()).longValueExact()) * (1 - (poolDynamicFeeSlider.getValue() / 100))));
-                    ki.getPoolManager().updateCurrentPayPerShare(pps);
-                } else {
-                    poolDynamicFeeSlider.setDisable(true);
-                    poolStaticFee.setDisable(false);
-                }
-                ki.setSetting(Settings.DYNAMIC_FEE, poolDynamicFee.isSelected());
-            }
-        });
-        poolDynamicFeeSlider.valueProperty().addListener(new ChangeListener<Number>() {
-            @Override
-            public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
-                BigDecimal sd = new BigDecimal(GPUMiner.shareDiff);
-                BigDecimal cd = new BigDecimal(ki.getChainMan().getCurrentDifficulty());
-                long pps = (long) (((cd.divide(sd, 9, RoundingMode.HALF_DOWN).doubleValue() * ChainManager.blockRewardForHeight(ki.getChainMan().currentHeight()).longValueExact()) * (1 - (poolDynamicFeeSlider.getValue() / 100))));
-                ki.getPoolManager().updateCurrentPayPerShare(pps);
-                ki.setStringSetting(StringSettings.POOL_FEE, poolDynamicFeeSlider.getValue() + "");
-            }
-        });
-        poolStaticFee.textProperty().addListener(new ChangeListener<String>() {
-            @Override
-            public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
-                try {
-                    double fee = Double.parseDouble(newValue);
 
-                    long pps = (long) (fee * 100_000_000L);
-                    ki.setStringSetting(StringSettings.POOL_STATIC_PPS, "" + pps);
-                    ki.getPoolManager().updateCurrentPayPerShare(pps);
-                } catch (NumberFormatException e) {
-                    ki.getMainLog().warn("Could not parse static pool fee " + newValue);
-                }
-            }
-        });
         menuDrawer.close();
         borderPane.setStyle("-fx-background-color:" + ki.getStringSetting(StringSettings.SECONDARY_COLOR));
-        VBox vb = new VBox();
+        vb = new VBox();
         vb.setMaxWidth(Double.MAX_VALUE);
-        //Image img = new Image(getClass().getResourceAsStream("/origin.png"));
-        //vb.setBackground(new Background(new BackgroundImage(img, BackgroundRepeat.NO_REPEAT, BackgroundRepeat.NO_REPEAT, BackgroundPosition.CENTER, BackgroundSize.DEFAULT)));
         vb.setFillWidth(true);
-        List<String> adds = new ArrayList<>();
-        for (IAddress add : ki.getAddMan().getAll()) {
-            if (!adds.contains(add.encodeForChain())) {
-                addressList.getItems().add(add.encodeForChain());
-                adds.add(add.encodeForChain());
-            }
-        }
-        payoutSlider.valueProperty().addListener(new ChangeListener<Number>() {
-            @Override
-            public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
-                ki.getPoolManager().updateCurrentPayInterval(newValue.longValue() * 60_000L);
-            }
-        });
 
-        orderHistory.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-
-                exchangePane.setVisible(false);
-                prepareOH();
-                ohPane.setVisible(true);
-            }
-        });
-        backToEx.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-                ohPane.setVisible(false);
-                exchangePane.setVisible(true);
-            }
-        });
-        entropyLabel.setWrapText(true);
-        entropyLabel.setMaxWidth(256);
-
-        for (KeyType type : KeyType.values()) {
-            if (!type.equals(KeyType.NONE))
-                keyType.getItems().add(new Label(type.toString()));
-        }
-        for (AddressLength l : AddressLength.values()) {
-            addressLength.getItems().add(new Label(l.toString()));
-        }
-        addressLength.getSelectionModel().select(0);
-        keyType.getSelectionModel().select(0);
-        addressList.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<String>() {
-            @Override
-            public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
-                entropyLabel.setText("Entropy of Selection: \n" + ki.getAddMan().getEntropyForAdd(Address.decodeFromChain(addressList.getSelectionModel().getSelectedItem())));
-                ByteArrayOutputStream out = QRCode.from(newValue + "," + "NONE" + "," + " ").to(ImageType.PNG).stream();
-                ByteArrayInputStream in = new ByteArrayInputStream(out.toByteArray());
-                qrCodeView.setImage(new Image(in));
-
-            }
-        });
-        Map<String, Byte> keys = new HashMap<>();
-        addKeyBtn.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-                try {
-                    if (EncryptionManager.pubKeyFromString(addPubKey.getText(), KeyType.valueOf(keyType.getSelectionModel().getSelectedItem().getText())) == null) {
-                        notification("Invalid Key");
-                        return;
-                    }
-
-                    keys.put(addPubKey.getText(), KeyType.valueOf(keyType.getSelectionModel().getSelectedItem().getText()).getValue());
-                    int selection;
-                    if (sigsRequired.getItems().size() > 0)
-                        selection = sigsRequired.getSelectionModel().getSelectedIndex();
-                    else
-                        selection = 0;
-                    sigsRequired.getItems().clear();
-                    for (int i = 0; i < keys.size(); i++) {
-                        sigsRequired.getItems().add(new Label(i + 1 + " of " + keys.size()));
-                    }
-                    sigsRequired.getSelectionModel().select(selection);
-                } catch (RuntimeException e) {
-                    throw e;
-                } catch (Exception e) {
-                    notification("Invalid key");
-                }
-            }
-        });
-        clearKeys.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-                keys.clear();
-                sigsRequired.getItems().clear();
-            }
-        });
-        createAddress.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-                IAddress a;
-                if (entropyField.getText().isEmpty()) {
-                    notification("Entropy cannot be empty when creating an address");
-                    return;
-                }
-                if (!createMultiSig) {
-
-                    if (prefixField.getText() == null || prefixField.getText().isEmpty()) {
-                        a = ki.getAddMan().createNew(ki.getEncryptMan().getPublicKeyString(KeyType.valueOf(keyType.getSelectionModel().getSelectedItem().getText())), entropyField.getText(), null, AddressLength.valueOf(addressLength.getSelectionModel().getSelectedItem().getText()), false, KeyType.valueOf(keyType.getSelectionModel().getSelectedItem().getText()));
-                    } else {
-                        if (prefixField.getText().length() != 5) {
-                            notification("Prefixes must be exactly 5 characters long");
-                            return;
-                        }
-                        if (prefixField.getText().contains(" ")) {
-                            notification("Prefixes cannot contain spaces");
-                            return;
-                        }
-                        a = ki.getAddMan().createNew(ki.getEncryptMan().getPublicKeyString(KeyType.valueOf(keyType.getSelectionModel().getSelectedItem().getText())), entropyField.getText(), prefixField.getText(), AddressLength.valueOf(addressLength.getSelectionModel().getSelectedItem().getText()), false, KeyType.valueOf(keyType.getSelectionModel().getSelectedItem().getText()));
-                    }
-                    addressList.getItems().add(a.encodeForChain());
-                } else {
-                    try {
-                        if (keys.isEmpty()) {
-                            notification("No keys have been added");
-                            return;
-                        }
-                        Binary bin = ki.getScriptMan().buildMultiSig(keys, sigsRequired.getSelectionModel().getSelectedIndex() + 1, ki.getBCE8(), entropyField.getText().getBytes("UTF-8"), ki.getEncryptMan().getPublicKey(KeyType.valueOf(keyType.getSelectionModel().getSelectedItem().getText())).getEncoded());
-                        bin.getProgram().seal();
-                        if (prefixField.getText() == null || prefixField.getText().isEmpty()) {
-
-                            a = ki.getAddMan().createNew(Utils.toBase64(bin.serializeToAmplet().serializeToBytes()), entropyField.getText(), null, AddressLength.valueOf(addressLength.getSelectionModel().getSelectedItem().getText()), true, KeyType.NONE);
-                        } else {
-                            if (prefixField.getText().length() != 5) {
-                                notification("Prefixes must be exactly 5 characters long");
-                                return;
-                            }
-                            if (prefixField.getText().contains(" ")) {
-                                notification("Prefixes cannot contain spaces");
-                                return;
-                            }
-                            a = ki.getAddMan().createNew(Utils.toBase64(bin.serializeToAmplet().serializeToBytes()), entropyField.getText(), prefixField.getText(), AddressLength.valueOf(addressLength.getSelectionModel().getSelectedItem().getText()), true, KeyType.NONE);
-
-                        }
-                        ki.getAddMan().associateBinary(a, bin);
-                    } catch (UnsupportedEncodingException e) {
-                        ki.getMainLog().warn("Unable to create multi-sig address", e);
-                        return;
-                    }
-                    addressList.getItems().add(a.encodeForChain());
-                }
-            }
-        });
-
-        saveMSAddress.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-                if (ki.getAddMan().getMainAdd().isP2SH()) {
-                    BinALPreBucket bucket = new BinALPreBucket(ki.getAddMan().getBinary(ki.getAddMan().getMainAdd()), ki.getAddMan().getMainAdd().getAddressLength(), (ki.getAddMan().getMainAdd().hasPrefix()) ? ki.getAddMan().getMainAdd().getPrefix() : null);
-                    try (FileOutputStream fos = new FileOutputStream("multisig.address")) {
-                        fos.write(bucket.serializeToBytes());
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                } else {
-                    notification("Set the multi-sig address as your spend address to save");
-                }
-            }
-        });
-
-        loadMSAddress.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-                try {
-                    Path path = Paths.get("multisig.address");
-                    BinALPreBucket bucket = BinALPreBucket.fromBytes(Files.readAllBytes(path));
-                    for (int i = 0; i < 32; i++) {
-                        KeyKeyTypePair kktp = KeyKeyTypePair.fromBytes(bucket.getBin().getConstantMemory().getElement(i).getData());
-                        if (ki.getEncryptMan().getPublicKeyString(kktp.getKeyType()).equals(Utils.toBase64(kktp.getKey()))) {
-                            IAddress a = ki.getAddMan().createNew(Utils.toBase64(bucket.getBin().serializeToAmplet().serializeToBytes()), new String(bucket.getBin().getEntropy(), "UTF-8"), bucket.getPrefix(), bucket.getAl(), true, KeyType.NONE);
-                            ki.getAddMan().associateBinary(a, bucket.getBin());
-                            addressList.getItems().add(a.encodeForChain());
-
-                            return;
-                        }
-                    }
-                    notification("Your keys don't exist in this address, not adding");
-                } catch (RuntimeException e) {
-                    throw e;
-                } catch (Exception e) {
-                    notification("Loading multisig from multisig.address file failed");
-                    //fail quietly for now
-                }
-            }
-        });
-
-        setSpendAddress.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-                ki.getAddMan().setMainAdd(Address.decodeFromChain(addressList.getSelectionModel().getSelectedItem()));
-                addressLabel.setText("Address - " + ki.getAddMan().getMainAdd().encodeForChain());
-            }
-        });
-        blockExplorerPane.visibleProperty().addListener(new ChangeListener<Boolean>() {
-            @Override
-            public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
-                if (blockExplorerPane.visibleProperty().get()) {
-                    fillMasonry(ki.getChainMan().currentHeight().subtract(BigInteger.valueOf(100)), ki.getChainMan().currentHeight());
-                }
-            }
-        });
         if (!ki.getOptions().pool) {
-            vb.getChildren().add(buildMainButton("Wallet", "/Wallet.png", 0, 0, content, walletPane));
-            vb.getChildren().add(buildMainButton("Address", "/home.png", 100, 0, content, addressPane));
-            vb.getChildren().add(buildMainButton("ADX", "/exchange.png", 200, 5, content, exchangePane));
+            vb.getChildren().add(buildMainButton("Wallet", "/Wallet.png", 0, 0, content, walletPane, 1));
+            vb.getChildren().add(buildMainButton("Address", "/home.png", 100, 0, content, addressPane, 1));
+            vb.getChildren().add(buildMainButton("", "/adxlogo.png", 200, 0, content, exchangePane, 3));
+            vb.getChildren().add(buildMainButton("AXC", "/axclogo.png", 300, 5, content, axcPane, 1.2));
         } else if (ki.getOptions().pool && !ki.getOptions().poolRelay) {
-            vb.getChildren().add(buildMainButton("Pool", "/pool.png", 100, 3, content, poolPane));
+            vb.getChildren().add(buildMainButton("Pool", "/pool.png", 100, 3, content, poolPane, 1));
         }
         if (ki.getOptions().poolRelay) {
-            vb.getChildren().add(buildMainButton("Pool", "/pool.png", 100, 3, content, poolRelay));
+            vb.getChildren().add(buildMainButton("Pool", "/pool.png", 100, 3, content, poolRelay, 1));
         }
-        //vb.getChildren().add(buildButton("Transactions","/Transactions.png",100));
         if (!ki.getOptions().poolRelay)
-            vb.getChildren().add(buildMainButton("Mining", "/gpu.png", 300, 1, content, miningTab));
+            vb.getChildren().add(buildMainButton("Mining", "/gpu.png", 400, 1, content, miningTab, 1));
 
         if (!ki.getOptions().lite && !ki.getOptions().pool)
-            vb.getChildren().add(buildMainButton("Blocks", "/Block.png", 400, 0, content, blockExplorerPane));
-        vb.getChildren().add(buildMainButton("Settings", "/Settings.png", 500, 0, content, settingsPane));
-        vb.getChildren().add(buildMainButton("Help", "/Help.png", 600, 7, content, helpPane));
+            vb.getChildren().add(buildMainButton("Blocks", "/Block.png", 500, 0, content, blockExplorerPane, 1));
+        vb.getChildren().add(buildMainButton("Settings", "/Settings.png", 600, 0, content, settingsPane, 1));
+        vb.getChildren().add(buildMainButton("Help", "/Help.png", 700, 7, content, helpPane, 1));
         vb.getChildren().add(new Separator());
-        if (!ki.getOptions().lite && !ki.getOptions().pool)
-            fillMasonry(ki.getChainMan().currentHeight().subtract(BigInteger.valueOf(100)), ki.getChainMan().currentHeight());
-        chainHeight2.setFont(acg10);
-        ch2dec.setFont(acg10);
-        //chainHeight2.setPrefHeight(80);
-        ch2dec.setMinWidth(90);
-        ch2dec.setTextAlignment(TextAlignment.CENTER);
-        if (!ki.getOptions().pool) {
-            vb.getChildren().add(ch2dec);
 
+        if (!ki.getOptions().pool) {
+            chainHeight2.setFont(acg10);
+            ch2dec.setFont(acg10);
+            ch2dec.setMinWidth(90);
+            ch2dec.setTextAlignment(TextAlignment.CENTER);
+            vb.getChildren().add(ch2dec);
             chainHeight2.setMinWidth(90);
             chainHeight2.setTextAlignment(TextAlignment.CENTER);
             vb.getChildren().add(chainHeight2);
         }
-        resetColors.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-                colorCombos.getSelectionModel().select(1);
-                colorPicker.setValue(Color.valueOf("#252830"));
-                colorCombos.getSelectionModel().select(0);
-                colorPicker.setValue(Color.valueOf("#18BC9C"));
-            }
-        });
 
-        latency.setFont(acg10);
-        if (!ki.getOptions().pool)
+        if (!ki.getOptions().pool) {
+            latency.setFont(acg10);
             vb.getChildren().add(latency);
-        //vb.setStyle("-fx-background-color:" + ki.getStringSetting(StringSettings.PRIMARY_COLOR));
-        //vb.setBackground(new Background(new BackgroundImage(img, BackgroundRepeat.NO_REPEAT, BackgroundRepeat.NO_REPEAT, BackgroundPosition.CENTER, BackgroundSize.DEFAULT)));
+        }
         menuDrawer.getSidePane().add(vb);
-        goBE.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-                int start = 0;
-                try {
-                    start = Integer.parseInt(fromBlock.getText());
-                } catch (NumberFormatException e) {
-                    return;
-                }
-                int end = 0;
-                try {
-                    end = Integer.parseInt(toBlock.getText());
-                } catch (NumberFormatException e) {
-                    return;
-                }
-
-                if (start >= end) {
-                    return;
-                }
-                if (start < 0) {
-                    return;
-                }
-                if (BigInteger.valueOf(end).compareTo(ki.getChainMan().currentHeight()) > 0) {
-                    return;
-                }
-                fillMasonry(BigInteger.valueOf(start), BigInteger.valueOf(end));
-            }
-        });
         HamburgerSlideCloseTransition burgerTask = new HamburgerSlideCloseTransition(menuHamburger);
         burgerTask.setRate(-1);
         menuHamburger.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
@@ -1573,78 +673,6 @@ public class NewGUI implements GUIHook {
             }
         });
 
-        ChangeListener<Color> cpListener = (observable, oldValue, newValue) -> {
-            //System.out.println("Color changed");
-            if (colorCombos.getSelectionModel().getSelectedItem().getText().contains("Primary Color")) {
-                //System.out.println("Changing primary");
-                menuHamburger.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
-
-                vb.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
-
-                sendButton.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
-                //sendButton.setOpacity(255);
-                loadTransaction.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
-                copyAddress.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
-                copySelectedAdd.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
-                copyPublicKey.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
-                startMining.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
-                //System.out.println("style:" + miningIntesity.getStyle());
-                String color = colorPicker.getValue().toString().replace("0x", "");
-                color = "#" + color;
-                //System.out.println("color: " + color);
-                miningIntesity.setStyle("-jfx-default-thumb:" + color);
-                createAddress.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
-                saveMSAddress.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
-                loadMSAddress.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
-                deleteAddress.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
-                setSpendAddress.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
-                changePassword.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
-                backToBE.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
-                backToEx.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
-                nextBlock.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
-                previousBlock.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
-                goBE.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
-                poolConnect.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
-                poolDisconnect.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
-                resetColors.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
-                exchangeBuy.setBackground(new Background(new BackgroundFill(Color.valueOf("#18BC9C"), CornerRadii.EMPTY, Insets.EMPTY)));
-                orderHistory.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
-                limitBuy.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
-                marketBuy.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
-                exchangeSell.setBackground(new Background(new BackgroundFill(Color.valueOf("#c84128"), CornerRadii.EMPTY, Insets.EMPTY)));
-                sellLabel.setTextFill(Color.valueOf("#c84128"));
-                buyLabel.setTextFill(Color.valueOf("#18BC9C"));
-                poolDynamicFeeSlider.setStyle("-jfx-default-thumb:" + color);
-                payoutSlider.setStyle("-jfx-default-thumb:" + color);
-                addKeyBtn.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
-                singleSig.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
-                multiSig.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
-                clearKeys.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
-
-                ki.setStringSetting(StringSettings.PRIMARY_COLOR, color);
-
-                //miningIntesity.getClip().setStyle("-fx-background-color:"+color);
-
-            } else if (colorCombos.getSelectionModel().getSelectedItem().getText().contains("Secondary Color")) {
-                String color = colorPicker.getValue().toString().replace("0x", "");
-                color = "#" + color;
-                topPane.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
-                borderPane.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
-                for (Pane p : content) {
-                    p.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
-                }
-                ki.setStringSetting(StringSettings.SECONDARY_COLOR, color);
-            } else if (colorCombos.getSelectionModel().getSelectedItem().getText().contains("Text Primary")) {
-                for (Node n : vb.getChildren()) {
-                    ((JFXButton) n).setTextFill(colorPicker.getValue());
-                }
-            } else if (colorCombos.getSelectionModel().getSelectedItem().getText().contains("Text Secondary")) {
-
-            }
-
-        };
-        colorPicker.valueProperty().addListener(cpListener);
-        colorPicker.setValue(Color.valueOf("#18BC9C"));
         menuHamburger.setStyle(vb.getStyle());
         menuDrawer.addEventHandler(MouseEvent.MOUSE_RELEASED, new EventHandler<MouseEvent>() {
             @Override
@@ -1655,708 +683,20 @@ public class NewGUI implements GUIHook {
                 }
             }
         });
+        if (ki.getOptions().pool) {
+            setupPoolClient();
 
-        poolConnect.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-                if (paytoAddress.getText().isEmpty()) return;
-                ki.getPoolData().payTo = Address.decodeFromChain(paytoAddress.getText());
-                ki.getNetMan().attemptConnect(ipField.getText());
-                ki.getPoolData().poolConn = ipField.getText();
-                ki.setStringSetting(StringSettings.POOL_PAYTO, paytoAddress.getText());
-                ki.setStringSetting(StringSettings.POOL_SERVER, ipField.getText());
-            }
-        });
-        poolDisconnect.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-                for (IConnectionManager connMan : ki.getNetMan().getConnections()) {
-                    connMan.disconnect();
-                    ki.getNetMan().getConnections().clear();
-                    ki.getPoolData().poolConn = "";
-                }
-            }
-        });
-        for (String dev : ki.getMinerMan().getDevNames()) {
-            XYChart.Series<String, Number> series = new XYChart.Series<>();
-            hashrateChart.getData().add(series);
-            series.setName(dev);
+        } else if (ki.getOptions().poolRelay) {
+            setupPoolServer();
+        } else if (ki.getOptions().lite) {
+            setupLite();
+        } else {
+            setupFull();
         }
-
-        hashrateChart.getXAxis().setLabel("");
-        hashrateChart.setLegendVisible(true);
-        hashrateChart.setCreateSymbols(false);
-        hashrateChart.getXAxis().setAnimated(false);
-
-        sendButton.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-                if (multiSigTransCache != null) {
-
-                    multiSigTransCache.addSig(Utils.toBase64(multiSigBinaryCache.serializeToAmplet().serializeToBytes()), Utils.toBase64(multiSigWMCache.serializeToBytes()));
-
-                    if (ki.getTransMan().verifyTransaction(multiSigTransCache)) {
-                        ki.getTransMan().getPending().add(multiSigTransCache);
-                        for (IInput i : multiSigTransCache.getInputs()) {
-                            ki.getTransMan().getUsedUTXOs().add(i.getID());
-                        }
-                        TransactionPacket tp = new TransactionPacket();
-                        tp.trans = multiSigTransCache.serializeToAmplet().serializeToBytes();
-                        ki.getNetMan().broadcast(tp);
-                        notification("Sent transaction");
-
-                    } else {
-                        notification("Not enough signatures. Saving transaction to file.");
-                        try (FileOutputStream fos = new FileOutputStream("Transaction.amp")) {
-                            fos.write(multiSigTransCache.serializeToAmplet().serializeToBytes());
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                } else if (!ki.getAddMan().getMainAdd().isP2SH()) {
-                    if (ki.getEncryptMan().getPublicKey(ki.getAddMan().getMainAdd().getKeyType()) != null) {
-
-                        Token token = Token.byName(tokenBox.getSelectionModel().getSelectedItem().getText());
-
-                        BigDecimal amt = new BigDecimal(amountText.getText());
-
-                        BigInteger amount = amt.multiply(new BigDecimal("100000000.0")).toBigInteger();
-
-                        IAddress receiver;
-                        try {
-                            receiver = Address.decodeFromChain(addressText.getText());
-                        } catch (Exception e) {
-                            notification("Send To Address Incorrect");
-                            return;
-                        }
-                        // Output output = new Output(amount, receiver, token, index, System.currentTimeMillis(), (byte) 2);
-                        //java.util.List<Output> outputs = new ArrayList<>();
-                        //outputs.add(output);
-
-                        //keys.add(ki.getEncryptMan().getPublicKeyString(ki.getAddMan().getMainAdd().getKeyType()));
-                        //java.util.List<Input> inputs = new ArrayList<>();
-                        BigInteger fee;
-                        if (feeText.getText() == null || feeText.getText().isEmpty()) {
-                            fee = BigInteger.TEN;
-                        } else {
-                            BigDecimal dFee = new BigDecimal(feeText.getText());
-                            fee = dFee.multiply(new BigDecimal("100000000.0")).toBigInteger();
-                            if (fee.compareTo(BigInteger.TEN) < 0) {
-                                fee = BigInteger.TEN;
-                            }
-                        }
-                        ki.getMainLog().info("Fee is: " + fee.toString());
-                        /*
-                        BigInteger totalInput = BigInteger.ZERO;
-                        for (IAddress a : ki.getAddMan().getActive()) {
-                            if (ki.getTransMan().getUTXOs(a, true) == null) return;
-                            for (Output o : ki.getTransMan().getUTXOs(a, true)) {
-                                if (o.getToken().equals(token)) {
-                                    if (inputs.contains(Input.fromOutput(o))) continue;
-                                    inputs.add(Input.fromOutput(o));
-                                    totalInput = totalInput.add(o.getAmount());
-                                    if (totalInput.compareTo(amount) >= 0) break;
-
-                                }
-                            }
-                            if (totalInput.compareTo(amount) >= 0) break;
-
-                        }
-                        if (totalInput.compareTo(amount) < 0) {
-                            ki.getMainLog().info("Not enough " + token.name() + " to do this transaction");
-                            return; // not enough of this token to send;
-                        }
-
-                        BigInteger feeInput = (token.equals(Token.ORIGIN)) ? totalInput : BigInteger.ZERO;
-                        for (IAddress a : ki.getAddMan().getActive()) {
-                            //get inputs
-                            if (feeInput.compareTo(fee) >= 0) break;
-                            for (Output o : ki.getTransMan().getUTXOs(a, true)) {
-                                if (o.getToken().equals(Token.ORIGIN)) {
-                                    inputs.add(Input.fromOutput(o));
-                                    feeInput = feeInput.add(o.getAmount());
-                                    if (feeInput.compareTo(fee) >= 0) break;
-
-                                }
-                            }
-                        }
-
-                        if (feeInput.compareTo(fee) < 0) {
-                            ki.getMainLog().info("Not enough origin to pay for this fee");
-                            return; //not enough origin to send this kind of fee
-                        }
-                        */
-                        IAddress changeAdd;
-                        if (sendBackToMain.isSelected()) {
-                            changeAdd = ki.getAddMan().getMainAdd();
-                        } else {
-                            try {
-                                changeAdd = Address.decodeFromChain(changeAddress.getText());
-                            } catch (Exception e) {
-                                notification("Invalid Change Address");
-                                return;
-                            }
-                        }
-                        ITrans trans = null;
-
-                        try {
-                            trans = ki.getTransMan().createSimple(receiver, amount, fee, token, messageText.getText(), changeAdd);
-                        } catch (InvalidTransactionException e) {
-                            ki.getMainLog().error("Error creating transaction: ", e);
-                            return;
-                        }
-                        if (ki.getTransMan().verifyTransaction(trans)) {
-                            ki.getTransMan().getPending().add(trans);
-                            for (IInput i : trans.getInputs()) {
-                                ki.getTransMan().getUsedUTXOs().add(i.getID());
-                            }
-                            TransactionPacket tp = new TransactionPacket();
-                            tp.trans = trans.serializeToAmplet().serializeToBytes();
-                            ki.getNetMan().broadcast(tp);
-                            notification("Sent transaction");
-
-                        } else {
-                            ki.debug("Transaction did not verify, not sending and not adding to pending list");
-                            notification("Transaction failed to send");
-                        }
-                    }
-                } else {
-                    //TODO find way to detect if this is a multi-sig wallet, for now we're just going to assume it is
-                    Token token = Token.byName(tokenBox.getSelectionModel().getSelectedItem().getText());
-
-                    BigDecimal amt = new BigDecimal(amountText.getText());
-
-                    BigInteger amount = amt.multiply(new BigDecimal("100000000.0")).toBigInteger();
-
-                    IAddress receiver;
-                    try {
-                        receiver = Address.decodeFromChain(addressText.getText());
-                    } catch (Exception e) {
-                        notification("Send To Address Incorrect");
-                        return;
-                    }
-
-                    BigInteger fee;
-                    if (feeText.getText() == null || feeText.getText().isEmpty()) {
-                        fee = BigInteger.TEN;
-                    } else {
-                        BigDecimal dFee = new BigDecimal(feeText.getText());
-                        fee = dFee.multiply(new BigDecimal("100000000.0")).toBigInteger();
-                        if (fee.compareTo(BigInteger.TEN) < 0) {
-                            fee = BigInteger.TEN;
-                        }
-                    }
-                    ki.getMainLog().info("Fee is: " + fee.toString());
-
-                    ITrans trans = null;
-                    if (ki.getAddMan().getBinary(ki.getAddMan().getMainAdd()) == null) {
-                        ki.getMainLog().warn("Do not have script for address: " + ki.getAddMan().getMainAdd().encodeForChain());
-                        notification("Do not have script for this address");
-                        return;
-                    }
-                    IAddress changeAdd;
-                    if (sendBackToMain.isSelected()) {
-                        changeAdd = ki.getAddMan().getMainAdd();
-                    } else {
-                        try {
-                            changeAdd = Address.decodeFromChain(changeAddress.getText());
-                        } catch (Exception e) {
-                            notification("Invalid Change Address");
-                            return;
-                        }
-                    }
-                    try {
-                        trans = ki.getTransMan().createSimpleMultiSig(ki.getAddMan().getBinary(ki.getAddMan().getMainAdd()), receiver, amount, fee, token, messageText.getText(), 1, changeAdd);
-                    } catch (InvalidTransactionException e) {
-                        ki.getMainLog().error("Error creating transaction: ", e);
-                        return;
-                    }
-                    //TODO this is kind of a weird hack, it relies on the transaction failing to verify to tell if there are enough sigs, we should be specifically checking the sigs.
-                    if (ki.getTransMan().verifyTransaction(trans)) {
-                        ki.getTransMan().getPending().add(trans);
-                        for (IInput i : trans.getInputs()) {
-                            ki.getTransMan().getUsedUTXOs().add(i.getID());
-                        }
-                        TransactionPacket tp = new TransactionPacket();
-                        tp.trans = trans.serializeToAmplet().serializeToBytes();
-                        ki.getNetMan().broadcast(tp);
-                        notification("Sent transaction");
-
-                    } else {
-                        notification("Not enough signatures. Saving transaction to file.");
-                        try (FileOutputStream fos = new FileOutputStream("Transaction.amp")) {
-                            fos.write(trans.serializeToAmplet().serializeToBytes());
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }
-            }
-        });
-        sendBackToMain.selectedProperty().addListener((observable, oldValue, newValue) -> {
-            if (newValue) {
-                changeAddress.setDisable(true);
-                changeAddress.setVisible(false);
-                changeAddress.setText("");
-            } else {
-                changeAddress.setDisable(false);
-                changeAddress.setVisible(true);
-            }
-        });
-        loadTransaction.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-
-                Path path = Paths.get("Transaction.amp");
-                try {
-                    ITrans trans = NewTrans.fromAmplet(Amplet.create(Files.readAllBytes(path)));
-                    IBinary bin = null;
-
-                    for (IAddress a : ki.getAddMan().getAll()) {
-                        if (trans.getInputs().get(0).getAddress().encodeForChain().equals(a.encodeForChain()) && a.isP2SH()) {
-                            bin = ki.getAddMan().getBinary(a);
-                        }
-                    }
-                    if (bin == null) {
-                        notification("Do not have script for the address in this transaction");
-                        return;
-                    }
-                    IWritableMemory wm = WritableMemory.deserializeFromBytes(Utils.fromBase64(trans.getSig(Utils.toBase64(bin.serializeToAmplet().serializeToBytes()))));
-
-                    int i = 0;
-                    for (; i < 32; i++) {
-                        try {
-                            KeyKeyTypePair kktp = KeyKeyTypePair.fromBytes(bin.getConstantMemory().getElement(i).getData());
-                            if (kktp == null) break;
-                            //if (kktp.getKey() == null) break;
-                            if (kktp.getKeyType() == null) break;
-                            if (ki.getEncryptMan().getPublicKeyString(kktp.getKeyType()).equals(Utils.toBase64(kktp.getKey()))) {
-                                wm.setElement(ki.getEncryptMan().sign(trans.toSignBytes(), kktp.getKeyType()), i);
-                            }
-                        } catch (RuntimeException e) {
-                            throw e;
-                        } catch (Exception e) {
-                            //fail quietly
-                            break;
-                        }
-                    }
-                    multiSigTransCache = trans;
-                    multiSigBinaryCache = bin;
-                    multiSigWMCache = wm;
-                    BigInteger amount = BigInteger.ZERO;
-                    for (IOutput out : trans.getOutputs()) {
-                        if (out.getAddress().encodeForChain().equals(trans.getInputs().get(0).getAddress().encodeForChain()))
-                            continue;
-                        addressText.setText(out.getAddress().encodeForChain());
-                        amount = amount.add(out.getAmount());
-                    }
-                    messageText.setText(trans.getMessage());
-                    amountText.setText("" + (amount.doubleValue() / 100_000_000D));
-
-                    //trans.addSig(utils.toBase64(bin.serializeToAmplet().serializeToBytes()),utils.toBase64(wm.serializeToBytes()));
-
-                } catch (IOException e) {
-                    ki.getMainLog().error("Could not load transaction from file Transaction.amp", e);
-                }
-            }
-        });
-        addressList.getSelectionModel().select(0);
-        List<Long> average = new ArrayList<>();
-        XYChart.Series<String, Number> candleSeries = new XYChart.Series<>();
-        exchangeGraph.getData().add(candleSeries);
-        exchangeGraph.getXAxis().setAnimated(false);
-        exchangeGraph.getYAxis().setAnimated(false);
-        exchangeGraph.setAnimated(false);
-        exchangeGraph.setCreateSymbols(false);
-        exchangeGraph.setPrefHeight(5000);
-        exchangeGraph.setPrefWidth(5000);
-        pnlGraph.setLegendVisible(false);
-        ohCancel.setFixedCellSize(40);
-        ohAmount.setFixedCellSize(40);
-        ohDirection.setFixedCellSize(40);
-        ohDate.setFixedCellSize(40);
-        ohPrice.setFixedCellSize(40);
-
-
-        bindScrolls(obSellPrice, obSellSize);
-        bindScrolls(obSellSize, obSellTotal);
-        bindScrolls(obBuyPrice, obBuySize);
-        bindScrolls(obBuySize, obBuyTotal);
-        bindScrolls(obRecentPrice, obRecentAmount);
-        bindScrolls(obRecentAmount, obRecentDirection);
-        bindScrolls(activeAmount, activePrice);
-        ListProperty<Order> sells = new SimpleListProperty<>();
-        sells.set(FXCollections.observableArrayList());
-        sells.bindContent(ki.getExMan().getOrderBook().sells());
-        //sells.set(ki.getExMan().getOrderBook().sells());
-        obSellPrice.itemsProperty().bind(sells);
-        obSellPrice.setCellFactory(param -> new ListCell<Order>() {
-            @Override
-            protected void updateItem(Order item, boolean empty) {
-                super.updateItem(item, empty);
-
-                if (empty || item == null || item.unitPrice() == null) {
-                    setText(null);
-                } else {
-                    setText(format2.format(item.unitPrice().doubleValue() / (unitMultiplierPrice.doubleValue())));
-                }
-            }
-        });
-        obSellSize.itemsProperty().bind(sells);
-        obSellSize.setCellFactory(param -> new ListCell<Order>() {
-            @Override
-            protected void updateItem(Order item, boolean empty) {
-                super.updateItem(item, empty);
-
-                if (empty || item == null || item.amountOnOffer() == null) {
-                    setText(null);
-                } else {
-                    setText(format2.format(item.amountOnOffer().doubleValue() / (unitMultiplierAmount.doubleValue())));
-                }
-            }
-        });
-        obSellTotal.itemsProperty().bind(sells);
-        obSellTotal.setCellFactory(param -> new ListCell<Order>() {
-            @Override
-            protected void updateItem(Order item, boolean empty) {
-                super.updateItem(item, empty);
-
-                if (empty || item == null || item.amountOnOffer() == null) {
-                    setText(null);
-                } else {
-                    setText(format2.format(item.getOm().totalAtOrder.doubleValue() / (unitMultiplierAmount.doubleValue())));
-                }
-            }
-        });
-
-        ListProperty<Order> active = new SimpleListProperty<>();
-        active.set(FXCollections.observableArrayList());
-        active.bindContent(ki.getExMan().getOrderBook().active());
-        activePrice.itemsProperty().bind(active);
-        activeAmount.itemsProperty().bind(active);
-        activePrice.setCellFactory(param -> new ListCell<Order>() {
-            @Override
-            protected void updateItem(Order item, boolean empty) {
-                super.updateItem(item, empty);
-
-                if (empty || item == null || item.unitPrice() == null) {
-                    setText(null);
-                } else {
-                    setText(format2.format(item.unitPrice().doubleValue() / (unitMultiplierPrice.doubleValue())));
-                    setStyle("-fx-text-fill:" + ((!item.buy()) ? ("#c84128") : ("#18BC9C")));
-                }
-            }
-        });
-        //obSellSize.itemsProperty().bind(sells);
-        activeAmount.setCellFactory(param -> new ListCell<Order>() {
-            @Override
-            protected void updateItem(Order item, boolean empty) {
-                super.updateItem(item, empty);
-
-                if (empty || item == null || item.amountOnOffer() == null) {
-                    setText(null);
-                } else {
-                    setText(format2.format(item.amountOnOffer().doubleValue() / (unitMultiplierAmount.doubleValue())));
-                    setStyle("-fx-text-fill:" + ((!item.buy()) ? ("#c84128") : ("#18BC9C")));
-                }
-
-            }
-        });
-        ListProperty<Order> buys = new SimpleListProperty<>();
-        //buys.set(ki.getExMan().getOrderBook().buys());
-        buys.set(FXCollections.observableArrayList());
-        buys.bindContent(ki.getExMan().getOrderBook().buys());
-        obBuyPrice.itemsProperty().bind(buys);
-        obBuySize.itemsProperty().bind(buys);
-        obBuyPrice.setCellFactory(param -> new ListCell<Order>() {
-            @Override
-            protected void updateItem(Order item, boolean empty) {
-                super.updateItem(item, empty);
-
-                if (empty || item == null || item.unitPrice() == null) {
-                    setText(null);
-                } else {
-                    setText(format2.format(item.unitPrice().doubleValue() / (unitMultiplierPrice.doubleValue())));
-                }
-            }
-        });
-        //obSellSize.itemsProperty().bind(sells);
-        obBuySize.setCellFactory(param -> new ListCell<Order>() {
-            @Override
-            protected void updateItem(Order item, boolean empty) {
-                super.updateItem(item, empty);
-
-                if (empty || item == null || item.amountOnOffer() == null) {
-                    setText(null);
-                } else {
-                    setText(format2.format(item.amountOnOffer().doubleValue() / (unitMultiplierAmount.doubleValue())));
-                }
-
-            }
-        });
-        obBuyTotal.itemsProperty().bind(buys);
-        obBuyTotal.setCellFactory(param -> new ListCell<Order>() {
-            @Override
-            protected void updateItem(Order item, boolean empty) {
-                super.updateItem(item, empty);
-
-                if (empty || item == null || item.getOm() == null) {
-                    setText(null);
-                } else {
-                    setText(format2.format(item.getOm().totalAtOrder.doubleValue() / (unitMultiplierAmount.doubleValue())));
-                }
-            }
-        });
-
-
-        ListProperty<Order> matched = new SimpleListProperty<>();
-        //matched.set(ki.getExMan().getOrderBook().matched());
-        matched.set(FXCollections.observableArrayList());
-        matched.bindContent(ki.getExMan().getOrderBook().matched());
-        obRecentPrice.itemsProperty().bind(matched);
-        obRecentAmount.itemsProperty().bind(matched);
-        obRecentDirection.itemsProperty().bind(matched);
-
-        obRecentPrice.setCellFactory(param -> new ListCell<Order>() {
-            @Override
-            protected void updateItem(Order item, boolean empty) {
-                super.updateItem(item, empty);
-
-                if (empty || item == null || item.unitPrice() == null) {
-                    setText(null);
-                } else {
-                    setText(format2.format(item.unitPrice().doubleValue() / (unitMultiplierPrice.doubleValue())));
-                    setStyle("-fx-text-fill:" + ((item.buy()) ? ("#c84128") : ("#18BC9C")));
-                }
-            }
-        });
-        //obSellSize.itemsProperty().bind(sells);
-        obRecentAmount.setCellFactory(param -> new ListCell<Order>() {
-            @Override
-            protected void updateItem(Order item, boolean empty) {
-                super.updateItem(item, empty);
-
-                if (empty || item == null || item.amountOnOffer() == null) {
-                    setText(null);
-                } else {
-                    setText(format2.format(item.amountOnOffer().doubleValue() / (unitMultiplierAmount.doubleValue())));
-                    setStyle("-fx-text-fill:" + ((item.buy()) ? ("#c84128") : ("#18BC9C")));
-                }
-            }
-        });
-        obRecentDirection.setCellFactory(param -> new SBListCellBuilder());
-
-        Thread gUp = new Thread() {
-            public void run() {
-                setName("GUI-Updater");
-                int i = 0;
-                while (true) {
-                    i++;
-                    if (ki.getMinerMan().isMining()) {
-                        mining = true;
-                        Platform.runLater(new Thread() {
-                            public void run() {
-                                startMining.setText("Stop Mining");
-                            }
-                        });
-                    }
-                    if (i % 10 == 0) {
-
-                        if (!ki.getOptions().pool)
-                        Platform.runLater(new Thread() {
-                            public void run() {
-                                setDaemon(true);
-                                if (!ki.getExMan().getOrderBook().isSorted())
-                                    ki.getExMan().getOrderBook().sort();
-
-                                /*
-                                if (!ki.getExMan().getOrderBook().hasRun()) {
-                                    for (int i = 0; i < ki.getExMan().getOrderBook().getData().size(); i++) {
-                                        ExchangeData data = ki.getExMan().getOrderBook().getData().get(i);
-                                        ki.getExMan().getOrderBook().setRecent(data);
-                                        exchangeGraph.getData().get(0).getData().add(new XYChart.Data<>(sdf.format(new Date(data.timestamp)), data.open));
-                                        ki.getExMan().getOrderBook().setRecent(null);
-                                    }
-                                    ki.getExMan().getOrderBook().run();
-                                } else if (ki.getExMan().getOrderBook().hasNew()) {
-                                    exchangeGraph.getData().get(0).getData().add(new XYChart.Data<>(sdf.format(new Date(ki.getExMan().getOrderBook().getRecentData().timestamp)), ki.getExMan().getOrderBook().getRecentData().open));
-
-                                }
-                                */
-
-
-                            }
-                        });
-                    }
-                    if ((i % 10 == 0) && mining) {
-
-                        if (!ki.getMinerMan().isMining()) {
-                            mining = false;
-                            Platform.runLater(new Runnable() {
-                                public void run() {
-                                    startMining.setText("Start Mining");
-                                }
-                            });
-                        }
-                        Platform.runLater(new Runnable() {
-                            public void run() {
-
-                                //setDaemon(true);
-                                for (XYChart.Series<String, Number> series : hashrateChart.getData()) {
-                                    /*
-                                    try {
-                                        ki.getMinerMan().getHashrate(series.getName());
-                                    } catch (Exception e) {
-                                        return;
-                                    }
-                                    */
-                                    if (series.getData().size() > 60) {
-                                        series.getData().remove(0);
-                                    }
-                                    //ki.debug("Adding mining data: " + sdf.format(new Date(System.currentTimeMillis())) + " " + ki.getMinerMan().getHashrate(series.getName())/1_000_000);
-                                    series.getData().add(new XYChart.Data<>(sdf.format(new Date(System.currentTimeMillis())), ki.getMinerMan().getHashrate(series.getName()) / 1_000_000));
-                                    long chash = ki.getMinerMan().cumulativeHashrate() / 1_000_000;
-                                    currentHashrate.setText("Current Hashrate - " + chash + " Mh/s");
-                                    if (chash > maxH) {
-                                        maxH = chash;
-                                        maxHashrate.setText("Max - " + chash + " Mh/s");
-                                    }
-                                    if (chash < minH) {
-                                        minH = chash;
-                                        minHashrate.setText("Min - " + chash + " Mh/s");
-                                    }
-                                    blocksFoundLabel.setText("Blocks Found - " + format2.format(blocksFoundInt));
-                                    average.add(chash);
-                                    if (average.size() > 25) {
-                                        average.remove(0);
-                                    }
-                                    long averageH = 0;
-                                    for (Long l : average) {
-                                        averageH += l;
-                                    }
-                                    averageH = averageH / average.size();
-                                    averageHashrate.setText("Average - " + averageH + " Mh/s");
-                                }
-
-                            }
-                        });
-                    }
-
-                    Platform.runLater(new Thread() {
-                        public void run() {
-                            //ki.debug("Current height of anchor: " + anchor.getHeight());
-                            //ki.debug("Current height of sp above anchor: " + ((StackPane)anchor.getParent()).getHeight());
-                            //ki.debug("Parent of Parent of anchor: " + anchor.getParent().getParent().getClass());
-                            startMining.setLayoutX((miningTab.getWidth() / 2) - (startMining.getWidth() / 2) - 5);
-                            hashrateChart.setMinWidth(miningTab.getWidth());
-                            miningIntesity.setMinWidth(miningTab.getWidth() - 20);
-                            miLabel.setLayoutX((miningTab.getWidth() / 2) - (miLabel.getWidth() / 2) - 5);
-                            walletBox.setLayoutX(walletPane.getWidth() - (walletBox.getWidth() + 5));
-                            walletAmount.setLayoutX(walletPane.getWidth() - (walletAmount.getWidth() + 15));
-                            tokenLabel.setLayoutX(walletAmount.getLayoutX() + 10);
-                            transactionTable.setMinWidth(walletPane.getWidth() - (walletBox.getWidth() + 65));
-                            transactionTable.setMinHeight(walletPane.getHeight() - 170);
-                            topPane2.setMinWidth(walletPane.getWidth());
-                            beScroll.setMinWidth(blockExplorerPane.getWidth());
-                            beScroll.setMinHeight(blockExplorerPane.getHeight() - 60);
-                            beScroll.setPrefHeight(blockExplorerPane.getHeight() - 60);
-                            lockPane.setMinHeight(borderPane.getHeight());
-                            ohVbox.setMinHeight(ohPane.getHeight());
-                            ohVbox.setMinWidth(ohPane.getWidth() - 10);
-
-                            adxBox.setMinWidth(exchangePane.getWidth() - 20);
-                            adxBox.setMinHeight(exchangePane.getHeight() - 20);
-                            heightLabel.setText("Chain Height - " + ki.getChainMan().currentHeight());
-                            if (!ki.getOptions().pool)
-                                chainHeight2.setText(" " + ki.getChainMan().currentHeight().toString());
-                            miningDataHbox.setMinWidth(miningTab.getWidth());
-
-                            if (startHeight != null && startHeight.compareTo(loadHeight) != 0) {
-                                syncProgress.setProgress(1 - (startHeight.subtract(ki.getChainMan().currentHeight()).multiply(BigInteger.valueOf(100)).divide(startHeight.subtract(loadHeight)).doubleValue() / 100));
-                            } else if (startHeight != null && startHeight.compareTo(loadHeight) == 0)
-                                syncProgress.setProgress(1);
-                            for (IConnectionManager c : ki.getNetMan().getConnections()) {
-                                latency.setText(" Latency - " + c.currentLatency());
-                            }
-                            startMining.setDisable(!GPUMiner.initDone);
-                            if (!GPUMiner.initDone) {
-                                startMining.setText("Autotuning...");
-                            } else if (frg) {
-                                frg = false;
-                                for (String name : ki.getMinerMan().getDevNames()) {
-                                    JFXToggleButton tb = new JFXToggleButton();
-                                    tb.setText(name);
-                                    tb.setTextFill(Color.WHITE);
-                                    tb.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
-                                        @Override
-                                        public void handle(MouseEvent event) {
-                                            if (!tb.isSelected())
-                                                ki.getMinerMan().disableDev(tb.getText());
-                                            else
-                                                ki.getMinerMan().enableDev(tb.getText());
-                                        }
-                                    });
-                                    tb.setSelected(true);
-
-                                    devicesBox.getChildren().add(tb);
-                                }
-                                startMining.setText("Start Mining");
-                            }
-                            if (ki.getOptions().pool) {
-                                shares.setText("Accepted Shares - " + currentShares);
-                                localShares.setText("Local Shares - " + localShare);
-                                //ki.debug("Current PPS: " + currentPPS);
-                                nextPayment.setText("Next Payment - " + format2.format(((currentShares * currentPPS)) / 100_000_000));
-                                if (ki.getNetMan().getConnections().size() > 0) {
-                                    poolConnected.setText("Connected");
-                                    poolConnect.setDisable(true);
-                                } else {
-                                    poolConnected.setText("Not Connected");
-                                    poolConnect.setDisable(false);
-                                    ki.getMinerMan().stopMiners();
-                                }
-                            }
-                            if (ki.getOptions().poolRelay) {
-                                long totalHR = 0;
-                                for (String ID : ki.getPoolData().hrMap.keySet()) {
-                                    totalHR += (ki.getPoolData().hrMap.get(ID) / 1000000);
-                                }
-                                poolHashrate.setText("Current Pool Hashrate (MH/s) - " + totalHR);
-                                poolNOC.setText("Number of Connections - " + ki.getPoolNet().getConnections().size());
-                                currentPoolShares.setText("Current Pool Shares - " + ki.getPoolManager().getTotalSharesOfCurrentPayPeriod());
-                                //ki.debug("Current PPS: " + ki.getPoolManager().getCurrentPayPerShare());
-                                estimatedNextPayout.setText("Estimated Next Payout - " + format2.format(ki.getPoolManager().getTotalSharesOfCurrentPayPeriod() * (double) ki.getPoolManager().getCurrentPayPerShare() / 100_000_000D));
-                            }
-
-
-                        }
-                    });
-
-                    try {
-                        sleep(100);
-                    } catch (InterruptedException e) {
-                        ki.getMainLog().error("GUI update thread interrupted ", e);
-                        return;
-                    }
-                }
-            }
-        };
-        gUp.setDaemon(true);
-        gUp.start();
-
-        for (Token t : Token.values()) {
-            if (t.getName().contains("TOKEN")) continue;
-
-            Label l = new Label(t.getName());
-            //l.setStyle("-fx-text-fill:BLACK");
-            tokenBox.getItems().add(l);
-
-        }
-        tokenBox.getSelectionModel().select(0);
     }
 
-    private JFXButton buildMainButton(String text, String image, int offset, int graphicOffset, List<Pane> content, Pane show) {
-        JFXButton button = buildButton(text, image, offset, graphicOffset);
+    private JFXButton buildMainButton(String text, String image, int offset, int graphicOffset, List<Pane> content, Pane show, double scale) {
+        JFXButton button = buildButton(text, image, offset, graphicOffset, scale);
         button.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
             for (Pane p : content) {
                 p.setVisible(false);
@@ -2411,7 +751,8 @@ public class NewGUI implements GUIHook {
             }
         });
     }
-    private JFXButton buildButton(String text, String image, int offset, int graphicOffset) {
+
+    private JFXButton buildButton(String text, String image, int offset, int graphicOffset, double scale) {
         for (int i = 0; i < graphicOffset; i++) {
             if (i % 2 != 0)
                 text = " " + text;
@@ -2422,9 +763,10 @@ public class NewGUI implements GUIHook {
         button.setRipplerFill(Color.valueOf(getDefaultColor(new Random().nextInt(12))));
         Image img = new Image(NewGUI.class.getResourceAsStream(image));
         ImageView iv = new ImageView(img);
-        iv.setFitWidth(20);
+        iv.setFitWidth(20 * scale);
         iv.setPreserveRatio(true);
         button.setGraphic(iv);
+        button.setStyle("-fx-padding: 0em 0em");
         button.setPrefWidth(Double.MAX_VALUE);
         button.setPrefHeight(50);
         button.setDefaultButton(false);
@@ -2455,7 +797,9 @@ public class NewGUI implements GUIHook {
     }
 
     private BigInteger currentBlock = BigInteger.ZERO;
+
     private Font acg10 = Font.loadFont(NewGUI.class.getResourceAsStream("/ADAM.CG PRO.otf"), 10);
+
     /**
      * so, this method was built to fill in the block explorer masonry pane because I really liked the effect of
      * the masonry pane. It works, but the masonry effect never became what I actually wanted, mostly because
@@ -2540,6 +884,23 @@ public class NewGUI implements GUIHook {
         solver.setText("Solver - " + b.getSolver());
         numberOfTransactions.setText("Number of Transactions - " + b.getTransactionKeys().size());
         blockTimestamp.setText(sdf2.format(new Date(b.getTimestamp())));
+        beTransactions.getItems().clear();
+        for (String trans : b.getTransactionKeys()) {
+
+            ITransAPI t = b.getTransaction(trans);
+            IAddress rec = t.getOutputs().get(0).getAddress();
+            BigInteger amount = BigInteger.ZERO;
+            for (IOutput o : t.getOutputs()) {
+                if (o.getAddress().encodeForChain().equals(rec.encodeForChain())) {
+                    amount = amount.add(o.getAmount());
+                }
+            }
+            beTransactions.getItems().add("Transaction: "
+                    + trans + " From: " + t.getInputs().get(0).getAddress().encodeForChain()
+                    + " To: " + t.getOutputs().get(0).getAddress().encodeForChain()
+                    + " Token: " + t.getOutputs().get(0).getToken().getName()
+                    + " Amount: " + format2.format(amount.doubleValue() / 100_000_000));
+        }
         currentBlock = b.getHeight();
         blockExplorerPane.setVisible(false);
         blockPane.setVisible(true);
@@ -2613,7 +974,6 @@ public class NewGUI implements GUIHook {
 
     private int blocksFoundInt = 0;
     private BigInteger latestBlock = BigInteger.ZERO;
-    //private XodusStringMap guiMap = new XodusStringMap("gui.data");
     private XodusAmpMap guiXAM = new XodusAmpMap("ngui");
 
     public void blockFound() {
@@ -2627,6 +987,7 @@ public class NewGUI implements GUIHook {
     }
 
     private JFXSnackbar sb;
+
     private void notification(String text) {
         Platform.runLater(new Thread() {
             public void run() {
@@ -2846,22 +1207,19 @@ public class NewGUI implements GUIHook {
                 });
 
                 ChangeListener<Number> stageSizeListener = (observable, oldValue, newValue) -> {
-                    //System.out.println("Height: " + stage.getHeight() + " Width: " + stage.getWidth());
+                    axcWeb.setMinWidth(axcPane.getWidth());
+                    axcWeb.setMinHeight(axcPane.getHeight());
+                    axcWeb.setPrefWidth(axcPane.getWidth());
+                    axcWeb.setPrefHeight(axcPane.getHeight());
                     hashrateChart.setMinWidth(miningTab.getWidth());
                     miningIntesity.setMinWidth(miningTab.getWidth() - 20);
                     startMining.setLayoutX((miningTab.getWidth() / 2) - (startMining.getWidth() / 2) - 5);
                     miLabel.setLayoutX((miningTab.getWidth() / 2) - (miLabel.getWidth() / 2) - 5);
-                    //addressText.setLayoutX(walletPane.getWidth() - (addressText.getWidth() + 5));
-                    //amountText.setLayoutX(walletPane.getWidth() - (amountText.getWidth() + 5));
-                    //messageText.setLayoutX(walletPane.getWidth() - (messageText.getWidth() + 5));
-                    //feeText.setLayoutX(walletPane.getWidth() - (feeText.getWidth() + 5));
                     walletBox.setLayoutX(walletPane.getWidth() - (walletBox.getWidth() + 5));
                     walletAmount.setLayoutX(walletPane.getWidth() - ((walletAmount.getWidth() + 15)));
                     tokenLabel.setLayoutX(walletAmount.getLayoutX() + 10);
                     transactionTable.setMinWidth(walletPane.getWidth() - (walletBox.getWidth() + 65));
                     transactionTable.setMinHeight(walletPane.getHeight() - 170);
-                    //versionLabel.setLayoutX(helpPane.getWidth() / 2 - (versionLabel.getWidth() / 2));
-                    //helpText.setLayoutX(helpPane.getWidth() / 2 - (helpText.getWidth() / 2));
                     topPane2.setMinWidth(walletPane.getWidth());
                     beScroll.setMinWidth(blockExplorerPane.getWidth());
                     beScroll.setMinHeight(blockExplorerPane.getHeight() - 60);
@@ -2878,6 +1236,7 @@ public class NewGUI implements GUIHook {
             }
         });
     }
+
     public void setStart(BigInteger startHeight) {
         this.startHeight = startHeight;
     }
@@ -2886,4 +1245,1651 @@ public class NewGUI implements GUIHook {
         this.currentShares = currentShares;
         this.currentPPS = currentPPS;
     }
+
+    private void setupMiningPane() {
+        miningDataHbox.setSpacing(10);
+        blocksFoundLabel.setText("Blocks Found - " + format2.format(blocksFoundInt));
+        startMining.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                if (ki.getOptions().mining) {
+                    if (ki.getNetMan().getConnections().size() == 0) return;
+                    if (ki.getOptions().pool && ki.getPoolData().currentWork == null) return;
+                    if (!mining) {
+                        ki.getMinerMan().startMiners();
+                        startMining.setText("Stop Mining");
+                        mining = true;
+                        hashrateChart.getData().clear();
+                        //List<XYChart.Series<String, Number>> devs = new ArrayList<>();
+                        for (String dev : ki.getMinerMan().getDevNames()) {
+                            XYChart.Series<String, Number> series = new XYChart.Series<>();
+                            hashrateChart.getData().add(series);
+                            series.setName(dev);
+                        }
+                    } else {
+                        ki.getMinerMan().stopMiners();
+                        startMining.setText("Start Mining");
+                        mining = false;
+                    }
+                }
+            }
+        });
+        miningIntesity.valueProperty().addListener(new ChangeListener<Number>() {
+            @Override
+            public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
+                for (IMiner miner : ki.getMinerMan().getMiners()) {
+                    miner.setIntensity(newValue.doubleValue());
+                }
+            }
+        });
+        hashrateChart.getXAxis().setLabel("");
+        hashrateChart.setLegendVisible(true);
+        hashrateChart.setCreateSymbols(false);
+        hashrateChart.getXAxis().setAnimated(false);
+
+        for (String dev : ki.getMinerMan().getDevNames()) {
+            XYChart.Series<String, Number> series = new XYChart.Series<>();
+            hashrateChart.getData().add(series);
+            series.setName(dev);
+        }
+    }
+
+    private void setupAXCPane() {
+
+        WebEngine engine = axcWeb.getEngine();
+        engine.load("http://75.74.67.19:8008/");
+    }
+
+    private void setupBlockExplorerPane() {
+
+        blockExplorerPane.visibleProperty().addListener(new ChangeListener<Boolean>() {
+            @Override
+            public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
+                if (blockExplorerPane.visibleProperty().get()) {
+                    fillMasonry(ki.getChainMan().currentHeight().subtract(BigInteger.valueOf(100)), ki.getChainMan().currentHeight());
+                }
+            }
+        });
+        backToBE.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                blockPane.setVisible(false);
+                blockExplorerPane.setVisible(true);
+            }
+        });
+        previousBlock.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                if (currentBlock.subtract(BigInteger.ONE).compareTo(BigInteger.ZERO) > 0)
+                    setupBlockPane(currentBlock.subtract(BigInteger.ONE));
+            }
+        });
+        nextBlock.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                if (currentBlock.add(BigInteger.ONE).compareTo(ki.getChainMan().currentHeight()) <= 0)
+                    setupBlockPane(currentBlock.add(BigInteger.ONE));
+            }
+        });
+        goBE.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                int start = 0;
+                try {
+                    start = Integer.parseInt(fromBlock.getText());
+                } catch (NumberFormatException e) {
+                    return;
+                }
+                int end = 0;
+                try {
+                    end = Integer.parseInt(toBlock.getText());
+                } catch (NumberFormatException e) {
+                    return;
+                }
+
+                if (start >= end) {
+                    return;
+                }
+                if (start < 0) {
+                    return;
+                }
+                if (BigInteger.valueOf(end).compareTo(ki.getChainMan().currentHeight()) > 0) {
+                    return;
+                }
+                fillMasonry(BigInteger.valueOf(start), BigInteger.valueOf(end));
+            }
+        });
+
+        fillMasonry(ki.getChainMan().currentHeight().subtract(BigInteger.valueOf(100)), ki.getChainMan().currentHeight());
+    }
+
+    private void setupWalletPane() {
+        tokenLabel.setMinWidth(walletAmount.getWidth());
+        addressLabel.setText("Address - " + ki.getAddMan().getMainAdd().encodeForChain());
+        tokenBox.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<Label>() {
+            @Override
+            public void changed(ObservableValue<? extends Label> observable, Label oldValue, Label newValue) {
+                tokenLabel.setText(tokenBox.getSelectionModel().getSelectedItem().getText());
+                walletAmount.setText(format2.format((double) ki.getTransMan().getAmountInWallet(ki.getAddMan().getMainAdd(), Token.byName(tokenBox.getSelectionModel().getSelectedItem().getText())).longValueExact() / 100_000_000));
+            }
+        });
+        transactionTable.setStyle("-fx-background-color:DIMGRAY");
+        copyAddress.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                StringSelection stringSelection = new StringSelection(ki.getAddMan().getMainAdd().encodeForChain());
+                Clipboard clpbrd = Toolkit.getDefaultToolkit().getSystemClipboard();
+                clpbrd.setContents(stringSelection, null);
+            }
+        });
+        JFXTreeTableColumn<StoredTrans, String> oaColumn = new JFXTreeTableColumn<>("Sender");
+        oaColumn.setPrefWidth(150);
+        oaColumn.setCellValueFactory((TreeTableColumn.CellDataFeatures<StoredTrans, String> param) -> {
+            if (oaColumn.validateValue(param)) return param.getValue().getValue().otherAddress;
+            else return oaColumn.getComputedValue(param);
+        });
+
+        JFXTreeTableColumn<StoredTrans, Double> amtColumn = new JFXTreeTableColumn<>("Amount");
+        amtColumn.setPrefWidth(150);
+
+        amtColumn.setCellValueFactory((TreeTableColumn.CellDataFeatures<StoredTrans, Double> param) -> {
+            if (amtColumn.validateValue(param)) {
+                return param.getValue().getValue().amount.asObject();
+            } else return amtColumn.getComputedValue(param);
+        });
+        JFXTreeTableColumn<StoredTrans, String> sentColumn = new JFXTreeTableColumn<>("Direction");
+        sentColumn.setPrefWidth(100);
+        sentColumn.setCellValueFactory((TreeTableColumn.CellDataFeatures<StoredTrans, String> param) -> {
+            if (sentColumn.validateValue(param)) return param.getValue().getValue().sent;
+            else return sentColumn.getComputedValue(param);
+        });
+        JFXTreeTableColumn<StoredTrans, String> msgColumn = new JFXTreeTableColumn<>("Message");
+        msgColumn.setPrefWidth(150);
+        msgColumn.setCellValueFactory((TreeTableColumn.CellDataFeatures<StoredTrans, String> param) -> {
+            if (msgColumn.validateValue(param)) return param.getValue().getValue().message;
+            else return msgColumn.getComputedValue(param);
+        });
+
+        JFXTreeTableColumn<StoredTrans, String> tsColumn = new JFXTreeTableColumn<>("Timestamp");
+        tsColumn.setPrefWidth(150);
+        tsColumn.setCellValueFactory((TreeTableColumn.CellDataFeatures<StoredTrans, String> param) -> {
+            if (tsColumn.validateValue(param)) return param.getValue().getValue().timestamp;
+            else return tsColumn.getComputedValue(param);
+        });
+
+        JFXTreeTableColumn<StoredTrans, String> addColumn = new JFXTreeTableColumn<>("Address");
+        addColumn.setPrefWidth(150);
+        addColumn.setCellValueFactory((TreeTableColumn.CellDataFeatures<StoredTrans, String> param) -> {
+            if (addColumn.validateValue(param)) return param.getValue().getValue().address;
+            else return addColumn.getComputedValue(param);
+        });
+
+        JFXTreeTableColumn<StoredTrans, String> hColumn = new JFXTreeTableColumn<>("Height");
+        hColumn.setPrefWidth(150);
+        hColumn.setCellValueFactory((TreeTableColumn.CellDataFeatures<StoredTrans, String> param) -> {
+            if (hColumn.validateValue(param)) return param.getValue().getValue().height;
+            else return hColumn.getComputedValue(param);
+        });
+        JFXTreeTableColumn<StoredTrans, ObservableList<String>> outColumn = new JFXTreeTableColumn<>("Outputs");
+        outColumn.setPrefWidth(400);
+        outColumn.setCellValueFactory((TreeTableColumn.CellDataFeatures<StoredTrans, ObservableList<String>> param) -> {
+            if (outColumn.validateValue(param)) return param.getValue().getValue().outputs;
+            else return outColumn.getComputedValue(param);
+        });
+        JFXTreeTableColumn<StoredTrans, ObservableList<String>> inColumn = new JFXTreeTableColumn<>("Inputs");
+        inColumn.setPrefWidth(400);
+        inColumn.setCellValueFactory((TreeTableColumn.CellDataFeatures<StoredTrans, ObservableList<String>> param) -> {
+            if (inColumn.validateValue(param)) return param.getValue().getValue().inputs;
+            else return inColumn.getComputedValue(param);
+        });
+
+        JFXTreeTableColumn<StoredTrans, Double> feeColumn = new JFXTreeTableColumn<>("Fee");
+        feeColumn.setPrefWidth(150);
+        feeColumn.setCellValueFactory((TreeTableColumn.CellDataFeatures<StoredTrans, Double> param) -> {
+            if (feeColumn.validateValue(param)) return param.getValue().getValue().fee.asObject();
+            else return feeColumn.getComputedValue(param);
+        });
+        final TreeItem<StoredTrans> root = new RecursiveTreeItem<StoredTrans>(transactions, RecursiveTreeObject::getChildren);
+
+        transactionTable.setRoot(root);
+        transactionTable.setShowRoot(false);
+        transactionTable.setEditable(false);
+        transactionTable.getColumns().setAll(addColumn, oaColumn, amtColumn, sentColumn, msgColumn, outColumn, inColumn, feeColumn, tsColumn);
+        transactionTable.group(addColumn);
+
+
+        searchBox.textProperty().addListener((o, oldVal, newVal) -> {
+            transactionTable.setPredicate(transFilter -> transFilter.getValue().address.get().contains(newVal)
+                    || transFilter.getValue().timestamp.get().contains(newVal)
+                    || transFilter.getValue().sent.get().contains(newVal)
+                    || transFilter.getValue().amount.toString().contains(newVal)
+                    || transFilter.getValue().otherAddress.get().contains(newVal)
+                    || transFilter.getValue().message.get().contains(newVal));
+
+        });
+        transactionTable.currentItemsCountProperty().addListener(new ChangeListener<Number>() {
+            @Override
+            public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
+                expandTreeView(transactionTable.getRoot());
+            }
+        });
+        amountOfTransactions.textProperty().bind(Bindings.createStringBinding(() -> transactionTable.getCurrentItemsCount() + "",
+                transactionTable.currentItemsCountProperty()));
+
+
+        sendBackToMain.selectedProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue) {
+                changeAddress.setDisable(true);
+                changeAddress.setVisible(false);
+                changeAddress.setText("");
+            } else {
+                changeAddress.setDisable(false);
+                changeAddress.setVisible(true);
+            }
+        });
+        loadTransaction.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+
+                Path path = Paths.get("Transaction.amp");
+                try {
+                    ITrans trans = NewTrans.fromAmplet(Amplet.create(Files.readAllBytes(path)));
+                    IBinary bin = null;
+
+                    for (IAddress a : ki.getAddMan().getAll()) {
+                        if (trans.getInputs().get(0).getAddress().encodeForChain().equals(a.encodeForChain()) && a.isP2SH()) {
+                            bin = ki.getAddMan().getBinary(a);
+                        }
+                    }
+                    if (bin == null) {
+                        notification("Do not have script for the address in this transaction");
+                        return;
+                    }
+                    IWritableMemory wm = WritableMemory.deserializeFromBytes(Utils.fromBase64(trans.getSig(Utils.toBase64(bin.serializeToAmplet().serializeToBytes()))));
+
+                    int i = 0;
+                    for (; i < 32; i++) {
+                        try {
+                            KeyKeyTypePair kktp = KeyKeyTypePair.fromBytes(bin.getConstantMemory().getElement(i).getData());
+                            if (kktp == null) break;
+                            //if (kktp.getKey() == null) break;
+                            if (kktp.getKeyType() == null) break;
+                            if (ki.getEncryptMan().getPublicKeyString(kktp.getKeyType()).equals(Utils.toBase64(kktp.getKey()))) {
+                                wm.setElement(ki.getEncryptMan().sign(trans.toSignBytes(), kktp.getKeyType()), i);
+                            }
+                        } catch (RuntimeException e) {
+                            throw e;
+                        } catch (Exception e) {
+                            //fail quietly
+                            break;
+                        }
+                    }
+                    multiSigTransCache = trans;
+                    multiSigBinaryCache = bin;
+                    multiSigWMCache = wm;
+                    BigInteger amount = BigInteger.ZERO;
+                    for (IOutput out : trans.getOutputs()) {
+                        if (out.getAddress().encodeForChain().equals(trans.getInputs().get(0).getAddress().encodeForChain()))
+                            continue;
+                        addressText.setText(out.getAddress().encodeForChain());
+                        amount = amount.add(out.getAmount());
+                    }
+                    messageText.setText(trans.getMessage());
+                    amountText.setText("" + (amount.doubleValue() / 100_000_000D));
+
+                } catch (IOException e) {
+                    ki.getMainLog().error("Could not load transaction from file Transaction.amp", e);
+                }
+            }
+        });
+
+        sendButton.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                if (multiSigTransCache != null) {
+
+                    multiSigTransCache.addSig(Utils.toBase64(multiSigBinaryCache.serializeToAmplet().serializeToBytes()), Utils.toBase64(multiSigWMCache.serializeToBytes()));
+
+                    if (ki.getTransMan().verifyTransaction(multiSigTransCache)) {
+                        ki.getTransMan().getPending().add(multiSigTransCache);
+                        for (IInput i : multiSigTransCache.getInputs()) {
+                            ki.getTransMan().getUsedUTXOs().add(i.getID());
+                        }
+                        TransactionPacket tp = new TransactionPacket();
+                        tp.trans = multiSigTransCache.serializeToAmplet().serializeToBytes();
+                        ki.getNetMan().broadcast(tp);
+                        notification("Sent transaction");
+
+                    } else {
+                        notification("Not enough signatures. Saving transaction to file.");
+                        try (FileOutputStream fos = new FileOutputStream("Transaction.amp")) {
+                            fos.write(multiSigTransCache.serializeToAmplet().serializeToBytes());
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                } else if (!ki.getAddMan().getMainAdd().isP2SH()) {
+                    if (ki.getEncryptMan().getPublicKey(ki.getAddMan().getMainAdd().getKeyType()) != null) {
+
+                        Token token = Token.byName(tokenBox.getSelectionModel().getSelectedItem().getText());
+
+                        BigDecimal amt = new BigDecimal(amountText.getText());
+
+                        BigInteger amount = amt.multiply(new BigDecimal("100000000.0")).toBigInteger();
+
+                        IAddress receiver;
+                        try {
+                            receiver = Address.decodeFromChain(addressText.getText());
+                        } catch (Exception e) {
+                            notification("Send To Address Incorrect");
+                            return;
+                        }
+                        BigInteger fee;
+                        if (feeText.getText() == null || feeText.getText().isEmpty()) {
+                            fee = BigInteger.TEN;
+                        } else {
+                            BigDecimal dFee = new BigDecimal(feeText.getText());
+                            fee = dFee.multiply(new BigDecimal("100000000.0")).toBigInteger();
+                            if (fee.compareTo(BigInteger.TEN) < 0) {
+                                fee = BigInteger.TEN;
+                            }
+                        }
+                        ki.getMainLog().info("Fee is: " + fee.toString());
+
+                        IAddress changeAdd;
+                        if (sendBackToMain.isSelected()) {
+                            changeAdd = ki.getAddMan().getMainAdd();
+                        } else {
+                            try {
+                                changeAdd = Address.decodeFromChain(changeAddress.getText());
+                            } catch (Exception e) {
+                                notification("Invalid Change Address");
+                                return;
+                            }
+                        }
+                        ITrans trans = null;
+
+                        try {
+                            trans = ki.getTransMan().createSimple(receiver, amount, fee, token, messageText.getText(), changeAdd);
+                        } catch (InvalidTransactionException e) {
+                            ki.getMainLog().error("Error creating transaction: ", e);
+                            return;
+                        }
+                        if (ki.getTransMan().verifyTransaction(trans)) {
+                            ki.getTransMan().getPending().add(trans);
+                            for (IInput i : trans.getInputs()) {
+                                ki.getTransMan().getUsedUTXOs().add(i.getID());
+                            }
+                            TransactionPacket tp = new TransactionPacket();
+                            tp.trans = trans.serializeToAmplet().serializeToBytes();
+                            ki.getNetMan().broadcast(tp);
+                            notification("Sent transaction");
+
+                        } else {
+                            ki.debug("Transaction did not verify, not sending and not adding to pending list");
+                            notification("Transaction failed to send");
+                        }
+                    }
+                } else {
+                    //TODO find way to detect if this is a multi-sig wallet, for now we're just going to assume it is
+                    Token token = Token.byName(tokenBox.getSelectionModel().getSelectedItem().getText());
+
+                    BigDecimal amt = new BigDecimal(amountText.getText());
+
+                    BigInteger amount = amt.multiply(new BigDecimal("100000000.0")).toBigInteger();
+
+                    IAddress receiver;
+                    try {
+                        receiver = Address.decodeFromChain(addressText.getText());
+                    } catch (Exception e) {
+                        notification("Send To Address Incorrect");
+                        return;
+                    }
+
+                    BigInteger fee;
+                    if (feeText.getText() == null || feeText.getText().isEmpty()) {
+                        fee = BigInteger.TEN;
+                    } else {
+                        BigDecimal dFee = new BigDecimal(feeText.getText());
+                        fee = dFee.multiply(new BigDecimal("100000000.0")).toBigInteger();
+                        if (fee.compareTo(BigInteger.TEN) < 0) {
+                            fee = BigInteger.TEN;
+                        }
+                    }
+                    ki.getMainLog().info("Fee is: " + fee.toString());
+
+                    ITrans trans = null;
+                    if (ki.getAddMan().getBinary(ki.getAddMan().getMainAdd()) == null) {
+                        ki.getMainLog().warn("Do not have script for address: " + ki.getAddMan().getMainAdd().encodeForChain());
+                        notification("Do not have script for this address");
+                        return;
+                    }
+                    IAddress changeAdd;
+                    if (sendBackToMain.isSelected()) {
+                        changeAdd = ki.getAddMan().getMainAdd();
+                    } else {
+                        try {
+                            changeAdd = Address.decodeFromChain(changeAddress.getText());
+                        } catch (Exception e) {
+                            notification("Invalid Change Address");
+                            return;
+                        }
+                    }
+                    try {
+                        trans = ki.getTransMan().createSimpleMultiSig(ki.getAddMan().getBinary(ki.getAddMan().getMainAdd()), receiver, amount, fee, token, messageText.getText(), 1, changeAdd);
+                    } catch (InvalidTransactionException e) {
+                        ki.getMainLog().error("Error creating transaction: ", e);
+                        return;
+                    }
+                    //TODO this is kind of a weird hack, it relies on the transaction failing to verify to tell if there are enough sigs, we should be specifically checking the sigs.
+                    if (ki.getTransMan().verifyTransaction(trans)) {
+                        ki.getTransMan().getPending().add(trans);
+                        for (IInput i : trans.getInputs()) {
+                            ki.getTransMan().getUsedUTXOs().add(i.getID());
+                        }
+                        TransactionPacket tp = new TransactionPacket();
+                        tp.trans = trans.serializeToAmplet().serializeToBytes();
+                        ki.getNetMan().broadcast(tp);
+                        notification("Sent transaction");
+
+                    } else {
+                        notification("Not enough signatures. Saving transaction to file.");
+                        try (FileOutputStream fos = new FileOutputStream("Transaction.amp")) {
+                            fos.write(trans.serializeToAmplet().serializeToBytes());
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            }
+        });
+
+        try {
+            if (guiXAM.getBytes("transactions") != null) {
+                HeadlessPrefixedAmplet hpa = HeadlessPrefixedAmplet.create(guiXAM.getBytes("transactions"));
+
+                new Thread() {
+
+                    public void run() {
+
+                        while (hpa.hasNextElement()) {
+                            try {
+                                ITrans t = Transaction.fromAmplet(Amplet.create(hpa.getNextElement()));
+                                if (t == null) continue;
+                                sTrans.add(t);
+                                addTransaction(t, (heightMap.get(t.getID()) == null) ? ki.getChainMan().currentHeight() : heightMap.get(t.getID()));
+                            } catch (Exception e) {
+                                ki.getMainLog().error("Error loading saved transactions for GUI: ", e);
+                            }
+                        }
+                    }
+                }.start();
+
+            }
+        } catch (Exception e) {
+            ki.getMainLog().error("Error loading saved transactions for GUI: ", e);
+        }
+
+        for (Token t : Token.values()) {
+            if (t.getName().contains("TOKEN")) continue;
+
+            Label l = new Label(t.getName());
+            tokenBox.getItems().add(l);
+
+        }
+        tokenBox.getSelectionModel().select(0);
+    }
+
+    private void setupAddressPane() {
+        List<String> adds = new ArrayList<>();
+        for (IAddress add : ki.getAddMan().getAll()) {
+            if (!adds.contains(add.encodeForChain())) {
+                addressList.getItems().add(add.encodeForChain());
+                adds.add(add.encodeForChain());
+            }
+        }
+        deleteAddress.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                if (ki.getAddMan().getMainAdd().encodeForChain().equals(addressList.getSelectionModel().getSelectedItem())) {
+                    notification("Cannot delete main address");
+                    return;
+                }
+                ki.getAddMan().deleteAddress(Address.decodeFromChain(addressList.getSelectionModel().getSelectedItem()));
+                addressList.getItems().remove(addressList.getSelectionModel().getSelectedIndex());
+            }
+        });
+        addressList.setBackground(new Background(new BackgroundFill(Color.GRAY, CornerRadii.EMPTY, Insets.EMPTY)));
+        copySelectedAdd.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                StringSelection stringSelection = new StringSelection(addressList.getSelectionModel().getSelectedItem());
+                Clipboard clpbrd = Toolkit.getDefaultToolkit().getSystemClipboard();
+                clpbrd.setContents(stringSelection, null);
+            }
+        });
+        copyPublicKey.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                StringSelection stringSelection = new StringSelection(ki.getEncryptMan().getPublicKeyString(KeyType.valueOf(keyType.getSelectionModel().getSelectedItem().getText())));
+                Clipboard clpbrd = Toolkit.getDefaultToolkit().getSystemClipboard();
+                clpbrd.setContents(stringSelection, null);
+            }
+        });
+        addressControls.getChildren().remove(multiSigVbox);
+        singleSig.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                if (createMultiSig) {
+                    createMultiSig = false;
+                    addressControls.getChildren().remove(multiSigVbox);
+                }
+            }
+        });
+        multiSig.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                if (!createMultiSig) {
+                    createMultiSig = true;
+                    addressControls.getChildren().add(multiSigVbox);
+                }
+            }
+        });
+        entropyLabel.setWrapText(true);
+        entropyLabel.setMaxWidth(256);
+
+        for (KeyType type : KeyType.values()) {
+            if (!type.equals(KeyType.NONE))
+                keyType.getItems().add(new Label(type.toString()));
+        }
+        for (AddressLength l : AddressLength.values()) {
+            addressLength.getItems().add(new Label(l.toString()));
+        }
+        addressLength.getSelectionModel().select(0);
+        keyType.getSelectionModel().select(0);
+        addressList.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<String>() {
+            @Override
+            public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
+                entropyLabel.setText("Entropy of Selection: \n" + ki.getAddMan().getEntropyForAdd(Address.decodeFromChain(addressList.getSelectionModel().getSelectedItem())));
+                ByteArrayOutputStream out = QRCode.from(newValue + "," + "NONE" + "," + " ").to(ImageType.PNG).stream();
+                ByteArrayInputStream in = new ByteArrayInputStream(out.toByteArray());
+                qrCodeView.setImage(new Image(in));
+
+            }
+        });
+        Map<String, Byte> keys = new HashMap<>();
+        addKeyBtn.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                try {
+                    if (EncryptionManager.pubKeyFromString(addPubKey.getText(), KeyType.valueOf(keyType.getSelectionModel().getSelectedItem().getText())) == null) {
+                        notification("Invalid Key");
+                        return;
+                    }
+
+                    keys.put(addPubKey.getText(), KeyType.valueOf(keyType.getSelectionModel().getSelectedItem().getText()).getValue());
+                    int selection;
+                    if (sigsRequired.getItems().size() > 0)
+                        selection = sigsRequired.getSelectionModel().getSelectedIndex();
+                    else
+                        selection = 0;
+                    sigsRequired.getItems().clear();
+                    for (int i = 0; i < keys.size(); i++) {
+                        sigsRequired.getItems().add(new Label(i + 1 + " of " + keys.size()));
+                    }
+                    sigsRequired.getSelectionModel().select(selection);
+                } catch (RuntimeException e) {
+                    throw e;
+                } catch (Exception e) {
+                    notification("Invalid key");
+                }
+            }
+        });
+        clearKeys.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                keys.clear();
+                sigsRequired.getItems().clear();
+            }
+        });
+        createAddress.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                IAddress a;
+                if (entropyField.getText().isEmpty()) {
+                    notification("Entropy cannot be empty when creating an address");
+                    return;
+                }
+                if (!createMultiSig) {
+
+                    if (prefixField.getText() == null || prefixField.getText().isEmpty()) {
+                        a = ki.getAddMan().createNew(ki.getEncryptMan().getPublicKeyString(KeyType.valueOf(keyType.getSelectionModel().getSelectedItem().getText())), entropyField.getText(), null, AddressLength.valueOf(addressLength.getSelectionModel().getSelectedItem().getText()), false, KeyType.valueOf(keyType.getSelectionModel().getSelectedItem().getText()));
+                    } else {
+                        if (prefixField.getText().length() != 5) {
+                            notification("Prefixes must be exactly 5 characters long");
+                            return;
+                        }
+                        if (prefixField.getText().contains(" ")) {
+                            notification("Prefixes cannot contain spaces");
+                            return;
+                        }
+                        a = ki.getAddMan().createNew(ki.getEncryptMan().getPublicKeyString(KeyType.valueOf(keyType.getSelectionModel().getSelectedItem().getText())), entropyField.getText(), prefixField.getText(), AddressLength.valueOf(addressLength.getSelectionModel().getSelectedItem().getText()), false, KeyType.valueOf(keyType.getSelectionModel().getSelectedItem().getText()));
+                    }
+                    addressList.getItems().add(a.encodeForChain());
+                } else {
+                    try {
+                        if (keys.isEmpty()) {
+                            notification("No keys have been added");
+                            return;
+                        }
+                        Binary bin = ki.getScriptMan().buildMultiSig(keys, sigsRequired.getSelectionModel().getSelectedIndex() + 1, ki.getBCE8(), entropyField.getText().getBytes("UTF-8"), ki.getEncryptMan().getPublicKey(KeyType.valueOf(keyType.getSelectionModel().getSelectedItem().getText())).getEncoded());
+                        bin.getProgram().seal();
+                        if (prefixField.getText() == null || prefixField.getText().isEmpty()) {
+
+                            a = ki.getAddMan().createNew(Utils.toBase64(bin.serializeToAmplet().serializeToBytes()), entropyField.getText(), null, AddressLength.valueOf(addressLength.getSelectionModel().getSelectedItem().getText()), true, KeyType.NONE);
+                        } else {
+                            if (prefixField.getText().length() != 5) {
+                                notification("Prefixes must be exactly 5 characters long");
+                                return;
+                            }
+                            if (prefixField.getText().contains(" ")) {
+                                notification("Prefixes cannot contain spaces");
+                                return;
+                            }
+                            a = ki.getAddMan().createNew(Utils.toBase64(bin.serializeToAmplet().serializeToBytes()), entropyField.getText(), prefixField.getText(), AddressLength.valueOf(addressLength.getSelectionModel().getSelectedItem().getText()), true, KeyType.NONE);
+
+                        }
+                        ki.getAddMan().associateBinary(a, bin);
+                    } catch (UnsupportedEncodingException e) {
+                        ki.getMainLog().warn("Unable to create multi-sig address", e);
+                        return;
+                    }
+                    addressList.getItems().add(a.encodeForChain());
+                }
+            }
+        });
+
+        saveMSAddress.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                if (ki.getAddMan().getMainAdd().isP2SH()) {
+                    BinALPreBucket bucket = new BinALPreBucket(ki.getAddMan().getBinary(ki.getAddMan().getMainAdd()), ki.getAddMan().getMainAdd().getAddressLength(), (ki.getAddMan().getMainAdd().hasPrefix()) ? ki.getAddMan().getMainAdd().getPrefix() : null);
+                    try (FileOutputStream fos = new FileOutputStream("multisig.address")) {
+                        fos.write(bucket.serializeToBytes());
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                } else {
+                    notification("Set the multi-sig address as your spend address to save");
+                }
+            }
+        });
+        loadMSAddress.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                try {
+                    Path path = Paths.get("multisig.address");
+                    BinALPreBucket bucket = BinALPreBucket.fromBytes(Files.readAllBytes(path));
+                    for (int i = 0; i < 32; i++) {
+                        KeyKeyTypePair kktp = KeyKeyTypePair.fromBytes(bucket.getBin().getConstantMemory().getElement(i).getData());
+                        if (ki.getEncryptMan().getPublicKeyString(kktp.getKeyType()).equals(Utils.toBase64(kktp.getKey()))) {
+                            IAddress a = ki.getAddMan().createNew(Utils.toBase64(bucket.getBin().serializeToAmplet().serializeToBytes()), new String(bucket.getBin().getEntropy(), "UTF-8"), bucket.getPrefix(), bucket.getAl(), true, KeyType.NONE);
+                            ki.getAddMan().associateBinary(a, bucket.getBin());
+                            addressList.getItems().add(a.encodeForChain());
+
+                            return;
+                        }
+                    }
+                    notification("Your keys don't exist in this address, not adding");
+                } catch (RuntimeException e) {
+                    throw e;
+                } catch (Exception e) {
+                    notification("Loading multisig from multisig.address file failed");
+                    //fail quietly for now
+                }
+            }
+        });
+
+        setSpendAddress.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                ki.getAddMan().setMainAdd(Address.decodeFromChain(addressList.getSelectionModel().getSelectedItem()));
+                addressLabel.setText("Address - " + ki.getAddMan().getMainAdd().encodeForChain());
+            }
+        });
+
+        addressList.getSelectionModel().select(0);
+    }
+
+    private void setupADXPane() {
+
+        orderHistory.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+
+                exchangePane.setVisible(false);
+                prepareOH();
+                ohPane.setVisible(true);
+            }
+        });
+        backToEx.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                ohPane.setVisible(false);
+                exchangePane.setVisible(true);
+            }
+        });
+
+        obSellSize.setSkin(new RefreshableListViewSkin(obSellSize));
+        obSellPrice.setSkin(new RefreshableListViewSkin(obSellPrice));
+        obSellTotal.setSkin(new RefreshableListViewSkin(obSellTotal));
+        obBuyPrice.setSkin(new RefreshableListViewSkin(obBuyPrice));
+        obBuySize.setSkin(new RefreshableListViewSkin(obBuySize));
+        obBuyTotal.setSkin(new RefreshableListViewSkin(obBuyTotal));
+        obRecentPrice.setSkin(new RefreshableListViewSkin(obRecentPrice));
+        obRecentAmount.setSkin(new RefreshableListViewSkin(obRecentAmount));
+        obRecentDirection.setSkin(new RefreshableListViewSkin(obRecentDirection));
+        activePrice.setSkin(new RefreshableListViewSkin(activePrice));
+        activeAmount.setSkin(new RefreshableListViewSkin(activeAmount));
+        pairs.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<Label>() {
+            @Override
+            public void changed(ObservableValue<? extends Label> observable, Label oldValue, Label newValue) {
+                Pairs pair = Pairs.byName(newValue.getText());
+                if (pair != null) {
+                    exchangeBuy.setText("Buy (" + pair.accepting().getName() + ")");
+                    exchangeSell.setText("Sell (" + pair.accepting().getName() + ")");
+                    unitSelectorPrice.getItems().clear();
+                    unitSelectorPrice.getItems().add(new Label(pair.getOnOfferName()));
+                    unitSelectorPrice.getItems().add(new Label("m" + pair.getOnOfferName()));
+                    unitSelectorPrice.getItems().add(new Label("µ" + pair.getOnOfferName()));
+
+                    unitSelectorAmount.getItems().clear();
+                    unitSelectorAmount.getItems().add(new Label(pair.getAcceptingName()));
+                    unitSelectorAmount.getItems().add(new Label("m" + pair.getAcceptingName()));
+                    unitSelectorAmount.getItems().add(new Label("µ" + pair.getAcceptingName()));
+                    tOOWallet.setText(pair.onOffer().getName() + "\n" + format2.format((double) ki.getTransMan().getAmountInWallet(ki.getAddMan().getMainAdd(), pair.onOffer()).longValueExact() / 100_000_000));
+                    tPWallet.setText(pair.accepting().getName() + "\n" + format2.format((double) ki.getTransMan().getAmountInWallet(ki.getAddMan().getMainAdd(), pair.accepting()).longValueExact() / 100_000_000));
+
+                }
+            }
+        });
+
+        for (Pairs pair : Pairs.values()) {
+            Label label = new Label(pair.getName());
+            pairs.getItems().add(label);
+        }
+        pairs.getSelectionModel().select(0);
+
+        unitSelectorPrice.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<Label>() {
+            @Override
+            public void changed(ObservableValue<? extends Label> observable, Label oldValue, Label newValue) {
+                Pairs pair = Pairs.byName(pairs.getSelectionModel().getSelectedItem().getText());
+                if (pair == null) return;
+                if (newValue.getText().equals("µ" + pair.getOnOfferName())) {
+                    unitMultiplierPrice = BigInteger.valueOf(100);
+                } else if (newValue.getText().equals("m" + pair.getOnOfferName())) {
+                    unitMultiplierPrice = BigInteger.valueOf(100_000);
+                } else if (newValue.getText().equals(pair.getOnOfferName())) {
+                    unitMultiplierPrice = BigInteger.valueOf(100_000_000);
+                }
+                tokenPrice.setText(newValue.getText());
+                ((RefreshableListViewSkin) obSellSize.getSkin()).refresh();
+                ((RefreshableListViewSkin) obSellPrice.getSkin()).refresh();
+                ((RefreshableListViewSkin) obSellTotal.getSkin()).refresh();
+                ((RefreshableListViewSkin) obBuySize.getSkin()).refresh();
+                ((RefreshableListViewSkin) obBuyPrice.getSkin()).refresh();
+                ((RefreshableListViewSkin) obBuyTotal.getSkin()).refresh();
+                ((RefreshableListViewSkin) obRecentAmount.getSkin()).refresh();
+                ((RefreshableListViewSkin) obRecentDirection.getSkin()).refresh();
+                ((RefreshableListViewSkin) obRecentPrice.getSkin()).refresh();
+                ((RefreshableListViewSkin) activeAmount.getSkin()).refresh();
+                ((RefreshableListViewSkin) activePrice.getSkin()).refresh();
+
+            }
+        });
+        unitSelectorPrice.getSelectionModel().select(0);
+        unitSelectorAmount.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<Label>() {
+            @Override
+            public void changed(ObservableValue<? extends Label> observable, Label oldValue, Label newValue) {
+                Pairs pair = Pairs.byName(pairs.getSelectionModel().getSelectedItem().getText());
+                if (pair == null) return;
+                if (newValue.getText().equals("µ" + pair.getAcceptingName())) {
+                    unitMultiplierAmount = BigInteger.valueOf(100);
+                } else if (newValue.getText().equals("m" + pair.getAcceptingName())) {
+                    unitMultiplierAmount = BigInteger.valueOf(100_000);
+                } else if (newValue.getText().equals(pair.getAcceptingName())) {
+                    unitMultiplierAmount = BigInteger.valueOf(100_000_000);
+                }
+                tokenAmount.setText(newValue.getText());
+                ((RefreshableListViewSkin) obSellSize.getSkin()).refresh();
+                ((RefreshableListViewSkin) obSellPrice.getSkin()).refresh();
+                ((RefreshableListViewSkin) obSellTotal.getSkin()).refresh();
+                ((RefreshableListViewSkin) obBuySize.getSkin()).refresh();
+                ((RefreshableListViewSkin) obBuyPrice.getSkin()).refresh();
+                ((RefreshableListViewSkin) obBuyTotal.getSkin()).refresh();
+                ((RefreshableListViewSkin) obRecentAmount.getSkin()).refresh();
+                ((RefreshableListViewSkin) obRecentDirection.getSkin()).refresh();
+                ((RefreshableListViewSkin) obRecentPrice.getSkin()).refresh();
+                ((RefreshableListViewSkin) activeAmount.getSkin()).refresh();
+                ((RefreshableListViewSkin) activePrice.getSkin()).refresh();
+
+            }
+        });
+        unitSelectorAmount.getSelectionModel().select(0);
+        NumberAxis priceAxis = new NumberAxis();
+        CategoryAxis timeAxis = new CategoryAxis();
+        exchangeGraph = new CandlestickGraph(timeAxis, priceAxis, ki);
+        exchangeGraphBox.getChildren().add(exchangeGraph);
+        exchangeGraph.setLegendVisible(false);
+        changePassword.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                if (cpNew.getText().equals(cpConfirm.getText())) {
+                    if (cpNew.getText().isEmpty()) {
+                        notification("Password cannot be empty");
+                        return;
+                    }
+                    if (verifyPassword(cpCurrent.getText())) {
+                        deleteOldPassword(cpCurrent.getText());
+
+                        createNewPassword(cpNew.getText());
+                        notification("Password Changed");
+                    } else {
+                        notification("Wrong password");
+                    }
+                } else {
+                    notification("Passwords don't match");
+                }
+            }
+        });
+
+        priceControlsIndex = exControlsBox.getChildren().indexOf(priceHBox);
+        limitBuy.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                exPrice.setText("");
+                limit = true;
+                if (!exControlsBox.getChildren().contains(priceHBox)) {
+                    exControlsBox.getChildren().add(priceControlsIndex, priceHBox);
+                }
+            }
+        });
+        marketBuy.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                exPrice.setText("");
+                limit = false;
+                if (exControlsBox.getChildren().contains(priceHBox)) {
+                    exControlsBox.getChildren().remove(priceControlsIndex);
+                }
+            }
+        });
+        exchangeBuy.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                BigInteger amount;
+                try {
+                    amount = new BigDecimal(amtOnOffer.getText()).multiply(BigDecimal.valueOf(unitMultiplierAmount.doubleValue())).toBigInteger();
+                } catch (NumberFormatException e) {
+                    notification("Invalid Amount");
+                    return;
+                }
+                BigInteger stopPrice = null;
+                if (!ki.getExMan().getOrderBook().isSorted()) {
+                    ki.getExMan().getOrderBook().sort();
+                }
+                if (!ki.getExMan().getOrderBook().sells().isEmpty())
+                    stopPrice = ki.getExMan().getOrderBook().sells().get(0).unitPrice();
+                else if (!limit) {
+                    notification("No order to market buy from");
+                    return;
+                }
+                if (limit) {
+                    try {
+                        stopPrice = new BigDecimal(exPrice.getText()).multiply(BigDecimal.valueOf(unitMultiplierPrice.doubleValue())).toBigInteger();
+                        if (stopPrice.compareTo(BigInteger.valueOf(500)) < 0) throw new Exception();
+                    } catch (Exception e) {
+                        notification("Invalid Price");
+                        return;
+                    }
+                }
+
+                OrderStatus status = ki.getExMan().placeOrder(true, amount, stopPrice, Pairs.byName(pairs.getSelectionModel().getSelectedItem().getText()), limit);
+                if (!status.succeeded()) {
+                    if (!status.partial()) notification("Order not completed");
+                    else notification("Order partially completed");
+                } else {
+                    notification("Order complete!");
+                }
+            }
+        });
+        exchangeSell.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                BigInteger amount;
+                try {
+                    amount = new BigDecimal(amtOnOffer.getText()).multiply(BigDecimal.valueOf(unitMultiplierAmount.doubleValue())).toBigInteger();
+                } catch (NumberFormatException e) {
+                    notification("Invalid Amount");
+                    return;
+                }
+                BigInteger stopPrice = null;
+                if (!ki.getExMan().getOrderBook().isSorted()) {
+                    ki.getExMan().getOrderBook().sort();
+                }
+                if (!ki.getExMan().getOrderBook().buys().isEmpty())
+                    stopPrice = ki.getExMan().getOrderBook().buys().get(0).unitPrice();
+                else if (!limit) {
+                    notification("No order to market sell to");
+                    return;
+                }
+                if (limit) {
+                    try {
+                        stopPrice = new BigDecimal(exPrice.getText()).multiply(BigDecimal.valueOf(unitMultiplierPrice.doubleValue())).toBigInteger();
+                        if (stopPrice.compareTo(BigInteger.valueOf(500)) < 0) throw new Exception();
+                    } catch (Exception e) {
+                        notification("Invalid Price");
+                        return;
+                    }
+                }
+                OrderStatus status = ki.getExMan().placeOrder(false, amount, stopPrice, Pairs.byName(pairs.getSelectionModel().getSelectedItem().getText()), limit);
+                if (!status.succeeded()) {
+                    if (!status.partial()) notification("Order not completed");
+                    else notification("Order partially completed");
+                } else {
+                    notification("Order complete!");
+                }
+            }
+        });
+
+
+        amtOnOffer.textProperty().addListener(new ChangeListener<String>() {
+            @Override
+            public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
+                if (!limit) {
+                    BigInteger amount;
+                    try {
+                        amount = new BigDecimal(amtOnOffer.getText()).multiply(BigDecimal.valueOf(unitMultiplierAmount.doubleValue())).toBigInteger();
+                    } catch (NumberFormatException e) {
+                        return;
+                    }
+                    BigInteger priceSell = ki.getExMan().getOrderBook().buys().get(0).unitPrice();
+                    BigInteger priceBuy = ki.getExMan().getOrderBook().sells().get(0).unitPrice();
+                    double totalBuy = (priceBuy.doubleValue() / 100_000_000D) * amount.doubleValue();
+                    double totalSell = (priceSell.doubleValue() / 100_000_000D) * amount.doubleValue();
+                    exchangeTotalPurchase.setText("Totals -" + "\n" + "Buy: " + format2.format(totalBuy / unitMultiplierPrice.doubleValue()) + unitSelectorPrice.getSelectionModel().getSelectedItem().getText() + "\n" + "Sell: " + format2.format(totalSell / unitMultiplierPrice.doubleValue()) + unitSelectorPrice.getSelectionModel().getSelectedItem().getText());
+                } else {
+                    BigInteger amount;
+                    BigInteger stopPrice = null;
+                    try {
+                        amount = new BigDecimal(amtOnOffer.getText()).multiply(BigDecimal.valueOf(unitMultiplierAmount.doubleValue())).toBigInteger();
+                    } catch (NumberFormatException e) {
+                        return;
+                    }
+                    try {
+                        stopPrice = new BigDecimal(exPrice.getText()).multiply(BigDecimal.valueOf(unitMultiplierPrice.doubleValue())).toBigInteger();
+                        if (stopPrice.compareTo(BigInteger.valueOf(500)) < 0) throw new Exception();
+                    } catch (Exception e) {
+                        return;
+                    }
+                    double total = (stopPrice.doubleValue() / 100_000_000) * amount.doubleValue();
+                    exchangeTotalPurchase.setText("Total - " + format2.format(total / unitMultiplierPrice.doubleValue()) + unitSelectorPrice.getSelectionModel().getSelectedItem().getText());
+                }
+            }
+        });
+
+        exPrice.textProperty().addListener(new ChangeListener<String>() {
+            @Override
+            public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
+                BigInteger amount;
+                BigInteger stopPrice = null;
+                try {
+                    amount = new BigDecimal(amtOnOffer.getText()).multiply(BigDecimal.valueOf(unitMultiplierAmount.doubleValue())).toBigInteger();
+                } catch (NumberFormatException e) {
+                    return;
+                }
+                try {
+                    stopPrice = new BigDecimal(exPrice.getText()).multiply(BigDecimal.valueOf(unitMultiplierPrice.doubleValue())).toBigInteger();
+                    if (stopPrice.compareTo(BigInteger.valueOf(500)) < 0) throw new Exception();
+                } catch (Exception e) {
+                    return;
+                }
+                double total = (stopPrice.doubleValue() / 100_000_000) * amount.doubleValue();
+                exchangeTotalPurchase.setText("Total - " + format2.format(total / unitMultiplierPrice.doubleValue()) + unitSelectorPrice.getSelectionModel().getSelectedItem().getText());
+            }
+        });
+        XYChart.Series<String, Number> candleSeries = new XYChart.Series<>();
+        exchangeGraph.getData().add(candleSeries);
+        exchangeGraph.getXAxis().setAnimated(false);
+        exchangeGraph.getYAxis().setAnimated(false);
+        exchangeGraph.setAnimated(false);
+        exchangeGraph.setCreateSymbols(false);
+        exchangeGraph.setPrefHeight(5000);
+        exchangeGraph.setPrefWidth(5000);
+        pnlGraph.setLegendVisible(false);
+        ohCancel.setFixedCellSize(40);
+        ohAmount.setFixedCellSize(40);
+        ohDirection.setFixedCellSize(40);
+        ohDate.setFixedCellSize(40);
+        ohPrice.setFixedCellSize(40);
+
+
+        bindScrolls(obSellPrice, obSellSize);
+        bindScrolls(obSellSize, obSellTotal);
+        bindScrolls(obBuyPrice, obBuySize);
+        bindScrolls(obBuySize, obBuyTotal);
+        bindScrolls(obRecentPrice, obRecentAmount);
+        bindScrolls(obRecentAmount, obRecentDirection);
+        bindScrolls(activeAmount, activePrice);
+        ListProperty<Order> sells = new SimpleListProperty<>();
+        sells.set(FXCollections.observableArrayList());
+        sells.bindContent(ki.getExMan().getOrderBook().sells());
+        //sells.set(ki.getExMan().getOrderBook().sells());
+        obSellPrice.itemsProperty().bind(sells);
+        obSellPrice.setCellFactory(param -> new ListCell<Order>() {
+            @Override
+            protected void updateItem(Order item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (empty || item == null || item.unitPrice() == null) {
+                    setText(null);
+                } else {
+                    setText(format2.format(item.unitPrice().doubleValue() / (unitMultiplierPrice.doubleValue())));
+                }
+            }
+        });
+        obSellSize.itemsProperty().bind(sells);
+        obSellSize.setCellFactory(param -> new ListCell<Order>() {
+            @Override
+            protected void updateItem(Order item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (empty || item == null || item.amountOnOffer() == null) {
+                    setText(null);
+                } else {
+                    setText(format2.format(item.amountOnOffer().doubleValue() / (unitMultiplierAmount.doubleValue())));
+                }
+            }
+        });
+        obSellTotal.itemsProperty().bind(sells);
+        obSellTotal.setCellFactory(param -> new ListCell<Order>() {
+            @Override
+            protected void updateItem(Order item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (empty || item == null || item.amountOnOffer() == null) {
+                    setText(null);
+                } else {
+                    setText(format2.format(item.getOm().totalAtOrder.doubleValue() / (unitMultiplierAmount.doubleValue())));
+                }
+            }
+        });
+
+        ListProperty<Order> active = new SimpleListProperty<>();
+        active.set(FXCollections.observableArrayList());
+        active.bindContent(ki.getExMan().getOrderBook().active());
+        activePrice.itemsProperty().bind(active);
+        activeAmount.itemsProperty().bind(active);
+        activePrice.setCellFactory(param -> new ListCell<Order>() {
+            @Override
+            protected void updateItem(Order item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (empty || item == null || item.unitPrice() == null) {
+                    setText(null);
+                } else {
+                    setText(format2.format(item.unitPrice().doubleValue() / (unitMultiplierPrice.doubleValue())));
+                    setStyle("-fx-text-fill:" + ((!item.buy()) ? ("#c84128") : ("#18BC9C")));
+                }
+            }
+        });
+        //obSellSize.itemsProperty().bind(sells);
+        activeAmount.setCellFactory(param -> new ListCell<Order>() {
+            @Override
+            protected void updateItem(Order item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (empty || item == null || item.amountOnOffer() == null) {
+                    setText(null);
+                } else {
+                    setText(format2.format(item.amountOnOffer().doubleValue() / (unitMultiplierAmount.doubleValue())));
+                    setStyle("-fx-text-fill:" + ((!item.buy()) ? ("#c84128") : ("#18BC9C")));
+                }
+
+            }
+        });
+        ListProperty<Order> buys = new SimpleListProperty<>();
+        buys.set(FXCollections.observableArrayList());
+        buys.bindContent(ki.getExMan().getOrderBook().buys());
+        obBuyPrice.itemsProperty().bind(buys);
+        obBuySize.itemsProperty().bind(buys);
+        obBuyPrice.setCellFactory(param -> new ListCell<Order>() {
+            @Override
+            protected void updateItem(Order item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (empty || item == null || item.unitPrice() == null) {
+                    setText(null);
+                } else {
+                    setText(format2.format(item.unitPrice().doubleValue() / (unitMultiplierPrice.doubleValue())));
+                }
+            }
+        });
+        //obSellSize.itemsProperty().bind(sells);
+        obBuySize.setCellFactory(param -> new ListCell<Order>() {
+            @Override
+            protected void updateItem(Order item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (empty || item == null || item.amountOnOffer() == null) {
+                    setText(null);
+                } else {
+                    setText(format2.format(item.amountOnOffer().doubleValue() / (unitMultiplierAmount.doubleValue())));
+                }
+
+            }
+        });
+        obBuyTotal.itemsProperty().bind(buys);
+        obBuyTotal.setCellFactory(param -> new ListCell<Order>() {
+            @Override
+            protected void updateItem(Order item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (empty || item == null || item.getOm() == null) {
+                    setText(null);
+                } else {
+                    setText(format2.format(item.getOm().totalAtOrder.doubleValue() / (unitMultiplierAmount.doubleValue())));
+                }
+            }
+        });
+
+
+        ListProperty<Order> matched = new SimpleListProperty<>();
+        //matched.set(ki.getExMan().getOrderBook().matched());
+        matched.set(FXCollections.observableArrayList());
+        matched.bindContent(ki.getExMan().getOrderBook().matched());
+        obRecentPrice.itemsProperty().bind(matched);
+        obRecentAmount.itemsProperty().bind(matched);
+        obRecentDirection.itemsProperty().bind(matched);
+
+        obRecentPrice.setCellFactory(param -> new ListCell<Order>() {
+            @Override
+            protected void updateItem(Order item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (empty || item == null || item.unitPrice() == null) {
+                    setText(null);
+                } else {
+                    setText(format2.format(item.unitPrice().doubleValue() / (unitMultiplierPrice.doubleValue())));
+                    setStyle("-fx-text-fill:" + ((item.buy()) ? ("#c84128") : ("#18BC9C")));
+                }
+            }
+        });
+        //obSellSize.itemsProperty().bind(sells);
+        obRecentAmount.setCellFactory(param -> new ListCell<Order>() {
+            @Override
+            protected void updateItem(Order item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (empty || item == null || item.amountOnOffer() == null) {
+                    setText(null);
+                } else {
+                    setText(format2.format(item.amountOnOffer().doubleValue() / (unitMultiplierAmount.doubleValue())));
+                    setStyle("-fx-text-fill:" + ((item.buy()) ? ("#c84128") : ("#18BC9C")));
+                }
+            }
+        });
+        obRecentDirection.setCellFactory(param -> new SBListCellBuilder());
+    }
+
+    private void setupUpdateThreads() {
+        List<Long> average = new ArrayList<>();
+
+
+        Thread gUp = new Thread() {
+            public void run() {
+                setName("GUI-Updater");
+                int i = 0;
+                while (true) {
+                    i++;
+                    if (ki.getMinerMan().isMining()) {
+                        mining = true;
+                        Platform.runLater(new Thread() {
+                            public void run() {
+                                startMining.setText("Stop Mining");
+                            }
+                        });
+                    }
+                    if (i % 10 == 0) {
+
+                        if (!ki.getOptions().pool)
+                            Platform.runLater(new Thread() {
+                                public void run() {
+                                    setDaemon(true);
+                                    if (!ki.getExMan().getOrderBook().isSorted())
+                                        ki.getExMan().getOrderBook().sort();
+
+                                }
+                            });
+                    }
+                    if ((i % 10 == 0) && mining) {
+
+                        if (!ki.getMinerMan().isMining()) {
+                            mining = false;
+                            Platform.runLater(new Runnable() {
+                                public void run() {
+                                    startMining.setText("Start Mining");
+                                }
+                            });
+                        }
+                        Platform.runLater(new Runnable() {
+                            public void run() {
+
+                                for (XYChart.Series<String, Number> series : hashrateChart.getData()) {
+                                    if (series.getData().size() > 60) {
+                                        series.getData().remove(0);
+                                    }
+                                    series.getData().add(new XYChart.Data<>(sdf.format(new Date(System.currentTimeMillis())), ki.getMinerMan().getHashrate(series.getName()) / 1_000_000));
+                                    long chash = ki.getMinerMan().cumulativeHashrate() / 1_000_000;
+                                    currentHashrate.setText("Current Hashrate - " + chash + " Mh/s");
+                                    if (chash > maxH) {
+                                        maxH = chash;
+                                        maxHashrate.setText("Max - " + chash + " Mh/s");
+                                    }
+                                    if (chash < minH) {
+                                        minH = chash;
+                                        minHashrate.setText("Min - " + chash + " Mh/s");
+                                    }
+                                    blocksFoundLabel.setText("Blocks Found - " + format2.format(blocksFoundInt));
+                                    average.add(chash);
+                                    if (average.size() > 25) {
+                                        average.remove(0);
+                                    }
+                                    long averageH = 0;
+                                    for (Long l : average) {
+                                        averageH += l;
+                                    }
+                                    averageH = averageH / average.size();
+                                    averageHashrate.setText("Average - " + averageH + " Mh/s");
+                                }
+
+                            }
+                        });
+                    }
+
+                    Platform.runLater(new Thread() {
+                        public void run() {
+                            axcWeb.setMinWidth(axcPane.getWidth());
+                            axcWeb.setMinHeight(axcPane.getHeight());
+                            axcWeb.setPrefWidth(axcPane.getWidth());
+                            axcWeb.setPrefHeight(axcPane.getHeight());
+                            startMining.setLayoutX((miningTab.getWidth() / 2) - (startMining.getWidth() / 2) - 5);
+                            hashrateChart.setMinWidth(miningTab.getWidth());
+                            miningIntesity.setMinWidth(miningTab.getWidth() - 20);
+                            miLabel.setLayoutX((miningTab.getWidth() / 2) - (miLabel.getWidth() / 2) - 5);
+                            walletBox.setLayoutX(walletPane.getWidth() - (walletBox.getWidth() + 5));
+                            walletAmount.setLayoutX(walletPane.getWidth() - (walletAmount.getWidth() + 15));
+                            tokenLabel.setLayoutX(walletAmount.getLayoutX() + 10);
+                            transactionTable.setMinWidth(walletPane.getWidth() - (walletBox.getWidth() + 65));
+                            transactionTable.setMinHeight(walletPane.getHeight() - 170);
+                            topPane2.setMinWidth(walletPane.getWidth());
+                            beScroll.setMinWidth(blockExplorerPane.getWidth());
+                            beScroll.setMinHeight(blockExplorerPane.getHeight() - 60);
+                            beScroll.setPrefHeight(blockExplorerPane.getHeight() - 60);
+                            lockPane.setMinHeight(borderPane.getHeight());
+                            ohVbox.setMinHeight(ohPane.getHeight());
+                            ohVbox.setMinWidth(ohPane.getWidth() - 10);
+
+                            adxBox.setMinWidth(exchangePane.getWidth() - 20);
+                            adxBox.setMinHeight(exchangePane.getHeight() - 20);
+                            heightLabel.setText("Chain Height - " + ki.getChainMan().currentHeight());
+                            if (!ki.getOptions().pool)
+                                chainHeight2.setText(" " + ki.getChainMan().currentHeight().toString());
+                            miningDataHbox.setMinWidth(miningTab.getWidth());
+
+                            for (IConnectionManager c : ki.getNetMan().getConnections()) {
+                                latency.setText(" Latency - " + c.currentLatency());
+                            }
+                            startMining.setDisable(!GPUMiner.initDone);
+                            if (!GPUMiner.initDone) {
+                                startMining.setText("Autotuning...");
+                            } else if (frg) {
+                                frg = false;
+                                for (String name : ki.getMinerMan().getDevNames()) {
+                                    JFXToggleButton tb = new JFXToggleButton();
+                                    tb.setText(name);
+                                    tb.setTextFill(Color.WHITE);
+                                    tb.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+                                        @Override
+                                        public void handle(MouseEvent event) {
+                                            if (!tb.isSelected())
+                                                ki.getMinerMan().disableDev(tb.getText());
+                                            else
+                                                ki.getMinerMan().enableDev(tb.getText());
+                                        }
+                                    });
+                                    tb.setSelected(true);
+
+                                    devicesBox.getChildren().add(tb);
+                                }
+                                startMining.setText("Start Mining");
+                            }
+                            if (ki.getOptions().pool) {
+                                shares.setText("Accepted Shares - " + currentShares);
+                                localShares.setText("Local Shares - " + localShare);
+                                nextPayment.setText("Next Payment - " + format2.format(((currentShares * currentPPS)) / 100_000_000));
+                                if (ki.getNetMan().getConnections().size() > 0) {
+                                    poolConnected.setText("Connected");
+                                    poolConnect.setDisable(true);
+                                } else {
+                                    poolConnected.setText("Not Connected");
+                                    poolConnect.setDisable(false);
+                                    ki.getMinerMan().stopMiners();
+                                }
+                            }
+                            if (ki.getOptions().poolRelay) {
+                                long totalHR = 0;
+                                for (String ID : ki.getPoolData().hrMap.keySet()) {
+                                    totalHR += (ki.getPoolData().hrMap.get(ID) / 1000000);
+                                }
+                                poolHashrate.setText("Current Pool Hashrate (MH/s) - " + totalHR);
+                                poolNOC.setText("Number of Connections - " + ki.getPoolNet().getConnections().size());
+                                currentPoolShares.setText("Current Pool Shares - " + ki.getPoolManager().getTotalSharesOfCurrentPayPeriod());
+                                estimatedNextPayout.setText("Estimated Next Payout - " + format2.format(ki.getPoolManager().getTotalSharesOfCurrentPayPeriod() * (double) ki.getPoolManager().getCurrentPayPerShare() / 100_000_000D));
+                            }
+
+
+                        }
+                    });
+
+                    try {
+                        sleep(100);
+                    } catch (InterruptedException e) {
+                        ki.getMainLog().error("GUI update thread interrupted ", e);
+                        return;
+                    }
+                }
+            }
+        };
+        gUp.setDaemon(true);
+        gUp.start();
+    }
+
+    private void setupBackendThreads() {
+        Thread t = new Thread() {
+            public void run() {
+                while (run) {
+                    if (close) {
+                        try {
+                            ki.close();
+                            Platform.exit();
+                            break;
+                        } catch (Exception e) {
+                            ki.getMainLog().error("Could not close correctly ", e);
+                        }
+                        continue;
+                    }
+                    try {
+                        sleep(100);
+                    } catch (InterruptedException e) {
+                        return;
+                    }
+
+                }
+            }
+        };
+        t.setName("GUI-Backend");
+        t.setDaemon(true);
+        threads.add(t);
+        t.start();
+    }
+
+    private void setupSettingsPane() {
+        debugMode.setTextFill(Color.WHITE);
+        requirePassword.setTextFill(Color.WHITE);
+        highSecurity.setTextFill(Color.WHITE);
+        versionLabel.setText("Version - " + ki.getVersion());
+        highSecurity.setSelected(ki.getSetting(Settings.HIGH_SECURITY));
+        requirePassword.setSelected(ki.getSetting(Settings.REQUIRE_PASSWORD));
+        debugMode.setSelected(ki.getSetting(Settings.DEBUG_MODE));
+
+        resetColors.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                colorCombos.getSelectionModel().select(1);
+                colorPicker.setValue(Color.valueOf("#252830"));
+                colorCombos.getSelectionModel().select(0);
+                colorPicker.setValue(Color.valueOf("#18BC9C"));
+            }
+        });
+        if (requirePassword.isSelected()) {
+            lockPane.setVisible(true);
+        }
+        highSecurity.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                ki.setSetting(Settings.HIGH_SECURITY, highSecurity.isSelected());
+            }
+        });
+        requirePassword.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                ki.setSetting(Settings.REQUIRE_PASSWORD, requirePassword.isSelected());
+            }
+        });
+        debugMode.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                ki.setSetting(Settings.DEBUG_MODE, debugMode.isSelected());
+            }
+        });
+
+        ChangeListener<Color> cpListener = (observable, oldValue, newValue) -> {
+            if (colorCombos.getSelectionModel().getSelectedItem().getText().contains("Primary Color")) {
+                menuHamburger.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
+
+                vb.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
+
+                sendButton.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
+                loadTransaction.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
+                copyAddress.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
+                copySelectedAdd.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
+                copyPublicKey.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
+                startMining.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
+                String color = colorPicker.getValue().toString().replace("0x", "");
+                color = "#" + color;
+                miningIntesity.setStyle("-jfx-default-thumb:" + color);
+                createAddress.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
+                saveMSAddress.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
+                loadMSAddress.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
+                deleteAddress.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
+                setSpendAddress.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
+                changePassword.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
+                backToBE.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
+                backToEx.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
+                nextBlock.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
+                previousBlock.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
+                goBE.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
+                poolConnect.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
+                poolDisconnect.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
+                resetColors.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
+                exchangeBuy.setBackground(new Background(new BackgroundFill(Color.valueOf("#18BC9C"), CornerRadii.EMPTY, Insets.EMPTY)));
+                orderHistory.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
+                limitBuy.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
+                marketBuy.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
+                exchangeSell.setBackground(new Background(new BackgroundFill(Color.valueOf("#c84128"), CornerRadii.EMPTY, Insets.EMPTY)));
+                sellLabel.setTextFill(Color.valueOf("#c84128"));
+                buyLabel.setTextFill(Color.valueOf("#18BC9C"));
+                poolDynamicFeeSlider.setStyle("-jfx-default-thumb:" + color);
+                payoutSlider.setStyle("-jfx-default-thumb:" + color);
+                addKeyBtn.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
+                singleSig.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
+                multiSig.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
+                clearKeys.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
+
+                ki.setStringSetting(StringSettings.PRIMARY_COLOR, color);
+
+                //miningIntesity.getClip().setStyle("-fx-background-color:"+color);
+
+            } else if (colorCombos.getSelectionModel().getSelectedItem().getText().contains("Secondary Color")) {
+                String color = colorPicker.getValue().toString().replace("0x", "");
+                color = "#" + color;
+                topPane.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
+                borderPane.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
+                for (Pane p : content) {
+                    p.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
+                }
+                ki.setStringSetting(StringSettings.SECONDARY_COLOR, color);
+            } else if (colorCombos.getSelectionModel().getSelectedItem().getText().contains("Text Primary")) {
+                for (Node n : vb.getChildren()) {
+                    ((JFXButton) n).setTextFill(colorPicker.getValue());
+                }
+            } else if (colorCombos.getSelectionModel().getSelectedItem().getText().contains("Text Secondary")) {
+
+            }
+
+        };
+        colorPicker.valueProperty().addListener(cpListener);
+        colorPicker.setValue(Color.valueOf("#18BC9C"));
+    }
+
+    private void setupPoolClientPane() {
+        autoMine.setTextFill(Color.WHITE);
+        autoMine.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                ki.setSetting(Settings.AUTO_MINE, autoMine.isSelected());
+            }
+        });
+        pplnsClient.setSelected(ki.getSetting(Settings.PPLNS_CLIENT));
+        if (ki.getStringSetting(StringSettings.POOL_PAYTO) != null && !ki.getStringSetting(StringSettings.POOL_PAYTO).isEmpty())
+            paytoAddress.setText(ki.getStringSetting(StringSettings.POOL_PAYTO));
+        if (ki.getStringSetting(StringSettings.POOL_SERVER) != null && !ki.getStringSetting(StringSettings.POOL_SERVER).isEmpty())
+            ipField.setText(ki.getStringSetting(StringSettings.POOL_SERVER));
+
+        poolConnect.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                if (paytoAddress.getText().isEmpty()) return;
+                ki.getPoolData().payTo = Address.decodeFromChain(paytoAddress.getText());
+                ki.getNetMan().attemptConnect(ipField.getText());
+                ki.getPoolData().poolConn = ipField.getText();
+                ki.setStringSetting(StringSettings.POOL_PAYTO, paytoAddress.getText());
+                ki.setStringSetting(StringSettings.POOL_SERVER, ipField.getText());
+            }
+        });
+        poolDisconnect.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                for (IConnectionManager connMan : ki.getNetMan().getConnections()) {
+                    connMan.disconnect();
+                    ki.getNetMan().getConnections().clear();
+                    ki.getPoolData().poolConn = "";
+                }
+            }
+        });
+    }
+
+    private void setupPoolServerPane() {
+        poolDynamicFee.setTextFill(Color.WHITE);
+        pplnsServer.setSelected(ki.getSetting(Settings.PPLNS_SERVER));
+        pplnsClient.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                ki.setSetting(Settings.PPLNS_CLIENT, pplnsClient.isSelected());
+            }
+        });
+        pplnsServer.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                ki.setSetting(Settings.PPLNS_SERVER, pplnsServer.isSelected());
+            }
+        });
+        poolDynamicFee.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                if (poolDynamicFee.isSelected()) {
+                    poolDynamicFeeSlider.setDisable(false);
+                    poolStaticFee.setDisable(true);
+                    BigDecimal sd = new BigDecimal(GPUMiner.shareDiff);
+                    BigDecimal cd = new BigDecimal(ki.getChainMan().getCurrentDifficulty());
+                    long pps = (long) (((cd.divide(sd, 9, RoundingMode.HALF_DOWN).doubleValue() * ChainManager.blockRewardForHeight(ki.getChainMan().currentHeight()).longValueExact()) * (1 - (poolDynamicFeeSlider.getValue() / 100))));
+                    ki.getPoolManager().updateCurrentPayPerShare(pps);
+                } else {
+                    poolDynamicFeeSlider.setDisable(true);
+                    poolStaticFee.setDisable(false);
+                }
+                ki.setSetting(Settings.DYNAMIC_FEE, poolDynamicFee.isSelected());
+            }
+        });
+        poolDynamicFeeSlider.valueProperty().addListener(new ChangeListener<Number>() {
+            @Override
+            public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
+                BigDecimal sd = new BigDecimal(GPUMiner.shareDiff);
+                BigDecimal cd = new BigDecimal(ki.getChainMan().getCurrentDifficulty());
+                long pps = (long) (((cd.divide(sd, 9, RoundingMode.HALF_DOWN).doubleValue() * ChainManager.blockRewardForHeight(ki.getChainMan().currentHeight()).longValueExact()) * (1 - (poolDynamicFeeSlider.getValue() / 100))));
+                ki.getPoolManager().updateCurrentPayPerShare(pps);
+                ki.setStringSetting(StringSettings.POOL_FEE, poolDynamicFeeSlider.getValue() + "");
+            }
+        });
+        poolStaticFee.textProperty().addListener(new ChangeListener<String>() {
+            @Override
+            public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
+                try {
+                    double fee = Double.parseDouble(newValue);
+
+                    long pps = (long) (fee * 100_000_000L);
+                    ki.setStringSetting(StringSettings.POOL_STATIC_PPS, "" + pps);
+                    ki.getPoolManager().updateCurrentPayPerShare(pps);
+                } catch (NumberFormatException e) {
+                    ki.getMainLog().warn("Could not parse static pool fee " + newValue);
+                }
+            }
+        });
+
+        payoutSlider.valueProperty().addListener(new ChangeListener<Number>() {
+            @Override
+            public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
+                ki.getPoolManager().updateCurrentPayInterval(newValue.longValue() * 60_000L);
+            }
+        });
+    }
+
+    private void setupStandard() {
+        setupSettingsPane();
+        setupWalletPane();
+        setupAddressPane();
+        setupMiningPane();
+        setupAXCPane();
+        setupADXPane();
+        setupBackendThreads();
+        setupUpdateThreads();
+    }
+
+    private void setupFull() {
+        setupStandard();
+        setupBlockExplorerPane();
+    }
+
+    private void setupLite() {
+        setupStandard();
+    }
+
+    private void setupPoolServer() {
+        setupSettingsPane();
+        setupWalletPane();
+        setupAddressPane();
+        setupAXCPane();
+        setupADXPane();
+        setupBlockExplorerPane();
+        setupPoolServerPane();
+        setupBackendThreads();
+        setupUpdateThreads();
+    }
+
+    private void setupPoolClient() {
+        setupMiningPane();
+        setupPoolClientPane();
+    }
+
 }

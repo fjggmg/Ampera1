@@ -34,6 +34,7 @@ public class SyncPage {
         syncPane.setBackground(new Background(new BackgroundFill(new LinearGradient(0, 0, 1, 0, true, CycleMethod.NO_CYCLE, stops), CornerRadii.EMPTY, Insets.EMPTY)));
         //syncPane.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)))
         mainLabel.setFont(mFont);
+
         BigInteger offset = Ki.getInstance().getLoadHeight();
         BigInteger total = Ki.getInstance().getStartHeight().subtract(Ki.getInstance().getLoadHeight());
         updateThread = new Thread() {

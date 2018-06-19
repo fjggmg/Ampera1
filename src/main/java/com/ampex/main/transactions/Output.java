@@ -7,10 +7,7 @@ import amp.HeadlessPrefixedAmplet;
 import amp.classification.AmpClassCollection;
 import amp.classification.classes.AC_SingleElement;
 import amp.group_primitives.UnpackedGroup;
-import com.ampex.amperabase.AmpIDs;
-import com.ampex.amperabase.IAddress;
-import com.ampex.amperabase.IOutput;
-import com.ampex.amperabase.Token;
+import com.ampex.amperabase.*;
 import com.ampex.main.Ki;
 import com.ampex.main.data.encryption.EncryptionManager;
 import com.ampex.main.data.utils.Utils;
@@ -139,6 +136,17 @@ public class Output implements IOutput {
         acc.addClass(version);
         Amplet amp = acc.serializeToAmplet();
         return amp;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        return o instanceof TXIO && ((TXIO) o).getID().equals(getID());
+    }
+
+    @Override
+    public int hashCode() {
+        byte[] id = Utils.fromBase64(getID());
+        return ByteTools.buildInt(id[0], id[1], id[2], id[3]);
     }
 
     @Deprecated
