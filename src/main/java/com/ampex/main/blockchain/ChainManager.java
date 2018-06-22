@@ -172,13 +172,16 @@ public class ChainManager implements IChainMan {
                 if (this.current != null) {
                     recalculateDifficulty();
                 }
+            } else if (ki.getMinerMan() != null && ki.getMinerMan().isMining()) {
+                ki.debug("Restarting miners");
+                ki.getMinerMan().restartMiners();
             }
 
+            //ki.debug("Mining status: " + ki.getMinerMan().isMining());
+
+
         }
-        if (ki.getMinerMan() != null && ki.getMinerMan().isMining()) {
-            ki.debug("Restarting miners");
-            ki.getMinerMan().restartMiners();
-        }
+
         if (ki.getOptions().poolRelay) {
             BigDecimal sd = new BigDecimal(GPUMiner.shareDiff);
             BigDecimal cd = new BigDecimal(ki.getChainMan().getCurrentDifficulty());
@@ -384,15 +387,10 @@ public class ChainManager implements IChainMan {
             precedingZeroes = (precedingZeroes | byteHash[i]) & 0x00ff;
         }
         if (height.compareTo(BigInteger.valueOf(32910L)) < 0) {
-            if (!(precedingZeroes == 0 && byteHash[mostSignificant0Digits] <= mostSignificantByte)) {
-                return false;
-            }
+            return precedingZeroes == 0 && byteHash[mostSignificant0Digits] <= mostSignificantByte;
         } else {
-            if (!(precedingZeroes == 0 && ((byteHash[mostSignificant0Digits] & 0x00ff) <= mostSignificantByte))) {
-                return false;
-            }
+            return precedingZeroes == 0 && ((byteHash[mostSignificant0Digits] & 0x00ff) <= mostSignificantByte);
         }
-        return true;
     }
 
     public BlockState verifyBlock(IBlockAPI block) {

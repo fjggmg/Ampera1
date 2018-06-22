@@ -231,9 +231,8 @@ public class Ki extends Thread implements IKi, IKiAPI {
         getMainLog().info("Chain loaded. Current height: " + chainMan.currentHeight());
 
 
-        if (o.pool || o.poolRelay) {
-            pd = new PoolData();
-        }
+        pd = new PoolData();
+
         if (o.rebuild) {
             List<IBlockAPI> blocksToRebuild = new ArrayList<>();
             BigInteger b = BigInteger.ONE;
@@ -299,6 +298,7 @@ public class Ki extends Thread implements IKi, IKiAPI {
             netMan = new PoolNetMan(this);
             poolNet = netMan;
         } else {
+            poolNet = new PoolNetMan(this);
             netMan = new NetMan(this, o.relay);
 
         }
@@ -330,6 +330,7 @@ public class Ki extends Thread implements IKi, IKiAPI {
         if (!o.pool) {
             netMan.start();
         }
+
         ih.start();
         guiThread.start();
         if (o.lite && !o.pool) {
@@ -344,8 +345,8 @@ public class Ki extends Thread implements IKi, IKiAPI {
         }
         if (o.poolRelay) {
             miningPool.start();
-            poolNet.start();
         }
+        poolNet.start();
         while (true) {
             if (o.relay || o.poolRelay) return;
             try {
@@ -391,6 +392,7 @@ public class Ki extends Thread implements IKi, IKiAPI {
 
             addMan.close();
             netMan.close();
+            poolNet.close();
             if (ki.getOptions().pool || ki.getOptions().poolRelay)
                 poolNet.close();
             settings.close();
@@ -401,6 +403,8 @@ public class Ki extends Thread implements IKi, IKiAPI {
             }
             if (!getOptions().nogui)
                 guiHook.close();
+            if (getOptions().poolRelay)
+                miningPool.interrupt();
             //System.exit(0);
         }
     }

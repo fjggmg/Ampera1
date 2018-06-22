@@ -64,8 +64,8 @@ public class PoolConnMan extends IConnectionManager implements ChannelHandler {
         ki.debug("Pool connection established");
 
         PoolHandshake ph = new PoolHandshake();
-        if (ki.getOptions().pool) {
-            if (ki.getPoolData().payTo == null || ki.getPoolData().ID == null) {
+        if (!ki.getOptions().poolRelay) {
+            if (ki.getPoolData().payTo == null) {
                 disconnect();
                 return;
             }

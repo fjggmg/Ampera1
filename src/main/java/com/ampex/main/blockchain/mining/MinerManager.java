@@ -167,7 +167,7 @@ public class MinerManager implements IMinerMan {
         return mining;
     }
 
-    ArrayList<GPUMiner> gpuMiners = new ArrayList<GPUMiner>();
+    private ArrayList<GPUMiner> gpuMiners = new ArrayList<GPUMiner>();
 
     @Override
     public void startMiners() {
@@ -200,6 +200,7 @@ public class MinerManager implements IMinerMan {
 
     @Override
     public void stopMiners() {
+        //ki.debug("Stop miners called");
         for (IMiner miner : miners) {
             miner.interrupt();
         }

@@ -621,6 +621,8 @@ public class NewGUI implements GUIHook {
             vb.getChildren().add(buildMainButton("Address", "/home.png", 100, 0, content, addressPane, 1));
             vb.getChildren().add(buildMainButton("", "/adxlogo.png", 200, 0, content, exchangePane, 3));
             vb.getChildren().add(buildMainButton("AXC", "/axclogo.png", 300, 5, content, axcPane, 1.2));
+            if (!ki.getOptions().poolRelay)
+                vb.getChildren().add(buildMainButton("Pool", "/pool.png", 400, 3, content, poolPane, 1));
         } else if (ki.getOptions().pool && !ki.getOptions().poolRelay) {
             vb.getChildren().add(buildMainButton("Pool", "/pool.png", 100, 3, content, poolPane, 1));
         }
@@ -628,12 +630,12 @@ public class NewGUI implements GUIHook {
             vb.getChildren().add(buildMainButton("Pool", "/pool.png", 100, 3, content, poolRelay, 1));
         }
         if (!ki.getOptions().poolRelay)
-            vb.getChildren().add(buildMainButton("Mining", "/gpu.png", 400, 1, content, miningTab, 1));
+            vb.getChildren().add(buildMainButton("Mining", "/gpu.png", 500, 1, content, miningTab, 1));
 
         if (!ki.getOptions().lite && !ki.getOptions().pool)
-            vb.getChildren().add(buildMainButton("Blocks", "/Block.png", 500, 0, content, blockExplorerPane, 1));
-        vb.getChildren().add(buildMainButton("Settings", "/Settings.png", 600, 0, content, settingsPane, 1));
-        vb.getChildren().add(buildMainButton("Help", "/Help.png", 700, 7, content, helpPane, 1));
+            vb.getChildren().add(buildMainButton("Blocks", "/Block.png", 600, 0, content, blockExplorerPane, 1));
+        vb.getChildren().add(buildMainButton("Settings", "/Settings.png", 700, 0, content, settingsPane, 1));
+        vb.getChildren().add(buildMainButton("Help", "/Help.png", 800, 7, content, helpPane, 1));
         vb.getChildren().add(new Separator());
 
         if (!ki.getOptions().pool) {
@@ -2574,19 +2576,20 @@ public class NewGUI implements GUIHook {
                                 }
                                 startMining.setText("Start Mining");
                             }
-                            if (ki.getOptions().pool) {
+
                                 shares.setText("Accepted Shares - " + currentShares);
                                 localShares.setText("Local Shares - " + localShare);
                                 nextPayment.setText("Next Payment - " + format2.format(((currentShares * currentPPS)) / 100_000_000));
-                                if (ki.getNetMan().getConnections().size() > 0) {
+                            if (ki.getPoolNet().getConnections().size() > 0) {
                                     poolConnected.setText("Connected");
                                     poolConnect.setDisable(true);
                                 } else {
                                     poolConnected.setText("Not Connected");
                                     poolConnect.setDisable(false);
+                                if (ki.getOptions().pool)
                                     ki.getMinerMan().stopMiners();
                                 }
-                            }
+
                             if (ki.getOptions().poolRelay) {
                                 long totalHR = 0;
                                 for (String ID : ki.getPoolData().hrMap.keySet()) {
@@ -2772,7 +2775,7 @@ public class NewGUI implements GUIHook {
             public void handle(MouseEvent event) {
                 if (paytoAddress.getText().isEmpty()) return;
                 ki.getPoolData().payTo = Address.decodeFromChain(paytoAddress.getText());
-                ki.getNetMan().attemptConnect(ipField.getText());
+                ki.getPoolNet().attemptConnect(ipField.getText());
                 ki.getPoolData().poolConn = ipField.getText();
                 ki.setStringSetting(StringSettings.POOL_PAYTO, paytoAddress.getText());
                 ki.setStringSetting(StringSettings.POOL_SERVER, ipField.getText());
@@ -2781,9 +2784,9 @@ public class NewGUI implements GUIHook {
         poolDisconnect.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
-                for (IConnectionManager connMan : ki.getNetMan().getConnections()) {
+                for (IConnectionManager connMan : ki.getPoolNet().getConnections()) {
                     connMan.disconnect();
-                    ki.getNetMan().getConnections().clear();
+                    ki.getPoolNet().getConnections().clear();
                     ki.getPoolData().poolConn = "";
                 }
             }
@@ -2864,6 +2867,7 @@ public class NewGUI implements GUIHook {
         setupADXPane();
         setupBackendThreads();
         setupUpdateThreads();
+        setupPoolClientPane();
     }
 
     private void setupFull() {

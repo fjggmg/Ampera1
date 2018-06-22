@@ -228,6 +228,14 @@ public class PoolNetMan extends Thread implements INetworkManager {
     }
 
     @Override
+    public void interrupt() {
+        for (Thread t : threads) {
+            t.interrupt();
+        }
+        gpq.interrupt();
+        super.interrupt();
+    }
+    @Override
     public List<String> getRelays() {
         return null;
     }
@@ -238,6 +246,7 @@ public class PoolNetMan extends Thread implements INetworkManager {
             if (conn != null && conn.isConnected())
                 conn.disconnect();
         }
+        interrupt();
     }
 
     @Override

@@ -40,7 +40,7 @@ public class GPUMiner extends Thread implements IMiner {
     public static final BigInteger shareDiff = new BigInteger("00000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF", 16);
 
 
-    public static int init(IKi ki, ContextMaster cm) throws MiningIncompatibleException {
+    public static int init(IKi ki, ContextMaster cm) {
 
         platforms = cm;
         ArrayList<DeviceContext> jcacqs = platforms.getContexts();
@@ -50,7 +50,7 @@ public class GPUMiner extends Thread implements IMiner {
 
         byte[] difficulty = new byte[64];
         int p = 63;
-        if (!ki.getOptions().pool)
+        if (!ki.getOptions().pool && ki.getPoolNet().getConnections().size() == 0)
             for (int i = ki.getChainMan().getCurrentDifficulty().toByteArray().length - 1; i >= 0; i--) {
                 difficulty[p] = ki.getChainMan().getCurrentDifficulty().toByteArray()[i];
                 p--;
@@ -65,7 +65,7 @@ public class GPUMiner extends Thread implements IMiner {
         int i = 0;
         for (DeviceContext jcaq : jcacqs) {
             int threadCount = TimedAutotune.getAutotuneSettingsMap().get(jcaq.getDInfo().getDeviceName()).threadFactor;
-            SHA3Miner miner = new SHA3Miner(jcaq, difficulty, (ki.getOptions().pool) ? share : null, threadCount, TimedAutotune.getAutotuneSettingsMap().get(jcaq.getDInfo().getDeviceName()).kernelType);
+            SHA3Miner miner = new SHA3Miner(jcaq, difficulty, (ki.getOptions().pool || ki.getPoolNet().getConnections().size() > 0) ? share : null, threadCount, TimedAutotune.getAutotuneSettingsMap().get(jcaq.getDInfo().getDeviceName()).kernelType);
             gpuMiners.add(miner);
             i++;
         }
@@ -95,7 +95,7 @@ public class GPUMiner extends Thread implements IMiner {
         while (mining) {
 
             Block b;
-            if (!ki.getOptions().pool) {
+            if (!ki.getOptions().pool && ki.getPoolNet().getConnections().size() == 0) {
                 b = ki.getChainMan().formEmptyBlock(TransactionFeeCalculator.MIN_FEE);
             } else {
                 b = new Block();
@@ -121,7 +121,7 @@ public class GPUMiner extends Thread implements IMiner {
             miner.setIntensity((miningIntensity == 0) ? 1 : miningIntensity / 100);
             byte[] difficulty = new byte[64];
             int p = 63;
-            if (!ki.getOptions().pool)
+            if (!ki.getOptions().pool && (ki.getPoolNet().getConnections().size() == 0))
                 for (int i = ki.getChainMan().getCurrentDifficulty().toByteArray().length - 1; i >= 0; i--) {
                     difficulty[p] = ki.getChainMan().getCurrentDifficulty().toByteArray()[i];
                     p--;
@@ -132,12 +132,14 @@ public class GPUMiner extends Thread implements IMiner {
             }
             ki.debug("Current difficulty is: " + Utils.toHexArray(difficulty));
 
-            if (ki.getOptions().pool) {
+            if (ki.getOptions().pool || ki.getPoolNet().getConnections().size() > 0) {
 
                 try {
                     if (ki.getPoolData().ID != null) {
                         byte[] extra = ki.getPoolData().ID.getBytes("UTF-8");
                         miner.resumeMining(message, extra);
+                    } else {
+                        ki.getMainLog().error("Unable to mine, pool ID is null.");
                     }
                 } catch (UnsupportedEncodingException e) {
                     e.printStackTrace();
@@ -172,7 +174,7 @@ public class GPUMiner extends Thread implements IMiner {
                 }
                 BlockAndSharePayloads[] basp = miner.getPayloads();
                 ki.debug("size of basp: " + basp.length);
-                if (!ki.getOptions().pool) {
+                if (!ki.getOptions().pool && (ki.getPoolNet().getConnections().size() < 1)) {
 
                     byte[] winningPayload = basp[0].getBlockPayload().getBytes();
 
@@ -233,7 +235,7 @@ public class GPUMiner extends Thread implements IMiner {
                             } catch (UnsupportedEncodingException e) {
                                 e.printStackTrace();
                             }
-                            ki.getNetMan().broadcast(pbh);
+                            ki.getPoolNet().broadcast(pbh);
                         }
                     }
                     for (int q = 0; q < i; q++) {

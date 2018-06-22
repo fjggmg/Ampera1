@@ -26,8 +26,11 @@ public class PoolHandshake implements PoolPacket {
             connMan.disconnect();
             return;
         }
-        if (ki.getOptions().pool) {
-            ki.getNetMan().connectionInit(ID, connMan);
+        if (!ki.getOptions().poolRelay) {
+
+            ki.getPoolNet().connectionInit(ID, connMan);
+            ki.getMinerMan().stopMiners();
+            ki.getMinerMan().setup();
             if (ki.getSetting(Settings.AUTO_MINE)) {
                 if (ki.getPoolData().currentWork != null) {
                     ki.getMinerMan().restartMiners();
