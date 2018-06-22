@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class TransactionManagerLite extends Thread implements ITransMan {
 
@@ -24,7 +25,7 @@ public class TransactionManagerLite extends Thread implements ITransMan {
 
     }
 
-    Map<String, TXIO> utxoMap = new HashMap<>();
+    Map<String, TXIO> utxoMap = new ConcurrentHashMap<>();
 
     public void resetLite() {
         utxoMap.clear();
