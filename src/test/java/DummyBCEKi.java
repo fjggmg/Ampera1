@@ -16,6 +16,7 @@ import com.ampex.main.transactions.ITransMan;
 import com.ampex.main.transactions.addresses.IAddMan;
 import com.ampex.main.transactions.scripting.ScriptManager;
 import engine.ByteCodeEngine;
+import engine.IByteCodeEngine;
 import mining_pool.Pool;
 import org.apache.logging.log4j.Logger;
 
@@ -110,6 +111,11 @@ public class DummyBCEKi implements IKi {
     }
 
     @Override
+    public void doneDownloading() {
+
+    }
+
+    @Override
     public void resetLite() {
 
     }
@@ -155,7 +161,7 @@ public class DummyBCEKi implements IKi {
     }
 
     @Override
-    public ByteCodeEngine getBCE8() {
+    public IByteCodeEngine getBCE8() {
         return bce;
     }
 

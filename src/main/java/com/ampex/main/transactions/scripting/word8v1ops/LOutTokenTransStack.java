@@ -31,6 +31,6 @@ public class LOutTokenTransStack implements IOperator {
     @Override
     public void execute(Stack<IDataElement> stack, IBinary binary, IProgram program, IConstantMemory constantMemory, IJumpMemory jumpMemory, IWritableMemory writableMemory, IOPCode opCode, ITransAPI transaction, byte[] executionAddress) throws Exception {
         IOutput o = transaction.getOutputs().get(stack.pop().getDataAsInt());
-        stack.push(DataElement.create(ByteTools.deconstructInt(o.getToken().getID())));
+        stack.push(new DataElement(ByteTools.deconstructInt(o.getToken().getID())));
     }
 }

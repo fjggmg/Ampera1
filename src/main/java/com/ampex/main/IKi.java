@@ -1,6 +1,6 @@
 package com.ampex.main;
 
-import com.ampex.amperabase.IKiAPI;
+import com.ampex.adapter.KiAdapter;
 import com.ampex.main.GUI.FXGUI;
 import com.ampex.main.GUI.NewGUI;
 import com.ampex.main.adx.ExchangeManager;
@@ -20,7 +20,7 @@ import com.ampex.main.transactions.TransactionManagerLite;
 import com.ampex.main.transactions.addresses.AddressManager;
 import com.ampex.main.transactions.addresses.IAddMan;
 import com.ampex.main.transactions.scripting.ScriptManager;
-import engine.ByteCodeEngine;
+import engine.IByteCodeEngine;
 import org.apache.logging.log4j.Logger;
 
 import java.math.BigInteger;
@@ -42,7 +42,7 @@ import java.math.BigInteger;
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
-public interface IKi extends IKiAPI {
+public interface IKi extends KiAdapter {
     /**
      * wrapper for thread
      */
@@ -150,7 +150,7 @@ public interface IKi extends IKiAPI {
 
     void setStringSetting(StringSettings setting, String value);
 
-    ByteCodeEngine getBCE8();
+    IByteCodeEngine getBCE8();
 
     ExchangeManager getExMan();
 

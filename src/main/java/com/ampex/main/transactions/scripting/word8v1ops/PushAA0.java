@@ -23,7 +23,7 @@ public class PushAA0 implements IOperator {
 
     @Override
     public void execute(Stack<IDataElement> stack, IBinary binary, IProgram program, IConstantMemory constantMemory, IJumpMemory jumpMemory, IWritableMemory writableMemory, IOPCode opCode, ITransAPI transaction, byte[] executionAddress) throws Exception {
-        stack.push(DataElement.create(new byte[1]));
+        stack.push(new DataElement(new byte[1]));
     }
 
     @Override

@@ -4,8 +4,8 @@ import amp.Amplet;
 import amp.HeadlessPrefixedAmplet;
 import amp.serialization.IAmpByteSerializable;
 import com.ampex.amperabase.AddressLength;
-import engine.binary.Binary;
 import engine.binary.IBinary;
+import engine.binary.on_ice.Binary;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.UnsupportedEncodingException;

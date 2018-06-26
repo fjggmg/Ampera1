@@ -5,6 +5,7 @@ import amp.HeadlessPrefixedAmplet;
 import amp.classification.AmpClassCollection;
 import amp.classification.classes.AC_ClassInstanceIDIsIndex;
 import amp.classification.classes.AC_SingleElement;
+import com.ampex.adapter.KiAdapter;
 import com.ampex.amperabase.*;
 import com.ampex.main.blockchain.IChainMan;
 import com.ampex.main.data.encryption.EncryptionManager;
@@ -12,9 +13,9 @@ import com.ampex.main.data.utils.Utils;
 import com.ampex.main.transactions.addresses.Address;
 import com.ampex.main.transactions.addresses.InvalidAddressException;
 import com.ampex.main.transactions.addresses.NewAdd;
-import engine.binary.Binary;
+import engine.binary.on_ice.Binary;
 import engine.data.IDataElement;
-import engine.data.WritableMemory;
+import engine.data.writable_memory.on_ice.WritableMemory;
 
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
@@ -200,7 +201,7 @@ public class NewTrans implements ITrans {
                 }
                 if (execAdd == null) return false;
                 try {
-                    ArrayList<IDataElement> result = ki.getBCE8().executeProgram(Binary.deserializeFromAmplet(Amplet.create(Utils.fromBase64(key.getKey()))), WritableMemory.deserializeFromBytes(Utils.fromBase64(ksep.getSig())), this, execAdd.toByteArray(), false);
+                    ArrayList<IDataElement> result = ((KiAdapter)ki).getBCE8().executeProgram(Binary.deserializeFromAmplet(Amplet.create(Utils.fromBase64(key.getKey()))), WritableMemory.deserializeFromBytes(Utils.fromBase64(ksep.getSig())), this, execAdd.toByteArray(), false);
                     if (result.get(0).getDataAsInt() != 0) return false;
                 } catch (Exception e) {
                     e.printStackTrace();

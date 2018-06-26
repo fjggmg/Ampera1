@@ -2,8 +2,8 @@ package com.ampex.main.transactions.addresses;
 
 import com.ampex.amperabase.IAddManAPI;
 import com.ampex.amperabase.IAddress;
-import engine.binary.Binary;
 import engine.binary.IBinary;
+import engine.binary.on_ice.Binary;
 
 /**
  * Created by Bryan on 8/8/2017.

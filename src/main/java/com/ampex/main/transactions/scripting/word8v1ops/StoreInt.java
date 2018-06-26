@@ -27,7 +27,7 @@ public class StoreInt implements IOperator {
         int add = stack.pop().getDataAsInt();
         int data = stack.pop().getDataAsInt();
         System.out.println("Storing: " + data + " to " + add);
-        writableMemory.setElement(DataElement.create(ByteTools.deconstructInt(data)), add);
+        writableMemory.setElement(new DataElement(ByteTools.deconstructInt(data)), add);
     }
 
     @Override

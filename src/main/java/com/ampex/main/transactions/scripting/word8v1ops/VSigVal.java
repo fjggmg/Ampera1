@@ -32,7 +32,7 @@ public class VSigVal implements IOperator {
         KeyType keyType = KeyType.byValue(stack.pop().getDataAsByte());
         byte[] result = new byte[1];
         result[0] = (EncryptionManager.verifySig(signed, sig, Utils.toBase64(key), keyType)) ? (byte) 1 : (byte) 0;
-        stack.push(DataElement.create(result));
+        stack.push(new DataElement(result));
     }
 
     @Override

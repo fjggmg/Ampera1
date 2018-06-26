@@ -62,7 +62,7 @@ public class VSigValS implements IOperator {
         byte[] key = kttp.getKey();
         KeyType keyType = kttp.getKeyType();
         result = (result + ((EncryptionManager.verifySig(signed, sig, Utils.toBase64(key), keyType)) ? 1 : 0));
-        stack.push(DataElement.create(ByteTools.deconstructInt(result)));
+        stack.push(new DataElement(ByteTools.deconstructInt(result)));
     }
 
     @Override

@@ -32,6 +32,6 @@ public class LOutAddMemStack implements IOperator {
     @Override
     public void execute(Stack<IDataElement> stack, IBinary binary, IProgram program, IConstantMemory constantMemory, IJumpMemory jumpMemory, IWritableMemory writableMemory, IOPCode opCode, ITransAPI transaction, byte[] executionAddress) throws Exception {
         IOutput o = Output.fromAmp(Amplet.create(writableMemory.getElement(stack.pop().getDataAsInt()).getData()));
-        stack.push(DataElement.create(o.getAddress().toByteArray()));
+        stack.push(new DataElement(o.getAddress().toByteArray()));
     }
 }

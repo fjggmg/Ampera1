@@ -30,6 +30,6 @@ public class LOutAddTransStack implements IOperator {
     @Override
     public void execute(Stack<IDataElement> stack, IBinary binary, IProgram program, IConstantMemory constantMemory, IJumpMemory jumpMemory, IWritableMemory writableMemory, IOPCode opCode, ITransAPI transaction, byte[] executionAddress) throws Exception {
         IOutput o = transaction.getOutputs().get(stack.pop().getDataAsInt());
-        stack.push(DataElement.create(o.getAddress().toByteArray()));
+        stack.push(new DataElement(o.getAddress().toByteArray()));
     }
 }

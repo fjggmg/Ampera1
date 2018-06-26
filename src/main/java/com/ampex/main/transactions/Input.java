@@ -137,6 +137,7 @@ public class Input implements IInput {
         hpa.addElement(prevID);
 
         hpa.addElement(hamplet);
+        if(version != 1)
         hpa.addElement(version);
         return hpa.serializeToBytes();
     }

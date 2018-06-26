@@ -7,8 +7,8 @@ import com.ampex.amperabase.IAddress;
 import com.ampex.main.data.encryption.EncryptionManager;
 import com.ampex.main.data.utils.Utils;
 import com.ampex.main.transactions.addresses.Address;
-import engine.binary.Binary;
 import engine.binary.IBinary;
+import engine.binary.on_ice.Binary;
 
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;

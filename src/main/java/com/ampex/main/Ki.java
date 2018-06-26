@@ -31,6 +31,7 @@ import com.ampex.main.transactions.addresses.IAddMan;
 import com.ampex.main.transactions.scripting.ScriptManager;
 import engine.ASELogging;
 import engine.ByteCodeEngine;
+import engine.IByteCodeEngine;
 import gpuminer.GPULogging;
 import gpuminer.JOCL.context.JOCLContextAndCommandQueue;
 import gpuminer.miner.context.ContextMaster;
@@ -442,6 +443,14 @@ public class Ki extends Thread implements IKi, IKiAPI {
     }
 
     @Override
+    public void doneDownloading() {
+        if(ki.getOptions().poolRelay)
+        {
+            miningPool.updateCurrentHeight(getChainMan().currentHeight());
+        }
+    }
+
+    @Override
     public void resetLite() {
         if (o.lite) {
 
@@ -521,7 +530,7 @@ public class Ki extends Thread implements IKi, IKiAPI {
     }
 
     @Override
-    public ByteCodeEngine getBCE8() {
+    public IByteCodeEngine getBCE8() {
         return bce8;
     }
 

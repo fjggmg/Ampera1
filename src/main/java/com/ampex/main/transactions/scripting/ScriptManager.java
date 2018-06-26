@@ -9,10 +9,12 @@ import com.ampex.main.data.utils.Utils;
 import com.ampex.main.transactions.scripting.compiling.StringCompiler;
 import com.ampex.main.transactions.scripting.compiling.StringFileCompiler;
 import engine.ByteCodeEngine;
-import engine.binary.Binary;
-import engine.data.ConstantMemory;
+import engine.IByteCodeEngine;
+import engine.binary.on_ice.Binary;
 import engine.data.DataElement;
-import engine.data.JumpMemory;
+import engine.data.constant_memory.on_ice.ConstantMemory;
+import engine.data.jump_memory.on_ice.JumpMemory;
+import engine.program.IProgram;
 import engine.program.Program;
 
 import java.io.File;
@@ -85,7 +87,7 @@ public class ScriptManager {
     private final List<String> mSigVerify = Arrays.asList("VSVS", "DUP", "PIR", "LCSK", "GTN", "BRN0");
     //fail or success
     private final List<String> mSigEnd = Arrays.asList("CSK", "PI1", "TERM", "CSK", "PI0", "TERM");
-    private Program genTrade;
+    private IProgram genTrade;
     private List<Program> loadedScripts = new ArrayList<>();
 
     /**
@@ -98,7 +100,7 @@ public class ScriptManager {
      * @param publicKey    public key for main key (no extra permissions with this multisig)
      * @return a binary ready to use for a multi-sig wallet
      */
-    public Binary buildMultiSig(Map<String, Byte> keys, int sigsRequired, ByteCodeEngine bce8, byte[] entropy, byte[] publicKey) {
+    public Binary buildMultiSig(Map<String, Byte> keys, int sigsRequired, IByteCodeEngine bce8, byte[] entropy, byte[] publicKey) {
         if (sigsRequired > keys.size()) return null;
         if (keys.size() > 30) return null;
         List<String> fullCode = new ArrayList<>();
@@ -191,7 +193,7 @@ public class ScriptManager {
 
     }
 
-    public Program genericTrade() {
+    public IProgram genericTrade() {
         return genTrade;
     }
 }

@@ -9,7 +9,7 @@ import com.ampex.main.data.buckets.KeyKeyTypePair;
 import com.ampex.main.data.utils.Utils;
 import database.XodusAmpMap;
 import engine.binary.IBinary;
-import engine.data.WritableMemory;
+import engine.data.writable_memory.on_ice.WritableMemory;
 
 import java.io.File;
 import java.io.UnsupportedEncodingException;
@@ -31,7 +31,7 @@ public class TransactionManager extends Thread implements ITransMan {
     private IKi ki;
     private List<ITransAPI> pending = new CopyOnWriteArrayList<>();
     private List<String> usedUTXOs = new ArrayList<>();
-    private BigInteger currentHeight = BigInteger.valueOf(-1);
+    private BigInteger currentHeight = BigInteger.valueOf(0);
     private final Object processLock = new Object();
     public TransactionManager(IKi ki, boolean dump) {
         this.ki = ki;
@@ -83,8 +83,9 @@ public class TransactionManager extends Thread implements ITransMan {
                 while (true) {
                     ki.debug("Post block processing on #" + currentHeight);
                     IBlockAPI b = processMap.remove(currentHeight);
-                    currentHeight = currentHeight.add(BigInteger.ONE);
+
                     if (b != null) {
+                        currentHeight = currentHeight.add(BigInteger.ONE);
                         ITransAPI coinbase = b.getCoinbase();
                         for (IOutput o : coinbase.getOutputs()) {
                             HeadlessPrefixedAmplet hpa;
@@ -92,8 +93,6 @@ public class TransactionManager extends Thread implements ITransMan {
                                 hpa = HeadlessPrefixedAmplet.create(utxoAmp.getBytes(o.getAddress().toByteArray()));
                             else
                                 hpa = HeadlessPrefixedAmplet.create();
-
-                            //ki.debug("Putting output: " + o.getID() + " with address: " + o.getAddress().encodeForChain() + " of amount + " + o.getAmount());
                             hpa.addElement(o.getID());
                             try {
                                 hpa.addBytes(new TXIOData(o.getAddress(), o.getIndex(), o.getAmount(), o.getToken(), o.getTimestamp(), o.getVersion()).serializeToBytes());
@@ -118,8 +117,6 @@ public class TransactionManager extends Thread implements ITransMan {
                                     try {
                                         String ID = new String(hpa.peekNextElement(), "UTF-8");
                                         if (ID.equals(i.getID())) {
-                                            //ki.debug("Removing output: " + i.getID() + " with address: " + i.getAddress().encodeForChain() + " of amount + " + i.getAmount());
-
                                             hpa.deleteNextElement();
                                             hpa.deleteNextElement();
                                             utxoAmp.putBytes(i.getAddress().toByteArray(), hpa.serializeToBytes());
@@ -140,10 +137,7 @@ public class TransactionManager extends Thread implements ITransMan {
                                     hpa = HeadlessPrefixedAmplet.create(utxoAmp.getBytes(o.getAddress().toByteArray()));
                                 else
                                     hpa = HeadlessPrefixedAmplet.create();
-
                                 hpa.addElement(o.getID());
-                                //ki.debug("Putting output: " + o.getID() + " with address: " + o.getAddress().encodeForChain() + " of amount + " + o.getAmount());
-
                                 try {
                                     hpa.addBytes(new TXIOData(o.getAddress(), o.getIndex(), o.getAmount(), o.getToken(), o.getTimestamp(), o.getVersion()).serializeToBytes());
                                 } catch (InvalidTXIOData invalidTXIOData) {
@@ -154,7 +148,6 @@ public class TransactionManager extends Thread implements ITransMan {
 
 
                             }
-
                             ki.getExMan().transactionProccessed(trans);
                         }
                     }

@@ -21,7 +21,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public class NetMan extends Thread implements INetworkManager {
 
     private static final String[] testBoot = {"73.108.51.16"};
-    private static final String[] bootstrap = {"mimpve.host"};
+    private static final String[] bootstrap = {"172.16.10.3","mimpve.host","73.108.51.16"};
 
     private IKi ki;
     private boolean isRelay;

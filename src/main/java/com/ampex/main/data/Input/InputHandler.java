@@ -9,6 +9,7 @@ import com.ampex.main.StringSettings;
 import com.ampex.main.blockchain.ChainManager;
 import com.ampex.main.blockchain.mining.GPUMiner;
 import com.ampex.main.data.encryption.EncryptionManager;
+import com.ampex.main.transactions.ITrans;
 import com.ampex.main.transactions.addresses.Address;
 
 import java.io.BufferedReader;
@@ -277,9 +278,13 @@ public class InputHandler extends Thread {
                     while (height.compareTo(ki.getChainMan().currentHeight()) <= 0) {
                         for (String trans : ki.getChainMan().getByHeight(height).getTransactionKeys()) {
                             if (ki.getChainMan().getByHeight(height).getTransaction(trans).getID().equals(id)) {
+                                ITransAPI transaction = ki.getChainMan().getByHeight(height).getTransaction(trans);
                                 ki.debug("Found instance in: " + height);
                                 ki.debug("INFO:");
+                                ki.debug("Message: " + transaction.getMessage());
+
                                 ki.debug("Inputs: ");
+
                                 for (IInput i : ki.getChainMan().getByHeight(height).getTransaction(trans).getInputs()) {
                                     ki.debug("ID: " + i.getID() + " Amount: " + i.getAmount());
                                 }
@@ -306,14 +311,26 @@ public class InputHandler extends Thread {
 
                             for (IInput i : ki.getChainMan().getByHeight(height).getTransaction(trans).getInputs()) {
                                 if (i.getID().equals(id)) {
-                                    ki.debug("Found instance at: " + height);
+                                    ki.getMainLog().info("Found instance at: " + height);
+                                    ki.getMainLog().info("Data: ");
+                                    ki.getMainLog().info("Address: " + i.getAddress().encodeForChain());
+                                    ki.getMainLog().info("Amount:" + i.getAmount());
+                                    ki.getMainLog().info("Timestamp: " + i.getTimestamp());
+                                    //ki.getMainLog().info("Version: " + i.getVersion());
+                                    ki.getMainLog().info("Token" + i.getToken());
                                 }
                             }
 
                             for (IOutput o : ki.getChainMan().getByHeight(height).getTransaction(trans).getOutputs()) {
                                 //ki.debug("Going over output: " + o.getID());
                                 if (o.getID().equals(id)) {
-                                    ki.debug("Found instance as output at: " + height);
+                                    ki.getMainLog().info("Found instance as output at: " + height);
+                                    ki.getMainLog().info("Data: ");
+                                    ki.getMainLog().info("Address: " + o.getAddress().encodeForChain());
+                                    ki.getMainLog().info("Amount:" + o.getAmount());
+                                    ki.getMainLog().info("Timestamp: " + o.getTimestamp());
+                                    ki.getMainLog().info("Version: " + o.getVersion());
+                                    ki.getMainLog().info("Token" + o.getToken());
                                 }
                             }
 

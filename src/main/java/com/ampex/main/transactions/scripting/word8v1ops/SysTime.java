@@ -24,7 +24,7 @@ public class SysTime implements IOperator {
 
     @Override
     public void execute(Stack<IDataElement> stack, IBinary binary, IProgram program, IConstantMemory constantMemory, IJumpMemory jumpMemory, IWritableMemory writableMemory, IOPCode opCode, ITransAPI transaction, byte[] executionAddress) throws Exception {
-        stack.push(DataElement.create(ByteTools.deconstructLong(System.currentTimeMillis())));
+        stack.push(new DataElement(ByteTools.deconstructLong(System.currentTimeMillis())));
     }
 
     @Override

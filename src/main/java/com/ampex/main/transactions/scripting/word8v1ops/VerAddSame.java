@@ -33,6 +33,6 @@ public class VerAddSame implements IOperator {
     public void execute(Stack<IDataElement> stack, IBinary binary, IProgram program, IConstantMemory constantMemory, IJumpMemory jumpMemory, IWritableMemory writableMemory, IOPCode opCode, ITransAPI transaction, byte[] executionAddress) throws Exception {
         IAddress a = Address.fromByteArray(stack.pop().getData());
         IAddress b = Address.fromByteArray(stack.pop().getData());
-        stack.push(DataElement.create(ByteTools.deconstructInt((a.encodeForChain().equals(b.encodeForChain())) ? 1 : 0)));
+        stack.push(new DataElement(ByteTools.deconstructInt((a.encodeForChain().equals(b.encodeForChain())) ? 1 : 0)));
     }
 }

@@ -17,11 +17,11 @@ import com.ampex.main.transactions.Output;
 import com.ampex.main.transactions.addresses.InvalidAddressException;
 import com.ampex.main.transactions.addresses.NewAdd;
 import com.ampex.main.transactions.scripting.ScriptManager;
-import engine.binary.Binary;
-import engine.data.ConstantMemory;
+import engine.binary.on_ice.Binary;
 import engine.data.DataElement;
-import engine.data.JumpMemory;
-import engine.data.WritableMemory;
+import engine.data.constant_memory.on_ice.ConstantMemory;
+import engine.data.jump_memory.on_ice.JumpMemory;
+import engine.data.writable_memory.on_ice.WritableMemory;
 
 import java.math.BigInteger;
 import java.util.*;

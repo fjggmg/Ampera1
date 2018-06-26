@@ -6,7 +6,7 @@ import com.ampex.main.IKi;
 import com.ampex.main.data.buckets.KeyKeyTypePair;
 import com.ampex.main.data.utils.Utils;
 import engine.binary.IBinary;
-import engine.data.WritableMemory;
+import engine.data.writable_memory.on_ice.WritableMemory;
 
 import java.math.BigInteger;
 import java.util.ArrayList;

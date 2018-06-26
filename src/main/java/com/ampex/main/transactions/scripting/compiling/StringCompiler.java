@@ -2,6 +2,7 @@ package com.ampex.main.transactions.scripting.compiling;
 
 import engine.ASEConstants;
 import engine.ByteCodeEngine;
+import engine.IByteCodeEngine;
 import engine.operators.IOperator;
 
 import java.util.ArrayList;
@@ -23,7 +24,7 @@ public class StringCompiler {
     }
     */
 
-    public static byte[] compile(List<String> lines, ByteCodeEngine bce) throws CompilerException {
+    public static byte[] compile(List<String> lines, IByteCodeEngine bce) throws CompilerException {
         List<String> tempByteCode = new ArrayList<>();
         tempByteCode.addAll(lines);
 
