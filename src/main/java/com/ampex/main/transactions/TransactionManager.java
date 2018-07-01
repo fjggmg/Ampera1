@@ -157,6 +157,10 @@ public class TransactionManager extends Thread implements ITransMan {
                         try {
                             if (processMap.isEmpty())
                                 processLock.wait();
+                            else if(processMap.get(currentHeight) == null)
+                            {
+                                currentHeight = currentHeight.add(BigInteger.ONE);
+                            }
                         } catch (InterruptedException e) {
                             tc.interrupt();
                             return;

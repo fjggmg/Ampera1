@@ -2868,6 +2868,7 @@ public class NewGUI implements GUIHook {
         setupADXPane();
         setupBackendThreads();
         setupUpdateThreads();
+        if(!ki.getOptions().relay)
         setupPoolClientPane();
     }
 

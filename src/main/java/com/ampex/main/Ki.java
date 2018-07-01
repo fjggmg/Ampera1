@@ -347,6 +347,7 @@ public class Ki extends Thread implements IKi, IKiAPI {
         if (o.poolRelay) {
             miningPool.start();
         }
+        if(!getOptions().relay)
         poolNet.start();
         while (true) {
             if (o.relay || o.poolRelay) return;
@@ -393,6 +394,7 @@ public class Ki extends Thread implements IKi, IKiAPI {
 
             addMan.close();
             netMan.close();
+            if(!getOptions().relay)
             poolNet.close();
             if (ki.getOptions().pool || ki.getOptions().poolRelay)
                 poolNet.close();

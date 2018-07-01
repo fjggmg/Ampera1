@@ -225,6 +225,11 @@ public class NetMan extends Thread implements INetworkManager {
 
                 public void run() {
                     setName("Ping Thread");
+                    try {
+                        sleep(30000);
+                    } catch (InterruptedException e) {
+                        return;
+                    }
                     while (true) {
                         if (ki.getNetMan().isInterrupted()) return;
                         Ping ping = new Ping();

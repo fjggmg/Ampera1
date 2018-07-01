@@ -69,7 +69,7 @@ public class ConnMan extends IConnectionManager implements ChannelHandler {
     }
     @Override
     public void sendPacket(AmpBuildable o) {
-
+        ki.debug("Sent packet: " + o);
         if (getPacketProcessor().getPacketGlobal().passiveConnection()) {
             if (!PASSIVE_WHITELIST.contains(o.getClass().getName())) return;
         }
@@ -174,6 +174,7 @@ public class ConnMan extends IConnectionManager implements ChannelHandler {
         ConnManPacketPair cmpp = new ConnManPacketPair();
         cmpp.connMan = this;
         cmpp.packet = o;
+        ki.debug("Received packet: " + o);
         ki.getNetMan().getGPQ().enqueue(cmpp);
     }
 }
