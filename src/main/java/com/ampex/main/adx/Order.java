@@ -9,6 +9,10 @@ import com.ampex.main.data.utils.Utils;
 import com.ampex.main.transactions.addresses.Address;
 import engine.binary.IBinary;
 import engine.binary.on_ice.Binary;
+import javafx.beans.Observable;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
@@ -24,6 +28,7 @@ public class Order implements IAmpByteSerializable {
     private IBinary bin;
     private OrderMeta om = new OrderMeta();
     private String txid;
+    private SimpleObjectProperty<BigInteger> amountProp;
 
     public Order(Pairs pair, BigInteger unitPrice, IAddress address, IAddress contractAdd, BigInteger amountOnOffer, IBinary bin, boolean buy, String txid) throws InvalidOrderException {
         this(pair, unitPrice, address, contractAdd, amountOnOffer, bin, buy, BigInteger.valueOf(System.currentTimeMillis()), txid);
@@ -45,10 +50,23 @@ public class Order implements IAmpByteSerializable {
         this.unitPrice = unitPrice;
         this.address = address;
         this.amountOnOffer = amountOnOffer;
+        amountProp = new SimpleObjectProperty<>(this.amountOnOffer);
+        amountProp.addListener(new ChangeListener<BigInteger>() {
+            @Override
+            public void changed(ObservableValue<? extends BigInteger> observable, BigInteger oldValue, BigInteger newValue) {
+                System.out.println("Observed change to amount of order");
+            }
+        });
+
         this.buy = buy;
         this.contractAdd = contractAdd;
     }
 
+
+    public SimpleObjectProperty<BigInteger> getAmountProp()
+    {
+        return amountProp;
+    }
     public String getTxid() {
         return txid;
     }
@@ -59,6 +77,8 @@ public class Order implements IAmpByteSerializable {
 
     public void reduceAmount(BigInteger amount) {
         amountOnOffer = amountOnOffer.subtract(amount);
+        amountProp.setValue(amountOnOffer);
+
     }
 
     public BigInteger amountOnOffer() {

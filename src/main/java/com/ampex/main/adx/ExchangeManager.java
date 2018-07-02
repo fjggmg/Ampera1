@@ -498,6 +498,7 @@ public class ExchangeManager {
     public void reduceOrder(String ID, BigInteger amount, String txid) {
         Order o = orders.get(ID);
         o.reduceAmount(amount);
+        orderBook.sort();
         try {
             orderBook.addMatched(new Order(o.pair(), o.unitPrice(), o.address(), o.contractAdd(), amount, o.bin(), o.buy(), txid));
         } catch (InvalidOrderException e) {

@@ -43,6 +43,7 @@ import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
 import javafx.application.Application;
 import javafx.application.Platform;
+import javafx.beans.Observable;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ListProperty;
 import javafx.beans.property.SimpleListProperty;
@@ -69,6 +70,7 @@ import javafx.scene.text.TextAlignment;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import javafx.stage.Stage;
+import javafx.util.Callback;
 import javafx.util.Duration;
 import net.glxn.qrgen.core.image.ImageType;
 import net.glxn.qrgen.javase.QRCode;
@@ -2285,7 +2287,12 @@ public class NewGUI implements GUIHook {
         bindScrolls(obRecentAmount, obRecentDirection);
         bindScrolls(activeAmount, activePrice);
         ListProperty<Order> sells = new SimpleListProperty<>();
-        sells.set(FXCollections.observableArrayList());
+        sells.set(FXCollections.observableArrayList(new Callback<Order, Observable[]>() {
+            @Override
+            public Observable[] call(Order param) {
+                return new Observable[]{ param.getAmountProp()};
+            }
+        }));
         sells.bindContent(ki.getExMan().getOrderBook().sells());
         //sells.set(ki.getExMan().getOrderBook().sells());
         obSellPrice.itemsProperty().bind(sells);
@@ -2329,8 +2336,14 @@ public class NewGUI implements GUIHook {
         });
 
         ListProperty<Order> active = new SimpleListProperty<>();
-        active.set(FXCollections.observableArrayList());
+        active.set(FXCollections.observableArrayList(new Callback<Order, Observable[]>() {
+            @Override
+            public Observable[] call(Order param) {
+                return new Observable[]{ param.getAmountProp()};
+            }
+        }));
         active.bindContent(ki.getExMan().getOrderBook().active());
+
         activePrice.itemsProperty().bind(active);
         activeAmount.itemsProperty().bind(active);
         activePrice.setCellFactory(param -> new ListCell<Order>() {
@@ -2362,7 +2375,12 @@ public class NewGUI implements GUIHook {
             }
         });
         ListProperty<Order> buys = new SimpleListProperty<>();
-        buys.set(FXCollections.observableArrayList());
+        buys.set(FXCollections.observableArrayList(new Callback<Order, Observable[]>() {
+            @Override
+            public Observable[] call(Order param) {
+                return new Observable[]{ param.getAmountProp()};
+            }
+        }));
         buys.bindContent(ki.getExMan().getOrderBook().buys());
         obBuyPrice.itemsProperty().bind(buys);
         obBuySize.itemsProperty().bind(buys);
