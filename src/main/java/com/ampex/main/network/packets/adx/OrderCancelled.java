@@ -28,7 +28,9 @@ public class OrderCancelled implements Packet {
             HeadlessPrefixedAmplet hpa = HeadlessPrefixedAmplet.create(serialized);
             ID = new String(hpa.getNextElement(), Charset.forName("UTF-8"));
             sig = hpa.getNextElement();
-        } catch (Exception e) {
+        }catch (RuntimeException re){
+            throw re;
+        }catch (Exception e) {
             throw new InvalidAmpBuildException("Unable to create OrderCancelled from bytes");
         }
     }

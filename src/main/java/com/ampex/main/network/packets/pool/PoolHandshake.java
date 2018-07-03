@@ -57,6 +57,8 @@ public class PoolHandshake implements PoolPacket {
             address = new String(hpa.getNextElement(), Charset.forName("UTF-8"));
             ID = new String(hpa.getNextElement(), Charset.forName("UTF-8"));
             version = new String(hpa.getNextElement(), Charset.forName("UTF-8"));
+        } catch(RuntimeException re) {
+            throw re;
         } catch (Exception e) {
             throw new InvalidAmpBuildException("Unable to create PoolHandshake from bytes");
         }

@@ -178,6 +178,8 @@ public class PoolBlockHeader implements PoolPacket {
             prevID = new String(hpa.getNextElement(), Charset.forName("UTF-8"));
             payload = hpa.getNextElement();
             coinbase = hpa.getNextElement();
+        } catch(RuntimeException re) {
+            throw re;
         } catch (Exception e) {
             throw new InvalidAmpBuildException("Unable to create PoolBlockHeader from bytes");
         }

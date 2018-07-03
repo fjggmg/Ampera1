@@ -1966,6 +1966,14 @@ public class NewGUI implements GUIHook {
         addressList.getSelectionModel().select(0);
     }
 
+
+    private static class OrderExtractor implements Callback<Order,Observable[]>
+    {
+        @Override
+        public Observable[] call(Order param) {
+            return new Observable[]{ param.getAmountProp()};
+        }
+    }
     private void setupADXPane() {
 
         orderHistory.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
@@ -2287,12 +2295,7 @@ public class NewGUI implements GUIHook {
         bindScrolls(obRecentAmount, obRecentDirection);
         bindScrolls(activeAmount, activePrice);
         ListProperty<Order> sells = new SimpleListProperty<>();
-        sells.set(FXCollections.observableArrayList(new Callback<Order, Observable[]>() {
-            @Override
-            public Observable[] call(Order param) {
-                return new Observable[]{ param.getAmountProp()};
-            }
-        }));
+        sells.set(FXCollections.observableArrayList(new OrderExtractor()));
         sells.bindContent(ki.getExMan().getOrderBook().sells());
         //sells.set(ki.getExMan().getOrderBook().sells());
         obSellPrice.itemsProperty().bind(sells);
@@ -2336,12 +2339,7 @@ public class NewGUI implements GUIHook {
         });
 
         ListProperty<Order> active = new SimpleListProperty<>();
-        active.set(FXCollections.observableArrayList(new Callback<Order, Observable[]>() {
-            @Override
-            public Observable[] call(Order param) {
-                return new Observable[]{ param.getAmountProp()};
-            }
-        }));
+        active.set(FXCollections.observableArrayList(new OrderExtractor()));
         active.bindContent(ki.getExMan().getOrderBook().active());
 
         activePrice.itemsProperty().bind(active);
@@ -2375,12 +2373,7 @@ public class NewGUI implements GUIHook {
             }
         });
         ListProperty<Order> buys = new SimpleListProperty<>();
-        buys.set(FXCollections.observableArrayList(new Callback<Order, Observable[]>() {
-            @Override
-            public Observable[] call(Order param) {
-                return new Observable[]{ param.getAmountProp()};
-            }
-        }));
+        buys.set(FXCollections.observableArrayList(new OrderExtractor()));
         buys.bindContent(ki.getExMan().getOrderBook().buys());
         obBuyPrice.itemsProperty().bind(buys);
         obBuySize.itemsProperty().bind(buys);

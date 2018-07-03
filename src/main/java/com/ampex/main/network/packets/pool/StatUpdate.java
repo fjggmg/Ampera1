@@ -24,6 +24,8 @@ public class StatUpdate implements PoolPacket {
             HeadlessAmplet ha = HeadlessAmplet.create(serialized);
             shares = ha.getNextLong();
             currentPPS = ha.getNextDouble();
+        } catch (RuntimeException re) {
+            throw re;
         } catch (Exception e) {
             throw new InvalidAmpBuildException("Unable to create StatUpdate from bytes");
         }
