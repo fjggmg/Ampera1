@@ -79,6 +79,7 @@ public class Server {
     }
 
     public void close() {
+        if(future == null) return;
         future.channel().close();
     }
 

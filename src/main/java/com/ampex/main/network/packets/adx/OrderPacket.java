@@ -13,6 +13,7 @@ import com.ampex.main.adx.Order;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.charset.Charset;
+import java.util.Map;
 
 public class OrderPacket implements Packet {
     public byte[] order;
@@ -68,6 +69,28 @@ public class OrderPacket implements Packet {
                             or.ID = order.getID();
                             connMan.sendPacket(or);
                             return;
+                        }
+                    }
+                    for(Map.Entry<String,Order> entry:((IKi) ki).getExMan().getPending().entrySet())
+                    {
+                        if(order.buy() && !entry.getValue().buy())
+                        {
+                            if(entry.getValue().unitPrice().compareTo(order.unitPrice()) <= 0)
+                            {
+                                OrderRefused or = new OrderRefused();
+                                or.ID = order.getID();
+                                connMan.sendPacket(or);
+                                return;
+                            }
+                        }else if(!order.buy() && entry.getValue().buy())
+                        {
+                            if(entry.getValue().unitPrice().compareTo(order.unitPrice()) >= 0)
+                            {
+                                OrderRefused or = new OrderRefused();
+                                or.ID = order.getID();
+                                connMan.sendPacket(or);
+                                return;
+                            }
                         }
                     }
                     OrderAccepted oa = new OrderAccepted();

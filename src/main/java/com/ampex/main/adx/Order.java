@@ -51,12 +51,6 @@ public class Order implements IAmpByteSerializable {
         this.address = address;
         this.amountOnOffer = amountOnOffer;
         amountProp = new SimpleObjectProperty<>(this.amountOnOffer);
-        amountProp.addListener(new ChangeListener<BigInteger>() {
-            @Override
-            public void changed(ObservableValue<? extends BigInteger> observable, BigInteger oldValue, BigInteger newValue) {
-                System.out.println("Observed change to amount of order");
-            }
-        });
 
         this.buy = buy;
         this.contractAdd = contractAdd;

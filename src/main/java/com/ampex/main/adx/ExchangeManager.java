@@ -52,6 +52,10 @@ public class ExchangeManager {
         return orderBook;
     }
 
+    public Map<String,Order> getPending()
+    {
+        return pending;
+    }
     private Random entRand = new Random();
     public OrderStatus placeOrder(boolean buy, BigInteger amount, BigInteger stopPrice, Pairs pair, boolean limitBuy) {
         if (amount.compareTo(BigInteger.ZERO) <= 0 || stopPrice.compareTo(BigInteger.ZERO) <= 0) {
