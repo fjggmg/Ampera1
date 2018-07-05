@@ -318,6 +318,19 @@ public class OrderBook {
             }
         }
         */
+        new Thread(() -> {
+            if(!ki.getOptions().nogui) {
+                if (data.size() > 0) {
+
+                    while(ki.getGUIHook() == null){}
+
+                    ki.getGUIHook().dataAdded();
+
+                }
+            }
+        }).start();
+
+
     }
 
     public ObservableList<Order> active() {
