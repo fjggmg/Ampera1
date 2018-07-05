@@ -32,8 +32,24 @@ public class OrderBook {
 
     public void addOrder(Order order) {
         sorted = false;
-        Platform.runLater(new Thread() {
-            public void run() {
+        if(!ki.getOptions().nogui) {
+            Platform.runLater(new Thread() {
+                public void run() {
+                    if (order.buy()) {
+                        buys.add(order);
+                    } else {
+                        sells.add(order);
+                    }
+                    for (IAddress add : ki.getAddMan().getAll()) {
+                        if (add.encodeForChain().equals(order.address().encodeForChain())) {
+                            active.add(order);
+                            break;
+                        }
+                    }
+                }
+            });
+        }else{
+            new Thread(() -> {
                 if (order.buy()) {
                     buys.add(order);
                 } else {
@@ -45,8 +61,8 @@ public class OrderBook {
                         break;
                     }
                 }
-            }
-        });
+            }).start();
+        }
     }
 
     public void matchOrder(Order order) {

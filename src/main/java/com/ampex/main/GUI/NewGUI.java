@@ -622,7 +622,7 @@ public class NewGUI implements GUIHook {
         if (!ki.getOptions().pool) {
             vb.getChildren().add(buildMainButton("Wallet", "/Wallet.png", 0, 0, content, walletPane, 1));
             vb.getChildren().add(buildMainButton("Address", "/home.png", 100, 0, content, addressPane, 1));
-            vb.getChildren().add(buildMainButton("", "/adxlogo.png", 200, 0, content, exchangePane, 3));
+            vb.getChildren().add(buildMainButton("ADX", "/exchange.png", 200, 0, content, exchangePane, 1));
             vb.getChildren().add(buildMainButton("AXC", "/axclogo.png", 300, 5, content, axcPane, 1.2));
             if (!ki.getOptions().poolRelay)
                 vb.getChildren().add(buildMainButton("Pool", "/pool.png", 400, 3, content, poolPane, 1));

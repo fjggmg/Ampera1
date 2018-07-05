@@ -436,7 +436,7 @@ public class ChainManager implements IChainMan {
                         }
                     }
                 }
-                if (add) {
+                if (add && ki.getGUIHook() != null) {
                     try {
                         ki.getGUIHook().addTransaction(transaction, block.getHeight());
                     } catch (Exception e) {
