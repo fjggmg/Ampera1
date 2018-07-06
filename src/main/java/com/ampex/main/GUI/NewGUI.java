@@ -1960,6 +1960,7 @@ public class NewGUI implements GUIHook {
             public void handle(MouseEvent event) {
                 ki.getAddMan().setMainAdd(Address.decodeFromChain(addressList.getSelectionModel().getSelectedItem()));
                 addressLabel.setText("Address - " + ki.getAddMan().getMainAdd().encodeForChain());
+                pbpDone();
             }
         });
 
