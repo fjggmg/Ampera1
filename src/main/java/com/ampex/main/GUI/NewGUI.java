@@ -620,25 +620,25 @@ public class NewGUI implements GUIHook {
         vb.setFillWidth(true);
 
         if (!ki.getOptions().pool) {
-            vb.getChildren().add(buildMainButton("Wallet", "/Wallet.png", 0, 0, content, walletPane, 1));
-            vb.getChildren().add(buildMainButton("Address", "/home.png", 100, 0, content, addressPane, 1));
-            vb.getChildren().add(buildMainButton("ADX", "/exchange.png", 200, 4, content, exchangePane, 1));
-            vb.getChildren().add(buildMainButton("AXC", "/axclogo.png", 300, 5, content, axcPane, 1.2));
+            vb.getChildren().add(buildMainButton("Wallet", "/Wallet.png", 0, 0, content, walletPane, 1,true));
+            vb.getChildren().add(buildMainButton("Address", "/home.png", 100, 0, content, addressPane, 1,false));
+            vb.getChildren().add(buildMainButton("ADX", "/exchange.png", 200, 4, content, exchangePane, 1,false));
+            vb.getChildren().add(buildMainButton("AXC", "/axclogo.png", 300, 5, content, axcPane, 1.2,true));
             if (!ki.getOptions().poolRelay)
-                vb.getChildren().add(buildMainButton("Pool", "/pool.png", 400, 3, content, poolPane, 1));
+                vb.getChildren().add(buildMainButton("Pool", "/pool.png", 400, 3, content, poolPane, 1,false));
         } else if (ki.getOptions().pool && !ki.getOptions().poolRelay) {
-            vb.getChildren().add(buildMainButton("Pool", "/pool.png", 100, 3, content, poolPane, 1));
+            vb.getChildren().add(buildMainButton("Pool", "/pool.png", 100, 3, content, poolPane, 1,false));
         }
         if (ki.getOptions().poolRelay) {
-            vb.getChildren().add(buildMainButton("Pool", "/pool.png", 100, 3, content, poolRelay, 1));
+            vb.getChildren().add(buildMainButton("Pool", "/pool.png", 100, 3, content, poolRelay, 1, false));
         }
         if (!ki.getOptions().poolRelay)
-            vb.getChildren().add(buildMainButton("Mining", "/gpu.png", 500, 1, content, miningTab, 1));
+            vb.getChildren().add(buildMainButton("Mining", "/gpu.png", 500, 1, content, miningTab, 1, false));
 
         if (!ki.getOptions().lite && !ki.getOptions().pool)
-            vb.getChildren().add(buildMainButton("Blocks", "/Block.png", 600, 0, content, blockExplorerPane, 1));
-        vb.getChildren().add(buildMainButton("Settings", "/Settings.png", 700, 0, content, settingsPane, 1));
-        vb.getChildren().add(buildMainButton("Help", "/Help.png", 800, 7, content, helpPane, 1));
+            vb.getChildren().add(buildMainButton("Blocks", "/Block.png", 600, 0, content, blockExplorerPane, 1, false));
+        vb.getChildren().add(buildMainButton("Settings", "/Settings.png", 700, 0, content, settingsPane, 1, false));
+        vb.getChildren().add(buildMainButton("Help", "/Help.png", 800, 7, content, helpPane, 1, false));
         vb.getChildren().add(new Separator());
 
         if (!ki.getOptions().pool) {
@@ -700,8 +700,8 @@ public class NewGUI implements GUIHook {
         }
     }
 
-    private JFXButton buildMainButton(String text, String image, int offset, int graphicOffset, List<Pane> content, Pane show, double scale) {
-        JFXButton button = buildButton(text, image, offset, graphicOffset, scale);
+    private JFXButton buildMainButton(String text, String image, int offset, int graphicOffset, List<Pane> content, Pane show, double scale, boolean smooth) {
+        JFXButton button = buildButton(text, image, offset, graphicOffset, scale, smooth);
         button.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
             for (Pane p : content) {
                 p.setVisible(false);
@@ -757,7 +757,7 @@ public class NewGUI implements GUIHook {
         });
     }
 
-    private JFXButton buildButton(String text, String image, int offset, int graphicOffset, double scale) {
+    private JFXButton buildButton(String text, String image, int offset, int graphicOffset, double scale, boolean smooth) {
         for (int i = 0; i < graphicOffset; i++) {
             if (i % 2 != 0)
                 text = " " + text;
@@ -766,10 +766,10 @@ public class NewGUI implements GUIHook {
         }
         JFXButton button = new JFXButton(text);
         button.setRipplerFill(Color.valueOf(getDefaultColor(new Random().nextInt(12))));
-        Image img = new Image(NewGUI.class.getResourceAsStream(image));
+        Image img = new Image(NewGUI.class.getResourceAsStream(image),20*scale,0,true,smooth);
         ImageView iv = new ImageView(img);
-        iv.setFitWidth(20 * scale);
-        iv.setPreserveRatio(true);
+        //iv.setFitWidth(20 * scale);
+        //iv.setPreserveRatio(true);
         button.setGraphic(iv);
         button.setStyle("-fx-padding: 0em 0em");
         button.setPrefWidth(Double.MAX_VALUE);

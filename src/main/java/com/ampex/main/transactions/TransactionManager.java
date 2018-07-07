@@ -14,10 +14,7 @@ import engine.data.writable_memory.on_ice.WritableMemory;
 import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
@@ -318,6 +315,19 @@ public class TransactionManager extends Thread implements ITransMan {
         if (utxoAmp.getBytes(address.toByteArray()) == null) {
             return null;
         }
+        if(utxoAmp.getBytes(address.toByteArray()).length == 0)
+        {
+            return new ArrayList<>();
+        }
+        System.out.println("Array from utxoAmp map:");
+        int i = 0;
+        for(byte b:utxoAmp.getBytes(address.toByteArray()))
+        {
+            System.out.println("Byte " + i + ": " + b);
+            i++;
+            if(i == 10) break;
+        }
+        //System.out.println(Arrays.asList(utxoAmp.getBytes(address.toByteArray())));
 
         //ki.debug("Getting UTXOs for address: " + address.encodeForChain());
         HeadlessPrefixedAmplet hpa = HeadlessPrefixedAmplet.create(utxoAmp.getBytes(address.toByteArray()));

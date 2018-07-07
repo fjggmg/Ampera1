@@ -68,8 +68,27 @@ public class OrderBook {
     public void matchOrder(Order order) {
         sorted = false;
         if (!matchedOrders.contains(order.getID())) {
-            Platform.runLater(new Thread() {
-                public void run() {
+            if(!ki.getOptions().nogui) {
+                Platform.runLater(new Thread() {
+                    public void run() {
+                        order.match(System.currentTimeMillis());
+                        if (order.buy()) {
+                            buys.remove(order);
+
+                        } else {
+                            sells.remove(order);
+                        }
+                        matched.add(0, order);
+                        for (IAddress add : ki.getAddMan().getAll()) {
+                            if (add.encodeForChain().equals(order.address().encodeForChain())) {
+                                active.remove(order);
+                                break;
+                            }
+                        }
+                    }
+                });
+            }else{
+                new Thread(() -> {
                     order.match(System.currentTimeMillis());
                     if (order.buy()) {
                         buys.remove(order);
@@ -84,8 +103,8 @@ public class OrderBook {
                             break;
                         }
                     }
-                }
-            });
+                }).start();
+            }
             addData(order.amountOnOffer(), order.unitPrice());
         }
     }
@@ -344,18 +363,42 @@ public class OrderBook {
      * @param order Order to add as matched
      */
     public void addMatched(Order order) {
-        Platform.runLater(new Thread() {
-            public void run() {
-                matched.add(0, order);
-                addData(order.amountOnOffer(), order.unitPrice());
-            }
-        });
+        if(!ki.getOptions().nogui) {
+            Platform.runLater(new Thread() {
+                public void run() {
+                    matched.add(0, order);
+                    addData(order.amountOnOffer(), order.unitPrice());
+                }
+            });
+        }else{
+            new Thread(() -> {
+                matched.add(0,order);
+                addData(order.amountOnOffer(),order.unitPrice());
+            }).start();
+        }
+
     }
 
     public void removeOrder(Order o) {
         sorted = false;
-        Platform.runLater(new Thread() {
-            public void run() {
+        if(!ki.getOptions().nogui) {
+            Platform.runLater(new Thread() {
+                public void run() {
+                    if (o.buy()) {
+                        buys.remove(o);
+                    } else {
+                        sells.remove(o);
+                    }
+                    for (IAddress add : ki.getAddMan().getAll()) {
+                        if (add.encodeForChain().equals(o.address().encodeForChain())) {
+                            active.remove(o);
+                            break;
+                        }
+                    }
+                }
+            });
+        }else{
+            new Thread(() -> {
                 if (o.buy()) {
                     buys.remove(o);
                 } else {
@@ -367,8 +410,8 @@ public class OrderBook {
                         break;
                     }
                 }
-            }
-        });
+            }).start();
+        }
 
     }
 }
