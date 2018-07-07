@@ -119,8 +119,8 @@ public class Ki extends Thread implements IKi, IKiAPI {
         PoolLogging.startLogging(new AmpexLogger("Pool"));
         GPULogging.startLogging(new AmpexLogger("GPU"));
         ASELogging.startLogging(new AmpexLogger("ASE"));
-        main = LogManager.getLogger("Origin");
-        main.info("Origin starting up");
+        main = LogManager.getLogger("Ampera");
+        main.info("Ampera starting up");
         //region settings shit
         if (!settings.get(VERSION)) {
             settings.put(VERSION, true);

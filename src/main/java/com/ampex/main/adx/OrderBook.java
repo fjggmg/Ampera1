@@ -228,21 +228,45 @@ public class OrderBook {
 
     public void sort() {
 
-        buys.sort(new OrderComparator(true));
-        BigInteger totalB = BigInteger.ZERO;
-        for (Order b : buys) {
-            totalB = totalB.add(b.amountOnOffer());
-            b.getOm().totalAtOrder = new BigInteger(totalB.toByteArray());
-        }
-        sells.sort(new OrderComparator(false));
-        BigInteger totalS = BigInteger.ZERO;
-        for (Order s : sells) {
-            totalS = totalS.add(s.amountOnOffer());
-            s.getOm().totalAtOrder = new BigInteger(totalS.toByteArray());
-        }
-        sorted = true;
-        if (matched.size() > 10_000) {
-            matched.remove(10_000, matched.size() - 1);
+        if(!ki.getOptions().nogui) {
+            Platform.runLater(new Runnable() {
+                @Override
+                public void run() {
+                    buys.sort(new OrderComparator(true));
+                    BigInteger totalB = BigInteger.ZERO;
+                    for (Order b : buys) {
+                        totalB = totalB.add(b.amountOnOffer());
+                        b.getOm().totalAtOrder = new BigInteger(totalB.toByteArray());
+                    }
+                    sells.sort(new OrderComparator(false));
+                    BigInteger totalS = BigInteger.ZERO;
+                    for (Order s : sells) {
+                        totalS = totalS.add(s.amountOnOffer());
+                        s.getOm().totalAtOrder = new BigInteger(totalS.toByteArray());
+                    }
+                    sorted = true;
+                    if (matched.size() > 10_000) {
+                        matched.remove(10_000, matched.size() - 1);
+                    }
+                }
+            });
+        }else{
+            buys.sort(new OrderComparator(true));
+            BigInteger totalB = BigInteger.ZERO;
+            for (Order b : buys) {
+                totalB = totalB.add(b.amountOnOffer());
+                b.getOm().totalAtOrder = new BigInteger(totalB.toByteArray());
+            }
+            sells.sort(new OrderComparator(false));
+            BigInteger totalS = BigInteger.ZERO;
+            for (Order s : sells) {
+                totalS = totalS.add(s.amountOnOffer());
+                s.getOm().totalAtOrder = new BigInteger(totalS.toByteArray());
+            }
+            sorted = true;
+            if (matched.size() > 10_000) {
+                matched.remove(10_000, matched.size() - 1);
+            }
         }
     }
 

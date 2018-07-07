@@ -33,6 +33,7 @@ public class ExchangeManager {
     private Map<String, Order> matchPending = new HashMap<>();
     private List<String> pendingUs = new ArrayList<>();
     private Map<String, ITrans> pendingAccept = new HashMap<>();
+
     public ExchangeManager(IKi ki) {
         this.ki = ki;
         orderBook = new OrderBook(ki);
@@ -52,11 +53,12 @@ public class ExchangeManager {
         return orderBook;
     }
 
-    public Map<String,Order> getPending()
-    {
+    public Map<String, Order> getPending() {
         return pending;
     }
+
     private Random entRand = new Random();
+
     public OrderStatus placeOrder(boolean buy, BigInteger amount, BigInteger stopPrice, Pairs pair, boolean limitBuy) {
         if (amount.compareTo(BigInteger.ZERO) <= 0 || stopPrice.compareTo(BigInteger.ZERO) <= 0) {
             ki.getMainLog().warn("Zero or Negative amount or price on placeOrder");
@@ -499,8 +501,27 @@ public class ExchangeManager {
         }
     }
 
+    public void rebuildOrderCache()
+    {
+        for(Order o:orderBook.sells())
+        {
+            orders.put(o.getID(),o);
+        }
+        for(Order o:orderBook.buys())
+        {
+            orders.put(o.getID(),o);
+        }
+        for(Order o:orderBook.matched())
+        {
+            orders.put(o.getID(),o);
+        }
+    }
+
     public void reduceOrder(String ID, BigInteger amount, String txid) {
         Order o = orders.get(ID);
+        if(o == null) rebuildOrderCache();
+        o = orders.get(ID);
+        if(o == null) return;
         o.reduceAmount(amount);
         orderBook.sort();
         try {
@@ -603,6 +624,7 @@ public class ExchangeManager {
         if (o != null) {
             if (EncryptionManager.verifySig(o.serializeToBytes(), sig, Utils.toBase64(o.bin().getPublicKey()), o.address().getKeyType())) {
                 orderBook.removeOrder(o);
+                orders.remove(ID);
             }
         }
     }
