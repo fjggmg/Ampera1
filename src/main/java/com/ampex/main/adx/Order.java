@@ -9,6 +9,7 @@ import com.ampex.main.data.utils.Utils;
 import com.ampex.main.transactions.addresses.Address;
 import engine.binary.IBinary;
 import engine.binary.on_ice.Binary;
+import javafx.application.Platform;
 import javafx.beans.Observable;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
@@ -71,7 +72,20 @@ public class Order implements IAmpByteSerializable {
 
     public void reduceAmount(BigInteger amount) {
         amountOnOffer = amountOnOffer.subtract(amount);
-        amountProp.setValue(amountOnOffer);
+        try {
+            Platform.runLater(new Runnable() {
+                @Override
+                public void run() {
+                    amountProp.setValue(amountOnOffer);
+                }
+            });
+        } catch (RuntimeException re)
+        {
+            throw re;
+        } catch (Exception e)
+        {
+            //fail silently because FX is not available
+        }
 
     }
 
