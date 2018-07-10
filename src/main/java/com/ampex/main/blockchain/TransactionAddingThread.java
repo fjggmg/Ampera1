@@ -3,6 +3,7 @@ package com.ampex.main.blockchain;
 import com.ampex.amperabase.ITransAPI;
 import com.ampex.main.transactions.ITransMan;
 
+@Deprecated
 public class TransactionAddingThread extends Thread {
     private TransactionVerifierThread.VerificationState state = TransactionVerifierThread.VerificationState.WORKING;
     private ITransAPI trans;

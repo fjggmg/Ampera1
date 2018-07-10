@@ -31,8 +31,10 @@ public class ChainManagerLite implements IChainMan {
         this.ki = ki;
         this.chainID = chainID;
         bDebug = ki.getOptions().bDebug;
+        bvh = new BlockVerificationHelper(ki);
     }
 
+    private IBlockVerificationHelper bvh;
     @Override
     public BlockState softVerifyBlock(IBlockAPI block) {
         IBlockAPI current = chain.get(block.getHeight().subtract(BigInteger.ONE));
@@ -86,7 +88,7 @@ public class ChainManagerLite implements IChainMan {
             return BlockState.BAD_COINBASE;
         if (bDebug)
             ki.debug("Coinbase verifies ok");
-        BlockVerificationHelper bvh = new BlockVerificationHelper(ki, block);
+        bvh.init(block);
         if (!bvh.verifyTransactions()) return BlockState.BAD_TRANSACTIONS;
         List<String> inputs = new ArrayList<>();
         for (String t : block.getTransactionKeys()) {

@@ -5,20 +5,31 @@ import com.ampex.main.IKi;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class BlockVerificationHelper implements IBlockVerificationHelper {
 
     private IBlockAPI block;
     private IKi ki;
-
-    public BlockVerificationHelper(IKi ki, IBlockAPI block) {
-        this.block = block;
+    private ExecutorService executor;
+    public BlockVerificationHelper(IKi ki) {
         this.ki = ki;
+        this.executor = Executors.newWorkStealingPool();
     }
 
+    public void init(IBlockAPI block)
+    {
+        this.block = block;
+    }
 
     @Override
     public boolean verifyTransactions() {
+        if(block == null)
+        {
+            ki.debug("Block passed to BVH was null");
+            return false;
+        }
         ki.debug("Beginning transaction verification from block management side");
         if (block.getTransactionKeys().size() == 0) {
             ki.debug("Block has no transactions, stopping verifier");
@@ -29,7 +40,7 @@ public class BlockVerificationHelper implements IBlockVerificationHelper {
         for (String t : block.getTransactionKeys()) {
             TransactionVerifierThread worker = new TransactionVerifierThread(ki.getTransMan(), block.getTransaction(t));
             workers.add(worker);
-            worker.start();
+            executor.execute(worker);
         }
         ki.debug("Created and started worker threads");
         List<TransactionVerifierThread> toRemove = new ArrayList<>();
@@ -51,6 +62,7 @@ public class BlockVerificationHelper implements IBlockVerificationHelper {
         return true;
     }
 
+    @Deprecated
     @Override
     public boolean addTransactions() {
         ki.debug("Beginning transaction adding from block management side");

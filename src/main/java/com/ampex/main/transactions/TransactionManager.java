@@ -33,7 +33,7 @@ public class TransactionManager extends Thread implements ITransMan {
     public TransactionManager(IKi ki, boolean dump) {
         this.ki = ki;
         if (!new File("transactions" + ((ki.getOptions().testNet) ? ChainManager.TEST_NET : ChainManager.POW_CHAIN) + "/").mkdirs()) {
-            ki.getMainLog().warn("Unable to create transactions folder");
+            ki.getMainLog().warn("Unable to create transactions folder, if this is not the first time you've run the program, you can ignore this");
         }
         utxoAmp = new XodusAmpMap("transactions" + ((ki.getOptions().testNet) ? ChainManager.TEST_NET : ChainManager.POW_CHAIN) + "/utxoAmp.dat");//utxoDB.hashMap("utxoDB", Serializer.STRING, Serializer.STRING).createOrOpen();
         utxoVerMap = new XodusAmpMap("transactions" + ((ki.getOptions().testNet) ? ChainManager.TEST_NET : ChainManager.POW_CHAIN) + "/utxoVer.dat");
@@ -79,7 +79,7 @@ public class TransactionManager extends Thread implements ITransMan {
                 setName("Post Block Processing");
                 while (true) {
                     ki.debug("Post block processing on #" + currentHeight);
-                    IBlockAPI b = processMap.remove(currentHeight);
+                    IBlockAPI b = ki.getChainMan().getByHeight(currentHeight);
 
                     if (b != null) {
                         currentHeight = currentHeight.add(BigInteger.ONE);
@@ -151,13 +151,10 @@ public class TransactionManager extends Thread implements ITransMan {
                     if (!ki.getOptions().nogui && ki.getGUIHook() != null)
                         ki.getGUIHook().pbpDone();
                     synchronized (processLock) {
+
                         try {
-                            if (processMap.isEmpty())
-                                processLock.wait();
-                            else if(processMap.get(currentHeight) == null)
-                            {
-                                currentHeight = currentHeight.add(BigInteger.ONE);
-                            }
+                            if(ki.getChainMan().currentHeight().compareTo(currentHeight) < 0)
+                            processLock.wait();
                         } catch (InterruptedException e) {
                             tc.interrupt();
                             return;
@@ -167,9 +164,31 @@ public class TransactionManager extends Thread implements ITransMan {
             }
         };
         pbp.start();
+        pbpMan = new Thread(){
+            public void run()
+            {
+                setName("PBPMan");
+                while(true)
+                {
+                    if(ki.getChainMan().currentHeight().compareTo(currentHeight) >= 0)
+                    {
+                        synchronized (processLock) {
+                            processLock.notifyAll();
+                        }
+                    }
+                    try {
+                        sleep(10000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        };
+        pbpMan.setDaemon(true);
+        pbpMan.start();
 
     }
-
+    private Thread pbpMan;
     @Override
     public void interrupt() {
         super.interrupt();
@@ -671,12 +690,12 @@ public class TransactionManager extends Thread implements ITransMan {
         throw new InvalidTransactionException("Public key null");
     }
 
-    private Map<BigInteger, IBlockAPI> processMap = new HashMap<>();
+    //private Map<BigInteger, IBlockAPI> processMap = new HashMap<>();
 
     @Override
     public boolean postBlockProcessing(IBlockAPI block) {
 
-        processMap.put(block.getHeight(), block);
+        //processMap.put(block.getHeight(), block);
         synchronized (processLock) {
             processLock.notifyAll();
         }

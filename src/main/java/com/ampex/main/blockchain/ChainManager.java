@@ -96,6 +96,7 @@ public class ChainManager implements IChainMan {
         this.folderName = chainID + folderName;
         this.chainID = chainID;
         this.bDebug = bDebug;
+        bvh = new BlockVerificationHelper(ki);
         if (!new File("chain" + chainID + "/").mkdirs()) {
             ki.getMainLog().warn("Unable to create chain folder");
         }
@@ -254,6 +255,7 @@ public class ChainManager implements IChainMan {
         blockHeightAmp.put(b.getHeight().toByteArray(), b);
     }
 
+    private IBlockVerificationHelper bvh;
     @Override
     public synchronized BlockState softVerifyBlock(IBlockAPI block) {
 
@@ -346,7 +348,7 @@ public class ChainManager implements IChainMan {
             return BlockState.BAD_COINBASE;
         if (bDebug)
             ki.debug("Coinbase verifies ok");
-        BlockVerificationHelper bvh = new BlockVerificationHelper(ki, block);
+        bvh.init(block);
         if (!bvh.verifyTransactions()) return BlockState.BAD_TRANSACTIONS;
         List<String> inputs = new ArrayList<>();
         for(String t: block.getTransactionKeys()) {
