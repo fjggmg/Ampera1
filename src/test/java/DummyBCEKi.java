@@ -30,9 +30,10 @@ public class DummyBCEKi implements IKi {
 
     }
 
+    private Options o = new Options();
     @Override
     public Options getOptions() {
-        return null;
+        return o;
     }
 
     @Override
@@ -87,7 +88,7 @@ public class DummyBCEKi implements IKi {
 
     @Override
     public void debug(String s) {
-
+        //System.out.println("DEBUG: " + s);
     }
 
     @Override
