@@ -8,11 +8,9 @@ import com.ampex.main.transactions.scripting.compiling.StringCompiler;
 import edu.emory.mathcs.backport.java.util.Arrays;
 import engine.binary.BinaryFactory;
 import engine.binary.IBinary;
-import engine.binary.on_ice.Binary;
 import engine.data.constant_memory.ConstantMemoryFactory;
 import engine.data.jump_memory.JumpMemoryFactory;
 import engine.data.writable_memory.WritableMemoryFactory;
-import engine.data.writable_memory.on_ice.WritableMemory;
 import engine.program.IProgram;
 import engine.program.Program;
 import org.junit.Test;
@@ -33,11 +31,14 @@ public class SytheticTransactionBenchmark {
 
     //This is an arbitrarily large and difficult script. It has one of the heaviest operators repeated a lot of times to simulate heavy load but the script will always return as "succeeded".
     //This script is much harder than the ADX trading script and should be much harder than any reasonable script encountered.
-    private List<String> testScriptCode = Arrays.asList(new String[]{"PI0","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL",
+    private List<String> impossibleTestScriptCode = Arrays.asList(new String[]{"PI0","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL",
             "VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL",
             "VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL",
             "VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL",
             "VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","CSK","PI0","TERM"});
+    private List<String> worstCaseTestScriptCode = Arrays.asList(new String[]{"PI0","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","CSK","PI0","TERM"});
+
+
     @Test
     public void syntheticBench()
     {
@@ -49,7 +50,7 @@ public class SytheticTransactionBenchmark {
         Map<String,IKSEP> keySigMap = new HashMap<>();
         byte[] testScriptByteCode;
         try {
-            testScriptByteCode = StringCompiler.compile(testScriptCode,ki.getBCE8());
+            testScriptByteCode = StringCompiler.compile(worstCaseTestScriptCode,ki.getBCE8());
         } catch (CompilerException e) {
             e.printStackTrace();
             fail();
@@ -127,7 +128,7 @@ public class SytheticTransactionBenchmark {
         }
 
         List<ITrans> toVerify = new ArrayList<>();
-        for(int i = 0; i < 100_000; i++)
+        for(int i = 0; i < 10_000; i++)
         {
             toVerify.add(NewTrans.fromAmplet(trans.serializeToAmplet()));
         }
