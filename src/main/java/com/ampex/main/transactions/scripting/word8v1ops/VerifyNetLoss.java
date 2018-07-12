@@ -35,6 +35,10 @@ public class VerifyNetLoss implements IOperator {
     public void execute(Stack<IDataElement> stack, IBinary binary, IProgram program, IConstantMemory constantMemory, IJumpMemory jumpMemory, IWritableMemory writableMemory, IOPCode opCode, ITransAPI transaction, byte[] executionAddress) throws Exception {
         BigInteger expected = new BigInteger(stack.pop().getData());
         IAddress address = Address.fromByteArray(executionAddress);
+        if(address == null){
+            stack.push(new DataElement(ByteTools.deconstructInt(0)));
+            return;
+        }
         //System.out.println("Expected: " + expected);
         BigInteger actual = BigInteger.ZERO;
         List<Token> tokens = new ArrayList<>();

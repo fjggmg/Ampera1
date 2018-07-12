@@ -13,8 +13,10 @@ import com.ampex.main.data.utils.Utils;
 import com.ampex.main.transactions.addresses.Address;
 import com.ampex.main.transactions.addresses.InvalidAddressException;
 import com.ampex.main.transactions.addresses.NewAdd;
+import engine.binary.BinaryFactory;
 import engine.binary.on_ice.Binary;
 import engine.data.IDataElement;
+import engine.data.writable_memory.WritableMemoryFactory;
 import engine.data.writable_memory.on_ice.WritableMemory;
 
 import java.io.UnsupportedEncodingException;
@@ -196,12 +198,16 @@ public class NewTrans implements ITrans {
             if (ksep.isP2SH()) {
                 IAddress execAdd = null;
                 for (IInput i : inputs) {
-                    if (ksep.getInputs().contains(i.getID()))
+
+                    if (ksep.getInputs().contains(i.getID())) {
+                        //System.out.println("Found execAdd: " + i.getAddress().encodeForChain());
                         execAdd = i.getAddress();
+                    }
                 }
                 if (execAdd == null) return false;
                 try {
-                    ArrayList<IDataElement> result = ((KiAdapter)ki).getBCE8().executeProgram(Binary.deserializeFromAmplet(Amplet.create(Utils.fromBase64(key.getKey()))), WritableMemory.deserializeFromBytes(Utils.fromBase64(ksep.getSig())), this, execAdd.toByteArray(), false);
+                    ArrayList<IDataElement> result = ((KiAdapter)ki).getBCE8().executeProgram(BinaryFactory.buildFromAmplet(Amplet.create(Utils.fromBase64(key.getKey()))),WritableMemoryFactory.build(Utils.fromBase64(ksep.getSig())), this, execAdd.toByteArray(), false);
+                    //System.out.println("Finished executing program, result: " + result.get(0).getDataAsInt());
                     if (result.get(0).getDataAsInt() != 0) return false;
                 } catch (Exception e) {
                     e.printStackTrace();

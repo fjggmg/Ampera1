@@ -15,15 +15,31 @@ import com.ampex.main.pool.PoolData;
 import com.ampex.main.transactions.ITransMan;
 import com.ampex.main.transactions.addresses.IAddMan;
 import com.ampex.main.transactions.scripting.ScriptManager;
+import com.ampex.main.transactions.scripting.word8v1ops.VerifyNetLoss;
 import engine.ByteCodeEngine;
 import engine.IByteCodeEngine;
+import engine.operators.reserved_set.word8v1.ClearStackWord8;
+import engine.operators.reserved_set.word8v1.PI.PI0Word8;
+import engine.operators.reserved_set.word8v1.TermWord8;
 import mining_pool.Pool;
 import org.apache.logging.log4j.Logger;
 
 import java.math.BigInteger;
 
 public class DummyBCEKi implements IKi {
-    public ByteCodeEngine bce;
+    private ByteCodeEngine bce = new ByteCodeEngine(1);
+
+    public DummyBCEKi()
+    {
+        //bce.addReservedWord8Operators();
+        //bce.addOperators("com.ampex.main.transactions.scripting.word8v1ops");
+        bce.addOperator(PI0Word8.class);
+        bce.addOperator(TermWord8.class);
+        bce.addOperator(VerifyNetLoss.class);
+        bce.addOperator(ClearStackWord8.class);
+        //bce8.addOperator(VSigBin.class);
+        bce.finalizeOperators();
+    }
 
     @Override
     public void start() {
