@@ -118,6 +118,10 @@ public class Ki extends Thread implements IKi, IKiAPI {
         if(o.benchmark)
         {
             SyntheticTransactionBenchmark stb = new SyntheticTransactionBenchmark();
+            stb.numberOfTransactions = o.numberOfTransactions;
+            stb.useWorstCaseScript = o.useWorstCase;
+            stb.useImpossibleScript = o.useImpossible;
+            stb.keyType = o.keyType;
             stb.syntheticBench();
             return;
         }
