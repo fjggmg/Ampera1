@@ -24,13 +24,13 @@ import java.util.concurrent.Executors;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-public class SytheticTransactionBenchmark {
+public class SyntheticTransactionBenchmark {
 
 
 
 
     //This is an arbitrarily large and difficult script. It has one of the heaviest operators repeated a lot of times to simulate heavy load but the script will always return as "succeeded".
-    //This script is much harder than the ADX trading script and should be much harder than any reasonable script encountered.
+    //This script is much harder than the ADX trading script and should be much harder than any script encountered.
     private List<String> impossibleTestScriptCode = Arrays.asList(new String[]{"PI0","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL",
             "VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL",
             "VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL",
@@ -38,6 +38,11 @@ public class SytheticTransactionBenchmark {
             "VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","CSK","PI0","TERM"});
     private List<String> worstCaseTestScriptCode = Arrays.asList(new String[]{"PI0","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","VNL","CSK","PI0","TERM"});
 
+    public KeyType keyType = KeyType.ED25519;
+    public boolean useImpossibleScript = false;
+    public boolean useWorstCaseScript = false;
+
+    public int numberOfTransactions = 50_000;
 
     @Test
     public void syntheticBench()
@@ -48,9 +53,13 @@ public class SytheticTransactionBenchmark {
         List<IOutput> outputs = new ArrayList<>();
         List<IInput> inputs = new ArrayList<>();
         Map<String,IKSEP> keySigMap = new HashMap<>();
-        byte[] testScriptByteCode;
+        byte[] testScriptByteCode = null;
+        if(useImpossibleScript || useWorstCaseScript)
         try {
-            testScriptByteCode = StringCompiler.compile(worstCaseTestScriptCode,ki.getBCE8());
+            if(useWorstCaseScript)
+                testScriptByteCode = StringCompiler.compile(worstCaseTestScriptCode,ki.getBCE8());
+            if(useImpossibleScript)
+                testScriptByteCode = StringCompiler.compile(impossibleTestScriptCode,ki.getBCE8());
         } catch (CompilerException e) {
             e.printStackTrace();
             fail();
@@ -62,22 +71,23 @@ public class SytheticTransactionBenchmark {
         EncryptionManager em = new EncryptionManager(ki);
         em.generateKeys();
         em.generateEDKeys();
-        IAddress p2shAdd;
-        IBinary bin;
-        try {
-            IProgram p = new Program(testScriptByteCode);
-            bin = BinaryFactory.build(p,ConstantMemoryFactory.build(),JumpMemoryFactory.build(),true,1,new byte[]{3,42,-1,23},System.currentTimeMillis(),em.getPublicKey(KeyType.ED25519).getEncoded(),KeyType.ED25519,null,0);
-            p2shAdd = NewAdd.createNew(Utils.toBase64(bin.serializeToAmplet().serializeToBytes()),Utils.toBase64(bin.getEntropy()),AddressLength.SHA256, true, KeyType.NONE);
-        } catch (Exception e) {
-            e.printStackTrace();
-            fail();
-            return;
-        }
 
-        KeyType kt = KeyType.ED25519;
+        IAddress p2shAdd = null;
+        IBinary bin = null;
+        if(useImpossibleScript || useWorstCaseScript) {
+            try {
+                IProgram p = new Program(testScriptByteCode);
+                bin = BinaryFactory.build(p, ConstantMemoryFactory.build(), JumpMemoryFactory.build(), true, 1, new byte[]{3, 42, -1, 23}, System.currentTimeMillis(), em.getPublicKey(KeyType.ED25519).getEncoded(), KeyType.ED25519, null, 0);
+                p2shAdd = NewAdd.createNew(Utils.toBase64(bin.serializeToAmplet().serializeToBytes()), Utils.toBase64(bin.getEntropy()), AddressLength.SHA256, true, KeyType.NONE);
+            } catch (Exception e) {
+                e.printStackTrace();
+                fail();
+                return;
+            }
+        }
         IAddress receiver = null;
         try {
-            receiver = NewAdd.createNew(em.getPublicKeyString(kt),"SynTestEnt1",AddressLength.SHA256,false,kt);
+            receiver = NewAdd.createNew(em.getPublicKeyString(keyType),"SynTestEnt1",AddressLength.SHA256,false,keyType);
         } catch (InvalidAddressException e) {
             e.printStackTrace();
             fail();
@@ -91,7 +101,6 @@ public class SytheticTransactionBenchmark {
         IInput input3 = new Input(EncryptionManager.sha3256("InputSynTest3"),0,amount,receiver,Token.ORIGIN,System.currentTimeMillis(),(byte)2);
         IInput input4 = new Input(EncryptionManager.sha3256("InputSynTest4"),0,amount,receiver,Token.ORIGIN,System.currentTimeMillis(),(byte)2);
 
-        IInput p2shInput = new Input(EncryptionManager.sha3256("InputSynTestP2SH1"),0,amount,p2shAdd,Token.ORIGIN,System.currentTimeMillis(),(byte)2);
 
         inputs.add(input);
         inputs.add(input2);
@@ -110,17 +119,21 @@ public class SytheticTransactionBenchmark {
         {
             sInputs.add(i.getID());
         }
-        keySigMap.put(em.getPublicKeyString(kt),new KeySigEntropyPair(null,"SynTestEnt1",sInputs,null,false, kt));
+        keySigMap.put(em.getPublicKeyString(keyType),new KeySigEntropyPair(null,"SynTestEnt1",sInputs,null,false, keyType));
 
-        List<String> sInsP2SH = new ArrayList<>();
-        sInsP2SH.add(p2shInput.getID());
-        inputs.add(p2shInput);
 
-        keySigMap.put(Utils.toBase64(bin.serializeToAmplet().serializeToBytes()),new KeySigEntropyPair(Utils.toBase64(WritableMemoryFactory.build().serializeToBytes()), Utils.toBase64(bin.getEntropy()),sInsP2SH,null,true, KeyType.NONE));
+        if(useWorstCaseScript || useImpossibleScript) {
+            IInput p2shInput = new Input(EncryptionManager.sha3256("InputSynTestP2SH1"), 0, amount, p2shAdd, Token.ORIGIN, System.currentTimeMillis(), (byte) 2);
+            List<String> sInsP2SH = new ArrayList<>();
+            sInsP2SH.add(p2shInput.getID());
+            inputs.add(p2shInput);
+
+            keySigMap.put(Utils.toBase64(bin.serializeToAmplet().serializeToBytes()), new KeySigEntropyPair(Utils.toBase64(WritableMemoryFactory.build().serializeToBytes()), Utils.toBase64(bin.getEntropy()), sInsP2SH, null, true, KeyType.NONE));
+        }
         ITrans trans;
         try {
             trans = new NewTrans(message,outputs,inputs,keySigMap,TransactionType.NEW_TRANS);
-            trans.addSig(em.getPublicKeyString(kt), Utils.toBase64(em.sign(trans.toSignBytes(), kt)));
+            trans.addSig(em.getPublicKeyString(keyType), Utils.toBase64(em.sign(trans.toSignBytes(), keyType)));
         } catch (InvalidTransactionException e) {
             e.printStackTrace();
             fail();
@@ -128,7 +141,7 @@ public class SytheticTransactionBenchmark {
         }
 
         List<ITrans> toVerify = new ArrayList<>();
-        for(int i = 0; i < 10_000; i++)
+        for(int i = 0; i < numberOfTransactions; i++)
         {
             toVerify.add(NewTrans.fromAmplet(trans.serializeToAmplet()));
         }

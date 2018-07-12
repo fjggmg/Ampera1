@@ -8,6 +8,7 @@ import com.ampex.amperanet.packets.TransactionDataRequest;
 import com.ampex.main.GUI.FXGUI;
 import com.ampex.main.GUI.NewGUI;
 import com.ampex.main.adx.ExchangeManager;
+import com.ampex.main.benchmarking.SyntheticTransactionBenchmark;
 import com.ampex.main.blockchain.*;
 import com.ampex.main.blockchain.mining.GPUMiner;
 import com.ampex.main.blockchain.mining.IMinerMan;
@@ -92,8 +93,8 @@ public class Ki extends Thread implements IKi, IKiAPI {
     private Pool miningPool;
     //public static volatile boolean canClose = true;
     private PoolData pd;
-    private XodusStringBooleanMap settings = new XodusStringBooleanMap("settings");
-    private XodusStringMap stringSettings = new XodusStringMap("etc");
+    private XodusStringBooleanMap settings; // = new XodusStringBooleanMap("settings");
+    private XodusStringMap stringSettings;// = new XodusStringMap("etc");
     private ByteCodeEngine bce8 = new ByteCodeEngine(1);
     private ByteCodeEngine bce16 = new ByteCodeEngine(1);
     private ScriptManager scriptMan;
@@ -112,8 +113,16 @@ public class Ki extends Thread implements IKi, IKiAPI {
                 VERSION = "post0.18.4";
 
         }
-        this.o = o;
 
+        this.o = o;
+        if(o.benchmark)
+        {
+            SyntheticTransactionBenchmark stb = new SyntheticTransactionBenchmark();
+            stb.syntheticBench();
+            return;
+        }
+        settings  = new XodusStringBooleanMap("settings");
+        stringSettings = new XodusStringMap("etc");
         System.setProperty("log4j.configurationFile", "log4j.xml");
         AmpLogging.startLogging(new AmpexLogger("Amp"));
         PoolLogging.startLogging(new AmpexLogger("Pool"));
@@ -324,6 +333,7 @@ public class Ki extends Thread implements IKi, IKiAPI {
     boolean setupDone = false;
     @Override
     public void run() {
+        if(o.benchmark) return;
         if (!o.pool) {
             transMan.start();
         }

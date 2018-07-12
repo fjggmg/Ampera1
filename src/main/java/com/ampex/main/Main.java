@@ -1,5 +1,6 @@
 package com.ampex.main;
 
+import com.ampex.amperabase.KeyType;
 import com.ampex.amperabase.Options;
 
 /**
@@ -69,6 +70,33 @@ public class Main {
             if (s.equals("-pool")) {
                 o.pool = true;
                 o.lite = true;
+            }
+            if (s.equals("-benchmark")) {
+                o.benchmark = true;
+            }
+            if (s.equals("--imps")) {
+                o.useImpossible = true;
+            }
+            if (s.equals("--wcs")) {
+                o.useWorstCase = true;
+            }
+            if (s.startsWith("--trans")) {
+                String reg = s.replace("--trans","");
+
+                try{
+                    o.numberOfTransactions = Integer.parseInt(reg);
+                }catch (NumberFormatException e)
+                {
+                    System.out.println("Could not parse number of transactions to use for benchmark, defaulting to 50k");
+                }
+            }
+
+            if (s.equals("--kED")) {
+                o.keyType = KeyType.ED25519;
+            }
+
+            if (s.equals("--kBP")) {
+                o.keyType = KeyType.BRAINPOOLP512T1;
             }
 
 
