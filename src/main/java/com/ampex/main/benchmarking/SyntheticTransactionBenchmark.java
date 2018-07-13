@@ -7,6 +7,7 @@ import com.ampex.main.transactions.addresses.InvalidAddressException;
 import com.ampex.main.transactions.addresses.NewAdd;
 import com.ampex.main.transactions.scripting.compiling.CompilerException;
 import com.ampex.main.transactions.scripting.compiling.StringCompiler;
+import com.sun.org.apache.bcel.internal.generic.IINC;
 import engine.binary.BinaryFactory;
 import engine.binary.IBinary;
 import engine.data.constant_memory.ConstantMemoryFactory;
@@ -27,10 +28,11 @@ public class SyntheticTransactionBenchmark {
     public static void main(String[] args)
     {
         SyntheticTransactionBenchmark stb = new SyntheticTransactionBenchmark();
-        stb.numberOfTransactions = 50_000;
-        //stb.useWorstCaseScript = true;
+        stb.numberOfTransactions = 500_000;
+        stb.useWorstCaseScript = true;
         //stb.useImpossibleScript = true;
-        stb.keyType = KeyType.BRAINPOOLP512T1;
+        //stb.keyType = KeyType.BRAINPOOLP512T1;
+        stb.scriptOnly = true;
         stb.syntheticBench();
     }
 
@@ -46,6 +48,8 @@ public class SyntheticTransactionBenchmark {
     public KeyType keyType = KeyType.ED25519;
     public boolean useImpossibleScript = false;
     public boolean useWorstCaseScript = false;
+    public boolean scriptOnly = false;
+
 
     public int numberOfTransactions = 50_000;
 
@@ -54,6 +58,11 @@ public class SyntheticTransactionBenchmark {
         if(useImpossibleScript && useWorstCaseScript)
         {
             System.out.println("Cannot use impossible and worse case script in benchmarking currently");
+            return;
+        }
+        if(scriptOnly && (!useImpossibleScript && !useWorstCaseScript))
+        {
+            System.out.println("Please specify which script to use with options");
             return;
         }
         System.out.println("=====Ampera Benchmarking System. Greater than 60s verification time is considered unacceptable=====");
@@ -101,45 +110,62 @@ public class SyntheticTransactionBenchmark {
                 return;
             }
         }
-        IAddress receiver = null;
-        try {
-            receiver = NewAdd.createNew(em.getPublicKeyString(keyType),"SynTestEnt1",AddressLength.SHA256,false,keyType);
-        } catch (InvalidAddressException e) {
-            e.printStackTrace();
-            return;
-        }
+
         BigInteger amount = BigInteger.valueOf(100_000_000);
 
+            IAddress receiver = null;
+            try {
+                receiver = NewAdd.createNew(em.getPublicKeyString(keyType), "SynTestEnt1", AddressLength.SHA256, false, keyType);
+            } catch (InvalidAddressException e) {
+                e.printStackTrace();
+                return;
+            }
 
-        IInput input = new Input(EncryptionManager.sha3256("InputSynTest1"),0,amount,receiver,Token.ORIGIN,System.currentTimeMillis(),(byte)2);
-        IInput input2 = new Input(EncryptionManager.sha3256("InputSynTest2"),0,amount,receiver,Token.ORIGIN,System.currentTimeMillis(),(byte)2);
-        IInput input3 = new Input(EncryptionManager.sha3256("InputSynTest3"),0,amount,receiver,Token.ORIGIN,System.currentTimeMillis(),(byte)2);
-        IInput input4 = new Input(EncryptionManager.sha3256("InputSynTest4"),0,amount,receiver,Token.ORIGIN,System.currentTimeMillis(),(byte)2);
+        if(!scriptOnly) {
+            IInput input = new Input(EncryptionManager.sha3256("InputSynTest1"), 0, amount, receiver, Token.ORIGIN, System.currentTimeMillis(), (byte) 2);
+            IInput input2 = new Input(EncryptionManager.sha3256("InputSynTest2"), 0, amount, receiver, Token.ORIGIN, System.currentTimeMillis(), (byte) 2);
+            IInput input3 = new Input(EncryptionManager.sha3256("InputSynTest3"), 0, amount, receiver, Token.ORIGIN, System.currentTimeMillis(), (byte) 2);
+            IInput input4 = new Input(EncryptionManager.sha3256("InputSynTest4"), 0, amount, receiver, Token.ORIGIN, System.currentTimeMillis(), (byte) 2);
 
+            inputs.add(input);
+            inputs.add(input2);
+            inputs.add(input3);
+            inputs.add(input4);
+        }else{
+            IInput input = new Input(EncryptionManager.sha3256("InputSynTest1"), 0, amount, p2shAdd, Token.ORIGIN, System.currentTimeMillis(), (byte) 2);
+            IInput input2 = new Input(EncryptionManager.sha3256("InputSynTest2"), 0, amount, p2shAdd, Token.ORIGIN, System.currentTimeMillis(), (byte) 2);
+            IInput input3 = new Input(EncryptionManager.sha3256("InputSynTest3"), 0, amount, p2shAdd, Token.ORIGIN, System.currentTimeMillis(), (byte) 2);
+            IInput input4 = new Input(EncryptionManager.sha3256("InputSynTest4"), 0, amount, p2shAdd, Token.ORIGIN, System.currentTimeMillis(), (byte) 2);
 
-        inputs.add(input);
-        inputs.add(input2);
-        inputs.add(input3);
-        inputs.add(input4);
-
+            inputs.add(input);
+            inputs.add(input2);
+            inputs.add(input3);
+            inputs.add(input4);
+        }
 
         Output output = new Output(amount,receiver,Token.ORIGIN,0,System.currentTimeMillis(),(byte)2);
         Output output2 = new Output(amount,receiver,Token.ORIGIN,1,System.currentTimeMillis(),(byte)2);
 
         outputs.add(output);
         outputs.add(output2);
-
-        List<String> sInputs = new ArrayList<>();
-        for(IInput i:inputs)
-        {
-            sInputs.add(i.getID());
+        if(!scriptOnly) {
+            List<String> sInputs = new ArrayList<>();
+            for (IInput i : inputs) {
+                sInputs.add(i.getID());
+            }
+            keySigMap.put(em.getPublicKeyString(keyType), new KeySigEntropyPair(null, "SynTestEnt1", sInputs, null, false, keyType));
         }
-        keySigMap.put(em.getPublicKeyString(keyType),new KeySigEntropyPair(null,"SynTestEnt1",sInputs,null,false, keyType));
-
 
         if(useWorstCaseScript || useImpossibleScript) {
             IInput p2shInput = new Input(EncryptionManager.sha3256("InputSynTestP2SH1"), 0, amount, p2shAdd, Token.ORIGIN, System.currentTimeMillis(), (byte) 2);
             List<String> sInsP2SH = new ArrayList<>();
+            if(scriptOnly)
+            {
+                for(IInput i: inputs)
+                {
+                    sInsP2SH.add(i.getID());
+                }
+            }
             sInsP2SH.add(p2shInput.getID());
             inputs.add(p2shInput);
 
@@ -148,6 +174,7 @@ public class SyntheticTransactionBenchmark {
         ITrans trans;
         try {
             trans = new NewTrans(message,outputs,inputs,keySigMap,TransactionType.NEW_TRANS);
+            if(!scriptOnly)
             trans.addSig(em.getPublicKeyString(keyType), Utils.toBase64(em.sign(trans.toSignBytes(), keyType)));
         } catch (InvalidTransactionException e) {
             e.printStackTrace();

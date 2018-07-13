@@ -98,6 +98,9 @@ public class Main {
             if (s.equals("--kBP")) {
                 o.keyType = KeyType.BRAINPOOLP512T1;
             }
+            if (s.equals("--so")) {
+                o.scriptOnly = true;
+            }
 
 
         }

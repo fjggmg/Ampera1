@@ -122,6 +122,7 @@ public class Ki extends Thread implements IKi, IKiAPI {
             stb.useWorstCaseScript = o.useWorstCase;
             stb.useImpossibleScript = o.useImpossible;
             stb.keyType = o.keyType;
+            stb.scriptOnly = o.scriptOnly;
             stb.syntheticBench();
             return;
         }
