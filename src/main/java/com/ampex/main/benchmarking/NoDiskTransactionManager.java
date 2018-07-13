@@ -38,37 +38,37 @@ public class NoDiskTransactionManager extends Thread implements ITransMan{
     @Override
     public boolean verifyTransaction(ITransAPI transaction) {
 
-            ki.debug("Verifying transaction: " + transaction.getID());
+            //ki.debug("Verifying transaction: " + transaction.getID());
 
 
         for (IInput i : transaction.getInputs()) {
 
             if (i == null) {
-                    ki.getMainLog().warn("Input is null, malformed transaction.");
+                    //ki.getMainLog().warn("Input is null, malformed transaction.");
                 return false;
             }
         }
-            ki.debug("all inputs verified");
+            //ki.debug("all inputs verified");
         if (!transaction.verifyInputToOutput()) {
-                ki.debug("Input values are not equal to output values");
+                //ki.debug("Input values are not equal to output values");
             return false;
         }
-        ki.debug("input to output verifies");
+        //ki.debug("input to output verifies");
         if (!transaction.verifyCanSpend()) {
-                ki.debug("this address cannot spend this input");
+                //ki.debug("this address cannot spend this input");
             return false;
         }
-            ki.debug("verified can spend");
+            //ki.debug("verified can spend");
         if (!transaction.verifySigs()) {
-                ki.debug("the signature on this transaction does not match");
+                //ki.debug("the signature on this transaction does not match");
             return false;
         }
         if (!transaction.verifySpecial(ki)) {
-                ki.debug("Contract requirements for this transaction have not been met");
+                //ki.debug("Contract requirements for this transaction have not been met");
             return false;
         }
-            ki.debug("verified signature");
-            ki.debug("Transaction verified");
+            //ki.debug("verified signature");
+            //ki.debug("Transaction verified");
 
         return true;
     }

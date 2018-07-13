@@ -17,13 +17,22 @@ import engine.program.Program;
 
 import java.math.BigInteger;
 import java.util.*;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 
 public class SyntheticTransactionBenchmark {
 
+
+    public static void main(String[] args)
+    {
+        SyntheticTransactionBenchmark stb = new SyntheticTransactionBenchmark();
+        stb.numberOfTransactions = 50_000;
+        //stb.useWorstCaseScript = true;
+        //stb.useImpossibleScript = true;
+        stb.keyType = KeyType.BRAINPOOLP512T1;
+        stb.syntheticBench();
+    }
 
     //This is an arbitrarily large and difficult script. It has one of the heaviest operators repeated a lot of times to simulate heavy load but the script will always return as "succeeded".
     //This script is much harder than the ADX trading script and should be much harder than any script encountered.
@@ -55,6 +64,7 @@ public class SyntheticTransactionBenchmark {
         System.out.println("Add worst case script to transaction for testing: " + useWorstCaseScript);
         System.out.println("---------------------------------------------------------------------------");
         System.out.println("Beginning setup...");
+        //ExecutorService executor = Executors.newFixedThreadPool(32);
         ExecutorService executor = Executors.newWorkStealingPool();
         DummyBCEKi ki = new DummyBCEKi();
         String message = "Synthetic test";
@@ -144,32 +154,46 @@ public class SyntheticTransactionBenchmark {
             return;
         }
 
-        List<ITrans> toVerify = new ArrayList<>();
-        for(int i = 0; i < numberOfTransactions; i++)
-        {
-            toVerify.add(NewTrans.fromAmplet(trans.serializeToAmplet()));
-        }
-
         ITransMan transMan = new NoDiskTransactionManager(ki,false);
         List<Callable<Boolean>> vts = new ArrayList<>();
-        for(ITrans t:toVerify)
+        for(int i = 0; i < numberOfTransactions; i++)
         {
             VerifierThread vt = new VerifierThread();
-            vt.init(t,transMan);
+            vt.init(NewTrans.fromAmplet(trans.serializeToAmplet()),transMan);
             vts.add(vt);
         }
+
         System.out.println("Setup complete, beginning benchmark. You may experience heavy CPU load during the test.");
         long start = System.currentTimeMillis();
+        //List<Future<Boolean>> results = null;
         try {
             executor.invokeAll(vts);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
         long stop = System.currentTimeMillis();
-
+        /*
+        for(Future<Boolean> future:results)
+        {
+            try {
+                System.out.println("Result: " + future.get());
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } catch (ExecutionException e) {
+                e.printStackTrace();
+            }
+        }
+        */
         System.out.println("Verification took: " + (stop - start) + " ms");
 
+
     }
+    private static AtomicInteger i = new AtomicInteger(0);
+    public static void increment()
+    {
+        i.incrementAndGet();
+    }
+
     private static class VerifierThread implements Callable<Boolean> {
         private ITrans trans;
         private ITransMan transMan;
@@ -186,6 +210,8 @@ public class SyntheticTransactionBenchmark {
                 System.out.println("Verification failed");
                 return false;
             }else{
+                //System.out.println("thread finished");
+               //increment();
                 return true;
             }
         }
