@@ -101,6 +101,9 @@ public class Main {
             if (s.equals("--so")) {
                 o.scriptOnly = true;
             }
+            if (s.equals("--ud")) {
+                o.noDisk = false;
+            }
 
 
         }

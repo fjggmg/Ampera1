@@ -40,6 +40,7 @@ public class Output implements IOutput {
     private final long timestamp;
     private final byte version;
 
+    @Override
     public byte getVersion() {
         return version;
     }

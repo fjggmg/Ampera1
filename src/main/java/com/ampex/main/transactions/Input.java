@@ -110,6 +110,11 @@ public class Input implements IInput {
         return timestamp;
     }
 
+    @Override
+    public byte getVersion() {
+        return version;
+    }
+
     public static IInput fromOutput(IOutput output)
     {
         return new Input(output.getID(), output.getIndex(), output.getAmount(), output.getAddress(), output.getToken(), output.getTimestamp(), VERSION);

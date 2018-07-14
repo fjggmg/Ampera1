@@ -123,6 +123,7 @@ public class Ki extends Thread implements IKi, IKiAPI {
             stb.useImpossibleScript = o.useImpossible;
             stb.keyType = o.keyType;
             stb.scriptOnly = o.scriptOnly;
+            stb.noDisk = o.noDisk;
             stb.syntheticBench();
             return;
         }

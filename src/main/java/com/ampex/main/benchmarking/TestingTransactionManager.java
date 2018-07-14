@@ -7,6 +7,7 @@ import com.ampex.main.blockchain.ChainManager;
 import com.ampex.main.data.buckets.KeyKeyTypePair;
 import com.ampex.main.data.utils.Utils;
 import com.ampex.main.transactions.*;
+import database.XodusAmpMap;
 import engine.binary.IBinary;
 import engine.data.writable_memory.on_ice.WritableMemory;
 
@@ -16,15 +17,24 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class NoDiskTransactionManager extends Thread implements ITransMan{
+public class TestingTransactionManager extends Thread implements ITransMan{
     private IKi ki;
     private final Object processLock = new Object();
-    public NoDiskTransactionManager(IKi ki, boolean dump) {
-        this.ki = ki;
+    private boolean nodisk;
 
+    private XodusAmpMap utxoVerMap;
+    public TestingTransactionManager(IKi ki, boolean nodisk, Map<String,TXIOData> prePop) {
+        this.ki = ki;
+        this.nodisk = nodisk;
+        if(!nodisk) {
+            utxoVerMap = new XodusAmpMap("benchTrans/utxoVer.dat");
+            utxoVerMap.clear();
+            for (Map.Entry<String, TXIOData> data : prePop.entrySet()) {
+                utxoVerMap.putBytes(data.getKey(), data.getValue().serializeToBytes());
+            }
+        }
     }
 
-    private Thread pbp;
 
     @Override
     public void run() {
@@ -33,7 +43,6 @@ public class NoDiskTransactionManager extends Thread implements ITransMan{
     @Override
     public void interrupt() {
         super.interrupt();
-        pbp.interrupt();
     }
     @Override
     public boolean verifyTransaction(ITransAPI transaction) {
@@ -42,6 +51,48 @@ public class NoDiskTransactionManager extends Thread implements ITransMan{
 
 
         for (IInput i : transaction.getInputs()) {
+
+            if(!nodisk)
+            {
+                TXIOData data;
+                try {
+                    data = TXIOData.fromByteArray(utxoVerMap.getBytes(i.getID()));
+                    if (data == null) {
+                        if (ki.getOptions().tDebug)
+                            ki.getMainLog().warn("Input already spent, bad transaction");
+                        return false;
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    return false;
+                }
+
+                if (ki.getOptions().tDebug)
+                    ki.debug("input not spent");
+
+                if (data.getAmount().compareTo(i.getAmount()) != 0) {
+                    if (ki.getOptions().tDebug)
+                        ki.getMainLog().warn("input is incorrect amount");
+                    return false;
+                }
+                if (ki.getOptions().tDebug)
+                    ki.debug("input correct amount");
+                if (!data.getAddress().encodeForChain().equals(i.getAddress().encodeForChain())) {
+                    if (ki.getOptions().tDebug)
+                        ki.getMainLog().warn("Input not for this address");
+                    return false;
+                }
+                if (data.getIndex() != i.getIndex()) {
+                    if (ki.getOptions().tDebug)
+                        ki.getMainLog().warn("Wrong input index");
+                    return false;
+                }
+                if (!data.getToken().equals(i.getToken())) {
+                    if (ki.getOptions().tDebug)
+                        ki.getMainLog().warn("Wrong token");
+                    return false;
+                }
+            }
 
             if (i == null) {
                     //ki.getMainLog().warn("Input is null, malformed transaction.");

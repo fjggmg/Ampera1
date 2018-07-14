@@ -7,7 +7,6 @@ import com.ampex.main.transactions.addresses.InvalidAddressException;
 import com.ampex.main.transactions.addresses.NewAdd;
 import com.ampex.main.transactions.scripting.compiling.CompilerException;
 import com.ampex.main.transactions.scripting.compiling.StringCompiler;
-import com.sun.org.apache.bcel.internal.generic.IINC;
 import engine.binary.BinaryFactory;
 import engine.binary.IBinary;
 import engine.data.constant_memory.ConstantMemoryFactory;
@@ -28,11 +27,12 @@ public class SyntheticTransactionBenchmark {
     public static void main(String[] args)
     {
         SyntheticTransactionBenchmark stb = new SyntheticTransactionBenchmark();
-        stb.numberOfTransactions = 500_000;
+        stb.numberOfTransactions = 100_000;
         stb.useWorstCaseScript = true;
         //stb.useImpossibleScript = true;
         //stb.keyType = KeyType.BRAINPOOLP512T1;
-        stb.scriptOnly = true;
+        //stb.scriptOnly = true;
+        stb.noDisk = false;
         stb.syntheticBench();
     }
 
@@ -49,6 +49,7 @@ public class SyntheticTransactionBenchmark {
     public boolean useImpossibleScript = false;
     public boolean useWorstCaseScript = false;
     public boolean scriptOnly = false;
+    public boolean noDisk = true;
 
 
     public int numberOfTransactions = 50_000;
@@ -181,7 +182,21 @@ public class SyntheticTransactionBenchmark {
             return;
         }
 
-        ITransMan transMan = new NoDiskTransactionManager(ki,false);
+        Map<String,TXIOData> prePop = new HashMap<>();
+        if(!noDisk)
+        {
+            for(IInput i:inputs)
+            {
+                try {
+                    prePop.put(i.getID(),new TXIOData(i));
+                } catch (InvalidTXIOData invalidTXIOData) {
+                    invalidTXIOData.printStackTrace();
+                    return;
+                }
+            }
+        }
+
+        ITransMan transMan = new TestingTransactionManager(ki,noDisk,prePop);
         List<Callable<Boolean>> vts = new ArrayList<>();
         for(int i = 0; i < numberOfTransactions; i++)
         {

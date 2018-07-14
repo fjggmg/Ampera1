@@ -215,8 +215,10 @@ public class TransactionManager extends Thread implements ITransMan {
                 return false;
             }
 
+            TXIOData data;
             try {
-                if (utxoVerMap.getBytes(i.getID()) == null) {
+                data = TXIOData.fromByteArray(utxoVerMap.getBytes(i.getID()));
+                if (data == null) {
                     if (ki.getOptions().tDebug)
                         ki.getMainLog().warn("Input already spent, bad transaction");
                     return false;
@@ -225,8 +227,7 @@ public class TransactionManager extends Thread implements ITransMan {
                 e.printStackTrace();
                 return false;
             }
-            TXIOData data = TXIOData.fromByteArray(utxoVerMap.getBytes(i.getID()));
-            if (data == null) return false;
+
             if (ki.getOptions().tDebug)
                 ki.debug("input not spent");
 

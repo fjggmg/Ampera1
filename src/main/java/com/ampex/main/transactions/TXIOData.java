@@ -4,6 +4,7 @@ import amp.ByteTools;
 import amp.HeadlessPrefixedAmplet;
 import amp.serialization.IAmpByteSerializable;
 import com.ampex.amperabase.IAddress;
+import com.ampex.amperabase.TXIO;
 import com.ampex.amperabase.Token;
 import com.ampex.main.blockchain.IChainMan;
 import com.ampex.main.transactions.addresses.Address;
@@ -51,11 +52,29 @@ public class TXIOData implements IAmpByteSerializable {
         this.address = address;
         if (index > IChainMan.MAX_TXIOS) throw new InvalidTXIOData("Invalid index");
         this.index = index;
-        if (amount.compareTo(BigInteger.ZERO) < 0) throw new InvalidTXIOData("Invalid height");
+        if (amount.compareTo(BigInteger.ZERO) < 0) throw new InvalidTXIOData("Invalid amount");
         this.amount = amount;
         this.token = token;
         this.timestamp = timestamp;
         this.version = version;
+    }
+
+    public TXIOData(TXIO txio) throws InvalidTXIOData
+    {
+        if (!txio.getAddress().isValid() && txio.getAddress().getVersion() != Address.VERSION)
+            throw new InvalidTXIOData("Invalid address: " + address.encodeForChain());
+        this.address = txio.getAddress();
+
+        if (txio.getIndex() > IChainMan.MAX_TXIOS) throw new InvalidTXIOData("Invalid index");
+
+        index = txio.getIndex();
+
+        if (txio.getAmount().compareTo(BigInteger.ZERO) < 0) throw new InvalidTXIOData("Invalid amount");
+
+        amount = txio.getAmount();
+        token = txio.getToken();
+        timestamp = txio.getTimestamp();
+        version = txio.getVersion();
     }
 
     @Override
