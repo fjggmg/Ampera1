@@ -230,11 +230,6 @@ public class SyntheticTransactionBenchmark {
 
 
     }
-    private static AtomicInteger i = new AtomicInteger(0);
-    public static void increment()
-    {
-        i.incrementAndGet();
-    }
 
     private static class VerifierThread implements Callable<Boolean> {
         private ITrans trans;

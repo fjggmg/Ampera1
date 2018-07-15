@@ -44,6 +44,12 @@ public class TestingTransactionManager extends Thread implements ITransMan{
     public void interrupt() {
         super.interrupt();
     }
+
+    @Override
+    public boolean hasUTXOsOnDisk(IAddress address) {
+        return false;
+    }
+
     @Override
     public boolean verifyTransaction(ITransAPI transaction) {
 
@@ -448,12 +454,8 @@ public class TestingTransactionManager extends Thread implements ITransMan{
     //private Map<BigInteger, IBlockAPI> processMap = new HashMap<>();
 
     @Override
-    public boolean postBlockProcessing(IBlockAPI block) {
+    public boolean postBlockProcessing(BigInteger height) {
 
-        //processMap.put(block.getHeight(), block);
-        synchronized (processLock) {
-            processLock.notifyAll();
-        }
         return true;
     }
 

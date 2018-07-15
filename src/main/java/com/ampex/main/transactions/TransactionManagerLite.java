@@ -373,7 +373,7 @@ public class TransactionManagerLite extends Thread implements ITransMan {
     }
     //no pbp because lite doesn't verify transactions, it just accepts them
     @Override
-    public boolean postBlockProcessing(IBlockAPI block) {
+    public boolean postBlockProcessing(BigInteger height) {
         return true;
     }
 
@@ -428,6 +428,11 @@ public class TransactionManagerLite extends Thread implements ITransMan {
     @Override
     public void setCurrentHeight(BigInteger currentHeight) {
 
+    }
+
+    @Override
+    public boolean hasUTXOsOnDisk(IAddress address) {
+        return false;
     }
 
     @Override

@@ -1,20 +1,43 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import com.jfoenix.controls.*?>
+<?import com.jfoenix.controls.JFXButton?>
+<?import com.jfoenix.controls.JFXCheckBox?>
+<?import com.jfoenix.controls.JFXColorPicker?>
+<?import com.jfoenix.controls.JFXComboBox?>
+<?import com.jfoenix.controls.JFXDrawer?>
+<?import com.jfoenix.controls.JFXHamburger?>
+<?import com.jfoenix.controls.JFXListView?>
+<?import com.jfoenix.controls.JFXPasswordField?>
+<?import com.jfoenix.controls.JFXSlider?>
+<?import com.jfoenix.controls.JFXSpinner?>
+<?import com.jfoenix.controls.JFXTextField?>
+<?import com.jfoenix.controls.JFXToggleButton?>
+<?import com.jfoenix.controls.JFXTreeTableView?>
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.chart.*?>
-<?import javafx.scene.control.*?>
 <?import javafx.scene.Cursor?>
+<?import javafx.scene.chart.CategoryAxis?>
+<?import javafx.scene.chart.LineChart?>
+<?import javafx.scene.chart.NumberAxis?>
+<?import javafx.scene.chart.PieChart?>
+<?import javafx.scene.control.Hyperlink?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.Tooltip?>
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
-<?import javafx.scene.layout.*?>
-<?import javafx.scene.text.*?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
 <?import javafx.scene.web.WebView?>
-<AnchorPane fx:id="anchor" prefHeight="600.0" prefWidth="1156.0" xmlns="http://javafx.com/javafx/8.0.141"
-            xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.ampex.main.GUI.NewGUI">
+
+<AnchorPane fx:id="anchor" prefHeight="600.0" prefWidth="1156.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.ampex.main.GUI.NewGUI">
     <children>
-        <StackPane AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
-                   AnchorPane.topAnchor="0.0">
+        <StackPane AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
             <children>
                 <BorderPane fx:id="borderPane" prefHeight="200.0" prefWidth="200.0" style="-fx-background-color: Gray;">
                     <left>
@@ -41,35 +64,28 @@
                             <children>
                                 <Pane fx:id="settingsPane" prefHeight="200.0" prefWidth="200.0" visible="false">
                                     <children>
-                                        <JFXColorPicker fx:id="colorPicker" layoutX="221.0" layoutY="14.0"
-                                                        stylesheets="@cpstyle.css"/>
+                                        <JFXColorPicker fx:id="colorPicker" layoutX="221.0" layoutY="14.0" stylesheets="@cpstyle.css" />
                                         <JFXComboBox fx:id="colorCombos" layoutX="14.0" layoutY="14.0" prefHeight="25.0" prefWidth="165.0" styleClass="custom-color-picker" stylesheets="@text-style.css" />
                                         <VBox layoutX="877.0" layoutY="12.0">
                                             <children>
-                                                <JFXToggleButton fx:id="debugMode" text="Debug Mode"/>
-                                                <JFXToggleButton fx:id="highSecurity" text="High Security Mode"/>
-                                                <JFXToggleButton fx:id="requirePassword" selected="true"
-                                                                 text="Require Password"/>
+                                                <JFXToggleButton fx:id="debugMode" text="Debug Mode" />
+                                                <JFXToggleButton fx:id="highSecurity" text="High Security Mode" />
+                                                <JFXToggleButton fx:id="requirePassword" selected="true" text="Require Password" />
                                             </children>
                                         </VBox>
                                         <HBox alignment="BOTTOM_LEFT" layoutX="14.0" layoutY="47.0" spacing="5.0">
                                             <children>
                                                 <VBox spacing="15.0">
                                                     <children>
-                                                        <JFXPasswordField fx:id="cpCurrent" labelFloat="true"
-                                                                          promptText="CurrentPassword"/>
-                                                        <JFXPasswordField fx:id="cpNew" labelFloat="true"
-                                                                          promptText="New Password"/>
-                                                        <JFXPasswordField fx:id="cpConfirm" labelFloat="true"
-                                                                          promptText="Confirm Password"/>
+                                                        <JFXPasswordField fx:id="cpCurrent" labelFloat="true" promptText="CurrentPassword" />
+                                                        <JFXPasswordField fx:id="cpNew" labelFloat="true" promptText="New Password" />
+                                                        <JFXPasswordField fx:id="cpConfirm" labelFloat="true" promptText="Confirm Password" />
                                                     </children>
                                                 </VBox>
-                                                <JFXButton fx:id="changePassword" prefHeight="32.0" prefWidth="112.0"
-                                                           text="Change Password"/>
+                                                <JFXButton fx:id="changePassword" prefHeight="32.0" prefWidth="112.0" text="Change Password" />
                                             </children>
                                         </HBox>
-                                        <JFXButton fx:id="resetColors" layoutX="362.0" layoutY="11.0" prefHeight="32.0"
-                                                   prefWidth="123.0" text="Reset Colors"/>
+                                        <JFXButton fx:id="resetColors" layoutX="362.0" layoutY="11.0" prefHeight="32.0" prefWidth="123.0" text="Reset Colors" />
                                     </children>
                                 </Pane>
                                 <Pane fx:id="walletPane" prefHeight="200.0" prefWidth="200.0" visible="false">
@@ -85,33 +101,27 @@
                                                 <Font size="18.0" />
                                             </font>
                                         </Label>
-                                        <VBox fx:id="walletBox" alignment="TOP_CENTER" layoutX="480.0" layoutY="101.0"
-                                              maxWidth="-Infinity" prefHeight="284.0" prefWidth="186.0" spacing="5.0">
+                                        <VBox fx:id="walletBox" alignment="TOP_CENTER" layoutX="480.0" layoutY="101.0" maxWidth="-Infinity" prefHeight="284.0" prefWidth="186.0" spacing="5.0">
                                             <children>
-                                                <JFXTextField fx:id="addressText" promptText="Address*"/>
-                                                <JFXTextField fx:id="amountText" promptText="Amount*"/>
-                                                <JFXTextField fx:id="feeText" promptText="Fee"/>
-                                                <JFXTextField fx:id="messageText" promptText="Message"/>
-                                                <JFXCheckBox fx:id="sendBackToMain" checkedColor="#18bc9c"
-                                                             pickOnBounds="false" selected="true"
-                                                             text="Send Change to Main Address" wrapText="true">
+                                                <JFXTextField fx:id="addressText" promptText="Address*" />
+                                                <JFXTextField fx:id="amountText" promptText="Amount*" />
+                                                <JFXTextField fx:id="feeText" promptText="Fee" />
+                                                <JFXTextField fx:id="messageText" promptText="Message" />
+                                                <JFXCheckBox fx:id="sendBackToMain" checkedColor="#18bc9c" pickOnBounds="false" selected="true" text="Send Change to Main Address" wrapText="true">
                                                     <VBox.margin>
-                                                        <Insets/>
+                                                        <Insets />
                                                     </VBox.margin>
                                                 </JFXCheckBox>
-                                                <JFXTextField fx:id="changeAddress" disable="true"
-                                                              promptText="Change Address" visible="false"/>
-                                                <JFXButton fx:id="sendButton" prefHeight="30.0" prefWidth="189.0"
-                                                           text="Send">
+                                                <JFXTextField fx:id="changeAddress" disable="true" promptText="Change Address" visible="false" />
+                                                <JFXButton fx:id="sendButton" prefHeight="30.0" prefWidth="5000.0" text="Send">
                                                     <font>
-                                                        <Font size="14.0"/>
+                                                        <Font size="14.0" />
                                                     </font>
                                                 </JFXButton>
-                                                <Label text="Multi-Signature:"/>
-                                                <JFXButton fx:id="loadTransaction" prefHeight="33.0" prefWidth="205.0"
-                                                           text="Load Transaction">
+                                                <Label text="Multi-Signature:" />
+                                                <JFXButton fx:id="loadTransaction" prefHeight="33.0" prefWidth="5000.0" text="Load Transaction">
                                                     <font>
-                                                        <Font size="14.0"/>
+                                                        <Font size="14.0" />
                                                     </font>
                                                 </JFXButton>
                                             </children>
@@ -163,22 +173,18 @@
                                                 <Label fx:id="blocksFoundLabel" text="Blocks Found - 400,300" />
                                             </children>
                                         </HBox>
-                                        <HBox fx:id="devicesBox" layoutX="45.0" layoutY="337.0" prefHeight="50.0"
-                                              prefWidth="468.0"/>
+                                        <HBox fx:id="devicesBox" layoutX="45.0" layoutY="337.0" prefHeight="50.0" prefWidth="468.0" />
                                     </children>
                                 </Pane>
                                 <Pane fx:id="helpPane" prefHeight="200.0" prefWidth="200.0" visible="false">
                                     <children>
                                         <VBox alignment="CENTER" layoutX="323.0" layoutY="14.0">
                                             <children>
-                                                <Label fx:id="versionLabel" alignment="CENTER" text="Version -"
-                                                       textAlignment="CENTER"/>
-                                                <Label prefHeight="40.0" prefWidth="420.0"
-                                                       text="Please report any issues in the discord server or in the bitbucket issues page."
-                                                       textAlignment="CENTER" wrapText="true"/>
-                                                <Hyperlink fx:id="faqLink" text="FAQ"/>
-                                                <Hyperlink fx:id="issuesPageLink" text="Issues Page"/>
-                                                <Hyperlink fx:id="discordServerLink" text="Discord Server"/>
+                                                <Label fx:id="versionLabel" alignment="CENTER" text="Version -" textAlignment="CENTER" />
+                                                <Label prefHeight="40.0" prefWidth="420.0" text="Please report any issues in the discord server or in the bitbucket issues page." textAlignment="CENTER" wrapText="true" />
+                                                <Hyperlink fx:id="faqLink" text="FAQ" />
+                                                <Hyperlink fx:id="issuesPageLink" text="Issues Page" />
+                                                <Hyperlink fx:id="discordServerLink" text="Discord Server" />
                                             </children>
                                         </VBox>
                                     </children>
@@ -193,83 +199,90 @@
                                 </Pane>
                                 <Pane fx:id="addressPane" prefHeight="200.0" prefWidth="200.0" visible="false">
                                     <children>
-                                        <HBox layoutX="14.0" layoutY="13.0" prefHeight="528.0" prefWidth="1045.0"
-                                              spacing="10.0">
+                                        <HBox layoutX="14.0" layoutY="13.0" prefHeight="528.0" prefWidth="1045.0" spacing="10.0">
                                             <children>
                                                 <VBox alignment="TOP_CENTER">
                                                     <children>
-                                                        <JFXListView fx:id="addressList" prefHeight="528.0"
-                                                                     prefWidth="732.0"/>
-                                                        <ImageView fx:id="qrCodeView" fitHeight="201.0" fitWidth="235.0"
-                                                                   pickOnBounds="true" preserveRatio="true"/>
+                                                        <JFXListView fx:id="addressList" prefHeight="528.0" prefWidth="732.0" />
+                                                        <ImageView fx:id="qrCodeView" fitHeight="201.0" fitWidth="235.0" pickOnBounds="true" preserveRatio="true" />
                                                     </children>
                                                 </VBox>
                                                 <VBox prefHeight="528.0" prefWidth="302.0">
                                                     <children>
-                                                        <VBox fx:id="addressControls" prefHeight="202.0"
-                                                              prefWidth="141.0" spacing="10.0">
+                                                        <VBox fx:id="addressControls" prefHeight="202.0" prefWidth="141.0" spacing="10.0">
                                                             <children>
                                                                 <HBox prefHeight="28.0" prefWidth="141.0" spacing="5.0">
                                                                     <children>
-                                                                        <JFXButton fx:id="singleSig" prefWidth="5000.0"
-                                                                                   text="Single Sig"/>
-                                                                        <JFXButton fx:id="multiSig" prefWidth="5000.0"
-                                                                                   text="Multi Sig"/>
-                                                                        <JFXButton fx:id="loadMSAddress"
-                                                                                   prefWidth="5000.0"
-                                                                                   text="Load MultiSig"/>
+                                                                        <JFXButton fx:id="singleSig" prefWidth="5000.0" text="Single Sig">
+                                                         <font>
+                                                            <Font size="12.0" />
+                                                         </font></JFXButton>
+                                                                        <JFXButton fx:id="multiSig" prefWidth="5000.0" text="Multi Sig">
+                                                         <font>
+                                                            <Font size="12.0" />
+                                                         </font></JFXButton>
+                                                                        <JFXButton fx:id="loadMSAddress" prefWidth="5000.0" text="Load MultiSig">
+                                                         <font>
+                                                            <Font size="12.0" />
+                                                         </font></JFXButton>
                                                                     </children>
                                                                 </HBox>
-                                                                <JFXTextField fx:id="entropyField" labelFloat="true"
-                                                                              promptText="Entropy"/>
-                                                                <JFXTextField fx:id="prefixField" labelFloat="true"
-                                                                              promptText="Prefix"/>
-                                                                <JFXButton fx:id="createAddress" prefHeight="25.0"
-                                                                           prefWidth="5000.0" text="Create"/>
+                                                                <JFXTextField fx:id="entropyField" labelFloat="true" promptText="Entropy" />
+                                                                <JFXTextField fx:id="prefixField" labelFloat="true" promptText="Prefix" />
+                                                                <JFXButton fx:id="createAddress" prefHeight="25.0" prefWidth="5000.0" text="Create">
+                                                   <font>
+                                                      <Font size="12.0" />
+                                                   </font></JFXButton>
                                                                 <HBox spacing="5.0">
                                                                     <children>
-                                                                        <JFXButton fx:id="copySelectedAdd"
-                                                                                   prefWidth="5000.0"
-                                                                                   text="Copy Selected Address"/>
-                                                                        <JFXButton fx:id="deleteAddress"
-                                                                                   prefHeight="25.0" prefWidth="5000.0"
-                                                                                   text="Delete"/>
+                                                                        <JFXButton fx:id="copySelectedAdd" prefWidth="5000.0" text="Copy Selected Address">
+                                                         <font>
+                                                            <Font size="12.0" />
+                                                         </font></JFXButton>
+                                                                        <JFXButton fx:id="deleteAddress" prefHeight="25.0" prefWidth="5000.0" text="Delete">
+                                                         <font>
+                                                            <Font size="12.0" />
+                                                         </font></JFXButton>
                                                                     </children>
                                                                 </HBox>
                                                                 <HBox spacing="5.0">
                                                                     <children>
-                                                                        <JFXButton fx:id="setSpendAddress"
-                                                                                   prefHeight="25.0" prefWidth="5000.0"
-                                                                                   text="Set Spend Address"/>
-                                                                        <JFXButton fx:id="saveMSAddress"
-                                                                                   prefWidth="5000.0"
-                                                                                   text="Save MultiSig Address"/>
+                                                                        <JFXButton fx:id="setSpendAddress" prefHeight="25.0" prefWidth="5000.0" text="Set Spend Address">
+                                                         <font>
+                                                            <Font size="12.0" />
+                                                         </font></JFXButton>
+                                                                        <JFXButton fx:id="saveMSAddress" prefWidth="5000.0" text="Save MultiSig Address">
+                                                         <font>
+                                                            <Font size="12.0" />
+                                                         </font></JFXButton>
                                                                     </children>
                                                                 </HBox>
-                                                                <Label text="KeyType:"/>
-                                                                <JFXComboBox fx:id="keyType" prefHeight="25.0"
-                                                                             prefWidth="5000.0"/>
-                                                                <JFXButton fx:id="copyPublicKey" prefWidth="5000.0"
-                                                                           text="Copy Public Key"/>
-                                                                <Label text="Address Length"/>
-                                                                <JFXComboBox fx:id="addressLength" prefWidth="5000.0"/>
-                                                                <VBox fx:id="multiSigVbox" prefHeight="127.0"
-                                                                      prefWidth="141.0">
+                                                                <Label text="KeyType:" />
+                                                                <JFXComboBox fx:id="keyType" prefHeight="25.0" prefWidth="5000.0" />
+                                                                <JFXButton fx:id="copyPublicKey" prefWidth="5000.0" text="Copy Public Key">
+                                                   <font>
+                                                      <Font size="12.0" />
+                                                   </font></JFXButton>
+                                                                <Label text="Address Length" />
+                                                                <JFXComboBox fx:id="addressLength" prefWidth="5000.0" />
+                                                                <VBox fx:id="multiSigVbox" prefHeight="127.0" prefWidth="141.0">
                                                                     <children>
-                                                                        <JFXTextField fx:id="addPubKey"
-                                                                                      promptText="Add Public Key"/>
-                                                                        <JFXButton fx:id="addKeyBtn" prefHeight="25.0"
-                                                                                   prefWidth="5000.0" text="Add Key"/>
-                                                                        <Label text="Sigs Required:"/>
-                                                                        <JFXComboBox fx:id="sigsRequired"
-                                                                                     prefWidth="5000.0"/>
-                                                                        <JFXButton fx:id="clearKeys" prefWidth="5000.0"
-                                                                                   text="Clear Keys"/>
+                                                                        <JFXTextField fx:id="addPubKey" promptText="Add Public Key" />
+                                                                        <JFXButton fx:id="addKeyBtn" prefHeight="25.0" prefWidth="5000.0" text="Add Key">
+                                                         <font>
+                                                            <Font size="12.0" />
+                                                         </font></JFXButton>
+                                                                        <Label text="Sigs Required:" />
+                                                                        <JFXComboBox fx:id="sigsRequired" prefWidth="5000.0" />
+                                                                        <JFXButton fx:id="clearKeys" prefWidth="5000.0" text="Clear Keys">
+                                                         <font>
+                                                            <Font size="12.0" />
+                                                         </font></JFXButton>
                                                                     </children>
                                                                 </VBox>
                                                             </children>
                                                         </VBox>
-                                                        <Label fx:id="entropyLabel" text="Entropy of Selection:"/>
+                                                        <Label fx:id="entropyLabel" text="Entropy of Selection:" />
                                                     </children>
                                                 </VBox>
                                             </children>
@@ -281,16 +294,14 @@
                                         <JFXButton fx:id="backToBE" layoutX="14.0" layoutY="14.0" prefHeight="33.0" prefWidth="135.0" text="Back" />
                                         <JFXButton fx:id="previousBlock" layoutX="248.0" layoutY="21.0" prefHeight="33.0" prefWidth="135.0" text="Previous Block" />
                                         <JFXButton fx:id="nextBlock" layoutX="481.0" layoutY="21.0" prefHeight="33.0" prefWidth="135.0" text="Next Block" />
-                                        <VBox layoutX="14.0" layoutY="63.0" prefHeight="476.0" prefWidth="1044.0"
-                                              spacing="5.0">
+                                        <VBox layoutX="14.0" layoutY="63.0" prefHeight="476.0" prefWidth="1044.0" spacing="5.0">
                                             <children>
-                                                <Label fx:id="blockHeight" text="Height -"/>
-                                                <Label fx:id="blockID" text="ID -"/>
-                                                <Label fx:id="solver" maxWidth="600.0" text="Solver -" wrapText="true"/>
-                                                <Label fx:id="numberOfTransactions" text="Number of Transactions -"/>
-                                                <Label fx:id="blockTimestamp" text="Timestamp -"/>
-                                                <JFXListView fx:id="beTransactions" prefHeight="377.0"
-                                                             prefWidth="1044.0"/>
+                                                <Label fx:id="blockHeight" text="Height -" />
+                                                <Label fx:id="blockID" text="ID -" />
+                                                <Label fx:id="solver" maxWidth="600.0" text="Solver -" wrapText="true" />
+                                                <Label fx:id="numberOfTransactions" text="Number of Transactions -" />
+                                                <Label fx:id="blockTimestamp" text="Timestamp -" />
+                                                <JFXListView fx:id="beTransactions" prefHeight="377.0" prefWidth="1044.0" />
                                             </children>
                                         </VBox>
                                     </children>
@@ -299,19 +310,14 @@
                                     <children>
                                         <JFXTextField fx:id="ipField" labelFloat="true" layoutX="14.0" layoutY="60.0" promptText="Pool IP*" text="ampextech.ddns.net" />
                                         <JFXButton fx:id="poolConnect" layoutX="175.0" layoutY="60.0" prefHeight="25.0" prefWidth="91.0" text="Connect" />
-                                        <Label fx:id="shares" layoutX="14.0" layoutY="123.0" text="Accepted Shares - "/>
-                                        <Label fx:id="nextPayment" layoutX="14.0" layoutY="140.0"
-                                               text="Next Payment - "/>
+                                        <Label fx:id="shares" layoutX="14.0" layoutY="123.0" text="Accepted Shares - " />
+                                        <Label fx:id="nextPayment" layoutX="14.0" layoutY="140.0" text="Next Payment - " />
                                         <JFXTextField fx:id="paytoAddress" labelFloat="true" layoutX="14.0" layoutY="14.0" promptText="Payto Address*" />
                                         <Label fx:id="poolConnected" layoutX="301.0" layoutY="64.0" text="Not Connected" />
-                                        <JFXButton fx:id="poolDisconnect" layoutX="175.0" layoutY="98.0"
-                                                   prefHeight="25.0" prefWidth="91.0" text="Disconnect"/>
-                                        <Label fx:id="localShares" layoutX="14.0" layoutY="157.0"
-                                               text="Local Shares -"/>
-                                        <JFXToggleButton fx:id="autoMine" layoutX="415.0" layoutY="44.0"
-                                                         text="Auto-Mine on reconnect"/>
-                                        <JFXToggleButton fx:id="pplnsClient" layoutX="415.0" layoutY="94.0" text="PPLNS"
-                                                         textFill="WHITE"/>
+                                        <JFXButton fx:id="poolDisconnect" layoutX="175.0" layoutY="98.0" prefHeight="25.0" prefWidth="91.0" text="Disconnect" />
+                                        <Label fx:id="localShares" layoutX="14.0" layoutY="157.0" text="Local Shares -" />
+                                        <JFXToggleButton fx:id="autoMine" layoutX="415.0" layoutY="44.0" text="Auto-Mine on reconnect" />
+                                        <JFXToggleButton fx:id="pplnsClient" layoutX="415.0" layoutY="94.0" text="PPLNS" textFill="WHITE" />
                                     </children>
                                 </Pane>
                                 <Pane fx:id="poolRelay" prefHeight="200.0" prefWidth="200.0" visible="false">
@@ -320,38 +326,25 @@
                                             <children>
                                                 <HBox>
                                                     <children>
-                                                        <Label fx:id="poolNOC" prefWidth="5000.0"
-                                                               text="Number of Connections -"/>
-                                                        <Label fx:id="poolHashrate" prefWidth="5000.0"
-                                                               text="Current Pool Hashrate (MH/s) - "/>
+                                                        <Label fx:id="poolNOC" prefWidth="5000.0" text="Number of Connections -" />
+                                                        <Label fx:id="poolHashrate" prefWidth="5000.0" text="Current Pool Hashrate (MH/s) - " />
                                                     </children>
                                                 </HBox>
-                                                <JFXSlider fx:id="poolDynamicFeeSlider" blockIncrement="0.25"
-                                                           majorTickUnit="0.25" max="10.0" minorTickCount="0"
-                                                           prefHeight="37.0" prefWidth="601.0" showTickLabels="true"
-                                                           showTickMarks="true" snapToTicks="true" value="0.25"/>
-                                                <Label alignment="CENTER" prefWidth="5000.0" text="Fee"/>
+                                                <JFXSlider fx:id="poolDynamicFeeSlider" blockIncrement="0.25" majorTickUnit="0.25" max="10.0" minorTickCount="0" prefHeight="37.0" prefWidth="601.0" showTickLabels="true" showTickMarks="true" snapToTicks="true" value="0.25" />
+                                                <Label alignment="CENTER" prefWidth="5000.0" text="Fee" />
                                                 <HBox>
                                                     <children>
-                                                        <JFXTextField fx:id="poolStaticFee" disable="true"
-                                                                      promptText="Static PPS"/>
-                                                        <JFXToggleButton fx:id="poolDynamicFee" selected="true"
-                                                                         text="Dynamic Fee"/>
-                                                        <JFXToggleButton fx:id="pplnsServer" text="PPLNS"
-                                                                         textFill="WHITE"/>
+                                                        <JFXTextField fx:id="poolStaticFee" disable="true" promptText="Static PPS" />
+                                                        <JFXToggleButton fx:id="poolDynamicFee" selected="true" text="Dynamic Fee" />
+                                                        <JFXToggleButton fx:id="pplnsServer" text="PPLNS" textFill="WHITE" />
                                                     </children>
                                                 </HBox>
-                                                <JFXSlider fx:id="payoutSlider" majorTickUnit="10.0" max="120.0"
-                                                           minorTickCount="5" prefHeight="14.0" prefWidth="601.0"
-                                                           showTickLabels="true" showTickMarks="true" snapToTicks="true"
-                                                           value="60.0"/>
-                                                <Label alignment="CENTER" prefWidth="5000.0"
-                                                       text="Payout Interval (minutes)"/>
+                                                <JFXSlider fx:id="payoutSlider" majorTickUnit="10.0" max="120.0" minorTickCount="5" prefHeight="14.0" prefWidth="601.0" showTickLabels="true" showTickMarks="true" snapToTicks="true" value="60.0" />
+                                                <Label alignment="CENTER" prefWidth="5000.0" text="Payout Interval (minutes)" />
                                                 <VBox spacing="5.0">
                                                     <children>
-                                                        <Label fx:id="currentPoolShares" text="Current Pool Shares -"/>
-                                                        <Label fx:id="estimatedNextPayout"
-                                                               text="Estimated Next Payout -"/>
+                                                        <Label fx:id="currentPoolShares" text="Current Pool Shares -" />
+                                                        <Label fx:id="estimatedNextPayout" text="Estimated Next Payout -" />
                                                     </children>
                                                 </VBox>
                                             </children>
@@ -360,65 +353,49 @@
                                 </Pane>
                                 <Pane fx:id="exchangePane" prefHeight="200.0" prefWidth="1077.0" visible="false">
                                     <children>
-                                        <HBox fx:id="adxBox" layoutX="6.0" layoutY="1.0" prefHeight="543.0"
-                                              prefWidth="1052.0" spacing="5.0">
+                                        <HBox fx:id="adxBox" layoutX="6.0" layoutY="1.0" prefHeight="543.0" prefWidth="1052.0" spacing="5.0">
                                             <children>
                                                 <VBox prefHeight="4000.0" prefWidth="5000.0">
                                                     <children>
                                                         <HBox prefHeight="5046.0" prefWidth="360.0" spacing="5.0">
                                                             <children>
-                                                                <VBox fx:id="exControlsBox" alignment="TOP_CENTER"
-                                                                      prefHeight="5000.0" prefWidth="5000.0"
-                                                                      spacing="5.0">
+                                                                <VBox fx:id="exControlsBox" alignment="TOP_CENTER" prefHeight="5000.0" prefWidth="5000.0" spacing="5.0">
                                                                     <children>
-                                                                        <HBox prefHeight="24.0" prefWidth="185.0"
-                                                                              spacing="5.0">
+                                                                        <HBox prefHeight="24.0" prefWidth="185.0" spacing="5.0">
                                                                             <children>
-                                                                                <JFXButton fx:id="marketBuy"
-                                                                                           prefWidth="2000.0"
-                                                                                           text="Market"/>
-                                                                                <JFXButton fx:id="limitBuy"
-                                                                                           prefWidth="2000.0"
-                                                                                           text="Limit"/>
+                                                                                <JFXButton fx:id="marketBuy" prefWidth="2000.0" text="Market" />
+                                                                                <JFXButton fx:id="limitBuy" prefWidth="2000.0" text="Limit" />
                                                                             </children>
                                                                         </HBox>
                                                                         <HBox>
                                                                             <children>
-                                                                                <JFXTextField fx:id="amtOnOffer"
-                                                                                              prefWidth="300.0"
-                                                                                              promptText="Amount"/>
-                                                                                <Label fx:id="tokenAmount"
-                                                                                       prefHeight="26.0"
-                                                                                       prefWidth="200.0" text="ORA"/>
+                                                                                <JFXTextField fx:id="amtOnOffer" prefWidth="300.0" promptText="Amount" />
+                                                                                <Label fx:id="tokenAmount" prefHeight="26.0" prefWidth="200.0" text="ORA" />
                                                                             </children>
                                                                         </HBox>
                                                                         <HBox fx:id="priceHBox">
                                                                             <children>
-                                                                                <JFXTextField fx:id="exPrice"
-                                                                                              prefWidth="300.0"
-                                                                                              promptText="Price"/>
-                                                                                <Label fx:id="tokenPrice"
-                                                                                       prefHeight="26.0"
-                                                                                       prefWidth="200.0" text="BTC"/>
+                                                                                <JFXTextField fx:id="exPrice" prefWidth="300.0" promptText="Price" />
+                                                                                <Label fx:id="tokenPrice" prefHeight="26.0" prefWidth="200.0" text="BTC" />
                                                                             </children>
                                                                         </HBox>
-                                                                        <Label fx:id="exchangeTotalPurchase"
-                                                                               text="Total -"/>
-                                                                        <JFXComboBox fx:id="pairs" prefHeight="30.0"
-                                                                                     prefWidth="981.0"/>
-                                                                        <JFXButton fx:id="exchangeBuy" prefHeight="30.0"
-                                                                                   prefWidth="980.0" text="Buy"/>
-                                                                        <JFXButton fx:id="exchangeSell"
-                                                                                   prefHeight="30.0" prefWidth="983.0"
-                                                                                   text="Sell"/>
+                                                                        <Label fx:id="exchangeTotalPurchase" text="Total -">
+                                                         <font>
+                                                            <Font size="12.0" />
+                                                         </font></Label>
+                                                                        <JFXComboBox fx:id="pairs" prefHeight="30.0" prefWidth="981.0" />
+                                                                        <JFXButton fx:id="exchangeBuy" prefHeight="30.0" prefWidth="980.0" text="Buy" />
+                                                                        <JFXButton fx:id="exchangeSell" prefHeight="30.0" prefWidth="983.0" text="Sell" />
                                                                         <VBox prefHeight="77.0" prefWidth="185.0">
                                                                             <children>
-                                                                                <Label fx:id="tOOWallet"
-                                                                                       text="Token On Offer"
-                                                                                       wrapText="true"/>
-                                                                                <Label fx:id="tPWallet"
-                                                                                       text="Token Paying"
-                                                                                       wrapText="true"/>
+                                                                                <Label fx:id="tOOWallet" prefWidth="5000.0" text="Token On Offer" wrapText="true">
+                                                               <font>
+                                                                  <Font size="13.0" />
+                                                               </font></Label>
+                                                                                <Label fx:id="tPWallet" prefWidth="5000.0" text="Token Paying" wrapText="true">
+                                                               <font>
+                                                                  <Font size="13.0" />
+                                                               </font></Label>
                                                                             </children>
                                                                         </VBox>
                                                                     </children>
@@ -427,61 +404,51 @@
                                                                     <children>
                                                                         <HBox>
                                                                             <children>
-                                                                                <Label prefHeight="26.0"
-                                                                                       prefWidth="1000.0"
-                                                                                       text="Active Orders"/>
-                                                                                <JFXButton fx:id="orderHistory"
-                                                                                           prefHeight="25.0"
-                                                                                           prefWidth="1032.0"
-                                                                                           text="Order History"/>
+                                                                                <Label prefHeight="26.0" prefWidth="1000.0" text="Active Orders">
+                                                               <font>
+                                                                  <Font size="12.0" />
+                                                               </font></Label>
+                                                                                <JFXButton fx:id="orderHistory" prefHeight="25.0" prefWidth="1032.0" text="Order History">
+                                                               <font>
+                                                                  <Font size="12.0" />
+                                                               </font></JFXButton>
                                                                             </children>
                                                                         </HBox>
                                                                         <HBox prefHeight="17.0" prefWidth="200.0">
                                                                             <children>
-                                                                                <Label prefWidth="1000.0" text="Price"/>
-                                                                                <Label prefWidth="1000.0"
-                                                                                       text="Amount"/>
+                                                                                <Label prefWidth="1000.0" text="Price" />
+                                                                                <Label prefWidth="1000.0" text="Amount" />
                                                                             </children>
                                                                         </HBox>
                                                                         <HBox prefHeight="5000.0" prefWidth="267.0">
                                                                             <children>
-                                                                                <JFXListView fx:id="activePrice"
-                                                                                             prefHeight="5000.0"
-                                                                                             prefWidth="500.0"/>
-                                                                                <JFXListView fx:id="activeAmount"
-                                                                                             prefHeight="5000.0"
-                                                                                             prefWidth="500.0"/>
+                                                                                <JFXListView fx:id="activePrice" prefHeight="5000.0" prefWidth="500.0" />
+                                                                                <JFXListView fx:id="activeAmount" prefHeight="5000.0" prefWidth="500.0" />
                                                                             </children>
                                                                         </HBox>
                                                                     </children>
                                                                 </VBox>
                                                             </children>
                                                         </HBox>
-                                                        <VBox prefHeight="5000.0" prefWidth="5000.0">
+                                                        <VBox prefHeight="5000.0" prefWidth="374.0">
                                                             <children>
                                                                 <Label text="Recent Trades">
                                                                     <font>
-                                                                        <Font size="14.0"/>
+                                                                        <Font size="12.0" />
                                                                     </font>
                                                                 </Label>
                                                                 <HBox prefHeight="10.0" prefWidth="5000.0">
                                                                     <children>
-                                                                        <Label prefWidth="500.0" text="Price"/>
-                                                                        <Label prefWidth="500.0" text="Amount"/>
-                                                                        <Label prefWidth="450.0" text="Direction"/>
+                                                                        <Label prefWidth="500.0" text="Price" />
+                                                                        <Label prefWidth="500.0" text="Amount" />
+                                                                        <Label prefWidth="450.0" text="Direction" />
                                                                     </children>
                                                                 </HBox>
                                                                 <HBox prefHeight="5000.0" prefWidth="5000.0">
                                                                     <children>
-                                                                        <JFXListView fx:id="obRecentPrice"
-                                                                                     prefHeight="297.0"
-                                                                                     prefWidth="500.0"/>
-                                                                        <JFXListView fx:id="obRecentAmount"
-                                                                                     prefHeight="297.0"
-                                                                                     prefWidth="500.0"/>
-                                                                        <JFXListView fx:id="obRecentDirection"
-                                                                                     prefHeight="297.0"
-                                                                                     prefWidth="450.0"/>
+                                                                        <JFXListView fx:id="obRecentPrice" prefHeight="297.0" prefWidth="500.0" />
+                                                                        <JFXListView fx:id="obRecentAmount" prefHeight="297.0" prefWidth="500.0" />
+                                                                        <JFXListView fx:id="obRecentDirection" prefHeight="297.0" prefWidth="450.0" />
                                                                     </children>
                                                                 </HBox>
                                                             </children>
@@ -492,141 +459,100 @@
                                                     <children>
                                                         <HBox prefHeight="5000.0" prefWidth="5000.0">
                                                             <children>
-                                                                <VBox fx:id="exchangeGraphBox" prefHeight="5000.0"
-                                                                      prefWidth="5000.0">
+                                                                <VBox fx:id="exchangeGraphBox" prefHeight="5000.0" prefWidth="5000.0">
                                                                     <children>
                                                                         <HBox prefHeight="19.0" prefWidth="688.0">
                                                                             <children>
-                                                                                <Label fx:id="currentOpen"
-                                                                                       prefWidth="1000.0" text="Open"/>
-                                                                                <Label fx:id="currentHigh"
-                                                                                       prefWidth="1000.0" text="High"/>
-                                                                                <Label fx:id="currentLow"
-                                                                                       prefWidth="1000.0" text="Low"/>
-                                                                                <Label fx:id="currentClose"
-                                                                                       prefWidth="1000.0" text="Close"/>
-                                                                                <JFXComboBox fx:id="unitSelectorAmount"
-                                                                                             prefHeight="25.0"
-                                                                                             prefWidth="1000.0"
-                                                                                             styleClass="custom-color-picker"
-                                                                                             stylesheets="@text-style.css"/>
-                                                                                <JFXComboBox fx:id="unitSelectorPrice"
-                                                                                             prefHeight="25.0"
-                                                                                             prefWidth="1000.0"
-                                                                                             styleClass="custom-color-picker"
-                                                                                             stylesheets="@text-style.css"/>
+                                                                                <Label fx:id="currentOpen" prefWidth="1000.0" text="Open">
+                                                               <font>
+                                                                  <Font size="14.0" />
+                                                               </font></Label>
+                                                                                <Label fx:id="currentHigh" prefWidth="1000.0" text="High">
+                                                               <font>
+                                                                  <Font size="14.0" />
+                                                               </font></Label>
+                                                                                <Label fx:id="currentLow" prefWidth="1000.0" text="Low">
+                                                               <font>
+                                                                  <Font size="14.0" />
+                                                               </font></Label>
+                                                                                <Label fx:id="currentClose" prefWidth="1000.0" text="Close">
+                                                               <font>
+                                                                  <Font size="14.0" />
+                                                               </font></Label>
+                                                                                <JFXComboBox fx:id="unitSelectorAmount" prefHeight="20.0" prefWidth="1000.0" styleClass="custom-color-picker" stylesheets="@text-style.css" />
+                                                                                <JFXComboBox fx:id="unitSelectorPrice" prefHeight="20.0" prefWidth="1000.0" styleClass="custom-color-picker" stylesheets="@text-style.css" />
                                                                             </children>
                                                                         </HBox>
                                                                     </children>
                                                                 </VBox>
                                                             </children>
                                                         </HBox>
-                                                        <VBox alignment="TOP_CENTER" prefHeight="5000.0"
-                                                              prefWidth="5000.0">
+                                                        <VBox alignment="TOP_CENTER" prefHeight="5000.0" prefWidth="5000.0">
                                                             <children>
                                                                 <HBox>
                                                                     <children>
-                                                                        <Label fx:id="buyLabel" alignment="CENTER"
-                                                                               prefWidth="1000.0"
-                                                                               stylesheets="@buy-text-style.css"
-                                                                               text="Buy">
+                                                                        <Label fx:id="buyLabel" alignment="CENTER" prefWidth="1000.0" stylesheets="@buy-text-style.css" text="Buy">
                                                                             <font>
-                                                                                <Font size="18.0"/>
+                                                                                <Font size="18.0" />
                                                                             </font>
                                                                         </Label>
-                                                                        <Label fx:id="lastTradeAmount"
-                                                                               alignment="CENTER" prefWidth="1000.0"
-                                                                               text="Last Trade Price">
+                                                                        <Label fx:id="lastTradeAmount" alignment="CENTER" prefWidth="1000.0" text="Last Trade Price">
                                                                             <font>
-                                                                                <Font size="20.0"/>
+                                                                                <Font size="20.0" />
                                                                             </font>
                                                                         </Label>
-                                                                        <Label fx:id="sellLabel" alignment="CENTER"
-                                                                               prefWidth="1000.0"
-                                                                               stylesheets="@sell-text-style.css"
-                                                                               text="Sell">
+                                                                        <Label fx:id="sellLabel" alignment="CENTER" prefWidth="1000.0" stylesheets="@sell-text-style.css" text="Sell">
                                                                             <font>
-                                                                                <Font size="18.0"/>
+                                                                                <Font size="18.0" />
                                                                             </font>
                                                                         </Label>
                                                                     </children>
                                                                 </HBox>
-                                                                <Separator minHeight="10.0" prefHeight="10.0"
-                                                                           prefWidth="200.0"/>
+                                                                <Separator minHeight="10.0" prefHeight="10.0" prefWidth="200.0" />
                                                                 <HBox prefHeight="60.0" prefWidth="200.0">
                                                                     <children>
-                                                                        <Label alignment="CENTER" prefWidth="1000.0"
-                                                                               stylesheets="@buy-text-style.css"
-                                                                               text="Total" textFill="#18bc9c">
+                                                                        <Label alignment="CENTER" prefWidth="1000.0" stylesheets="@buy-text-style.css" text="Total" textFill="#18bc9c">
                                                                             <font>
-                                                                                <Font size="14.0"/>
+                                                                                <Font size="14.0" />
                                                                             </font>
                                                                         </Label>
-                                                                        <Label alignment="CENTER" contentDisplay="RIGHT"
-                                                                               prefHeight="17.0" prefWidth="1000.0"
-                                                                               stylesheets="@buy-text-style.css"
-                                                                               text="Size" textAlignment="RIGHT"
-                                                                               textFill="#18bc9c">
+                                                                        <Label alignment="CENTER" contentDisplay="RIGHT" prefHeight="17.0" prefWidth="1000.0" stylesheets="@buy-text-style.css" text="Size" textAlignment="RIGHT" textFill="#18bc9c">
                                                                             <font>
-                                                                                <Font size="14.0"/>
+                                                                                <Font size="14.0" />
                                                                             </font>
                                                                         </Label>
-                                                                        <Label alignment="CENTER" prefHeight="17.0"
-                                                                               prefWidth="1000.0"
-                                                                               stylesheets="@buy-text-style.css"
-                                                                               text="Price" textFill="#18bc9c">
+                                                                        <Label alignment="CENTER" prefHeight="17.0" prefWidth="1000.0" stylesheets="@buy-text-style.css" text="Price" textFill="#18bc9c">
                                                                             <font>
-                                                                                <Font size="14.0"/>
+                                                                                <Font size="14.0" />
                                                                             </font>
                                                                         </Label>
-                                                                        <Label alignment="CENTER" prefHeight="17.0"
-                                                                               prefWidth="1000.0"
-                                                                               stylesheets="@sell-text-style.css"
-                                                                               text="Price" textFill="#c84128">
+                                                                        <Label alignment="CENTER" prefHeight="17.0" prefWidth="1000.0" stylesheets="@sell-text-style.css" text="Price" textFill="#c84128">
                                                                             <font>
-                                                                                <Font size="14.0"/>
+                                                                                <Font size="14.0" />
                                                                             </font>
                                                                         </Label>
-                                                                        <Label alignment="CENTER" prefHeight="17.0"
-                                                                               prefWidth="1000.0"
-                                                                               stylesheets="@sell-text-style.css"
-                                                                               text="Size" textFill="#c84128">
+                                                                        <Label alignment="CENTER" prefHeight="17.0" prefWidth="1000.0" stylesheets="@sell-text-style.css" text="Size" textFill="#c84128">
                                                                             <font>
-                                                                                <Font size="14.0"/>
+                                                                                <Font size="14.0" />
                                                                             </font>
                                                                         </Label>
-                                                                        <Label alignment="CENTER" prefHeight="17.0"
-                                                                               prefWidth="1000.0"
-                                                                               stylesheets="@sell-text-style.css"
-                                                                               text="Total" textFill="#c84128">
+                                                                        <Label alignment="CENTER" prefHeight="17.0" prefWidth="1000.0" stylesheets="@sell-text-style.css" text="Total" textFill="#c84128">
                                                                             <font>
-                                                                                <Font size="14.0"/>
+                                                                                <Font size="14.0" />
                                                                             </font>
                                                                         </Label>
                                                                     </children>
                                                                 </HBox>
                                                                 <HBox prefHeight="5000.0" prefWidth="669.0">
                                                                     <children>
-                                                                        <JFXListView fx:id="obBuyTotal"
-                                                                                     prefHeight="1000.0"
-                                                                                     prefWidth="1000.0"/>
-                                                                        <JFXListView fx:id="obBuySize"
-                                                                                     prefHeight="1000.0"
-                                                                                     prefWidth="1000.0"/>
-                                                                        <JFXListView fx:id="obBuyPrice"
-                                                                                     prefHeight="1000.0"
-                                                                                     prefWidth="1000.0"/>
-                                                                        <JFXListView fx:id="obSellPrice"
-                                                                                     prefHeight="1000.0"
-                                                                                     prefWidth="1000.0"/>
-                                                                        <JFXListView fx:id="obSellSize"
-                                                                                     prefHeight="1000.0"
-                                                                                     prefWidth="1000.0"/>
+                                                                        <JFXListView fx:id="obBuyTotal" prefHeight="1000.0" prefWidth="1000.0" />
+                                                                        <JFXListView fx:id="obBuySize" prefHeight="1000.0" prefWidth="1000.0" />
+                                                                        <JFXListView fx:id="obBuyPrice" prefHeight="1000.0" prefWidth="1000.0" />
+                                                                        <JFXListView fx:id="obSellPrice" prefHeight="1000.0" prefWidth="1000.0" />
+                                                                        <JFXListView fx:id="obSellSize" prefHeight="1000.0" prefWidth="1000.0" />
                                                                         <HBox>
                                                                             <children>
-                                                                                <JFXListView fx:id="obSellTotal"
-                                                                                             prefHeight="1000.0"
-                                                                                             prefWidth="1000.0"/>
+                                                                                <JFXListView fx:id="obSellTotal" prefHeight="1000.0" prefWidth="1000.0" />
                                                                             </children>
                                                                         </HBox>
                                                                     </children>
@@ -641,32 +567,27 @@
                                 </Pane>
                                 <Pane fx:id="ohPane" prefHeight="545.0" prefWidth="1059.0" visible="false">
                                     <children>
-                                        <VBox fx:id="ohVbox" layoutX="5.0" layoutY="2.0" prefHeight="542.0"
-                                              prefWidth="1057.0">
+                                        <VBox fx:id="ohVbox" layoutX="5.0" layoutY="2.0" prefHeight="542.0" prefWidth="1057.0">
                                             <children>
                                                 <HBox alignment="TOP_RIGHT" prefHeight="3000.0" prefWidth="10000.0">
                                                     <children>
                                                         <VBox prefHeight="3000.0" prefWidth="4600.0">
                                                             <children>
-                                                                <JFXButton fx:id="backToEx" prefHeight="25.0"
-                                                                           prefWidth="99.0" text="Back"/>
-                                                                <Label fx:id="pnlLabel" text="Unrealized PnL -"
-                                                                       wrapText="true">
+                                                                <JFXButton fx:id="backToEx" prefHeight="25.0" prefWidth="99.0" text="Back" />
+                                                                <Label fx:id="pnlLabel" text="Unrealized PnL -" wrapText="true">
                                                                     <font>
-                                                                        <Font size="18.0"/>
+                                                                        <Font size="18.0" />
                                                                     </font>
                                                                 </Label>
                                                             </children>
                                                         </VBox>
-                                                        <PieChart fx:id="ohPortfolio" prefHeight="5000.0"
-                                                                  prefWidth="5000.0" title="Portfolio"/>
-                                                        <LineChart fx:id="pnlGraph" prefHeight="5000.0"
-                                                                   prefWidth="5000.0" title="Realized PnL">
+                                                        <PieChart fx:id="ohPortfolio" prefHeight="5000.0" prefWidth="5000.0" title="Portfolio" />
+                                                        <LineChart fx:id="pnlGraph" prefHeight="5000.0" prefWidth="5000.0" title="Realized PnL">
                                                             <xAxis>
-                                                                <CategoryAxis side="BOTTOM"/>
+                                                                <CategoryAxis side="BOTTOM" />
                                                             </xAxis>
                                                             <yAxis>
-                                                                <NumberAxis side="LEFT"/>
+                                                                <NumberAxis side="LEFT" />
                                                             </yAxis>
                                                         </LineChart>
                                                     </children>
@@ -675,38 +596,38 @@
                                                     <children>
                                                         <Label prefWidth="500.0" text="Price">
                                                             <font>
-                                                                <Font size="18.0"/>
+                                                                <Font size="18.0" />
                                                             </font>
                                                         </Label>
                                                         <Label prefWidth="500.0" text="Amount">
                                                             <font>
-                                                                <Font size="18.0"/>
+                                                                <Font size="18.0" />
                                                             </font>
                                                         </Label>
                                                         <Label prefWidth="500.0" text="Date">
                                                             <font>
-                                                                <Font size="18.0"/>
+                                                                <Font size="18.0" />
                                                             </font>
                                                         </Label>
                                                         <Label prefWidth="500.0" text="Direction">
                                                             <font>
-                                                                <Font size="18.0"/>
+                                                                <Font size="18.0" />
                                                             </font>
                                                         </Label>
                                                         <Label prefWidth="500.0" text="Cancel">
                                                             <font>
-                                                                <Font size="18.0"/>
+                                                                <Font size="18.0" />
                                                             </font>
                                                         </Label>
                                                     </children>
                                                 </HBox>
                                                 <HBox prefHeight="2950.0" prefWidth="1057.0">
                                                     <children>
-                                                        <JFXListView fx:id="ohPrice" prefWidth="1000.0"/>
-                                                        <JFXListView fx:id="ohAmount" prefWidth="1000.0"/>
-                                                        <JFXListView fx:id="ohDate" prefWidth="1000.0"/>
-                                                        <JFXListView fx:id="ohDirection" prefWidth="1000.0"/>
-                                                        <JFXListView fx:id="ohCancel" prefWidth="1000.0"/>
+                                                        <JFXListView fx:id="ohPrice" prefWidth="1000.0" />
+                                                        <JFXListView fx:id="ohAmount" prefWidth="1000.0" />
+                                                        <JFXListView fx:id="ohDate" prefWidth="1000.0" />
+                                                        <JFXListView fx:id="ohDirection" prefWidth="1000.0" />
+                                                        <JFXListView fx:id="ohCancel" prefWidth="1000.0" />
                                                     </children>
                                                 </HBox>
                                             </children>
@@ -715,7 +636,7 @@
                                 </Pane>
                                 <Pane fx:id="axcPane" prefHeight="200.0" prefWidth="200.0" visible="false">
                                     <children>
-                                        <WebView fx:id="axcWeb" prefHeight="539.0" prefWidth="1060.0"/>
+                                        <WebView fx:id="axcWeb" prefHeight="539.0" prefWidth="1060.0" />
                                     </children>
                                 </Pane>
                             </children>
@@ -724,22 +645,19 @@
                 </BorderPane>
             </children>
         </StackPane>
-        <Pane fx:id="lockPane" prefHeight="600.0" prefWidth="1156.0" style="-fx-background-color: DimGray;"
-              visible="false" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
+        <Pane fx:id="lockPane" prefHeight="600.0" prefWidth="1156.0" style="-fx-background-color: DimGray;" visible="false" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
             <children>
-                <VBox fx:id="passwordVbox" layoutX="497.0" layoutY="134.0" prefHeight="409.0" prefWidth="162.0"
-                      spacing="20.0">
+                <VBox fx:id="passwordVbox" layoutX="497.0" layoutY="134.0" prefHeight="409.0" prefWidth="162.0" spacing="20.0">
                     <children>
                         <ImageView fitHeight="159.0" fitWidth="162.0">
                             <image>
-                                <Image url="@Lock.png"/>
+                                <Image url="@Lock.png" />
                             </image>
                         </ImageView>
-                        <JFXPasswordField fx:id="passwordField" onAction="#passwordEnter" promptText="Password"/>
-                        <JFXPasswordField fx:id="confirmPassword" onAction="#passwordEnter"
-                                          promptText="Confirm Password"/>
-                        <JFXButton fx:id="submitPassword" prefHeight="25.0" prefWidth="162.0" text="Submit"/>
-                        <JFXSpinner fx:id="passwordWaiter" visible="false"/>
+                        <JFXPasswordField fx:id="passwordField" onAction="#passwordEnter" promptText="Password" />
+                        <JFXPasswordField fx:id="confirmPassword" onAction="#passwordEnter" promptText="Confirm Password" />
+                        <JFXButton fx:id="submitPassword" prefHeight="25.0" prefWidth="162.0" text="Submit" />
+                        <JFXSpinner fx:id="passwordWaiter" visible="false" />
                     </children>
                 </VBox>
             </children>

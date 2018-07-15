@@ -142,4 +142,6 @@ public interface ITransMan extends ITransManAPI {
      * wrapper for thread.interrupt
      */
     void interrupt();
+
+    boolean hasUTXOsOnDisk(IAddress address);
 }

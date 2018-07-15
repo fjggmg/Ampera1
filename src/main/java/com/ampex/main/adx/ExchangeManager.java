@@ -106,8 +106,10 @@ public class ExchangeManager {
                 List<IInput> toUs = ki.getTransMan().getInputsForAmountAndToken(o.contractAdd(), amountBuying, o.pair().accepting(), true);
                 if (toUs == null) {
                     if (!pendingUs.contains(o.getTxid())) {
+                        if( !ki.getTransMan().hasUTXOsOnDisk(o.contractAdd()))
                         toRemove.add(o);
                         ki.getTransMan().unUseUTXOs(inputs);
+                        currentStatus = OrderStatus.BAD_UTXOS_THEM;
                     }
                     continue;
                 }
@@ -298,9 +300,12 @@ public class ExchangeManager {
                 List<IInput> toUs = ki.getTransMan().getInputsForAmountAndToken(o.contractAdd(), amountSelling.multiply(o.unitPrice()).divide(BigInteger.valueOf(100_000_000)), o.pair().onOffer(), true);
                 if (toUs == null) {
                     if (!pendingUs.contains(o.getTxid())) {
+                        if( !ki.getTransMan().hasUTXOsOnDisk(o.contractAdd()))
                         toRemove.add(o);
                         ki.getTransMan().unUseUTXOs(inputs);
+                        currentStatus = OrderStatus.BAD_UTXOS_THEM;
                     }
+
                     continue;
                 }
                 amount = amount.subtract(amountSelling);
@@ -400,7 +405,7 @@ public class ExchangeManager {
             if (!currentStatus.succeeded()) {
                 return currentStatus;
             }
-            System.out.println("Removed orders from orderbook");
+            System.out.println("Removed: " + toRemove.size() + " orders from orderbook");
             if (amount.compareTo(BigInteger.ZERO) > 0 && limitBuy) {
                 short[] jumps = new short[16];
                 jumps[0] = ScriptManager.GEN_TRADE_FAIL_JUMP;
@@ -503,6 +508,7 @@ public class ExchangeManager {
 
     public void rebuildOrderCache()
     {
+        ki.getMainLog().warn("Rebuilding Order cache, ours became desynced");
         for(Order o:orderBook.sells())
         {
             orders.put(o.getID(),o);
@@ -521,7 +527,10 @@ public class ExchangeManager {
         Order o = orders.get(ID);
         if(o == null) rebuildOrderCache();
         o = orders.get(ID);
-        if(o == null) return;
+        if(o == null){
+            ki.getMainLog().warn("Unable to reduce order: " + ID + " unable to find in order book");
+            return;
+        }
         o.reduceAmount(amount);
         orderBook.sort();
         try {

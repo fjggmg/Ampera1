@@ -664,7 +664,7 @@ public class NewGUI implements GUIHook {
             public void handle(MouseEvent event) {
                 burgerTask.setRate(burgerTask.getRate() * -1);
                 burgerTask.play();
-                if (menuDrawer.isHidden() || menuDrawer.isHiding()) {
+                if (menuDrawer.isClosed() || menuDrawer.isClosing()) {
                     menuDrawer.open();
                     for (Timeline tl : btnAnimations) {
                         tl.play();
@@ -682,7 +682,7 @@ public class NewGUI implements GUIHook {
         menuDrawer.addEventHandler(MouseEvent.MOUSE_RELEASED, new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
-                if (menuDrawer.isHiding()) {
+                if (menuDrawer.isClosing()) {
                     burgerTask.setRate(burgerTask.getRate() * -1);
                     burgerTask.play();
                 }
@@ -2170,8 +2170,8 @@ public class NewGUI implements GUIHook {
 
                 OrderStatus status = ki.getExMan().placeOrder(true, amount, stopPrice, Pairs.byName(pairs.getSelectionModel().getSelectedItem().getText()), limit);
                 if (!status.succeeded()) {
-                    if (!status.partial()) notification("Order not completed");
-                    else notification("Order partially completed");
+                    if (!status.partial()) notification("Order not completed, Error code: " + status.errorCode());
+                    else notification("Order may have been partially completed, Error code: " + status.errorCode());
                 } else {
                     notification("Order complete!");
                 }
@@ -2208,8 +2208,8 @@ public class NewGUI implements GUIHook {
                 }
                 OrderStatus status = ki.getExMan().placeOrder(false, amount, stopPrice, Pairs.byName(pairs.getSelectionModel().getSelectedItem().getText()), limit);
                 if (!status.succeeded()) {
-                    if (!status.partial()) notification("Order not completed");
-                    else notification("Order partially completed");
+                    if (!status.partial()) notification("Order not completed, Error code: " + status.errorCode());
+                    else notification("Order may have been partially completed, Error code: " + status.errorCode());
                 } else {
                     notification("Order complete!");
                 }

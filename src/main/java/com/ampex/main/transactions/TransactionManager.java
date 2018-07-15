@@ -16,6 +16,8 @@ import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * Created by Bryan on 8/11/2017.
@@ -40,7 +42,6 @@ public class TransactionManager extends Thread implements ITransMan {
 
     }
 
-    private Thread pbp;
 
     @Override
     public void run() {
@@ -73,6 +74,7 @@ public class TransactionManager extends Thread implements ITransMan {
         };
         tc.setDaemon(true);
         tc.start();
+        /*
         pbp = new Thread() {
             public void run() {
 
@@ -163,37 +165,119 @@ public class TransactionManager extends Thread implements ITransMan {
                 }
             }
         };
-        pbp.start();
-        pbpMan = new Thread(){
-            public void run()
-            {
-                setName("PBPMan");
-                while(true)
-                {
-                    if(ki.getChainMan().currentHeight().compareTo(currentHeight) >= 0)
-                    {
-                        synchronized (processLock) {
-                            processLock.notifyAll();
+        */
+
+        pbpExec = Executors.newSingleThreadExecutor();
+    }
+
+    ExecutorService pbpExec;
+
+    private class PostBlockProcessor extends Thread{
+        private BigInteger currentHeight;
+        private IKi ki;
+        private XodusAmpMap utxoAmp;
+        public PostBlockProcessor(BigInteger height, IKi ki, XodusAmpMap utxoAmp)
+        {
+            this.currentHeight = height;
+            this.ki = ki;
+            this.utxoAmp = utxoAmp;
+        }
+
+        @Override
+        public void run()
+        {
+            setName("Post Block Processing");
+                ki.debug("Post block processing on #" + currentHeight);
+                IBlockAPI b = ki.getChainMan().getByHeight(currentHeight);
+
+                if (b != null) {
+                    ITransAPI coinbase = b.getCoinbase();
+                    for (IOutput o : coinbase.getOutputs()) {
+                        HeadlessPrefixedAmplet hpa;
+                        if (utxoAmp.getBytes(o.getAddress().toByteArray()) != null)
+                            hpa = HeadlessPrefixedAmplet.create(utxoAmp.getBytes(o.getAddress().toByteArray()));
+                        else
+                            hpa = HeadlessPrefixedAmplet.create();
+                        hpa.addElement(o.getID());
+                        try {
+                            hpa.addBytes(new TXIOData(o.getAddress(), o.getIndex(), o.getAmount(), o.getToken(), o.getTimestamp(), o.getVersion()).serializeToBytes());
+                        } catch (InvalidTXIOData invalidTXIOData) {
+                            invalidTXIOData.printStackTrace();
+                            continue;
                         }
+                        utxoAmp.putBytes(o.getAddress().toByteArray(), hpa.serializeToBytes());
+
                     }
-                    try {
-                        sleep(10000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
+                    for (String trans : b.getTransactionKeys()) {
+
+                        ITransAPI t = b.getTransaction(trans);
+                        for (IInput i : t.getInputs()) {
+                            getUsedUTXOs().remove(i.getID());
+                            HeadlessPrefixedAmplet hpa;
+                            if (utxoAmp.getBytes(i.getAddress().toByteArray()) != null)
+                                hpa = HeadlessPrefixedAmplet.create(utxoAmp.getBytes(i.getAddress().toByteArray()));
+                            else
+                                hpa = HeadlessPrefixedAmplet.create();
+                            while (hpa.peekNextElement() != null) {
+                                try {
+                                    String ID = new String(hpa.peekNextElement(), "UTF-8");
+                                    if (ID.equals(i.getID())) {
+                                        hpa.deleteNextElement();
+                                        hpa.deleteNextElement();
+                                        utxoAmp.putBytes(i.getAddress().toByteArray(), hpa.serializeToBytes());
+                                        break;
+                                    } else {
+                                        hpa.getNextElement();
+                                        hpa.getNextElement();
+                                    }
+                                } catch (UnsupportedEncodingException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                        }
+                        for (IOutput o : t.getOutputs()) {
+                            HeadlessPrefixedAmplet hpa;
+                            if (utxoAmp.getBytes(o.getAddress().toByteArray()) != null)
+                                hpa = HeadlessPrefixedAmplet.create(utxoAmp.getBytes(o.getAddress().toByteArray()));
+                            else
+                                hpa = HeadlessPrefixedAmplet.create();
+                            hpa.addElement(o.getID());
+                            try {
+                                hpa.addBytes(new TXIOData(o.getAddress(), o.getIndex(), o.getAmount(), o.getToken(), o.getTimestamp(), o.getVersion()).serializeToBytes());
+                            } catch (InvalidTXIOData invalidTXIOData) {
+                                invalidTXIOData.printStackTrace();
+                                continue;
+                            }
+                            utxoAmp.putBytes(o.getAddress().toByteArray(), hpa.serializeToBytes());
+
+                        }
+                        ki.getExMan().transactionProccessed(trans);
                     }
                 }
-            }
-        };
-        pbpMan.setDaemon(true);
-        pbpMan.start();
+                if (!ki.getOptions().nogui && ki.getGUIHook() != null)
+                    ki.getGUIHook().pbpDone();
 
+
+        }
     }
-    private Thread pbpMan;
     @Override
     public void interrupt() {
         super.interrupt();
-        pbp.interrupt();
     }
+
+    @Override
+    public boolean hasUTXOsOnDisk(IAddress address) {
+        byte[] data = utxoAmp.getBytes(address.toByteArray());
+        if (data == null) {
+            return false;
+        }
+        if(data.length == 0)
+        {
+            return false;
+        }
+        return true;
+    }
+
     @Override
     public boolean verifyTransaction(ITransAPI transaction) {
 
@@ -332,13 +416,15 @@ public class TransactionManager extends Thread implements ITransMan {
 
     @Override
     public List<IOutput> getUTXOs(IAddress address, boolean safe) {
-        if (utxoAmp.getBytes(address.toByteArray()) == null) {
+        byte[] udata = utxoAmp.getBytes(address.toByteArray());
+        if (udata == null) {
             return null;
         }
-        if(utxoAmp.getBytes(address.toByteArray()).length == 0)
+        if(udata.length == 0)
         {
             return new ArrayList<>();
         }
+        /*
         System.out.println("Array from utxoAmp map:");
         int i = 0;
         for(byte b:utxoAmp.getBytes(address.toByteArray()))
@@ -347,10 +433,11 @@ public class TransactionManager extends Thread implements ITransMan {
             i++;
             if(i == 10) break;
         }
+        */
         //System.out.println(Arrays.asList(utxoAmp.getBytes(address.toByteArray())));
 
         //ki.debug("Getting UTXOs for address: " + address.encodeForChain());
-        HeadlessPrefixedAmplet hpa = HeadlessPrefixedAmplet.create(utxoAmp.getBytes(address.toByteArray()));
+        HeadlessPrefixedAmplet hpa = HeadlessPrefixedAmplet.create(udata);
         //ki.debug("HPA has elements: " + hpa.hasNextElement());
         String utxoID;
         try {
@@ -469,6 +556,7 @@ public class TransactionManager extends Thread implements ITransMan {
         utxoAmp.close();
         utxoVerMap.close();
         interrupt();
+        pbpExec.shutdown();
     }
 
     @Override
@@ -693,13 +781,12 @@ public class TransactionManager extends Thread implements ITransMan {
 
     //private Map<BigInteger, IBlockAPI> processMap = new HashMap<>();
 
+    //TODO consider taking boolean off this method
     @Override
-    public boolean postBlockProcessing(IBlockAPI block) {
+    public synchronized boolean postBlockProcessing(BigInteger height) {
 
         //processMap.put(block.getHeight(), block);
-        synchronized (processLock) {
-            processLock.notifyAll();
-        }
+        pbpExec.execute(new PostBlockProcessor(height,ki,utxoAmp));
         return true;
     }
 

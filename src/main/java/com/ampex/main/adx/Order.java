@@ -4,6 +4,7 @@ import amp.Amplet;
 import amp.HeadlessPrefixedAmplet;
 import amp.serialization.IAmpByteSerializable;
 import com.ampex.amperabase.IAddress;
+import com.ampex.main.Ki;
 import com.ampex.main.data.encryption.EncryptionManager;
 import com.ampex.main.data.utils.Utils;
 import com.ampex.main.transactions.addresses.Address;
@@ -72,6 +73,8 @@ public class Order implements IAmpByteSerializable {
 
     public void reduceAmount(BigInteger amount) {
         amountOnOffer = amountOnOffer.subtract(amount);
+        //using static reference to god object, need to fix this
+        if(!Ki.getInstance().getOptions().nogui)
         try {
             Platform.runLater(new Runnable() {
                 @Override

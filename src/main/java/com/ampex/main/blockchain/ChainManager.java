@@ -139,7 +139,7 @@ public class ChainManager implements IChainMan {
                         ki.close();
                     }
                 }
-                ki.getTransMan().postBlockProcessing(b);
+                ki.getTransMan().postBlockProcessing(b.getHeight());
                 height = height.add(BigInteger.ONE);
             }
             blockHeightMap.clear();
@@ -206,7 +206,7 @@ public class ChainManager implements IChainMan {
             }
         }
         ki.blockTick(block);
-        ki.getTransMan().postBlockProcessing(block);
+        ki.getTransMan().postBlockProcessing(block.getHeight());
         return BlockState.SUCCESS;
     }
 

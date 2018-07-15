@@ -26,10 +26,7 @@ public class PoolNetMan extends Thread implements INetworkManager {
     public static final String POOL_NET_VERSION = "1.0.3";
     GlobalPacketQueuer gpq = new GlobalPacketQueuer();
     public PoolNetMan(IKi ki) {
-
         this.ki = ki;
-
-
     }
 
     @Override
