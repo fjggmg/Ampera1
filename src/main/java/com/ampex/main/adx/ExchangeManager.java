@@ -334,8 +334,10 @@ public class ExchangeManager {
                     buyingAmountOverage = buyingAmountOverage.subtract(BigInteger.valueOf(1_000_000));
                 }
                 System.out.println("Matched, building transaction7");
-                inputs.addAll(feeIn);
-                ourInputs.addAll(feeIn);
+                if(feeIn != null) {
+                    inputs.addAll(feeIn);
+                    ourInputs.addAll(feeIn);
+                }
                 System.out.println("All inputs: ");
                 for (IInput i : inputs) {
                     System.out.println(i.getToken().getName() + " " + i.getAmount());
