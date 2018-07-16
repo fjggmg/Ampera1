@@ -4,7 +4,6 @@ import amp.Amplet;
 import amp.ByteTools;
 import amp.HeadlessAmplet;
 import amp.HeadlessPrefixedAmplet;
-import com.ampex.adapter.KiAdapter;
 import com.ampex.amperabase.*;
 import com.ampex.amperanet.packets.TransactionPacket;
 import com.ampex.main.GUI.data.CandlestickGraph;
@@ -58,6 +57,7 @@ import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.chart.*;
 import javafx.scene.control.*;
+import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.image.Image;
@@ -74,6 +74,9 @@ import javafx.util.Callback;
 import javafx.util.Duration;
 import net.glxn.qrgen.core.image.ImageType;
 import net.glxn.qrgen.javase.QRCode;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.awt.*;
 import java.awt.datatransfer.Clipboard;
@@ -187,6 +190,7 @@ public class NewGUI implements GUIHook {
     public Pane axcPane;
     public WebView axcWeb;
     public JFXListView<String> beTransactions;
+    public JFXButton exportTransactions;
     private CandlestickGraph exchangeGraph;
     public VBox passwordVbox;
     public VBox exchangeGraphBox;
@@ -544,6 +548,151 @@ public class NewGUI implements GUIHook {
                 expandTreeView(child);
             }
         }
+    }
+
+    private void exportTransactionsToXLS()
+    {
+        Thread exporter = new Thread(){
+            public void run()
+            {
+                String[] columns = {"ID","Message","Timestamp", "Fee"};
+                String[] txioColumns = {"Address","ID", "Amount", "Token", "Timestamp"};
+
+                Workbook workbook = new XSSFWorkbook();
+
+                CreationHelper ch = workbook.getCreationHelper();
+
+                Sheet sheet = workbook.createSheet("Transactions");
+
+                org.apache.poi.ss.usermodel.Font headerFont = workbook.createFont();
+                headerFont.setBold(true);
+                headerFont.setFontHeightInPoints((short)14);
+
+                CellStyle headerStyle = workbook.createCellStyle();
+                headerStyle.setFont(headerFont);
+
+
+                Row headerRow = sheet.createRow(0);
+
+
+                for(int i = 0; i < columns.length; i++)
+                {
+                    Cell cell = headerRow.createCell(i);
+                    cell.setCellValue(columns[i]);
+                    cell.setCellStyle(headerStyle);
+                }
+                //CellStyle dateStyle = workbook.createCellStyle();
+                //dateStyle.setDataFormat(ch.createDataFormat().getFormat("dd-MM-yyyy:HH:mm:ss"));
+                int startRow = 1;
+                for(ITransAPI trans:sTrans)
+                {
+                    Row transRow = sheet.createRow(startRow);
+                    Cell txid = transRow.createCell(0);
+                    txid.setCellValue(trans.getID());
+
+                    Cell message = transRow.createCell(1);
+                    message.setCellValue(trans.getMessage());
+
+                    Cell timestamp = transRow.createCell(2);
+                    //timestamp.setCellStyle(dateStyle);
+                    timestamp.setCellValue(sdf2.format(new Date(trans.getOutputs().get(0).getTimestamp())));
+
+                    Cell fee = transRow.createCell(3);
+                    fee.setCellValue(format2.format(trans.getFee().doubleValue()/100_000_000));
+
+                    startRow++;
+
+                    Row inputRow = sheet.createRow(startRow);
+                    Cell in = inputRow.createCell(0);
+                    in.setCellValue("Inputs");
+                    for(int i = 0; i < txioColumns.length;i++)
+                    {
+                        Cell cell = inputRow.createCell(i+1);
+                        cell.setCellValue(txioColumns[i]);
+                    }
+
+
+
+                    for(IInput input:trans.getInputs())
+                    {
+                        startRow++;
+                        Row inRow = sheet.createRow(startRow);
+
+                        Cell address = inRow.createCell(1);
+                        address.setCellValue(input.getAddress().encodeForChain());
+
+
+                        Cell id = inRow.createCell(2);
+                        id.setCellValue(input.getID());
+
+                        Cell amount = inRow.createCell(3);
+                        amount.setCellValue(format2.format(input.getAmount().doubleValue()/100_000_000));
+
+                        Cell token = inRow.createCell(4);
+                        token.setCellValue(input.getToken().getName());
+
+                        Cell time = inRow.createCell(5);
+                        time.setCellValue(sdf2.format(new Date(input.getTimestamp())));
+
+                    }
+
+                    startRow++;
+
+                    Row outputRow = sheet.createRow(startRow);
+                    Cell out = outputRow.createCell(0);
+                    out.setCellValue("Outputs");
+                    for(int i = 0; i < txioColumns.length;i++)
+                    {
+                        Cell cell = inputRow.createCell(i+1);
+                        cell.setCellValue(txioColumns[i]);
+                    }
+
+                    for(IOutput output:trans.getOutputs())
+                    {
+                        startRow++;
+                        Row outRow = sheet.createRow(startRow);
+
+                        Cell address = outRow.createCell(1);
+                        address.setCellValue(output.getAddress().encodeForChain());
+
+
+                        Cell id = outRow.createCell(2);
+                        id.setCellValue(output.getID());
+
+                        Cell amount = outRow.createCell(3);
+                        amount.setCellValue(format2.format(output.getAmount().doubleValue()/100_000_000));
+
+                        Cell token = outRow.createCell(4);
+                        token.setCellValue(output.getToken().getName());
+
+                        Cell time = outRow.createCell(5);
+                        time.setCellValue(sdf2.format(new Date(output.getTimestamp())));
+
+                    }
+                    startRow++;
+                }
+
+                File file = new File("transactions.xlsx");
+                try {
+                    if(file.exists())
+                        file.delete();
+                    file.createNewFile();
+
+                    FileOutputStream fos = new FileOutputStream(file);
+
+                    workbook.write(fos);
+                    fos.close();
+                    workbook.close();
+
+                    notification("Done exporting transactions");
+                } catch (IOException e) {
+                    notification("Unable to export transactions, make sure the transactions.xlsx file is not open anywhere else.");
+                }
+
+            }
+        };
+        exporter.setDaemon(true);
+        exporter.start();
     }
 
     @FXML
@@ -1195,13 +1344,13 @@ public class NewGUI implements GUIHook {
                 faqLink.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
                     @Override
                     public void handle(MouseEvent event) {
-                        app.getHostServices().showDocument("https://bitbucket.org/backspace119/ki-project-origin/wiki/FAQ");
+                        app.getHostServices().showDocument("https://bitbucket.org/backspace119/ampera/wiki/FAQ");
                     }
                 });
                 issuesPageLink.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
                     @Override
                     public void handle(MouseEvent event) {
-                        app.getHostServices().showDocument("https://bitbucket.org/backspace119/ki-project-origin/issues?status=new&status=open");
+                        app.getHostServices().showDocument("https://bitbucket.org/backspace119/ampera/issues?status=new&status=open");
                     }
                 });
                 discordServerLink.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
@@ -1216,13 +1365,13 @@ public class NewGUI implements GUIHook {
                     axcWeb.setMinHeight(axcPane.getHeight());
                     axcWeb.setPrefWidth(axcPane.getWidth());
                     axcWeb.setPrefHeight(axcPane.getHeight());
-                    hashrateChart.setMinWidth(miningTab.getWidth());
-                    miningIntesity.setMinWidth(miningTab.getWidth() - 20);
-                    startMining.setLayoutX((miningTab.getWidth() / 2) - (startMining.getWidth() / 2) - 5);
-                    miLabel.setLayoutX((miningTab.getWidth() / 2) - (miLabel.getWidth() / 2) - 5);
+                    //hashrateChart.setMinWidth(miningTab.getWidth()-25);
+                    //miningIntesity.setMinWidth(miningTab.getWidth() - 25);
+                    //startMining.setLayoutX((miningTab.getWidth() / 2) - (startMining.getWidth() / 2) - 5);
+                    //miLabel.setLayoutX((miningTab.getWidth() / 2) - (miLabel.getWidth() / 2) - 5);
                     walletBox.setLayoutX(walletPane.getWidth() - (walletBox.getWidth() + 5));
-                    walletAmount.setLayoutX(walletPane.getWidth() - ((walletAmount.getWidth() + 15)));
-                    tokenLabel.setLayoutX(walletAmount.getLayoutX() + 10);
+                    //wwalletAmount.setLayoutX(walletPane.getWidth() - ((walletAmount.getWidth() + 15)));
+                    //tokenLabel.setLayoutX(walletAmount.getLayoutX() + 10);
                     transactionTable.setMinWidth(walletPane.getWidth() - (walletBox.getWidth() + 65));
                     transactionTable.setMinHeight(walletPane.getHeight() - 170);
                     topPane2.setMinWidth(walletPane.getWidth());
@@ -1230,7 +1379,7 @@ public class NewGUI implements GUIHook {
                     beScroll.setMinHeight(blockExplorerPane.getHeight() - 60);
                     beScroll.setPrefHeight(blockExplorerPane.getHeight() - 60);
                     lockPane.setMinHeight(borderPane.getHeight());
-                    miningDataHbox.setMinWidth(miningTab.getWidth());
+                    miningDataHbox.setMinWidth(miningTab.getWidth() - 15);
                     ohVbox.setMinHeight(ohPane.getHeight());
                     ohVbox.setMinWidth(ohPane.getWidth() - 10);
                     adxBox.setMinWidth(exchangePane.getWidth() - 20);
@@ -1369,6 +1518,13 @@ public class NewGUI implements GUIHook {
     }
 
     private void setupWalletPane() {
+
+        exportTransactions.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                exportTransactionsToXLS();
+            }
+        });
         tokenLabel.setMinWidth(walletAmount.getWidth());
         addressLabel.setText("Address - " + ki.getAddMan().getMainAdd().encodeForChain());
         tokenBox.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<Label>() {
@@ -2538,13 +2694,13 @@ public class NewGUI implements GUIHook {
                             axcWeb.setMinHeight(axcPane.getHeight());
                             axcWeb.setPrefWidth(axcPane.getWidth());
                             axcWeb.setPrefHeight(axcPane.getHeight());
-                            startMining.setLayoutX((miningTab.getWidth() / 2) - (startMining.getWidth() / 2) - 5);
-                            hashrateChart.setMinWidth(miningTab.getWidth());
-                            miningIntesity.setMinWidth(miningTab.getWidth() - 20);
-                            miLabel.setLayoutX((miningTab.getWidth() / 2) - (miLabel.getWidth() / 2) - 5);
+                            //startMining.setLayoutX((miningTab.getWidth() / 2) - (startMining.getWidth() / 2) - 5);
+                            //hashrateChart.setMinWidth(miningTab.getWidth() - 25);
+                            //miningIntesity.setMinWidth(miningTab.getWidth() - 25);
+                            //miLabel.setLayoutX((miningTab.getWidth() / 2) - (miLabel.getWidth() / 2) - 5);
                             walletBox.setLayoutX(walletPane.getWidth() - (walletBox.getWidth() + 5));
-                            walletAmount.setLayoutX(walletPane.getWidth() - (walletAmount.getWidth() + 15));
-                            tokenLabel.setLayoutX(walletAmount.getLayoutX() + 10);
+                            //walletAmount.setLayoutX(walletPane.getWidth() - (walletAmount.getWidth() + 15));
+                            //tokenLabel.setLayoutX(walletAmount.getLayoutX() + 10);
                             transactionTable.setMinWidth(walletPane.getWidth() - (walletBox.getWidth() + 65));
                             transactionTable.setMinHeight(walletPane.getHeight() - 170);
                             topPane2.setMinWidth(walletPane.getWidth());
@@ -2560,7 +2716,7 @@ public class NewGUI implements GUIHook {
                             heightLabel.setText("Chain Height - " + ki.getChainMan().currentHeight());
                             if (!ki.getOptions().pool)
                                 chainHeight2.setText(" " + ki.getChainMan().currentHeight().toString());
-                            miningDataHbox.setMinWidth(miningTab.getWidth());
+                            miningDataHbox.setMinWidth(miningTab.getWidth() - 15);
 
                             for (IConnectionManager c : ki.getNetMan().getConnections()) {
                                 latency.setText(" Latency - " + c.currentLatency());
@@ -2742,7 +2898,7 @@ public class NewGUI implements GUIHook {
                 singleSig.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
                 multiSig.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
                 clearKeys.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
-
+                exportTransactions.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
                 ki.setStringSetting(StringSettings.PRIMARY_COLOR, color);
 
                 //miningIntesity.getClip().setStyle("-fx-background-color:"+color);

@@ -1,6 +1,6 @@
 # README #
 
-This is the official home to the code for Origin, part of the Ki Global Hedge project. The wiki has useful information to help with the program, feel free to add to it.
+This is the official home to the code for Ampera, part of the Eko Global Hedge project. The wiki has useful information to help with the program, feel free to add to it.
 
 Link to join the discord where you can contact developers and talk with other people: https://discord.gg/6PjeMzd
 

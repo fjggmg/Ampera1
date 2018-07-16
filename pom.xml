@@ -155,7 +155,6 @@
             <artifactId>xodus-environment</artifactId>
             <version>1.2.2</version>
         </dependency>
-        <!-- https://mvnrepository.com/artifact/org.codehaus.mojo/findbugs-maven-plugin -->
         <dependency>
             <groupId>org.codehaus.mojo</groupId>
             <artifactId>findbugs-maven-plugin</artifactId>
@@ -249,6 +248,11 @@
             <groupId>com.github.kenglxn.qrgen</groupId>
             <artifactId>javase</artifactId>
             <version>2.4.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml</artifactId>
+            <version>3.17</version>
         </dependency>
 
     </dependencies>
