@@ -2,10 +2,11 @@ package com.ampex.main.adx;
 
 public enum OrderStatus {
     COMPLETE(true, true, "NONE"),
-    BAD_UTXOS_US(true, false, "OMU"),
-    BAD_UTXOS_THEM(true, false, "OMT"),
+    BAD_UTXOS_US(true, false, "OOU"),
+    BAD_UTXOS_THEM(true, false, "OOT"),
     GENERAL_FAILURE(false, false, "GF"),
-    TRANSACTION_FAILURE(true, false, "TF");
+    TRANSACTION_FAILURE(true, false, "TF"),
+    NOT_ENOUGH_FOR_FEE(true,false,"OOF");
     private final boolean success;
     private final boolean partial;
     private final String error;

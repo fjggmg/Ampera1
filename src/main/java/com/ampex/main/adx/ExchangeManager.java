@@ -123,7 +123,7 @@ public class ExchangeManager {
                 inputs.addAll(toUs);
                 List<IInput> feeIn = ki.getTransMan().getInputsForAmountAndToken(ki.getAddMan().getMainAdd(), BigInteger.valueOf(1_000_00), Token.ORIGIN, true);
                 if (feeIn == null) {
-                    currentStatus = OrderStatus.BAD_UTXOS_US;
+                    currentStatus = OrderStatus.NOT_ENOUGH_FOR_FEE;
                     break;
                 }
                 BigInteger feeOverage = BigInteger.ZERO;
@@ -318,16 +318,22 @@ public class ExchangeManager {
                 receivingAmountOverage = receivingAmountOverage.subtract(amountSelling.multiply(o.unitPrice()).divide(BigInteger.valueOf(100_000_000)));
                 inputs.addAll(toUs);
                 List<IInput> feeIn = ki.getTransMan().getInputsForAmountAndToken(ki.getAddMan().getMainAdd(), BigInteger.valueOf(1_000_00), Token.ORIGIN, true);
-                if (feeIn == null) {
-                    currentStatus = OrderStatus.BAD_UTXOS_US;
-                    break;
-                }
+
                 BigInteger feeOverage = BigInteger.ZERO;
-                for (IInput i : feeIn) {
-                    feeOverage = feeOverage.add(i.getAmount());
+                if(o.pair().accepting().equals(Token.ORIGIN) && buyingAmountOverage.compareTo(BigInteger.valueOf(1_000_000)) < 0) {
+                    if (feeIn == null) {
+                        currentStatus = OrderStatus.NOT_ENOUGH_FOR_FEE;
+                        break;
+                    }
+                    for (IInput i : feeIn) {
+                        feeOverage = feeOverage.add(i.getAmount());
+                    }
+
+                    feeOverage = feeOverage.subtract(BigInteger.valueOf(1_000_00));
+                }else{
+                    buyingAmountOverage = buyingAmountOverage.subtract(BigInteger.valueOf(1_000_000));
                 }
                 System.out.println("Matched, building transaction7");
-                feeOverage = feeOverage.subtract(BigInteger.valueOf(1_000_00));
                 inputs.addAll(feeIn);
                 ourInputs.addAll(feeIn);
                 System.out.println("All inputs: ");
