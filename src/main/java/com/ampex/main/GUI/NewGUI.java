@@ -1142,7 +1142,7 @@ public class NewGUI implements GUIHook {
 
     private JFXSnackbar sb;
 
-    private synchronized void notification(String text) {
+    private void notification(String text) {
         Platform.runLater(new Thread() {
             public void run() {
                 if (sb == null) {
