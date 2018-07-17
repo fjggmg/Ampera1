@@ -19,7 +19,6 @@ import java.util.Map;
 
 public class TestingTransactionManager extends Thread implements ITransMan{
     private IKi ki;
-    private final Object processLock = new Object();
     private boolean nodisk;
 
     private XodusAmpMap utxoVerMap;
@@ -171,25 +170,7 @@ public class TestingTransactionManager extends Thread implements ITransMan{
     @Override
     public boolean addCoinbase(ITransAPI transaction, BigInteger blockHeight, BigInteger fees) {
 
-        if (!verifyCoinbase(transaction, blockHeight, fees)) return false;
-        for (IOutput o : transaction.getOutputs()) {
-            /*
-            if (ki.getOptions().tDebug) {
-                ki.debug("Address " + o.getAddress().encodeForChain());
-                ki.debug("ID: " + o.getID());
-                ki.debug("Token " + o.getToken());
-                ki.debug("Amount " + o.getAmount());
-            }
-            */
-            TXIOData data = null;
-            try {
-                data = new TXIOData(o.getAddress(), o.getIndex(), o.getAmount(), o.getToken(), o.getTimestamp(), o.getVersion());
-            } catch (InvalidTXIOData invalidTXIOData) {
-                invalidTXIOData.printStackTrace();
-                return false;
-            }
-            //ki.getAddMan().receivedOn(o.getAddress());
-        }
+
         return true;
     }
 
@@ -476,12 +457,7 @@ public class TestingTransactionManager extends Thread implements ITransMan{
         }
         if (totalIn.compareTo(amount) < 0)
             return null;
-        if (used) {
-            List<String> usedOuts = new ArrayList<>();
-            for (IInput i : inputs) {
-                usedOuts.add(i.getID());
-            }
-        }
+
         return inputs;
     }
 
@@ -540,7 +516,4 @@ public class TestingTransactionManager extends Thread implements ITransMan{
     public void unUseUTXOs(List<IInput> inputs) {
     }
 
-    @Override
-    public void setCurrentHeight(BigInteger currentHeight) {
-    }
 }

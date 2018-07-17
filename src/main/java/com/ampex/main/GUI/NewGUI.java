@@ -560,8 +560,6 @@ public class NewGUI implements GUIHook {
 
                 Workbook workbook = new XSSFWorkbook();
 
-                CreationHelper ch = workbook.getCreationHelper();
-
                 Sheet sheet = workbook.createSheet("Transactions");
 
                 org.apache.poi.ss.usermodel.Font headerFont = workbook.createFont();
@@ -673,20 +671,39 @@ public class NewGUI implements GUIHook {
                 }
 
                 File file = new File("transactions.xlsx");
-                try {
-                    if(file.exists())
-                        file.delete();
-                    file.createNewFile();
 
-                    FileOutputStream fos = new FileOutputStream(file);
+                if(file.exists())
+                    if(!file.delete())
+                    {
+                        notification("Unable to delete transactions.xlsx file to overwrite");
+                        return;
+                    }
+                try {
+                    if(!file.createNewFile())
+                    {
+                        notification("Unable to create new transactions.xlsx file");
+                        return;
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    notification("Unable to create new transactions.xlsx file");
+                    return;
+                }
+                try (FileOutputStream fos = new FileOutputStream(file)){
 
                     workbook.write(fos);
                     fos.close();
-                    workbook.close();
 
                     notification("Done exporting transactions");
                 } catch (IOException e) {
                     notification("Unable to export transactions, make sure the transactions.xlsx file is not open anywhere else.");
+                }finally {
+                    try {
+                        workbook.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        notification("Unable to close file after writing transactions.xslx");
+                    }
                 }
 
             }

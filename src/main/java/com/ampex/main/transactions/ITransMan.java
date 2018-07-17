@@ -127,13 +127,6 @@ public interface ITransMan extends ITransManAPI {
     void unUseUTXOs(List<IInput> inputs);
 
     /**
-     * Primer for post block processing. This keeps PBP from having to count from -1 to current height when the first
-     * block to process comes through. You should not need to call this, it's called from the chain manager during startup.
-     * @param currentHeight currentHeight of chain
-     */
-    void setCurrentHeight(BigInteger currentHeight);
-
-    /**
      * Wrapper for threading. This was created to separate thread creation from the constructor
      */
     void start();

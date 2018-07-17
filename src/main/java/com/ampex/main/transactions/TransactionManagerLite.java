@@ -426,11 +426,6 @@ public class TransactionManagerLite extends Thread implements ITransMan {
     }
 
     @Override
-    public void setCurrentHeight(BigInteger currentHeight) {
-
-    }
-
-    @Override
     public boolean hasUTXOsOnDisk(IAddress address) {
         return false;
     }

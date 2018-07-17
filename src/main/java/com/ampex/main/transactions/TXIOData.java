@@ -62,7 +62,7 @@ public class TXIOData implements IAmpByteSerializable {
     public TXIOData(TXIO txio) throws InvalidTXIOData
     {
         if (!txio.getAddress().isValid() && txio.getAddress().getVersion() != Address.VERSION)
-            throw new InvalidTXIOData("Invalid address: " + address.encodeForChain());
+            throw new InvalidTXIOData("Invalid address: " + txio.getAddress().encodeForChain());
         this.address = txio.getAddress();
 
         if (txio.getIndex() > IChainMan.MAX_TXIOS) throw new InvalidTXIOData("Invalid index");

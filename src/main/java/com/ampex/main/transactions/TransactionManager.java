@@ -30,8 +30,6 @@ public class TransactionManager extends Thread implements ITransMan {
     private IKi ki;
     private List<ITransAPI> pending = new CopyOnWriteArrayList<>();
     private List<String> usedUTXOs = new ArrayList<>();
-    private BigInteger currentHeight = BigInteger.valueOf(0);
-    private final Object processLock = new Object();
     public TransactionManager(IKi ki, boolean dump) {
         this.ki = ki;
         if (!new File("transactions" + ((ki.getOptions().testNet) ? ChainManager.TEST_NET : ChainManager.POW_CHAIN) + "/").mkdirs()) {
@@ -166,9 +164,15 @@ public class TransactionManager extends Thread implements ITransMan {
             }
         };
         */
+        execInit();
 
+    }
+
+    private synchronized void execInit()
+    {
         pbpExec = Executors.newSingleThreadExecutor();
     }
+
 
     ExecutorService pbpExec;
 
@@ -875,9 +879,5 @@ public class TransactionManager extends Thread implements ITransMan {
         }
     }
 
-    @Override
-    public void setCurrentHeight(BigInteger currentHeight) {
-        this.currentHeight = currentHeight;
-    }
 
 }

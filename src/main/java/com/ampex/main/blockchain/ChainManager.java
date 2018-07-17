@@ -235,7 +235,6 @@ public class ChainManager implements IChainMan {
             return;
         }
         currentDifficulty = new BigInteger(csMap.get("diff"));
-        ki.getTransMan().setCurrentHeight(currentHeight.add(BigInteger.ONE));
     }
 
     @Override
