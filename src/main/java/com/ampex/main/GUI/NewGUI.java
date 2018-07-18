@@ -675,7 +675,7 @@ public class NewGUI implements GUIHook {
                 if(file.exists())
                     if(!file.delete())
                     {
-                        notification("Unable to delete transactions.xlsx file to overwrite");
+                        notification("Unable to delete transactions.xlsx file to overwrite. Please make sure file is not open elsewhere.");
                         return;
                     }
                 try {
@@ -692,7 +692,7 @@ public class NewGUI implements GUIHook {
                 try (FileOutputStream fos = new FileOutputStream(file)){
 
                     workbook.write(fos);
-                    fos.close();
+                    //fos.close();
 
                     notification("Done exporting transactions");
                 } catch (IOException e) {
@@ -788,6 +788,7 @@ public class NewGUI implements GUIHook {
         if (!ki.getOptions().pool) {
             vb.getChildren().add(buildMainButton("Wallet", "/Wallet.png", 0, 0, content, walletPane, 1,true));
             vb.getChildren().add(buildMainButton("Address", "/home.png", 100, 0, content, addressPane, 1,false));
+            if(!ki.getOptions().lite)
             vb.getChildren().add(buildMainButton("ADX", "/exchange.png", 200, 4, content, exchangePane, 1,false));
             vb.getChildren().add(buildMainButton("AXC", "/axclogo.png", 300, 5, content, axcPane, 1.2,true));
             if (!ki.getOptions().poolRelay)
@@ -1468,7 +1469,7 @@ public class NewGUI implements GUIHook {
     private void setupAXCPane() {
 
         WebEngine engine = axcWeb.getEngine();
-        engine.load("http://75.74.67.19:8008/");
+        engine.load("http://www.axcore.io/");
     }
 
     private void setupBlockExplorerPane() {
@@ -2332,13 +2333,13 @@ public class NewGUI implements GUIHook {
                     return;
                 }
                 if (limit) {
-                    try {
+                    //try {
                         stopPrice = new BigDecimal(exPrice.getText()).multiply(BigDecimal.valueOf(unitMultiplierPrice.doubleValue())).toBigInteger();
-                        if (stopPrice.compareTo(BigInteger.valueOf(500)) < 0) throw new Exception();
-                    } catch (Exception e) {
+                        //if (stopPrice.compareTo(BigInteger.valueOf(500)) < 0) throw new Exception();
+                    /*} catch (Exception e) {
                         notification("Invalid Price");
                         return;
-                    }
+                    }*/
                 }
 
                 OrderStatus status = ki.getExMan().placeOrder(true, amount, stopPrice, Pairs.byName(pairs.getSelectionModel().getSelectedItem().getText()), limit);
@@ -2371,13 +2372,14 @@ public class NewGUI implements GUIHook {
                     return;
                 }
                 if (limit) {
-                    try {
+                    //try {
                         stopPrice = new BigDecimal(exPrice.getText()).multiply(BigDecimal.valueOf(unitMultiplierPrice.doubleValue())).toBigInteger();
-                        if (stopPrice.compareTo(BigInteger.valueOf(500)) < 0) throw new Exception();
-                    } catch (Exception e) {
+
+                        //if (stopPrice.compareTo(BigInteger.valueOf(500)) < 0) throw new Exception();
+                    /*&} catch (Exception e) {
                         notification("Invalid Price");
                         return;
-                    }
+                    }*/
                 }
                 OrderStatus status = ki.getExMan().placeOrder(false, amount, stopPrice, Pairs.byName(pairs.getSelectionModel().getSelectedItem().getText()), limit);
                 if (!status.succeeded()) {

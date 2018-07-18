@@ -61,6 +61,7 @@ public class OrderPacket implements Packet {
                             OrderRefused or = new OrderRefused();
                             or.ID = order.getID();
                             connMan.sendPacket(or);
+                            ((IKi) ki).getMainLog().warn("Failed on chain");
                             return;
                         }
                     } else if (!((IKi) ki).getExMan().getOrderBook().buys().isEmpty()) {
@@ -68,6 +69,7 @@ public class OrderPacket implements Packet {
                             OrderRefused or = new OrderRefused();
                             or.ID = order.getID();
                             connMan.sendPacket(or);
+                            ((IKi) ki).getMainLog().warn("Failed on chain");
                             return;
                         }
                     }
@@ -80,6 +82,7 @@ public class OrderPacket implements Packet {
                                 OrderRefused or = new OrderRefused();
                                 or.ID = order.getID();
                                 connMan.sendPacket(or);
+                                ((IKi) ki).getMainLog().warn("Failed on pending");
                                 return;
                             }
                         }else if(!order.buy() && entry.getValue().buy())
@@ -89,6 +92,7 @@ public class OrderPacket implements Packet {
                                 OrderRefused or = new OrderRefused();
                                 or.ID = order.getID();
                                 connMan.sendPacket(or);
+                                ((IKi) ki).getMainLog().warn("Failed on pending");
                                 return;
                             }
                         }
