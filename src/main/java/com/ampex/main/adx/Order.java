@@ -28,7 +28,6 @@ public class Order implements IAmpByteSerializable {
     private boolean buy;
     private BigInteger timestamp;
     private IBinary bin;
-    private OrderMeta om = new OrderMeta();
     private String txid;
     private SimpleObjectProperty<BigInteger> amountProp;
 
@@ -126,10 +125,6 @@ public class Order implements IAmpByteSerializable {
 
     public String getID() {
         return EncryptionManager.sha3256(pair.name() + Utils.toBase64(bin.serializeToAmplet().serializeToBytes()) + unitPrice + address.encodeForChain() + contractAdd.encodeForChain() + buy + txid);
-    }
-
-    public OrderMeta getOm() {
-        return om;
     }
 
     @Override

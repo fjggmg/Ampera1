@@ -23,6 +23,7 @@ import com.ampex.main.data.buckets.BinALPreBucket;
 import com.ampex.main.data.buckets.KeyKeyTypePair;
 import com.ampex.main.data.encryption.EncryptionManager;
 import com.ampex.main.data.utils.Utils;
+import com.ampex.main.data.utils.WritablePair;
 import com.ampex.main.data.xodus.XodusStringMap;
 import com.ampex.main.transactions.ITrans;
 import com.ampex.main.transactions.NewTrans;
@@ -45,7 +46,9 @@ import javafx.application.Platform;
 import javafx.beans.Observable;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ListProperty;
+import javafx.beans.property.MapProperty;
 import javafx.beans.property.SimpleListProperty;
+import javafx.beans.property.SimpleMapProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
@@ -157,12 +160,12 @@ public class NewGUI implements GUIHook {
     public Label lastTradeAmount;
     public JFXTextField exPrice;
     public JFXComboBox<Label> pairs;
-    public JFXListView<Order> obBuyTotal;
-    public JFXListView<Order> obBuySize;
-    public JFXListView<Order> obBuyPrice;
-    public JFXListView<Order> obSellPrice;
-    public JFXListView<Order> obSellSize;
-    public JFXListView<Order> obSellTotal;
+    public JFXListView<BigInteger> obBuyTotal;
+    public JFXListView<BigInteger> obBuySize;
+    public JFXListView<BigInteger> obBuyPrice;
+    public JFXListView<BigInteger> obSellPrice;
+    public JFXListView<BigInteger> obSellSize;
+    public JFXListView<BigInteger> obSellTotal;
     public Label buyLabel;
     public Label sellLabel;
     public JFXListView<Order> obRecentPrice;
@@ -2168,17 +2171,17 @@ public class NewGUI implements GUIHook {
             }
         });
 
-        obSellSize.setSkin(new RefreshableListViewSkin(obSellSize));
-        obSellPrice.setSkin(new RefreshableListViewSkin(obSellPrice));
-        obSellTotal.setSkin(new RefreshableListViewSkin(obSellTotal));
-        obBuyPrice.setSkin(new RefreshableListViewSkin(obBuyPrice));
-        obBuySize.setSkin(new RefreshableListViewSkin(obBuySize));
-        obBuyTotal.setSkin(new RefreshableListViewSkin(obBuyTotal));
-        obRecentPrice.setSkin(new RefreshableListViewSkin(obRecentPrice));
-        obRecentAmount.setSkin(new RefreshableListViewSkin(obRecentAmount));
-        obRecentDirection.setSkin(new RefreshableListViewSkin(obRecentDirection));
-        activePrice.setSkin(new RefreshableListViewSkin(activePrice));
-        activeAmount.setSkin(new RefreshableListViewSkin(activeAmount));
+        obSellSize.setSkin(new RefreshableListViewSkin<>(obSellSize));
+        obSellPrice.setSkin(new RefreshableListViewSkin<>(obSellPrice));
+        obSellTotal.setSkin(new RefreshableListViewSkin<>(obSellTotal));
+        obBuyPrice.setSkin(new RefreshableListViewSkin<>(obBuyPrice));
+        obBuySize.setSkin(new RefreshableListViewSkin<>(obBuySize));
+        obBuyTotal.setSkin(new RefreshableListViewSkin<>(obBuyTotal));
+        obRecentPrice.setSkin(new RefreshableListViewSkin<>(obRecentPrice));
+        obRecentAmount.setSkin(new RefreshableListViewSkin<>(obRecentAmount));
+        obRecentDirection.setSkin(new RefreshableListViewSkin<>(obRecentDirection));
+        activePrice.setSkin(new RefreshableListViewSkin<>(activePrice));
+        activeAmount.setSkin(new RefreshableListViewSkin<>(activeAmount));
         pairs.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<Label>() {
             @Override
             public void changed(ObservableValue<? extends Label> observable, Label oldValue, Label newValue) {
@@ -2470,49 +2473,65 @@ public class NewGUI implements GUIHook {
         bindScrolls(obRecentPrice, obRecentAmount);
         bindScrolls(obRecentAmount, obRecentDirection);
         bindScrolls(activeAmount, activePrice);
-        ListProperty<Order> sells = new SimpleListProperty<>();
-        sells.set(FXCollections.observableArrayList(new OrderExtractor()));
-        sells.bindContent(ki.getExMan().getOrderBook().sells());
+        //MapProperty<BigInteger,WritablePair<BigInteger,BigInteger>> sells = new SimpleMapProperty<>();
+        //sells.set(FXCollections.observableArrayList(new OrderExtractor()));
+        //sells.bindContent(ki.getExMan().getOrderBook().getSellDepthMap());
+        ListProperty<BigInteger> sellPrice = new SimpleListProperty<>();
+        sellPrice.setValue(FXCollections.observableArrayList());
+        sellPrice.bindContent(ki.getExMan().getOrderBook().getSellDepth().getPriceList());
         //sells.set(ki.getExMan().getOrderBook().sells());
-        obSellPrice.itemsProperty().bind(sells);
-        obSellPrice.setCellFactory(param -> new ListCell<Order>() {
+        //obSellPrice.itemsProperty().bind(sells.keySet());
+        obSellPrice.itemsProperty().bind(sellPrice);
+        obSellPrice.setCellFactory(param -> new ListCell<BigInteger>() {
             @Override
-            protected void updateItem(Order item, boolean empty) {
+            protected void updateItem(BigInteger item, boolean empty) {
                 super.updateItem(item, empty);
 
-                if (empty || item == null || item.unitPrice() == null) {
+                if (empty || item == null) {
                     setText(null);
                 } else {
-                    setText(format2.format(item.unitPrice().doubleValue() / (unitMultiplierPrice.doubleValue())));
+                    setText(format2.format(item.doubleValue() / (unitMultiplierPrice.doubleValue())));
+
+                    setStyle("-fx-background-color:#c84128;-fx-background-insets: 0 " + (obSellPrice.getWidth() - ( obSellPrice.getWidth()/(ki.getExMan().getOrderBook().getSellDepth().getTotal().doubleValue()/ki.getExMan().getOrderBook().getSellDepth().getTotalAt(item).doubleValue()))) +" 0 0" );
                 }
             }
         });
-        obSellSize.itemsProperty().bind(sells);
-        obSellSize.setCellFactory(param -> new ListCell<Order>() {
+
+        ListProperty<BigInteger> sellAmount = new SimpleListProperty<>();
+        sellAmount.setValue(FXCollections.observableArrayList());
+        sellAmount.bindContent(ki.getExMan().getOrderBook().getSellDepth().getAmountList());
+        obSellSize.itemsProperty().bind(sellAmount);
+        obSellSize.setCellFactory(param -> new ListCell<BigInteger>() {
             @Override
-            protected void updateItem(Order item, boolean empty) {
+            protected void updateItem(BigInteger item, boolean empty) {
                 super.updateItem(item, empty);
 
-                if (empty || item == null || item.amountOnOffer() == null) {
+                if (empty || item == null) {
                     setText(null);
                 } else {
-                    setText(format2.format(item.amountOnOffer().doubleValue() / (unitMultiplierAmount.doubleValue())));
+                    setText(format2.format(item.doubleValue() / (unitMultiplierAmount.doubleValue())));
                 }
             }
         });
-        obSellTotal.itemsProperty().bind(sells);
-        obSellTotal.setCellFactory(param -> new ListCell<Order>() {
+
+        ListProperty<BigInteger> sellTotal = new SimpleListProperty<>();
+        sellTotal.setValue(FXCollections.observableArrayList());
+        sellTotal.bindContent(ki.getExMan().getOrderBook().getSellDepth().getTotalList());
+        obSellTotal.itemsProperty().bind(sellTotal);
+        obSellTotal.setCellFactory(param -> new ListCell<BigInteger>() {
             @Override
-            protected void updateItem(Order item, boolean empty) {
+            protected void updateItem(BigInteger item, boolean empty) {
                 super.updateItem(item, empty);
 
-                if (empty || item == null || item.amountOnOffer() == null) {
+                if (empty || item == null) {
                     setText(null);
                 } else {
-                    setText(format2.format(item.getOm().totalAtOrder.doubleValue() / (unitMultiplierAmount.doubleValue())));
+                    setText(format2.format(item.doubleValue() / (unitMultiplierAmount.doubleValue())));
                 }
             }
         });
+
+
 
         ListProperty<Order> active = new SimpleListProperty<>();
         active.set(FXCollections.observableArrayList(new OrderExtractor()));
@@ -2548,47 +2567,64 @@ public class NewGUI implements GUIHook {
 
             }
         });
-        ListProperty<Order> buys = new SimpleListProperty<>();
-        buys.set(FXCollections.observableArrayList(new OrderExtractor()));
-        buys.bindContent(ki.getExMan().getOrderBook().buys());
-        obBuyPrice.itemsProperty().bind(buys);
-        obBuySize.itemsProperty().bind(buys);
-        obBuyPrice.setCellFactory(param -> new ListCell<Order>() {
+
+
+        ListProperty<BigInteger> buyPrice = new SimpleListProperty<>();
+        buyPrice.set(FXCollections.observableArrayList());
+        buyPrice.bindContent(ki.getExMan().getOrderBook().getBuyDepthBook().getPriceList());
+        obBuyPrice.itemsProperty().bind(buyPrice);
+        //obBuySize.itemsProperty().bind(buys);
+        obBuyPrice.setCellFactory(param -> new ListCell<BigInteger>() {
             @Override
-            protected void updateItem(Order item, boolean empty) {
+            protected void updateItem(BigInteger item, boolean empty) {
                 super.updateItem(item, empty);
 
-                if (empty || item == null || item.unitPrice() == null) {
+                if (empty || item == null ) {
                     setText(null);
                 } else {
-                    setText(format2.format(item.unitPrice().doubleValue() / (unitMultiplierPrice.doubleValue())));
+                    setText(format2.format(item.doubleValue() / (unitMultiplierPrice.doubleValue())));
+
+                    ki.getMainLog().warn("Total: "  + ki.getExMan().getOrderBook().getBuyDepthBook().getTotal());
+                    ki.getMainLog().warn("Total at: " + ki.getExMan().getOrderBook().getBuyDepthBook().getTotalAt(item));
+                    ki.getMainLog().warn("RESULT OF TOTAL EQUATION: " + ki.getExMan().getOrderBook().getBuyDepthBook().getTotal().divide(ki.getExMan().getOrderBook().getBuyDepthBook().getTotalAt(item)).doubleValue());
+                    setStyle("-fx-background-color:#18BC9C;-fx-background-insets: 0 0 0 " + (obBuyPrice.getWidth() - ( obBuyPrice.getWidth()/(ki.getExMan().getOrderBook().getBuyDepthBook().getTotal().doubleValue()/ki.getExMan().getOrderBook().getBuyDepthBook().getTotalAt(item).doubleValue()))));
+
+                    //setBackground(new Background(new BackgroundFill(Color.valueOf("#18BC9C"), CornerRadii.EMPTY, new Insets(0,0.5,0,0))));
                 }
             }
         });
         //obSellSize.itemsProperty().bind(sells);
-        obBuySize.setCellFactory(param -> new ListCell<Order>() {
+
+        ListProperty<BigInteger> buySize = new SimpleListProperty<>();
+        buySize.set(FXCollections.observableArrayList());
+        buySize.bindContent(ki.getExMan().getOrderBook().getBuyDepthBook().getAmountList());
+        obBuySize.itemsProperty().bind(buySize);
+        obBuySize.setCellFactory(param -> new ListCell<BigInteger>() {
             @Override
-            protected void updateItem(Order item, boolean empty) {
+            protected void updateItem(BigInteger item, boolean empty) {
                 super.updateItem(item, empty);
 
-                if (empty || item == null || item.amountOnOffer() == null) {
+                if (empty || item == null) {
                     setText(null);
                 } else {
-                    setText(format2.format(item.amountOnOffer().doubleValue() / (unitMultiplierAmount.doubleValue())));
+                    setText(format2.format(item.doubleValue() / (unitMultiplierAmount.doubleValue())));
                 }
 
             }
         });
-        obBuyTotal.itemsProperty().bind(buys);
-        obBuyTotal.setCellFactory(param -> new ListCell<Order>() {
+        ListProperty<BigInteger> buyTotal = new SimpleListProperty<>();
+        buyTotal.set(FXCollections.observableArrayList());
+        buyTotal.bindContent(ki.getExMan().getOrderBook().getBuyDepthBook().getTotalList());
+        obBuyTotal.itemsProperty().bind(buyTotal);
+        obBuyTotal.setCellFactory(param -> new ListCell<BigInteger>() {
             @Override
-            protected void updateItem(Order item, boolean empty) {
+            protected void updateItem(BigInteger item, boolean empty) {
                 super.updateItem(item, empty);
 
-                if (empty || item == null || item.getOm() == null) {
+                if (empty || item == null ) {
                     setText(null);
                 } else {
-                    setText(format2.format(item.getOm().totalAtOrder.doubleValue() / (unitMultiplierAmount.doubleValue())));
+                    setText(format2.format(item.doubleValue() / (unitMultiplierAmount.doubleValue())));
                 }
             }
         });
@@ -2630,6 +2666,7 @@ public class NewGUI implements GUIHook {
             }
         });
         obRecentDirection.setCellFactory(param -> new SBListCellBuilder());
+
     }
 
     private void setupUpdateThreads() {
@@ -2877,47 +2914,48 @@ public class NewGUI implements GUIHook {
 
         ChangeListener<Color> cpListener = (observable, oldValue, newValue) -> {
             if (colorCombos.getSelectionModel().getSelectedItem().getText().contains("Primary Color")) {
-                menuHamburger.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
+                Background primBack = new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY));
+                menuHamburger.setBackground(primBack);
 
-                vb.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
+                vb.setBackground(primBack);
 
-                sendButton.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
-                loadTransaction.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
-                copyAddress.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
-                copySelectedAdd.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
-                copyPublicKey.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
-                startMining.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
+                sendButton.setBackground(primBack);
+                loadTransaction.setBackground(primBack);
+                copyAddress.setBackground(primBack);
+                copySelectedAdd.setBackground(primBack);
+                copyPublicKey.setBackground(primBack);
+                startMining.setBackground(primBack);
                 String color = colorPicker.getValue().toString().replace("0x", "");
                 color = "#" + color;
                 miningIntesity.setStyle("-jfx-default-thumb:" + color);
-                createAddress.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
-                saveMSAddress.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
-                loadMSAddress.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
-                deleteAddress.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
-                setSpendAddress.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
-                changePassword.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
-                backToBE.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
-                backToEx.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
-                nextBlock.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
-                previousBlock.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
-                goBE.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
-                poolConnect.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
-                poolDisconnect.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
-                resetColors.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
+                createAddress.setBackground(primBack);
+                saveMSAddress.setBackground(primBack);
+                loadMSAddress.setBackground(primBack);
+                deleteAddress.setBackground(primBack);
+                setSpendAddress.setBackground(primBack);
+                changePassword.setBackground(primBack);
+                backToBE.setBackground(primBack);
+                backToEx.setBackground(primBack);
+                nextBlock.setBackground(primBack);
+                previousBlock.setBackground(primBack);
+                goBE.setBackground(primBack);
+                poolConnect.setBackground(primBack);
+                poolDisconnect.setBackground(primBack);
+                resetColors.setBackground(primBack);
                 exchangeBuy.setBackground(new Background(new BackgroundFill(Color.valueOf("#18BC9C"), CornerRadii.EMPTY, Insets.EMPTY)));
-                orderHistory.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
-                limitBuy.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
-                marketBuy.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
+                orderHistory.setBackground(primBack);
+                limitBuy.setBackground(primBack);
+                marketBuy.setBackground(primBack);
                 exchangeSell.setBackground(new Background(new BackgroundFill(Color.valueOf("#c84128"), CornerRadii.EMPTY, Insets.EMPTY)));
                 sellLabel.setTextFill(Color.valueOf("#c84128"));
                 buyLabel.setTextFill(Color.valueOf("#18BC9C"));
                 poolDynamicFeeSlider.setStyle("-jfx-default-thumb:" + color);
                 payoutSlider.setStyle("-jfx-default-thumb:" + color);
-                addKeyBtn.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
-                singleSig.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
-                multiSig.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
-                clearKeys.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
-                exportTransactions.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
+                addKeyBtn.setBackground(primBack);
+                singleSig.setBackground(primBack);
+                multiSig.setBackground(primBack);
+                clearKeys.setBackground(primBack);
+                exportTransactions.setBackground(primBack);
                 ki.setStringSetting(StringSettings.PRIMARY_COLOR, color);
 
                 //miningIntesity.getClip().setStyle("-fx-background-color:"+color);

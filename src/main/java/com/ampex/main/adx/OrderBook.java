@@ -4,28 +4,38 @@ import amp.HeadlessPrefixedAmplet;
 import com.ampex.amperabase.IAddress;
 import com.ampex.main.IKi;
 import com.ampex.main.Ki;
+import com.ampex.main.data.utils.WritablePair;
 import database.XodusAmpMap;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.ObservableMap;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.stream.Collectors;
 
 public class OrderBook {
 
-    private volatile ObservableList<Order> buys = FXCollections.observableArrayList(new CopyOnWriteArrayList<>());
-    private volatile ObservableList<Order> sells = FXCollections.observableArrayList(new CopyOnWriteArrayList<>());
-    private volatile ObservableList<Order> matched = FXCollections.observableArrayList(new CopyOnWriteArrayList<>());
+    private volatile List<Order> buys = new ArrayList<>();
+    private volatile List<Order> sells = new ArrayList<>();
+    private volatile ObservableList<Order> matched = FXCollections.observableArrayList();
     private XodusAmpMap obMap = new XodusAmpMap("ob");
     private List<ExchangeData> data = new ArrayList<>();
     private List<String> matchedOrders = new ArrayList<>();
     private boolean firstRun = false;
-    private volatile ObservableList<Order> active = FXCollections.observableArrayList(new CopyOnWriteArrayList<>());
+    private volatile ObservableList<Order> active = FXCollections.observableArrayList();
     private IKi ki;
     private boolean sorted = false;
+    //private ObservableMap<BigInteger,WritablePair<BigInteger,BigInteger>> buyDepthMap = FXCollections.observableMap(new HashMap<>());
+
+    //private ObservableMap<BigInteger,WritablePair<BigInteger,BigInteger>> sellDepthMap = FXCollections.observableMap(new HashMap<>());
+
+    private DepthBook buyDepth = new DepthBook();
+    private DepthBook sellDepth = new DepthBook();
+
     public OrderBook(IKi ki) {
         this.ki = ki;
     }
@@ -109,11 +119,11 @@ public class OrderBook {
         }
     }
 
-    public ObservableList<Order> buys() {
+    public List<Order> buys() {
         return buys;
     }
 
-    public ObservableList<Order> sells() {
+    public List<Order> sells() {
         return sells;
     }
 
@@ -226,48 +236,59 @@ public class OrderBook {
         addData(amount, price, System.currentTimeMillis());
     }
 
+    private final Object sync = new Object();
     public void sort() {
 
         if(!ki.getOptions().nogui) {
             Platform.runLater(new Runnable() {
                 @Override
                 public void run() {
-                    buys.sort(new OrderComparator(true));
-                    BigInteger totalB = BigInteger.ZERO;
-                    for (Order b : buys) {
-                        totalB = totalB.add(b.amountOnOffer());
-                        b.getOm().totalAtOrder = new BigInteger(totalB.toByteArray());
-                    }
-                    sells.sort(new OrderComparator(false));
-                    BigInteger totalS = BigInteger.ZERO;
-                    for (Order s : sells) {
-                        totalS = totalS.add(s.amountOnOffer());
-                        s.getOm().totalAtOrder = new BigInteger(totalS.toByteArray());
-                    }
-                    sorted = true;
-                    if (matched.size() > 10_000) {
-                        matched.remove(10_000, matched.size() - 1);
-                    }
+                    doSort();
                 }
             });
         }else{
-            buys.sort(new OrderComparator(true));
-            BigInteger totalB = BigInteger.ZERO;
-            for (Order b : buys) {
-                totalB = totalB.add(b.amountOnOffer());
-                b.getOm().totalAtOrder = new BigInteger(totalB.toByteArray());
-            }
-            sells.sort(new OrderComparator(false));
-            BigInteger totalS = BigInteger.ZERO;
-            for (Order s : sells) {
-                totalS = totalS.add(s.amountOnOffer());
-                s.getOm().totalAtOrder = new BigInteger(totalS.toByteArray());
-            }
-            sorted = true;
-            if (matched.size() > 10_000) {
-                matched.remove(10_000, matched.size() - 1);
+            doSort();
+        }
+    }
+
+
+    private void doSort()
+    {
+        buys.sort(new OrderComparator(true));
+        /*
+        BigInteger totalB = BigInteger.ZERO;
+        for (Order b : buys) {
+            totalB = totalB.add(b.amountOnOffer());
+            b.getOm().totalAtOrder = new BigInteger(totalB.toByteArray());
+        }
+        */
+        buyDepth.rebuild(buys);
+
+        sells.sort(new OrderComparator(false));
+        /*
+        BigInteger totalS = BigInteger.ZERO;
+        for (Order s : sells) {
+            totalS = totalS.add(s.amountOnOffer());
+            s.getOm().totalAtOrder = new BigInteger(totalS.toByteArray());
+        }
+        */
+        sellDepth.rebuild(sells);
+        sorted = true;
+        if (matched.size() > 10_000) {
+            synchronized (sync) {
+                //TODO fix this, make matched not an observable list, probably active too
+                matched = FXCollections.observableArrayList(matched.stream().limit(10_000).collect(Collectors.toList()));
             }
         }
+    }
+
+    public DepthBook getBuyDepthBook()
+    {
+        return buyDepth;
+    }
+    public DepthBook getSellDepth()
+    {
+        return sellDepth;
     }
 
     public void close() {
@@ -395,10 +416,10 @@ public class OrderBook {
                 }
             });
         }else{
-            new Thread(() -> {
+
                 matched.add(0,order);
                 addData(order.amountOnOffer(),order.unitPrice());
-            }).start();
+
         }
 
     }
