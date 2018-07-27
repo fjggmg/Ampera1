@@ -62,45 +62,6 @@
                     <center>
                         <StackPane prefHeight="345.0" prefWidth="887.0" BorderPane.alignment="CENTER">
                             <children>
-                                <Pane fx:id="settingsPane" prefHeight="200.0" prefWidth="200.0" visible="false">
-                                    <children>
-                              <HBox layoutX="14.0" layoutY="4.0">
-                                 <children>
-                                    <VBox spacing="10.0">
-                                       <children>
-                                          <HBox spacing="20.0">
-                                             <children>
-                                                          <JFXComboBox fx:id="colorCombos" prefHeight="25.0" prefWidth="165.0" styleClass="custom-color-picker" stylesheets="@text-style.css" />
-                                                          <JFXColorPicker fx:id="colorPicker" stylesheets="@cpstyle.css" />
-                                                          <JFXButton fx:id="resetColors" prefHeight="32.0" prefWidth="123.0" text="Reset Colors" />
-                                             </children>
-                                          </HBox>
-                                                    <HBox alignment="BOTTOM_LEFT" spacing="5.0">
-                                                        <children>
-                                                            <VBox spacing="15.0">
-                                                                <children>
-                                                      <Label text="Change Password:" />
-                                                                    <JFXPasswordField fx:id="cpCurrent" labelFloat="true" promptText="CurrentPassword" />
-                                                                    <JFXPasswordField fx:id="cpNew" labelFloat="true" promptText="New Password" />
-                                                                    <JFXPasswordField fx:id="cpConfirm" labelFloat="true" promptText="Confirm Password" />
-                                                                </children>
-                                                            </VBox>
-                                                            <JFXButton fx:id="changePassword" prefHeight="32.0" prefWidth="180.0" text="Change Password" />
-                                                        </children>
-                                                    </HBox>
-                                       </children>
-                                    </VBox>
-                                              <VBox>
-                                                  <children>
-                                                      <JFXToggleButton fx:id="debugMode" text="Debug Mode" />
-                                                      <JFXToggleButton fx:id="highSecurity" text="High Security Mode" />
-                                                      <JFXToggleButton fx:id="requirePassword" selected="true" text="Require Password" />
-                                                  </children>
-                                              </VBox>
-                                 </children>
-                              </HBox>
-                                    </children>
-                                </Pane>
                                 <Pane fx:id="walletPane" prefHeight="200.0" prefWidth="200.0" visible="false">
                                     <children>
                               <VBox layoutX="14.0" layoutY="14.0" spacing="5.0">
@@ -675,6 +636,47 @@
                                 <Pane fx:id="axcPane" prefHeight="200.0" prefWidth="200.0" visible="false">
                                     <children>
                                         <WebView fx:id="axcWeb" prefHeight="539.0" prefWidth="1060.0" />
+                                    </children>
+                                </Pane>
+                                <Pane fx:id="settingsPane" prefHeight="200.0" prefWidth="200.0" visible="false">
+                                    <children>
+                              <HBox layoutX="14.0" layoutY="4.0">
+                                 <children>
+                                    <VBox spacing="10.0">
+                                       <children>
+                                          <HBox spacing="20.0">
+                                             <children>
+                                                          <JFXComboBox fx:id="colorCombos" prefHeight="25.0" prefWidth="165.0" styleClass="custom-color-picker" stylesheets="@text-style.css" />
+                                                          <JFXColorPicker fx:id="colorPicker" stylesheets="@cpstyle.css" />
+                                                          <JFXButton fx:id="resetColors" prefHeight="32.0" prefWidth="123.0" text="Reset Colors" />
+                                             </children>
+                                          </HBox>
+                                                    <HBox alignment="BOTTOM_LEFT" prefHeight="166.0" prefWidth="428.0" spacing="5.0">
+                                                        <children>
+                                                            <VBox spacing="15.0">
+                                                                <children>
+                                                      <Label text="Change Password:" />
+                                                                    <JFXPasswordField fx:id="cpCurrent" labelFloat="true" promptText="CurrentPassword" />
+                                                                    <JFXPasswordField fx:id="cpNew" labelFloat="true" promptText="New Password" />
+                                                                    <JFXPasswordField fx:id="cpConfirm" labelFloat="true" promptText="Confirm Password" />
+                                                                </children>
+                                                            </VBox>
+                                                            <JFXButton fx:id="changePassword" prefHeight="32.0" prefWidth="180.0" text="Change Password" />
+                                                        </children>
+                                                    </HBox>
+                                       </children>
+                                    </VBox>
+                                              <VBox>
+                                                  <children>
+                                                      <JFXToggleButton fx:id="debugMode" text="Debug Mode" />
+                                                      <JFXToggleButton fx:id="highSecurity" text="High Security Mode" />
+                                                      <JFXToggleButton fx:id="requirePassword" selected="true" text="Require Password" />
+                                          <Label text="Starting Page:" />
+                                          <JFXComboBox fx:id="startPage" prefHeight="31.0" prefWidth="211.0" />
+                                                  </children>
+                                              </VBox>
+                                 </children>
+                              </HBox>
                                     </children>
                                 </Pane>
                             </children>

@@ -194,6 +194,7 @@ public class NewGUI implements GUIHook {
     public WebView axcWeb;
     public JFXListView<String> beTransactions;
     public JFXButton exportTransactions;
+    public JFXComboBox<Label> startPage;
     private CandlestickGraph exchangeGraph;
     public VBox passwordVbox;
     public VBox exchangeGraphBox;
@@ -2980,6 +2981,40 @@ public class NewGUI implements GUIHook {
         };
         colorPicker.valueProperty().addListener(cpListener);
         colorPicker.setValue(Color.valueOf("#18BC9C"));
+        int i = 0;
+        for(PageNames name:PageNames.values())
+        {
+
+            startPage.getItems().add(new Label(name.name().toLowerCase()));
+            if(ki.getStringSetting(StringSettings.START_PAGE).equals(name.name()))
+                startPage.getSelectionModel().select(i);
+            i++;
+        }
+
+        startPage.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<Label>() {
+            @Override
+            public void changed(ObservableValue<? extends Label> observable, Label oldValue, Label newValue) {
+                ki.setStringSetting(StringSettings.START_PAGE,newValue.getText().toUpperCase());
+            }
+        });
+        switch (PageNames.valueOf(ki.getStringSetting(StringSettings.START_PAGE)))
+        {
+            case WALLET:
+                walletPane.setVisible(true);
+                break;
+            case MINER:
+                miningTab.setVisible(true);
+                break;
+            case POOL:
+                poolPane.setVisible(true);
+                break;
+            case ADDRESS:
+                addressPane.setVisible(true);
+                break;
+            case SETTINGS:
+                settingsPane.setVisible(true);
+                break;
+        }
     }
 
     private void setupPoolClientPane() {

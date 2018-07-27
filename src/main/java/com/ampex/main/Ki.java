@@ -7,6 +7,7 @@ import com.ampex.amperanet.packets.DifficultyRequest;
 import com.ampex.amperanet.packets.TransactionDataRequest;
 import com.ampex.main.GUI.FXGUI;
 import com.ampex.main.GUI.NewGUI;
+import com.ampex.main.GUI.PageNames;
 import com.ampex.main.adx.ExchangeManager;
 import com.ampex.main.benchmarking.SyntheticTransactionBenchmark;
 import com.ampex.main.blockchain.*;
@@ -181,19 +182,23 @@ public class Ki extends Thread implements IKi, IKiAPI {
 
                 settings.put(Settings.PPLNS_SERVER.getKey(), false);
             }
-            if (getStringSetting(StringSettings.POOL_FEE) == null)
-            stringSettings.put(StringSettings.POOL_FEE.getKey(), "1");
-            if (getStringSetting(StringSettings.POOL_STATIC_PPS) == null)
-                stringSettings.put(StringSettings.POOL_STATIC_PPS.getKey(), "100");
-            if (getStringSetting(StringSettings.PRIMARY_COLOR) == null)
-                stringSettings.put(StringSettings.PRIMARY_COLOR.getKey(), "#18BC9C");
-            if (getStringSetting(StringSettings.SECONDARY_COLOR) == null)
-                stringSettings.put(StringSettings.SECONDARY_COLOR.getKey(), "#252830");
-            if (getStringSetting(StringSettings.POOL_PAYTO) == null)
-                stringSettings.put(StringSettings.POOL_PAYTO.getKey(), "");
-            if (getStringSetting(StringSettings.POOL_SERVER) == null)
-                stringSettings.put(StringSettings.POOL_SERVER.getKey(), "ampextech.ddns.net");
+
         }
+        //TODO moved the following out of the if statement above, may move the rest out as well, this all makes sure it's not overwriting, so no need to check if we're on the same version or not....will need to investigate further
+        if (getStringSetting(StringSettings.POOL_FEE) == null)
+            stringSettings.put(StringSettings.POOL_FEE.getKey(), "1");
+        if (getStringSetting(StringSettings.POOL_STATIC_PPS) == null)
+            stringSettings.put(StringSettings.POOL_STATIC_PPS.getKey(), "100");
+        if (getStringSetting(StringSettings.PRIMARY_COLOR) == null)
+            stringSettings.put(StringSettings.PRIMARY_COLOR.getKey(), "#18BC9C");
+        if (getStringSetting(StringSettings.SECONDARY_COLOR) == null)
+            stringSettings.put(StringSettings.SECONDARY_COLOR.getKey(), "#252830");
+        if (getStringSetting(StringSettings.POOL_PAYTO) == null)
+            stringSettings.put(StringSettings.POOL_PAYTO.getKey(), "");
+        if (getStringSetting(StringSettings.POOL_SERVER) == null)
+            stringSettings.put(StringSettings.POOL_SERVER.getKey(), "ampextech.ddns.net");
+        if (getStringSetting(StringSettings.START_PAGE) == null)
+            stringSettings.put(StringSettings.START_PAGE.getKey(),PageNames.WALLET.name());
         //endregion
         scriptMan = new ScriptManager(bce8, bce16, this);
         scriptMan.loadScripts(ScriptManager.SCRIPTS_FOLDER);

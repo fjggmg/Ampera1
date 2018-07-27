@@ -9,7 +9,8 @@ public enum StringSettings {
     PRIMARY_COLOR("primaryColor"),
     SECONDARY_COLOR("secondaryColor"),
     POOL_PAYTO("poolPayto"),
-    POOL_SERVER("poolServer");
+    POOL_SERVER("poolServer"),
+    START_PAGE("startPage");
 
     private final String key;
 
