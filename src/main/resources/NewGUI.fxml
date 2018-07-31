@@ -62,6 +62,22 @@
                     <center>
                         <StackPane prefHeight="345.0" prefWidth="887.0" BorderPane.alignment="CENTER">
                             <children>
+                        <Pane fx:id="addressBookPane" prefHeight="200.0" prefWidth="200.0" visible="false">
+                           <children>
+                              <HBox layoutX="6.0" layoutY="9.0" prefHeight="525.0" prefWidth="1025.0">
+                                 <children>
+                                    <JFXListView prefHeight="525.0" prefWidth="5000.0" />
+                                    <VBox prefWidth="4400.0">
+                                       <children>
+                                          <JFXButton prefHeight="31.0" prefWidth="5000.0" text="Add New" />
+                                          <JFXButton prefHeight="31.0" prefWidth="5000.0" text="Delete" />
+                                          <JFXButton prefHeight="31.0" prefWidth="5000.0" text="Copy" />
+                                       </children>
+                                    </VBox>
+                                 </children>
+                              </HBox>
+                           </children>
+                        </Pane>
                                 <Pane fx:id="walletPane" prefHeight="200.0" prefWidth="200.0" visible="false">
                                     <children>
                               <VBox layoutX="14.0" layoutY="14.0" spacing="5.0">
@@ -307,16 +323,34 @@
                                 </Pane>
                                 <Pane fx:id="poolPane" prefHeight="200.0" prefWidth="200.0" visible="false">
                                     <children>
-                                        <JFXTextField fx:id="ipField" labelFloat="true" layoutX="14.0" layoutY="60.0" promptText="Pool IP*" text="ampextech.ddns.net" />
-                                        <JFXButton fx:id="poolConnect" layoutX="175.0" layoutY="60.0" prefHeight="25.0" prefWidth="91.0" text="Connect" />
-                                        <Label fx:id="shares" layoutX="14.0" layoutY="123.0" text="Accepted Shares - " />
-                                        <Label fx:id="nextPayment" layoutX="14.0" layoutY="140.0" text="Next Payment - " />
-                                        <JFXTextField fx:id="paytoAddress" labelFloat="true" layoutX="14.0" layoutY="14.0" promptText="Payto Address*" />
-                                        <Label fx:id="poolConnected" layoutX="301.0" layoutY="64.0" text="Not Connected" />
-                                        <JFXButton fx:id="poolDisconnect" layoutX="175.0" layoutY="98.0" prefHeight="25.0" prefWidth="91.0" text="Disconnect" />
-                                        <Label fx:id="localShares" layoutX="14.0" layoutY="157.0" text="Local Shares -" />
-                                        <JFXToggleButton fx:id="autoMine" layoutX="415.0" layoutY="44.0" text="Auto-Mine on reconnect" />
-                                        <JFXToggleButton fx:id="pplnsClient" layoutX="415.0" layoutY="94.0" text="PPLNS" textFill="WHITE" />
+                              <HBox layoutX="14.0" layoutY="14.0" spacing="10.0">
+                                 <children>
+                                    <VBox prefHeight="196.0" prefWidth="253.0" spacing="20.0">
+                                       <children>
+                                                    <JFXTextField fx:id="paytoAddress" labelFloat="true" promptText="Payto Address*" />
+                                                    <JFXTextField fx:id="ipField" labelFloat="true" promptText="Pool IP*" text="ampextech.ddns.net" />
+                                                    <Label fx:id="shares" prefWidth="5000.0" text="Accepted Shares - " />
+                                                    <Label fx:id="nextPayment" prefWidth="5000.0" text="Next Payment - " />
+                                                    <Label fx:id="localShares" prefWidth="5000.0" text="Local Shares -" />
+                                          <Label fx:id="dayEarnings" prefWidth="5000.0" text="Estimated 24h earnings -" />
+                                          <Label fx:id="clientPoolFee" text="Pool Fee" />
+                                       </children>
+                                    </VBox>
+                                    <VBox prefHeight="196.0" prefWidth="149.0" spacing="20.0">
+                                       <children>
+                                                    <JFXButton fx:id="poolConnect" prefHeight="31.0" prefWidth="165.0" text="Connect" />
+                                                    <JFXButton fx:id="poolDisconnect" prefHeight="31.0" prefWidth="157.0" text="Disconnect" />
+                                       </children>
+                                    </VBox>
+                                    <VBox>
+                                       <children>
+                                                    <Label fx:id="poolConnected" text="Not Connected" />
+                                                    <JFXToggleButton fx:id="autoMine" text="Auto-Mine on reconnect" textFill="WHITE" />
+                                                    <JFXToggleButton fx:id="pplnsClient" text="PPLNS" textFill="WHITE" />
+                                       </children>
+                                    </VBox>
+                                 </children>
+                              </HBox>
                                     </children>
                                 </Pane>
                                 <Pane fx:id="poolRelay" prefHeight="200.0" prefWidth="200.0" visible="false">

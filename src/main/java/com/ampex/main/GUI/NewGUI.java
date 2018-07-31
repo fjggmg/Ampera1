@@ -195,6 +195,8 @@ public class NewGUI implements GUIHook {
     public JFXListView<String> beTransactions;
     public JFXButton exportTransactions;
     public JFXComboBox<Label> startPage;
+    public Label dayEarnings;
+    public Label clientPoolFee;
     private CandlestickGraph exchangeGraph;
     public VBox passwordVbox;
     public VBox exchangeGraphBox;
@@ -1417,9 +1419,23 @@ public class NewGUI implements GUIHook {
         this.startHeight = startHeight;
     }
 
-    public void updatePoolStats(long currentShares, double currentPPS) {
+    private double poolFee;
+
+    public void updatePoolStats(long currentShares, double currentPPS, double poolFee) {
         this.currentShares = currentShares;
         this.currentPPS = currentPPS;
+        this.poolFee = poolFee;
+        Platform.runLater(new Runnable() {
+            @Override
+            public void run() {
+                shares.setText("Accepted Shares - " + currentShares);
+
+                nextPayment.setText("Next Payment - " + format2.format(((currentShares * currentPPS)) / 100_000_000));
+
+                clientPoolFee.setText("Pool Fee - " + ((poolFee == -1) ? "N/A" : poolFee) + "%");
+                dayEarnings.setText("Estimated 24h earnings - " + (format2.format(60*60*24*(currentPPS * (ki.getMinerMan().cumulativeHashrate()/Math.pow(16,8))))));
+            }
+        });
     }
 
     private void setupMiningPane() {
@@ -2803,9 +2819,7 @@ public class NewGUI implements GUIHook {
                                 startMining.setText("Start Mining");
                             }
 
-                                shares.setText("Accepted Shares - " + currentShares);
-                                localShares.setText("Local Shares - " + localShare);
-                                nextPayment.setText("Next Payment - " + format2.format(((currentShares * currentPPS)) / 100_000_000));
+                            localShares.setText("Local Shares - " + localShare);
                             if (ki.getPoolNet().getConnections().size() > 0) {
                                     poolConnected.setText("Connected");
                                     poolConnect.setDisable(true);

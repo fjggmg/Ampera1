@@ -3,6 +3,8 @@ package com.ampex.main.network.pool;
 import com.ampex.amperabase.AmpBuildable;
 import com.ampex.amperabase.IConnectionManager;
 import com.ampex.main.IKi;
+import com.ampex.main.Settings;
+import com.ampex.main.StringSettings;
 import com.ampex.main.network.GlobalPacketQueuer;
 import com.ampex.main.network.INetworkManager;
 import com.ampex.main.network.logic.Client;
@@ -190,6 +192,12 @@ public class PoolNetMan extends Thread implements INetworkManager {
                                 continue;
                             }
                             su.currentPPS = ki.getPoolManager().getCurrentPayPerShare();
+                            //should be safe cast since we're using it properly, but may update later if some of this becomes the public api
+                            if(!ki.getSetting(Settings.DYNAMIC_FEE)) {
+                                su.poolFee = -1;
+                            }else {
+                                su.poolFee = Double.parseDouble(ki.getStringSetting(StringSettings.POOL_FEE));
+                            }
 
                             conn.sendPacket(su);
                         }

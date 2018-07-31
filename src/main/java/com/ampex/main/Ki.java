@@ -168,7 +168,7 @@ public class Ki extends Thread implements IKi, IKiAPI {
                 getSetting(Settings.AUTO_MINE);
             } catch (Exception e) {
 
-                settings.put(Settings.AUTO_MINE.getKey(), false);
+                settings.put(Settings.AUTO_MINE.getKey(), true);
             }
             try {
                 getSetting(Settings.PPLNS_CLIENT);
@@ -186,7 +186,7 @@ public class Ki extends Thread implements IKi, IKiAPI {
         }
         //TODO moved the following out of the if statement above, may move the rest out as well, this all makes sure it's not overwriting, so no need to check if we're on the same version or not....will need to investigate further
         if (getStringSetting(StringSettings.POOL_FEE) == null)
-            stringSettings.put(StringSettings.POOL_FEE.getKey(), "1");
+            stringSettings.put(StringSettings.POOL_FEE.getKey(), "0.25");
         if (getStringSetting(StringSettings.POOL_STATIC_PPS) == null)
             stringSettings.put(StringSettings.POOL_STATIC_PPS.getKey(), "100");
         if (getStringSetting(StringSettings.PRIMARY_COLOR) == null)

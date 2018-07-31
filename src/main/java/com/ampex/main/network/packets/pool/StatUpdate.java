@@ -9,13 +9,14 @@ public class StatUpdate implements PoolPacket {
 
     public long shares;
     public double currentPPS;
+    public double poolFee;
 
     @Override
     public void process(IKi ki, IConnectionManager connMan) {
         ki.debug("===============Received stat update=======================");
         ki.debug("shares: " + shares);
         ki.debug("pps: " + currentPPS);
-        ki.getGUIHook().updatePoolStats(shares, currentPPS);
+        ki.getGUIHook().updatePoolStats(shares, currentPPS,poolFee);
     }
 
     @Override
@@ -24,6 +25,7 @@ public class StatUpdate implements PoolPacket {
             HeadlessAmplet ha = HeadlessAmplet.create(serialized);
             shares = ha.getNextLong();
             currentPPS = ha.getNextDouble();
+            poolFee = ha.getNextDouble();
         } catch (RuntimeException re) {
             throw re;
         } catch (Exception e) {
@@ -36,6 +38,7 @@ public class StatUpdate implements PoolPacket {
         HeadlessAmplet ha = HeadlessAmplet.create();
         ha.addElement(shares);
         ha.addElement(currentPPS);
+        ha.addElement(poolFee);
         return ha.serializeToBytes();
     }
 }
