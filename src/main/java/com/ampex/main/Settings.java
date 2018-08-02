@@ -10,7 +10,8 @@ public enum Settings {
     DYNAMIC_FEE("dynamicFee"),
     AUTO_MINE("autoMine"),
     PPLNS_SERVER("pplnsServer"),
-    PPLNS_CLIENT("pplnsClient");
+    PPLNS_CLIENT("pplnsClient"),
+    SHOWN_WARNING("shownWarning");
     private final String key;
 
     Settings(String key) {

@@ -70,10 +70,11 @@ public class Order implements IAmpByteSerializable {
         this.timestamp = BigInteger.valueOf(timestamp);
     }
 
+    private static boolean fxAvailable = true;
     public void reduceAmount(BigInteger amount) {
         amountOnOffer = amountOnOffer.subtract(amount);
         //using static reference to god object, need to fix this
-        if(!Ki.getInstance().getOptions().nogui)
+        if(!Ki.getInstance().getOptions().nogui && fxAvailable)
         try {
             Platform.runLater(new Runnable() {
                 @Override
@@ -86,6 +87,7 @@ public class Order implements IAmpByteSerializable {
             throw re;
         } catch (Exception e)
         {
+            fxAvailable = false;
             //fail silently because FX is not available
         }
 

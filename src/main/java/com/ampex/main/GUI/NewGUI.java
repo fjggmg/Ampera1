@@ -56,6 +56,7 @@ import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.chart.*;
@@ -202,6 +203,12 @@ public class NewGUI implements GUIHook {
     public Label latencyUnder;
     public Label hashrateUnder;
     public VBox nonMenuVbox;
+    public Pane addressBookPane;
+    public JFXListView addBookList;
+    public JFXButton addNewBook;
+    public JFXButton deleteBook;
+    public JFXButton copyBook;
+    public StackPane mainStackPane;
     private CandlestickGraph exchangeGraph;
     public VBox passwordVbox;
     public VBox exchangeGraphBox;
@@ -801,8 +808,38 @@ public class NewGUI implements GUIHook {
         if (!ki.getOptions().pool) {
             vb.getChildren().add(buildMainButton("Wallet", "/Wallet.png", 0, 0, content, walletPane, 1,true));
             vb.getChildren().add(buildMainButton("Address", "/home.png", 100, 0, content, addressPane, 1,false));
-            if(!ki.getOptions().lite)
-            vb.getChildren().add(buildMainButton("ADX", "/exchange.png", 200, 4, content, exchangePane, 1,false));
+            vb.getChildren().add(buildMainButton("Book", "/addressbook.png", 200, 2, content, addressBookPane, 1,false));
+            if(!ki.getOptions().lite) {
+
+                AnchorPane pane = null;
+                try {
+                    pane = FXMLLoader.load(NewGUI.class.getResource("/ADXDialogue.fxml"));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                AnchorPane dpane = pane;
+                JFXDialogLayout layout = new JFXDialogLayout();
+                if(dpane != null)
+                {
+                    layout.setBackground(new Background(new BackgroundFill(Color.valueOf(ki.getStringSetting(StringSettings.SECONDARY_COLOR)),CornerRadii.EMPTY,Insets.EMPTY)));
+                    layout.setHeading(new Label("Warning"));
+                    layout.setBody(dpane);
+                }
+                JFXDialog dialog = new JFXDialog();
+                dialog.setContent(layout);
+                dialog.setOverlayClose(false);
+                JFXButton button = buildMainButton("ADX", "/exchange.png", 200, 4, content, exchangePane, 1, false);
+                button.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+                    @Override
+                    public void handle(MouseEvent event) {
+                        if(!ki.getSetting(Settings.SHOWN_WARNING)) {
+                            dialog.show(mainStackPane);
+                            ki.setSetting(Settings.SHOWN_WARNING, true);
+                        }
+                    }
+                });
+                vb.getChildren().add(button);
+            }
             vb.getChildren().add(buildMainButton("AXC", "/axclogo.png", 300, 5, content, axcPane, 1.2,true));
             if (!ki.getOptions().poolRelay)
                 vb.getChildren().add(buildMainButton("Pool", "/pool.png", 400, 3, content, poolPane, 1,false));
@@ -2372,13 +2409,13 @@ public class NewGUI implements GUIHook {
                     return;
                 }
                 if (limit) {
-                    //try {
+                    try {
                         stopPrice = new BigDecimal(exPrice.getText()).multiply(BigDecimal.valueOf(unitMultiplierPrice.doubleValue())).toBigInteger();
-                        //if (stopPrice.compareTo(BigInteger.valueOf(500)) < 0) throw new Exception();
-                    /*} catch (Exception e) {
+                        if (stopPrice.compareTo(BigInteger.ZERO) < 0) throw new Exception();
+                    } catch (Exception e) {
                         notification("Invalid Price");
                         return;
-                    }*/
+                    }
                 }
 
                 OrderStatus status = ki.getExMan().placeOrder(true, amount, stopPrice, Pairs.byName(pairs.getSelectionModel().getSelectedItem().getText()), limit);
@@ -2411,14 +2448,14 @@ public class NewGUI implements GUIHook {
                     return;
                 }
                 if (limit) {
-                    //try {
+                    try {
                         stopPrice = new BigDecimal(exPrice.getText()).multiply(BigDecimal.valueOf(unitMultiplierPrice.doubleValue())).toBigInteger();
 
-                        //if (stopPrice.compareTo(BigInteger.valueOf(500)) < 0) throw new Exception();
-                    /*&} catch (Exception e) {
+                        if (stopPrice.compareTo(BigInteger.ZERO) < 0) throw new Exception();
+                    } catch (Exception e) {
                         notification("Invalid Price");
                         return;
-                    }*/
+                    }
                 }
                 OrderStatus status = ki.getExMan().placeOrder(false, amount, stopPrice, Pairs.byName(pairs.getSelectionModel().getSelectedItem().getText()), limit);
                 if (!status.succeeded()) {
@@ -2956,7 +2993,9 @@ public class NewGUI implements GUIHook {
                 menuHamburger.setBackground(primBack);
 
                 vb.setBackground(primBack);
-
+                addNewBook.setBackground(primBack);
+                deleteBook.setBackground(primBack);
+                copyBook.setBackground(primBack);
                 sendButton.setBackground(primBack);
                 loadTransaction.setBackground(primBack);
                 copyAddress.setBackground(primBack);
@@ -3158,10 +3197,47 @@ public class NewGUI implements GUIHook {
         });
     }
 
+    private void setupAddressBook()
+    {
+        VBox vbox = null;
+        try {
+            vbox = FXMLLoader.load(NewGUI.class.getResource("/AddressBookDialog.fxml"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        if(vbox == null) return;
+        JFXButton add = (JFXButton) vbox.getChildrenUnmodifiable().get(2);
+        JFXTextField nameField = (JFXTextField) vbox.getChildrenUnmodifiable().get(0);
+        JFXTextField addField = (JFXTextField) vbox.getChildrenUnmodifiable().get(1);
+        add.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                IAddress address = Address.decodeFromChain(addField.getText());
+                if(address == null){
+                    notification("Invalid address");
+                    return;
+                }
+                ki.getAddressBook().add(nameField.getText(),address);
+            }
+        });
+        JFXDialogLayout layout = new JFXDialogLayout();
+        layout.setBody(vbox);
+        JFXDialog dialog = new JFXDialog();
+        dialog.setContent(layout);
+
+        addNewBook.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+
+                dialog.show(mainStackPane);
+            }
+        });
+    }
     private void setupStandard() {
         setupSettingsPane();
         setupWalletPane();
         setupAddressPane();
+        setupAddressBook();
         setupMiningPane();
         setupAXCPane();
         setupADXPane();

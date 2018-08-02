@@ -57,6 +57,7 @@ public class SyncPage {
                         return;
                     }
                     if (Ki.getInstance().getChainMan().currentHeight().compareTo(Ki.getInstance().getStartHeight()) >= 0) {
+                        Ki.syncDone = true;
                         break;
                     }
                 }

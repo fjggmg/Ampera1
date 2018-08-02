@@ -1,14 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import java.lang.*?>
-<?import java.util.*?>
-<?import javafx.scene.*?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
+<?import com.jfoenix.controls.JFXButton?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.VBox?>
 
-<AnchorPane xmlns="http://javafx.com/javafx"
-            xmlns:fx="http://javafx.com/fxml"
-            fx:controller="ADXDialogue"
-            prefHeight="400.0" prefWidth="600.0">
-
+<AnchorPane prefHeight="400.0" prefWidth="600.0" style="-fx-background-color: #252830;" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.ampex.main.GUI.ADXDialog">
+   <children>
+      <VBox alignment="CENTER" spacing="50.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+         <children>
+            <Label prefHeight="266.0" prefWidth="553.0" text="The ADX is an experimental decentralized exchange.  Bugs are to be expected while the program is still in beta. This means you could lose ALL FUNDS you put onto the ADX AT ANY TIME. The makers of Ampera assume no responsibility for this, and you are trading at your own risk. Please report any bugs you find on the ADX. By clicking OK, you acknowledge this warning and accept responsibility for any problem you may run into on the ADX." textFill="WHITE" wrapText="true">
+               <padding>
+                  <Insets left="20.0" right="20.0" />
+               </padding>
+            </Label>
+            <JFXButton fx:id="okButton" style="-fx-background-color: #18BC9C;" text="OK" textFill="WHITE" />
+         </children>
+      </VBox>
+   </children>
 </AnchorPane>

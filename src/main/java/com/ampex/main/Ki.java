@@ -28,6 +28,7 @@ import com.ampex.main.pool.PoolData;
 import com.ampex.main.transactions.ITransMan;
 import com.ampex.main.transactions.TransactionManager;
 import com.ampex.main.transactions.TransactionManagerLite;
+import com.ampex.main.transactions.addresses.AddressBook;
 import com.ampex.main.transactions.addresses.AddressManager;
 import com.ampex.main.transactions.addresses.IAddMan;
 import com.ampex.main.transactions.scripting.ScriptManager;
@@ -55,21 +56,21 @@ import java.util.Properties;
 
 /**
  * Created by Bryan on 5/10/2017.
- *
+ * <p>
  * Copyright (C) 2017 Ampex Technologies LLC.
-
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation, either version 3 of the License, or
- (at your option) any later version.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with this program.  If not, see http://www.gnu.org/licenses/.
+ * <p>
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * <p>
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * <p>
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 public class Ki extends Thread implements IKi, IKiAPI {
 
@@ -101,6 +102,8 @@ public class Ki extends Thread implements IKi, IKiAPI {
     private ScriptManager scriptMan;
     private ExchangeManager exchangeMan;
     private BigInteger loadHeight;
+    private IAddressBook addressBook;
+
     public Ki(Options o) {
         Properties p = new Properties();
         try (InputStream is = Ki.class.getResourceAsStream("/proj.properties")) {
@@ -116,8 +119,7 @@ public class Ki extends Thread implements IKi, IKiAPI {
         }
 
         this.o = o;
-        if(o.benchmark)
-        {
+        if (o.benchmark) {
             SyntheticTransactionBenchmark stb = new SyntheticTransactionBenchmark();
             stb.numberOfTransactions = o.numberOfTransactions;
             stb.useWorstCaseScript = o.useWorstCase;
@@ -128,7 +130,7 @@ public class Ki extends Thread implements IKi, IKiAPI {
             stb.syntheticBench();
             return;
         }
-        settings  = new XodusStringBooleanMap("settings");
+        settings = new XodusStringBooleanMap("settings");
         stringSettings = new XodusStringMap("etc");
         System.setProperty("log4j.configurationFile", "log4j.xml");
         AmpLogging.startLogging(new AmpexLogger("Amp"));
@@ -138,52 +140,57 @@ public class Ki extends Thread implements IKi, IKiAPI {
         main = LogManager.getLogger("Ampera");
         main.info("Ampera starting up");
         //region settings shit
-        if (!settings.get(VERSION)) {
-            settings.put(VERSION, true);
-            try {
-                getSetting(Settings.DEBUG_MODE);
-            } catch (Exception e) {
+        settings.put(VERSION, true);
+        try {
+            getSetting(Settings.DEBUG_MODE);
+        } catch (Exception e) {
 
-                settings.put(Settings.DEBUG_MODE.getKey(), true);
-            }
-            try {
-                getSetting(Settings.HIGH_SECURITY);
-            } catch (Exception e) {
-
-                settings.put(Settings.HIGH_SECURITY.getKey(), false);
-            }
-            try {
-                getSetting(Settings.REQUIRE_PASSWORD);
-            } catch (Exception e) {
-
-                settings.put(Settings.REQUIRE_PASSWORD.getKey(), false);
-            }
-            try {
-                getSetting(Settings.DYNAMIC_FEE);
-            } catch (Exception e) {
-
-                settings.put(Settings.DYNAMIC_FEE.getKey(), true);
-            }
-            try {
-                getSetting(Settings.AUTO_MINE);
-            } catch (Exception e) {
-
-                settings.put(Settings.AUTO_MINE.getKey(), true);
-            }
-            try {
-                getSetting(Settings.PPLNS_CLIENT);
-            } catch (Exception e) {
-
-                settings.put(Settings.PPLNS_CLIENT.getKey(), false);
-            }
-            try {
-                getSetting(Settings.PPLNS_SERVER);
-            } catch (Exception e) {
-
-                settings.put(Settings.PPLNS_SERVER.getKey(), false);
-            }
-
+            settings.put(Settings.DEBUG_MODE.getKey(), true);
         }
+        try {
+            getSetting(Settings.HIGH_SECURITY);
+        } catch (Exception e) {
+
+            settings.put(Settings.HIGH_SECURITY.getKey(), false);
+        }
+        try {
+            getSetting(Settings.REQUIRE_PASSWORD);
+        } catch (Exception e) {
+
+            settings.put(Settings.REQUIRE_PASSWORD.getKey(), false);
+        }
+        try {
+            getSetting(Settings.DYNAMIC_FEE);
+        } catch (Exception e) {
+
+            settings.put(Settings.DYNAMIC_FEE.getKey(), true);
+        }
+        try {
+            getSetting(Settings.AUTO_MINE);
+        } catch (Exception e) {
+
+            settings.put(Settings.AUTO_MINE.getKey(), true);
+        }
+        try {
+            getSetting(Settings.PPLNS_CLIENT);
+        } catch (Exception e) {
+
+            settings.put(Settings.PPLNS_CLIENT.getKey(), false);
+        }
+        try {
+            getSetting(Settings.PPLNS_SERVER);
+        } catch (Exception e) {
+
+            settings.put(Settings.PPLNS_SERVER.getKey(), false);
+        }
+        try {
+            getSetting(Settings.SHOWN_WARNING);
+        } catch (Exception e) {
+
+            settings.put(Settings.SHOWN_WARNING.getKey(), false);
+        }
+
+
         //TODO moved the following out of the if statement above, may move the rest out as well, this all makes sure it's not overwriting, so no need to check if we're on the same version or not....will need to investigate further
         if (getStringSetting(StringSettings.POOL_FEE) == null)
             stringSettings.put(StringSettings.POOL_FEE.getKey(), "0.25");
@@ -198,7 +205,7 @@ public class Ki extends Thread implements IKi, IKiAPI {
         if (getStringSetting(StringSettings.POOL_SERVER) == null)
             stringSettings.put(StringSettings.POOL_SERVER.getKey(), "ampextech.ddns.net");
         if (getStringSetting(StringSettings.START_PAGE) == null)
-            stringSettings.put(StringSettings.START_PAGE.getKey(),PageNames.WALLET.name());
+            stringSettings.put(StringSettings.START_PAGE.getKey(), PageNames.WALLET.name());
         //endregion
         scriptMan = new ScriptManager(bce8, bce16, this);
         scriptMan.loadScripts(ScriptManager.SCRIPTS_FOLDER);
@@ -221,6 +228,7 @@ public class Ki extends Thread implements IKi, IKiAPI {
         if (addMan.getMainAdd() == null) {
             addMan.setMainAdd(addMan.getNewAdd(KeyType.ED25519, true));
         }
+        addressBook = new AddressBook();
         System.out.println("Main type: " + addMan.getMainAdd().getKeyType());
         exchangeMan = new ExchangeManager(this);
         if (o.relay) {
@@ -327,7 +335,7 @@ public class Ki extends Thread implements IKi, IKiAPI {
         debug("Stateman done");
 
         if (!o.relay || !o.poolRelay)
-        minerMan = new MinerManager(this, o.mDebug);
+            minerMan = new MinerManager(this, o.mDebug);
         //gui = MainGUI.guiFactory(this);
         debug("Starting GUI");
         guiThread = new Thread(() -> {
@@ -337,14 +345,17 @@ public class Ki extends Thread implements IKi, IKiAPI {
 
         });
 
+        if(o.lite) syncDone = true;
+
     }
 
     private volatile FXGUI guiRef;
     private Thread guiThread;
     boolean setupDone = false;
+    public static volatile boolean syncDone = false;
     @Override
     public void run() {
-        if(o.benchmark) return;
+        if (o.benchmark) return;
         if (!o.pool) {
             transMan.start();
         }
@@ -368,8 +379,8 @@ public class Ki extends Thread implements IKi, IKiAPI {
         if (o.poolRelay) {
             miningPool.start();
         }
-        if(!getOptions().relay)
-        poolNet.start();
+        if (!getOptions().relay)
+            poolNet.start();
         while (true) {
             if (o.relay || o.poolRelay) return;
             try {
@@ -377,7 +388,7 @@ public class Ki extends Thread implements IKi, IKiAPI {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            if (!setupDone && !o.relay) {
+            if (!setupDone && !o.relay && syncDone) {
                 if (getOptions().lite && !getNetMan().isDiffSet() && !getOptions().pool)
                     continue;
                 minerMan.setup();
@@ -388,10 +399,12 @@ public class Ki extends Thread implements IKi, IKiAPI {
                 Thread.sleep(250);
             } catch (InterruptedException e) {
                 e.printStackTrace();
+                return;
             }
 
         }
     }
+
     @Override
     public void setGUIHook(NewGUI guiHook) {
         this.guiHook = guiHook;
@@ -403,8 +416,8 @@ public class Ki extends Thread implements IKi, IKiAPI {
     }
 
     private boolean closing = false;
-    public void close()
-    {
+
+    public void close() {
         synchronized (closeLock) {
             closing = true;
             minerMan.shutdown();
@@ -415,8 +428,8 @@ public class Ki extends Thread implements IKi, IKiAPI {
 
             addMan.close();
             netMan.close();
-            if(!getOptions().relay)
-            poolNet.close();
+            if (!getOptions().relay)
+                poolNet.close();
             if (ki.getOptions().pool || ki.getOptions().poolRelay)
                 poolNet.close();
             settings.close();
@@ -436,12 +449,13 @@ public class Ki extends Thread implements IKi, IKiAPI {
     /**
      * Singleton for use with un-initializable objects, like the NewGUI, instance should be taken and stored to
      * help prevent thread issues.
+     *
      * @return instance of Ki
      */
-    public static IKi getInstance()
-    {
+    public static IKi getInstance() {
         return instance;
     }
+
     @Override
     public boolean isRelay() {
         return relay;
@@ -467,8 +481,7 @@ public class Ki extends Thread implements IKi, IKiAPI {
 
     @Override
     public void doneDownloading() {
-        if(ki.getOptions().poolRelay)
-        {
+        if (ki.getOptions().poolRelay) {
             miningPool.updateCurrentHeight(getChainMan().currentHeight());
         }
     }
@@ -538,6 +551,11 @@ public class Ki extends Thread implements IKi, IKiAPI {
     }
 
     @Override
+    public IAddressBook getAddressBook() {
+        return addressBook;
+    }
+
+    @Override
     public INetworkManager getPoolNet() {
         return poolNet;
     }
@@ -558,6 +576,7 @@ public class Ki extends Thread implements IKi, IKiAPI {
     }
 
     private String relayer;
+
     @Override
     public String getRelayer() {
         return relayer;
@@ -589,27 +608,27 @@ public class Ki extends Thread implements IKi, IKiAPI {
     }
 
     @Override
-    public Logger getMainLog() { return main; }
+    public Logger getMainLog() {
+        return main;
+    }
 
     @Override
-    public void debug(String debug)
-    {
+    public void debug(String debug) {
         if (closing) return;
-        if (getSetting(Settings.DEBUG_MODE) || isRelay())
-        {
+        if (getSetting(Settings.DEBUG_MODE) || isRelay()) {
 
             main.debug(debug);
         }
     }
 
     @Override
-    public INetworkManager getNetMan()
-    {
+    public INetworkManager getNetMan() {
         return netMan;
     }
 
     private BigInteger startHeight = BigInteger.ZERO;
     private final Object refNotify = new Object();
+
     @Override
     public void setStartHeight(BigInteger startHeight) {
 
@@ -654,9 +673,9 @@ public class Ki extends Thread implements IKi, IKiAPI {
     }
 
     private boolean killedSync = false;
+
     @Override
-    public void blockTick(IBlockAPI block)
-    {
+    public void blockTick(IBlockAPI block) {
         if (getOptions().poolRelay) {
 
             miningPool.updateCurrentHeight(ki.getChainMan().currentHeight());
@@ -696,13 +715,12 @@ public class Ki extends Thread implements IKi, IKiAPI {
 
 
     @Override
-    public IMinerMan getMinerMan()
-    {
+    public IMinerMan getMinerMan() {
         return minerMan;
     }
+
     @Override
-    public IAddMan getAddMan()
-    {
+    public IAddMan getAddMan() {
         return addMan;
     }
 
