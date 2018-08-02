@@ -96,7 +96,13 @@ public class Address implements IAddress {
     {
         char[] eChar = encoded.toCharArray();
         char[] vChar = {eChar[0],eChar[1],eChar[2]};
-        byte version = Byte.parseByte(new String(vChar));
+        byte version;
+        try {
+            version = Byte.parseByte(new String(vChar));
+        }catch (NumberFormatException e)
+        {
+            return null;
+        }
         if (version != VERSION) return NewAdd.decodeFromChain(encoded);
         StringBuilder ID = new StringBuilder();
         for(int i = 3; i < eChar.length - 4;i++)

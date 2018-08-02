@@ -204,7 +204,7 @@ public class NewGUI implements GUIHook {
     public Label hashrateUnder;
     public VBox nonMenuVbox;
     public Pane addressBookPane;
-    public JFXListView addBookList;
+    public JFXListView<Label> addBookList;
     public JFXButton addNewBook;
     public JFXButton deleteBook;
     public JFXButton copyBook;
@@ -771,6 +771,7 @@ public class NewGUI implements GUIHook {
         content.add(exchangePane);
         content.add(ohPane);
         content.add(axcPane);
+        content.add(addressBookPane);
         Label pc = new Label("Primary Color");
         Label sc = new Label("Secondary Color");
         Label pt = new Label("Primary Text Color");
@@ -3197,6 +3198,14 @@ public class NewGUI implements GUIHook {
         });
     }
 
+    private void setupAddressBookList()
+    {
+        addBookList.getItems().clear();
+        for(Map.Entry<String,IAddress> entry:ki.getAddressBook().getBook().entrySet())
+        {
+            addBookList.getItems().add(new Label(entry.getKey() + "\t" + entry.getValue().encodeForChain()));
+        }
+    }
     private void setupAddressBook()
     {
         VBox vbox = null;
@@ -3206,6 +3215,10 @@ public class NewGUI implements GUIHook {
             e.printStackTrace();
         }
         if(vbox == null) return;
+        JFXDialogLayout layout = new JFXDialogLayout();
+        layout.setBody(vbox);
+        JFXDialog dialog = new JFXDialog();
+        dialog.setContent(layout);
         JFXButton add = (JFXButton) vbox.getChildrenUnmodifiable().get(2);
         JFXTextField nameField = (JFXTextField) vbox.getChildrenUnmodifiable().get(0);
         JFXTextField addField = (JFXTextField) vbox.getChildrenUnmodifiable().get(1);
@@ -3218,18 +3231,36 @@ public class NewGUI implements GUIHook {
                     return;
                 }
                 ki.getAddressBook().add(nameField.getText(),address);
+                //TODO super lazy and quick, do this correctly
+                setupAddressBookList();
+                dialog.close();
             }
         });
-        JFXDialogLayout layout = new JFXDialogLayout();
-        layout.setBody(vbox);
-        JFXDialog dialog = new JFXDialog();
-        dialog.setContent(layout);
+
 
         addNewBook.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
 
                 dialog.show(mainStackPane);
+            }
+        });
+
+        copyBook.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                StringSelection stringSelection = new StringSelection(addBookList.getSelectionModel().getSelectedItem().getText().split("\t")[1]);
+                Clipboard clpbrd = Toolkit.getDefaultToolkit().getSystemClipboard();
+                clpbrd.setContents(stringSelection, null);
+                notification("Copied to clipboard");
+            }
+        });
+
+        deleteBook.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                ki.getAddressBook().remove(addBookList.getSelectionModel().getSelectedItem().getText().split("\t")[0]);
+                setupAddressBookList();
             }
         });
     }

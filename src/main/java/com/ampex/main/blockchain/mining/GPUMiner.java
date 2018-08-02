@@ -104,7 +104,7 @@ public class GPUMiner extends Thread implements IMiner {
                 b.timestamp = System.currentTimeMillis();
                 b.height = ki.getPoolData().currentWork.height;
                 b.merkleRoot = ki.getPoolData().currentWork.merkleRoot;
-                b.solver = ki.getPoolData().currentWork.solver;
+                b.solver = Utils.toBase64(ki.getPoolData().payTo.toByteArray());//= ki.getPoolData().currentWork.solver;
                 b.setCoinbase(NewTrans.fromAmplet(Amplet.create(ki.getPoolData().currentWork.coinbase)));
             }
 
@@ -220,7 +220,7 @@ public class GPUMiner extends Thread implements IMiner {
                             PoolBlockHeader pbh = new PoolBlockHeader();
                             pbh.height = ki.getPoolData().currentWork.height;
                             pbh.merkleRoot = ki.getPoolData().currentWork.merkleRoot;
-                            pbh.solver = ki.getPoolData().currentWork.solver;
+                            pbh.solver  = Utils.toBase64(ki.getPoolData().payTo.toByteArray());// = ki.getPoolData().currentWork.solver;
                             pbh.prevID = ki.getPoolData().currentWork.prevID;
                             pbh.coinbase = ki.getPoolData().currentWork.coinbase;
                             i++;

@@ -36,7 +36,7 @@ public class VSigValS implements IOperator {
         //byte[] rdata = stack.pop().getData();
         //System.out.println("Rdata: " + Arrays.toString(rdata));
         int result = stack.pop().getDataAsInt();
-        System.out.println("Result Currently: " + result);
+        //System.out.println("Result Currently: " + result);
         boolean prefail = false;
         byte[] sig = null;
         try {
@@ -45,7 +45,7 @@ public class VSigValS implements IOperator {
             //fail quietly
             prefail = true;
         }
-        System.out.println("Sig: " + Arrays.toString(sig));
+        //System.out.println("Sig: " + Arrays.toString(sig));
         byte[] kktpBytes = null;
         try {
             kktpBytes = stack.pop().getData();
@@ -57,7 +57,7 @@ public class VSigValS implements IOperator {
             stack.push(new DataElement(ByteTools.deconstructInt(result)));
             return;
         }
-        System.out.println("KKTP: " + Arrays.toString(kktpBytes));
+        //System.out.println("KKTP: " + Arrays.toString(kktpBytes));
         KeyKeyTypePair kttp = KeyKeyTypePair.fromBytes(kktpBytes);
         byte[] key = kttp.getKey();
         KeyType keyType = kttp.getKeyType();

@@ -420,6 +420,7 @@ public class Ki extends Thread implements IKi, IKiAPI {
     public void close() {
         synchronized (closeLock) {
             closing = true;
+            addressBook.close();
             minerMan.shutdown();
             chainMan.close();
 

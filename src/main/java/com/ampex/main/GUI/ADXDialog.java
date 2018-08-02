@@ -10,6 +10,7 @@ import javafx.scene.input.MouseEvent;
 public class ADXDialog {
 
 
+    @FXML
     public JFXButton okButton;
 
     @FXML

@@ -89,6 +89,12 @@ public class PoolBlockHeader implements PoolPacket {
                 b.ID = ID;
                 b.solver = solver;
                 ki.getPoolData().hrMap.put(connMan.getID(), currentHR);
+                if (pplns) {
+                    if (ki.getSetting(Settings.PPLNS_SERVER))
+                        ki.getPoolManager().addPPLNSShare(b);
+                } else {
+                    ki.getPoolManager().addShare(b);
+                }
                 if (ChainManager.checkSolve(ki.getChainMan().getCurrentDifficulty(), b.height, b.ID)) {
                     if (ki.getChainMan().softVerifyBlock(b).success()) {
                         ki.debug("Share is a solve");
@@ -110,12 +116,7 @@ public class PoolBlockHeader implements PoolPacket {
                         }
                     }
                 }
-                if (pplns) {
-                    if (ki.getSetting(Settings.PPLNS_SERVER))
-                        ki.getPoolManager().addPPLNSShare(b);
-                } else {
-                    ki.getPoolManager().addShare(b);
-                }
+
                 //ki.debug("Shares for address:  " + ki.getPoolManager().getTotalSharesOfMiner(Address.decodeFromChain(ki.getPoolData().addMap.get(connMan.getID()))));
             } else {
                 if (ki.getPoolData().workMap.containsKey(ki.getPoolData().currentWork.merkleRoot))
