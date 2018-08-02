@@ -146,7 +146,7 @@ public class PoolNetMan extends Thread implements INetworkManager {
             threads.add(t);
             t.start();
             if (ki.getOptions().pool) {
-                new Thread() {
+                Thread rt = new Thread() {
                     public void run() {
                         while (true) {
                             setName("ReconnectThread");
@@ -156,11 +156,15 @@ public class PoolNetMan extends Thread implements INetworkManager {
                             try {
                                 sleep(10000);
                             } catch (InterruptedException e) {
-                                e.printStackTrace();
+                                return;
                             }
                         }
                     }
-                }.start();
+                };
+                rt.setDaemon(true);
+                threads.add(rt);
+                rt.start();
+
             }
             Thread t2 = new Thread() {
 
@@ -205,11 +209,13 @@ public class PoolNetMan extends Thread implements INetworkManager {
                         try {
                             sleep(30000);
                         } catch (InterruptedException e) {
-                            e.printStackTrace();
+                            //e.printStackTrace();
+                            return;
                         }
                     }
                 }
             };
+            t2.setDaemon(true);
             threads.add(t2);
             t2.start();
         }
@@ -238,6 +244,7 @@ public class PoolNetMan extends Thread implements INetworkManager {
             t.interrupt();
         }
         gpq.interrupt();
+
         super.interrupt();
     }
     @Override

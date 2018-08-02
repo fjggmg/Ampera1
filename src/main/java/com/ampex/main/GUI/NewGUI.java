@@ -197,6 +197,11 @@ public class NewGUI implements GUIHook {
     public JFXComboBox<Label> startPage;
     public Label dayEarnings;
     public Label clientPoolFee;
+    public JFXDrawer nonMenuDrawer;
+    public Label chainHeightUnder;
+    public Label latencyUnder;
+    public Label hashrateUnder;
+    public VBox nonMenuVbox;
     private CandlestickGraph exchangeGraph;
     public VBox passwordVbox;
     public VBox exchangeGraphBox;
@@ -786,7 +791,9 @@ public class NewGUI implements GUIHook {
         animation.play();
 
         menuDrawer.close();
+        nonMenuDrawer.open();
         borderPane.setStyle("-fx-background-color:" + ki.getStringSetting(StringSettings.SECONDARY_COLOR));
+
         vb = new VBox();
         vb.setMaxWidth(Double.MAX_VALUE);
         vb.setFillWidth(true);
@@ -828,8 +835,18 @@ public class NewGUI implements GUIHook {
         if (!ki.getOptions().pool) {
             latency.setFont(acg10);
             vb.getChildren().add(latency);
+            latencyUnder.setFont(acg10);
+            chainHeightUnder.setFont(acg10);
+            hashrateUnder.setFont(acg10);
+        }else{
+            latencyUnder.setDisable(true);
+            chainHeightUnder.setDisable(true);
         }
         menuDrawer.getSidePane().add(vb);
+        //nonMenuDrawer.getChildren().clear();
+        nonMenuVbox.setBackground(new Background(new BackgroundFill(Color.valueOf(ki.getStringSetting(StringSettings.SECONDARY_COLOR)), CornerRadii.EMPTY, Insets.EMPTY)));
+        nonMenuDrawer.getSidePane().add(nonMenuVbox);
+        nonMenuDrawer.getChildren().remove(nonMenuVbox);
         HamburgerSlideCloseTransition burgerTask = new HamburgerSlideCloseTransition(menuHamburger);
         burgerTask.setRate(-1);
         menuHamburger.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
@@ -839,11 +856,13 @@ public class NewGUI implements GUIHook {
                 burgerTask.play();
                 if (menuDrawer.isClosed() || menuDrawer.isClosing()) {
                     menuDrawer.open();
+                    nonMenuDrawer.close();
                     for (Timeline tl : btnAnimations) {
                         tl.play();
                     }
                 } else {
                     menuDrawer.close();
+                    nonMenuDrawer.open();
                     for (Timeline tl : btnAnimationsR) {
                         tl.play();
                     }
@@ -1433,7 +1452,7 @@ public class NewGUI implements GUIHook {
                 nextPayment.setText("Next Payment - " + format2.format(((currentShares * currentPPS)) / 100_000_000));
 
                 clientPoolFee.setText("Pool Fee - " + ((poolFee == -1) ? "N/A" : poolFee) + "%");
-                dayEarnings.setText("Estimated 24h earnings - " + (format2.format(60*60*24*(currentPPS * (ki.getMinerMan().cumulativeHashrate()/Math.pow(16,8))))));
+                dayEarnings.setText("Estimated 24h earnings - " + (format2.format(86_400*(currentPPS * (ki.getMinerMan().cumulativeHashrate()/Math.pow(16,8))))));
             }
         });
     }
@@ -2735,6 +2754,7 @@ public class NewGUI implements GUIHook {
                                     }
                                     series.getData().add(new XYChart.Data<>(sdf.format(new Date(System.currentTimeMillis())), ki.getMinerMan().getHashrate(series.getName()) / 1_000_000));
                                     long chash = ki.getMinerMan().cumulativeHashrate() / 1_000_000;
+                                    hashrateUnder.setText("Current Hashrate - " + chash + " Mh/s");
                                     currentHashrate.setText("Current Hashrate - " + chash + " Mh/s");
                                     if (chash > maxH) {
                                         maxH = chash;
@@ -2787,12 +2807,15 @@ public class NewGUI implements GUIHook {
                             adxBox.setMinWidth(exchangePane.getWidth() - 20);
                             adxBox.setMinHeight(exchangePane.getHeight() - 20);
                             heightLabel.setText("Chain Height - " + ki.getChainMan().currentHeight());
-                            if (!ki.getOptions().pool)
+                            if (!ki.getOptions().pool) {
                                 chainHeight2.setText(" " + ki.getChainMan().currentHeight().toString());
+                                chainHeightUnder.setText("Chain Height - " + ki.getChainMan().currentHeight().toString());
+                            }
                             miningDataHbox.setMinWidth(miningTab.getWidth() - 15);
 
                             for (IConnectionManager c : ki.getNetMan().getConnections()) {
                                 latency.setText(" Latency - " + c.currentLatency());
+                                latencyUnder.setText("Latency - " + c.currentLatency());
                             }
                             startMining.setDisable(!GPUMiner.initDone);
                             if (!GPUMiner.initDone) {
@@ -2976,12 +2999,14 @@ public class NewGUI implements GUIHook {
                 //miningIntesity.getClip().setStyle("-fx-background-color:"+color);
 
             } else if (colorCombos.getSelectionModel().getSelectedItem().getText().contains("Secondary Color")) {
+                Background secBack = new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY));
                 String color = colorPicker.getValue().toString().replace("0x", "");
                 color = "#" + color;
-                topPane.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
-                borderPane.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
+                nonMenuVbox.setBackground(secBack);
+                topPane.setBackground(secBack);
+                borderPane.setBackground(secBack);
                 for (Pane p : content) {
-                    p.setBackground(new Background(new BackgroundFill(colorPicker.getValue(), CornerRadii.EMPTY, Insets.EMPTY)));
+                    p.setBackground(secBack);
                 }
                 ki.setStringSetting(StringSettings.SECONDARY_COLOR, color);
             } else if (colorCombos.getSelectionModel().getSelectedItem().getText().contains("Text Primary")) {
