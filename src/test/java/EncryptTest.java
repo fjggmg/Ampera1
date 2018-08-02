@@ -1,8 +1,4 @@
-import com.lifeform.main.data.EncryptionManager;
-import org.junit.Assert;
 import org.junit.Test;
-
-import java.util.Random;
 
 public class EncryptTest {
 

@@ -1,13 +1,14 @@
 
-import com.lifeform.main.data.EncryptionManager;
-import com.lifeform.main.transactions.*;
-import org.junit.Assert;
+import com.ampex.amperabase.AddressLength;
+import com.ampex.amperabase.IAddress;
+import com.ampex.amperabase.KeyType;
+import com.ampex.main.data.encryption.EncryptionManager;
+import com.ampex.main.transactions.addresses.Address;
+import com.ampex.main.transactions.addresses.InvalidAddressException;
+import com.ampex.main.transactions.addresses.NewAdd;
 import org.junit.Test;
 
 import java.io.UnsupportedEncodingException;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
 
 import static org.junit.Assert.*;
 

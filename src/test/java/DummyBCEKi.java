@@ -1,36 +1,56 @@
-import com.lifeform.main.IKi;
-import com.lifeform.main.NewGUI;
-import com.lifeform.main.Settings;
-import com.lifeform.main.StringSettings;
-import com.lifeform.main.adx.ExchangeManager;
-import com.lifeform.main.blockchain.Block;
-import com.lifeform.main.blockchain.IChainMan;
-import com.lifeform.main.blockchain.IMinerMan;
-import com.lifeform.main.blockchain.IStateManager;
-import com.lifeform.main.data.IEncryptMan;
-import com.lifeform.main.data.Options;
-import com.lifeform.main.network.INetworkManager;
-import com.lifeform.main.network.pool.PoolData;
-import com.lifeform.main.transactions.IAddMan;
-import com.lifeform.main.transactions.ITransMan;
-import com.lifeform.main.transactions.scripting.ScriptManager;
+import com.ampex.amperabase.IAddressBook;
+import com.ampex.amperabase.IBlockAPI;
+import com.ampex.amperabase.IStateManager;
+import com.ampex.amperabase.Options;
+import com.ampex.main.GUI.FXGUI;
+import com.ampex.main.GUI.NewGUI;
+import com.ampex.main.IKi;
+import com.ampex.main.Settings;
+import com.ampex.main.StringSettings;
+import com.ampex.main.adx.ExchangeManager;
+import com.ampex.main.blockchain.IChainMan;
+import com.ampex.main.blockchain.mining.IMinerMan;
+import com.ampex.main.data.encryption.IEncryptMan;
+import com.ampex.main.network.INetworkManager;
+import com.ampex.main.pool.PoolData;
+import com.ampex.main.transactions.ITransMan;
+import com.ampex.main.transactions.addresses.IAddMan;
+import com.ampex.main.transactions.scripting.ScriptManager;
+import com.ampex.main.transactions.scripting.word8v1ops.VerifyNetLoss;
 import engine.ByteCodeEngine;
+import engine.IByteCodeEngine;
+import engine.operators.reserved_set.word8v1.ClearStackWord8;
+import engine.operators.reserved_set.word8v1.PI.PI0Word8;
+import engine.operators.reserved_set.word8v1.TermWord8;
 import mining_pool.Pool;
 import org.apache.logging.log4j.Logger;
 
 import java.math.BigInteger;
 
 public class DummyBCEKi implements IKi {
-    public ByteCodeEngine bce;
+    private ByteCodeEngine bce = new ByteCodeEngine(1);
+
+    public DummyBCEKi()
+    {
+        //bce.addReservedWord8Operators();
+        //bce.addOperators("com.ampex.main.transactions.scripting.word8v1ops");
+        bce.addOperator(PI0Word8.class);
+        bce.addOperator(TermWord8.class);
+        bce.addOperator(VerifyNetLoss.class);
+        bce.addOperator(ClearStackWord8.class);
+        //bce8.addOperator(VSigBin.class);
+        bce.finalizeOperators();
+    }
 
     @Override
     public void start() {
 
     }
 
+    private Options o = new Options();
     @Override
     public Options getOptions() {
-        return null;
+        return o;
     }
 
     @Override
@@ -79,18 +99,13 @@ public class DummyBCEKi implements IKi {
     }
 
     @Override
-    public void blockTick(Block block) {
-
-    }
-
-    @Override
     public IAddMan getAddMan() {
         return null;
     }
 
     @Override
     public void debug(String s) {
-
+        //System.out.println("DEBUG: " + s);
     }
 
     @Override
@@ -109,13 +124,13 @@ public class DummyBCEKi implements IKi {
     }
 
     @Override
-    public void restartNetwork() {
-
+    public IStateManager getStateManager() {
+        return null;
     }
 
     @Override
-    public IStateManager getStateManager() {
-        return null;
+    public void doneDownloading() {
+
     }
 
     @Override
@@ -149,6 +164,11 @@ public class DummyBCEKi implements IKi {
     }
 
     @Override
+    public IAddressBook getAddressBook() {
+        return null;
+    }
+
+    @Override
     public INetworkManager getPoolNet() {
         return null;
     }
@@ -164,7 +184,7 @@ public class DummyBCEKi implements IKi {
     }
 
     @Override
-    public ByteCodeEngine getBCE8() {
+    public IByteCodeEngine getBCE8() {
         return bce;
     }
 
@@ -180,6 +200,46 @@ public class DummyBCEKi implements IKi {
 
     @Override
     public void setStartHeight(BigInteger startHeight) {
+
+    }
+
+    @Override
+    public Object getCloseLock() {
+        return null;
+    }
+
+    @Override
+    public void downloadedTo(BigInteger height) {
+
+    }
+
+    @Override
+    public void blockTick(IBlockAPI iBlockAPI) {
+
+    }
+
+    @Override
+    public BigInteger getLoadHeight() {
+        return null;
+    }
+
+    @Override
+    public BigInteger getDownloadedTo() {
+        return null;
+    }
+
+    @Override
+    public BigInteger getStartHeight() {
+        return null;
+    }
+
+    @Override
+    public String getVersion() {
+        return "TESTING";
+    }
+
+    @Override
+    public void setInnerGUIRef(FXGUI ref) {
 
     }
 }
