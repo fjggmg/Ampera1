@@ -1,5 +1,6 @@
 package com.ampex.main.benchmarking;
 
+import com.ampex.amperabase.IAddressBook;
 import com.ampex.amperabase.IBlockAPI;
 import com.ampex.amperabase.IStateManager;
 import com.ampex.amperabase.Options;
@@ -162,6 +163,11 @@ public class DummyBCEKi implements IKi {
     @Override
     public void newTransPool() {
 
+    }
+
+    @Override
+    public IAddressBook getAddressBook() {
+        return null;
     }
 
     @Override
