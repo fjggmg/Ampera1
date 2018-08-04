@@ -257,6 +257,7 @@ public class Ki extends Thread implements IKi, IKiAPI {
 
         chainMan.loadChain();
         loadHeight = chainMan.currentHeight();
+        pbpStatus = chainMan.currentHeight();
         getMainLog().info("Chain loaded. Current height: " + chainMan.currentHeight());
 
 
@@ -337,6 +338,7 @@ public class Ki extends Thread implements IKi, IKiAPI {
         if (!o.relay || !o.poolRelay)
             minerMan = new MinerManager(this, o.mDebug);
         //gui = MainGUI.guiFactory(this);
+        if(!o.nogui)
         debug("Starting GUI");
         guiThread = new Thread(() -> {
             if (!o.nogui) {
@@ -351,8 +353,8 @@ public class Ki extends Thread implements IKi, IKiAPI {
 
     private volatile FXGUI guiRef;
     private Thread guiThread;
-    boolean setupDone = false;
-    public static volatile boolean syncDone = false;
+    private boolean setupDone = false;
+    private static volatile boolean syncDone = false;
     @Override
     public void run() {
         if (o.benchmark) return;
@@ -473,6 +475,24 @@ public class Ki extends Thread implements IKi, IKiAPI {
         synchronized (refNotify) {
             refNotify.notifyAll();
         }
+    }
+
+    private BigInteger pbpStatus = BigInteger.ZERO;
+    @Override
+    public void pbpTo(BigInteger height) {
+        pbpStatus = height;
+    }
+
+    @Override
+    public BigInteger getPBPStatus() {
+        return pbpStatus;
+    }
+
+    @Override
+    public void syncDone() {
+        syncDone = true;
+        killedSync = true;
+        guiRef.loadMain();
     }
 
     @Override
@@ -706,14 +726,8 @@ public class Ki extends Thread implements IKi, IKiAPI {
                 poolNet.broadcast(pbh);
             }
         }
-        if (!o.nogui && !o.lite && !killedSync) {
-            if (block.getHeight().compareTo(startHeight) >= 0) {
-                killedSync = true;
-                guiRef.loadMain();
-            }
-        }
-    }
 
+    }
 
     @Override
     public IMinerMan getMinerMan() {

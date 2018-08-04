@@ -11,6 +11,7 @@ import com.ampex.main.data.xodus.XodusStringMap;
 import com.ampex.main.network.logic.Client;
 import com.ampex.main.network.logic.Server;
 import com.ampex.main.network.packets.adx.OrderPacket;
+import com.ampex.main.network.rest.RestDataProvidor;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -261,8 +262,25 @@ public class NetMan extends Thread implements INetworkManager {
                         ki.debug("Server stopped, error follows: ");
                         e.printStackTrace();
                     }
+
                 }
             };
+            Thread rest = new Thread()
+            {
+                public void run()
+                {
+                    setName("restServer");
+                    rdp = new RestDataProvidor(ki,29880);
+                    try{
+                        rdp.start();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            };
+            rest.setDaemon(true);
+            rest.start();
+            threads.add(rest);
             threads.add(t);
             t.start();
 
@@ -276,7 +294,7 @@ public class NetMan extends Thread implements INetworkManager {
         }
 
     }
-
+    private RestDataProvidor rdp;
     private Server server;
     @Override
     public void interrupt() {

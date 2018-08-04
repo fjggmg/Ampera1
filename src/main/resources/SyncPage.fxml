@@ -2,44 +2,46 @@
 
 <?import com.jfoenix.controls.JFXProgressBar?>
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.control.*?>
+<?import javafx.scene.control.Label?>
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
-<?import javafx.scene.layout.*?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
-<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="620.0" prefWidth="1156.0"
-            xmlns="http://javafx.com/javafx/8.0.141" xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="com.ampex.main.GUI.SyncPage">
+
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="620.0" prefWidth="1156.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.ampex.main.GUI.SyncPage">
     <children>
-        <StackPane fx:id="syncPane" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
-                   AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+        <StackPane fx:id="syncPane" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
             <children>
                 <VBox alignment="TOP_CENTER" spacing="20.0">
                     <children>
                         <Label fx:id="mainLabel" text="Ampera Full Node">
                             <font>
-                                <Font name="System Bold" size="24.0"/>
+                                <Font name="System Bold" size="24.0" />
                             </font>
                         </Label>
                         <ImageView fitHeight="150.0" fitWidth="200.0" pickOnBounds="true" preserveRatio="true">
                             <image>
-                                <Image url="@origin.png"/>
+                                <Image url="@origin.png" />
                             </image>
                         </ImageView>
-                        <Label text="Sync Progress:"/>
-                        <Label text="Download:"/>
-                        <JFXProgressBar fx:id="downloadProgress" prefHeight="15.0" prefWidth="350.0"/>
-                        <Label text="Verify:"/>
-                        <JFXProgressBar fx:id="verifyProgress" prefHeight="15.0" prefWidth="350.0"/>
-                        <Label fx:id="heightLabel" text="Height:"/>
+                        <Label text="Sync Progress:" />
+                        <Label text="Download:" />
+                        <JFXProgressBar fx:id="downloadProgress" prefHeight="15.0" prefWidth="350.0" />
+                        <Label text="Verify:" />
+                        <JFXProgressBar fx:id="verifyProgress" prefHeight="15.0" prefWidth="350.0" />
+                  <Label text="Quick Lookup Building:" />
+                  <JFXProgressBar fx:id="quickLookupBar" prefHeight="15.0" prefWidth="350.0" />
+                        <Label fx:id="heightLabel" text="Height:" />
                         <Label text="You may experience unresponsiveness during this process">
                             <font>
-                                <Font name="System Italic" size="12.0"/>
+                                <Font name="System Italic" size="12.0" />
                             </font>
                         </Label>
                     </children>
                     <StackPane.margin>
-                        <Insets top="100.0"/>
+                        <Insets top="50.0" />
                     </StackPane.margin>
                 </VBox>
             </children>

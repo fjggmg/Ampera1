@@ -1490,7 +1490,7 @@ public class NewGUI implements GUIHook {
                 nextPayment.setText("Next Payment - " + format2.format(((currentShares * currentPPS)) / 100_000_000));
 
                 clientPoolFee.setText("Pool Fee - " + ((poolFee == -1) ? "N/A" : poolFee) + "%");
-                dayEarnings.setText("Estimated 24h earnings - " + (format2.format(86_400*(currentPPS * (ki.getMinerMan().cumulativeHashrate()/Math.pow(16,8))))));
+                dayEarnings.setText("Estimated 24h earnings - " + (format2.format(86_400*((currentPPS/100_000_000) * ((double)ki.getMinerMan().cumulativeHashrate()/Math.pow(16,8))))));
             }
         });
     }
@@ -2792,7 +2792,7 @@ public class NewGUI implements GUIHook {
                                     }
                                     series.getData().add(new XYChart.Data<>(sdf.format(new Date(System.currentTimeMillis())), ki.getMinerMan().getHashrate(series.getName()) / 1_000_000));
                                     long chash = ki.getMinerMan().cumulativeHashrate() / 1_000_000;
-                                    hashrateUnder.setText("Current Hashrate - " + chash + " Mh/s");
+                                    hashrateUnder.setText("Current Hashrate - \n " + chash + " Mh/s");
                                     currentHashrate.setText("Current Hashrate - " + chash + " Mh/s");
                                     if (chash > maxH) {
                                         maxH = chash;
