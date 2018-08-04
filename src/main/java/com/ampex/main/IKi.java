@@ -175,4 +175,9 @@ public interface IKi extends KiAdapter {
     String getVersion();
 
     void setInnerGUIRef(FXGUI ref);
+
+    void pbpTo(BigInteger height);
+    BigInteger getPBPStatus();
+
+    void syncDone();
 }

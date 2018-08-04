@@ -16,7 +16,7 @@ public class SyncGUI extends Application {
 
     @Override
     public void start(Stage pStage) throws Exception {
-        pStage.setTitle("Origin");
+        pStage.setTitle("Ampera");
 
         Parent root = FXMLLoader.load(FXGUI.class.getResource("/SyncPage.fxml"));
 

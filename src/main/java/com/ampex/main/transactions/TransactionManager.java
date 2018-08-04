@@ -257,9 +257,11 @@ public class TransactionManager extends Thread implements ITransMan {
                         }
                         ki.getExMan().transactionProccessed(trans);
                     }
+                    ki.pbpTo(b.getHeight());
                 }
                 if (!ki.getOptions().nogui && ki.getGUIHook() != null)
                     ki.getGUIHook().pbpDone();
+
 
 
         }

@@ -25,6 +25,7 @@ public class SyncPage {
     public JFXProgressBar downloadProgress;
     public JFXProgressBar verifyProgress;
     public Label heightLabel;
+    public JFXProgressBar quickLookupBar;
     private Font mFont = Font.loadFont(SyncPage.class.getResourceAsStream("/ADAM.CG PRO.otf"), 24);
     private Thread updateThread;
 
@@ -47,6 +48,7 @@ public class SyncPage {
                             heightLabel.setText("Height - " + Ki.getInstance().getChainMan().currentHeight());
                             downloadProgress.setProgress(Ki.getInstance().getDownloadedTo().subtract(offset).doubleValue() / total.doubleValue());
                             verifyProgress.setProgress(Ki.getInstance().getChainMan().currentHeight().subtract(offset).doubleValue() / total.doubleValue());
+                            quickLookupBar.setProgress(Ki.getInstance().getPBPStatus().subtract(offset).doubleValue()/total.doubleValue());
 
                         }
                     });
@@ -56,8 +58,9 @@ public class SyncPage {
                         e.printStackTrace();
                         return;
                     }
-                    if (Ki.getInstance().getChainMan().currentHeight().compareTo(Ki.getInstance().getStartHeight()) >= 0) {
-                        Ki.syncDone = true;
+                    if ((Ki.getInstance().getChainMan().currentHeight().compareTo(Ki.getInstance().getStartHeight()) >= 0) && (Ki.getInstance().getPBPStatus().compareTo(Ki.getInstance().getStartHeight()) >= 0)) {
+                        //Ki.syncDone = true;
+                        Ki.getInstance().syncDone();
                         break;
                     }
                 }

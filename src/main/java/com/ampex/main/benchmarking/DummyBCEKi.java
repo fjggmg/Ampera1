@@ -244,4 +244,19 @@ public class DummyBCEKi implements IKi {
     public void setInnerGUIRef(FXGUI ref) {
 
     }
+
+    @Override
+    public void pbpTo(BigInteger height) {
+
+    }
+
+    @Override
+    public BigInteger getPBPStatus() {
+        return null;
+    }
+
+    @Override
+    public void syncDone() {
+
+    }
 }
