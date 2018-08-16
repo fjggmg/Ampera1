@@ -6,7 +6,7 @@
     <groupId>com.ampex</groupId>
     <artifactId>Ampera</artifactId>
     <packaging>jar</packaging>
-    <version>0.18.4.1-BETA</version>
+    <version>0.18.4.2-BETA</version>
     <repositories>
         <repository>
             <id>jitpack.io</id>
@@ -192,7 +192,7 @@
         <dependency>
             <groupId>com.ampex</groupId>
             <artifactId>AmperaNet</artifactId>
-            <version>1.0.5</version>
+            <version>1.0.6</version>
         </dependency>
         <dependency>
             <groupId>com.ampex</groupId>
